@@ -18,25 +18,25 @@ const ProfileStats = ({ stats }) => {
                             <div className="flex justify-center mb-2">
                                 <Icon className={`text-3xl ${item.color}`} />
                             </div>
-                            <div className="text-2xl font-bold text-gray-800">{item.value.toLocaleString()}</div>
-                            <div className="text-sm text-gray-500 mt-1">{item.label}</div>
+                            <div className="text-2xl font-bold text-gray-800 dark:text-white">{item.value.toLocaleString()}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.label}</div>
                         </div>
                     );
                 })}
             </div>
 
-            <div className="grid grid-cols-3 gap-6 mt-8 pt-6 border-t border-gray-100">
+            <div className="grid grid-cols-3 gap-6 mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
                 <div className="text-center">
-                    <div className="text-xl font-bold text-gray-800">{stats.xperPoints?.toLocaleString() || '133.525'}</div>
-                    <div className="text-xs text-gray-500">Xper Puanı</div>
+                    <div className="text-xl font-bold text-gray-800 dark:text-white">{stats.xperPoints?.toLocaleString() || '133.525'}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Xper Puanı</div>
                 </div>
                 <div className="text-center">
-                    <div className="text-xl font-bold text-gray-800">#{stats.generalRank || '162'}</div>
-                    <div className="text-xs text-gray-500">Genel Xper sıralaması</div>
+                    <div className="text-xl font-bold text-gray-800 dark:text-white">#{stats.generalRank || '162'}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Genel Xper sıralaması</div>
                 </div>
                 <div className="text-center">
-                    <div className="text-xl font-bold text-gray-800">#{stats.categoryRank || '114'}</div>
-                    <div className="text-xs text-gray-500">Etiketler Xper sıralaması</div>
+                    <div className="text-xl font-bold text-gray-800 dark:text-white">#{stats.categoryRank || '114'}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Etiketler Xper sıralaması</div>
                 </div>
             </div>
         </div>

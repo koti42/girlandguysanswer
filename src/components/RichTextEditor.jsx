@@ -30,38 +30,38 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
     };
 
     return (
-        <div className="border border-gray-300 rounded-xl overflow-hidden focus-within:border-coral focus-within:ring-1 focus-within:ring-coral/20 transition-all">
+        <div className="border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden focus-within:border-coral focus-within:ring-1 focus-within:ring-coral/20 transition-all">
             {/* Toolbar */}
-            <div className="bg-gray-50 border-b border-gray-200 px-3 py-2 flex items-center gap-2">
+            <div className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-3 py-2 flex items-center gap-2">
                 <button
                     type="button"
                     onClick={() => applyFormat('bold')}
-                    className="p-2 hover:bg-gray-200 rounded transition-colors"
+                    className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
                     title="Kalın"
                 >
-                    <FaBold className="text-gray-700" />
+                    <FaBold className="text-gray-700 dark:text-gray-300" />
                 </button>
                 <button
                     type="button"
                     onClick={() => applyFormat('italic')}
-                    className="p-2 hover:bg-gray-200 rounded transition-colors"
+                    className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
                     title="İtalik"
                 >
-                    <FaItalic className="text-gray-700" />
+                    <FaItalic className="text-gray-700 dark:text-gray-300" />
                 </button>
                 <button
                     type="button"
                     onClick={() => applyFormat('insertUnorderedList')}
-                    className="p-2 hover:bg-gray-200 rounded transition-colors"
+                    className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
                     title="Liste"
                 >
-                    <FaListUl className="text-gray-700" />
+                    <FaListUl className="text-gray-700 dark:text-gray-300" />
                 </button>
 
-                <div className="h-6 w-px bg-gray-300 mx-1"></div>
+                <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
-                <label className="p-2 hover:bg-gray-200 rounded transition-colors cursor-pointer" title="Görsel Ekle">
-                    <FaImage className="text-gray-700" />
+                <label className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors cursor-pointer" title="Görsel Ekle">
+                    <FaImage className="text-gray-700 dark:text-gray-300" />
                     <input
                         type="file"
                         accept="image/*"
@@ -76,7 +76,7 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
                 ref={editorRef}
                 contentEditable
                 onInput={handleInput}
-                className="min-h-[150px] p-4 outline-none prose prose-sm max-w-none"
+                className="min-h-[150px] p-4 outline-none prose prose-sm max-w-none dark:bg-gray-800 dark:text-white"
                 dangerouslySetInnerHTML={{ __html: value }}
                 data-placeholder={placeholder}
                 style={{

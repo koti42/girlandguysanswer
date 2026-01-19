@@ -95,7 +95,7 @@ const AskQuestionPage = () => {
                 <FaLightbulb className="text-gold" />
                 İpuçları
             </h3>
-            <ul className="space-y-3 text-sm text-gray-600">
+            <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
                 <li className="flex gap-2">
                     <span className="text-coral">•</span>
                     <span>Başlığınızı açık ve net yazın</span>
@@ -117,12 +117,12 @@ const AskQuestionPage = () => {
     );
 
     const RulesWidget = () => (
-        <div className="bg-orange-50 rounded-2xl shadow-soft p-6 border border-orange-100">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-white dark:text-gray-100">
+        <div className="bg-orange-50 dark:bg-gray-800 rounded-2xl shadow-soft p-6 border border-orange-100 dark:border-gray-700">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-white">
                 <FaExclamationTriangle className="text-orange-500" />
                 Topluluk Kuralları
             </h3>
-            <ul className="space-y-2 text-sm text-gray-600">
+            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <li>✓ Saygılı ve nazik olun</li>
                 <li>✓ Spam yapmayın</li>
                 <li>✓ Kişisel bilgi paylaşmayın</li>
@@ -137,7 +137,7 @@ const AskQuestionPage = () => {
                 <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-soft p-12 text-center max-w-md">
                     <FaCheckCircle className="text-green-500 text-6xl mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-white dark:text-gray-100 mb-2">Sorunuz Gönderildi!</h2>
-                    <p className="text-gray-600">Ana sayfaya yönlendiriliyorsunuz...</p>
+                    <p className="text-gray-600 dark:text-gray-400">Ana sayfaya yönlendiriliyorsunuz...</p>
                 </div>
             </div>
         );
@@ -174,12 +174,12 @@ const AskQuestionPage = () => {
                                 onChange={handleInputChange}
                                 placeholder="Örn: Yaz düğünü için hangi renk abiye önerirsiniz?"
                                 className={`w-full px-4 py-3 rounded-xl border ${errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                    } focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
+                                    } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
                                 maxLength={200}
                             />
                             <div className="flex justify-between mt-2">
                                 {errors.title && <span className="text-red-500 text-sm">{errors.title}</span>}
-                                <span className="text-gray-400 text-sm ml-auto">{formData.title.length}/200</span>
+                                <span className="text-gray-400 dark:text-gray-500 text-sm ml-auto">{formData.title.length}/200</span>
                             </div>
                         </div>
 
@@ -193,7 +193,7 @@ const AskQuestionPage = () => {
                                 value={formData.category}
                                 onChange={handleInputChange}
                                 className={`w-full px-4 py-3 rounded-xl border ${errors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                    } focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
+                                    } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
                             >
                                 <option value="">Kategori seçin...</option>
                                 {categories.map(cat => (
@@ -215,7 +215,7 @@ const AskQuestionPage = () => {
                                     onChange={(e) => setTagInput(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                                     placeholder="Etiket ekle..."
-                                    className="flex-1 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all"
+                                    className="flex-1 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all"
                                     disabled={formData.tags.length >= 5}
                                 />
                                 <button
@@ -253,7 +253,7 @@ const AskQuestionPage = () => {
                                 onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
                                 placeholder="Sorunuzla ilgili daha fazla detay paylaşabilirsiniz..."
                             />
-                            <span className="text-gray-400 text-sm block mt-2">Metin editörü ile zengin içerik oluşturabilirsiniz</span>
+                            <span className="text-gray-400 dark:text-gray-500 text-sm block mt-2">Metin editörü ile zengin içerik oluşturabilirsiniz</span>
                         </div>
 
                         {/* Image Upload */}
