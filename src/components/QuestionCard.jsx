@@ -6,12 +6,17 @@ import QuestionActionsMenu from './QuestionActionsMenu';
 const QuestionCard = ({ question }) => {
     const [showReplyBox, setShowReplyBox] = useState(false);
     const [replyText, setReplyText] = useState('');
+    const [isAnonymous, setIsAnonymous] = useState(false);
 
     const handleSubmitReply = (e) => {
         e.preventDefault();
         if (replyText.trim()) {
-            console.log('Hızlı cevap gönderildi:', replyText);
+            console.log('Hızlı cevap gönderildi:', {
+                text: replyText,
+                anonymous: isAnonymous
+            });
             setReplyText('');
+            setIsAnonymous(false);
             setShowReplyBox(false);
         }
     };
@@ -116,7 +121,18 @@ const QuestionCard = ({ question }) => {
                             <FaPaperPlane />
                         </button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">Detaylı cevap için soruya tıklayın</p>
+                    <div className="flex items-center justify-between mt-3">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={isAnonymous}
+                                onChange={(e) => setIsAnonymous(e.target.checked)}
+                                className="w-4 h-4 text-coral border-gray-300 rounded focus:ring-coral focus:ring-2"
+                            />
+                            <span className="text-sm text-gray-600">Anonim olarak cevapla</span>
+                        </label>
+                        <p className="text-xs text-gray-500">Detaylı cevap için soruya tıklayın</p>
+                    </div>
                 </form>
             )}
         </div>
