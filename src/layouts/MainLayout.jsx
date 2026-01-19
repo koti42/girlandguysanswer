@@ -15,8 +15,9 @@ const MainLayout = ({ children, sidebar, onSearch }) => {
                     {/* Sidebar - Hidden on mobile */}
                     {sidebar && (
                         <aside className="hidden lg:flex lg:w-[32%] flex-col gap-6">
-                            {sidebar})
-                        </aside>
+                                                        {sidebar}
+                                                </aside>
+                    )}
                 </div>
             </main>
 
