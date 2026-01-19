@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import { questions } from '../data/mockData';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
@@ -8,8 +8,10 @@ import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components
 const QuestionDetailPage = () => {
     const { id } = useParams();
     const [commentText, setCommentText] = useState('');
+    const [isCommentAnonymous, setIsCommentAnonymous] = useState(false);
     const [replyingTo, setReplyingTo] = useState([]); // Array to support multiple replies
     const [replyTexts, setReplyTexts] = useState({}); // Object to store reply text for each answer
+    const [replyAnonymous, setReplyAnonymous] = useState({}); // Anonymous state for each reply
 
     // Find question by ID
     const question = questions.find(q => q.id === parseInt(id));
@@ -89,8 +91,12 @@ const QuestionDetailPage = () => {
     const handleSubmitComment = (e) => {
         e.preventDefault();
         if (commentText.trim()) {
-            console.log('Cevap gönderildi:', commentText);
+            console.log('Cevap gönderildi:', {
+                text: commentText,
+                anonymous: isCommentAnonymous
+            });
             setCommentText('');
+            setIsCommentAnonymous(false);
         }
     };
 
@@ -98,8 +104,13 @@ const QuestionDetailPage = () => {
         e.preventDefault();
         const replyText = replyTexts[answerId];
         if (replyText && replyText.trim()) {
-            console.log('Yanıt gönderildi:', replyText, 'Cevap ID:', answerId);
+            console.log('Yanıt gönderildi:', {
+                text: replyText,
+                answerId: answerId,
+                anonymous: replyAnonymous[answerId] || false
+            });
             setReplyTexts(prev => ({ ...prev, [answerId]: '' }));
+            setReplyAnonymous(prev => ({ ...prev, [answerId]: false }));
             setReplyingTo(prev => prev.filter(id => id !== answerId));
         }
     };
@@ -213,7 +224,18 @@ const QuestionDetailPage = () => {
                             rows={4}
                             className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-4"
                         />
-                        <div className="flex justify-end">
+                        <div className="flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={() => setIsCommentAnonymous(!isCommentAnonymous)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isCommentAnonymous
+                                        ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                                        : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
+                                    }`}
+                            >
+                                <FaUserSecret className="text-lg" />
+                                <span className="text-sm">{isCommentAnonymous ? 'Anonim cevap' : 'Anonim olarak cevapla'}</span>
+                            </button>
                             <button
                                 type="submit"
                                 disabled={!commentText.trim()}
@@ -315,6 +337,19 @@ const QuestionDetailPage = () => {
                                                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-3"
                                                         autoFocus
                                                     />
+                                                    <div className="mb-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setReplyAnonymous(prev => ({ ...prev, [answer.id]: !prev[answer.id] }))}
+                                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-sm ${replyAnonymous[answer.id]
+                                                                    ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                                                                    : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
+                                                                }`}
+                                                        >
+                                                            <FaUserSecret />
+                                                            <span className="text-xs">{replyAnonymous[answer.id] ? 'Anonim yanıt' : 'Anonim olarak yanıtla'}</span>
+                                                        </button>
+                                                    </div>
                                                     <div className="flex gap-2 justify-end">
                                                         <button
                                                             type="button"
