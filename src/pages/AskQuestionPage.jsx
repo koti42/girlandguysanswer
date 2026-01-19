@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTimes, FaImage, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
+import RichTextEditor from '../components/RichTextEditor';
 import { categories } from '../data/mockData';
 
 const AskQuestionPage = () => {
@@ -247,16 +248,12 @@ const AskQuestionPage = () => {
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 Açıklama <span className="text-gray-400 font-normal">(Opsiyonel)</span>
                             </label>
-                            <textarea
-                                name="description"
+                            <RichTextEditor
                                 value={formData.description}
-                                onChange={handleInputChange}
+                                onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
                                 placeholder="Sorunuzla ilgili daha fazla detay paylaşabilirsiniz..."
-                                rows={6}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none"
-                                maxLength={1000}
                             />
-                            <span className="text-gray-400 text-sm block mt-2">{formData.description.length}/1000</span>
+                            <span className="text-gray-400 text-sm block mt-2">Metin editörü ile zengin içerik oluşturabilirsiniz</span>
                         </div>
 
                         {/* Image Upload */}

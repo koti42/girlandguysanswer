@@ -8,6 +8,7 @@ import SignupPage from './pages/SignupPage';
 import FollowersPage from './pages/FollowersPage';
 import FollowingPage from './pages/FollowingPage';
 import QuestionDetailPage from './pages/QuestionDetailPage';
+import MessagesPage from './pages/MessagesPage';
 
 function App() {
   return (
@@ -21,12 +22,15 @@ function App() {
         <Route path="/ask" element={<AskQuestionPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/messages/:username" element={<MessagesPage />} />
       </Routes>
     </Router>
   );
 }
 
 export default App;
+
 
 
 

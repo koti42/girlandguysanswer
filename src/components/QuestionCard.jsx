@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaHeart, FaComment, FaEye, FaEllipsisV, FaMars, FaVenus } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus } from 'react-icons/fa';
+import QuestionActionsMenu from './QuestionActionsMenu';
 
 const QuestionCard = ({ question }) => {
     return (
@@ -29,9 +30,7 @@ const QuestionCard = ({ question }) => {
                         <span className="text-xs text-gray-500">{question.category}</span>
                     </div>
                 </div>
-                <button className="text-gray-400 hover:text-gray-600">
-                    <FaEllipsisV />
-                </button>
+                <QuestionActionsMenu />
             </div>
 
             {/* Content */}
