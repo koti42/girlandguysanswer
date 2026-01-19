@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaSearch, FaBell, FaHeart, FaMoon, FaSun } from 'react-icons/fa';
+import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import NotificationDropdown from './NotificationDropdown';
 import { notifications } from '../data/mockData';
@@ -8,6 +8,8 @@ import { notifications } from '../data/mockData';
 const Header = ({ onSearch }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const { isDark, toggleTheme } = useTheme();
 
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -20,91 +22,233 @@ const Header = ({ onSearch }) => {
         }
     };
 
-    return (
-        <header className="sticky top-0 z-50 bg-background/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm py-3 px-4 md:px-8">
-            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-                {/* Logo */}
-                <Link to="/" className="flex items-center gap-1 shrink-0 hover:opacity-80 transition-opacity">
-                    <span className="font-script text-4xl text-coral font-bold leading-none select-none">
-                        Kızilinkalarsoruyor
-                    </span>
-                    <div className="relative">
-                        <FaHeart className="text-gold text-2xl" />
-                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-xs">?</span>
-                    </div>
-                </Link>
+    const closeMobileMenu = () => {
+        setIsMobileMenuOpen(false);
+    };
 
-                {/* Search Bar */}
-                <div className="hidden md:flex flex-1 max-w-xl relative">
-                    <input
-                        type="text"
-                        placeholder="Binlerce soru arasında ara..."
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        className="w-full bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm"
-                    />
-                    <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-coral transition-colors">
-                        <FaSearch />
+    return (
+        <>
+            <header className="sticky top-0 z-50 bg-background/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm py-3 px-4 md:px-8">
+                <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4">
+                    {/* Mobile Menu Button */}
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                        <FaBars className="text-xl text-gray-700 dark:text-gray-300" />
                     </button>
+
+                    {/* Logo */}
+                    <Link to="/" className="flex items-center gap-1 shrink-0 hover:opacity-80 transition-opacity">
+                        <span className="font-script text-2xl md:text-4xl text-coral font-bold leading-none select-none">
+                            Kızilinkalarsoruyor
+                        </span>
+                        <div className="relative hidden sm:block">
+                            <FaHeart className="text-gold text-xl md:text-2xl" />
+                            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-xs">?</span>
+                        </div>
+                    </Link>
+
+                    {/* Desktop Search Bar */}
+                    <div className="hidden md:flex flex-1 max-w-xl relative">
+                        <input
+                            type="text"
+                            placeholder="Binlerce soru arasında ara..."
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                            className="w-full bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm"
+                        />
+                        <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-coral transition-colors">
+                            <FaSearch />
+                        </button>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                        {/* Mobile Search Button */}
+                        <button
+                            onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+                            className="md:hidden p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                        >
+                            <FaSearch className="text-lg" />
+                        </button>
+
+                        {/* Dark Mode Toggle */}
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                            title={isDark ? 'Açık Mod' : 'Koyu Mod'}
+                        >
+                            {isDark ? <FaSun className="text-lg" /> : <FaMoon className="text-lg" />}
+                        </button>
+
+                        {/* Ask Question Button */}
+                        <Link to="/ask">
+                            <button className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-3 md:px-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-sm whitespace-nowrap">
+                                <span className="hidden sm:inline">Soru Sor</span>
+                                <span className="sm:hidden">Sor</span>
+                            </button>
+                        </Link>
+
+                        {/* Desktop Auth Buttons */}
+                        <Link to="/login" className="hidden lg:block">
+                            <button className="text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm">
+                                Giriş
+                            </button>
+                        </Link>
+                        <Link to="/signup" className="hidden lg:block">
+                            <button className="bg-gray-800 dark:bg-gray-700 text-white font-semibold py-2 px-4 rounded-2xl hover:bg-gray-700 dark:hover:bg-gray-600 transition-all text-sm">
+                                Kayıt Ol
+                            </button>
+                        </Link>
+
+                        {/* Notifications */}
+                        <div className="relative hidden sm:block">
+                            <button
+                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                className="relative p-2 text-gray-500 hover:text-coral bg-white dark:bg-gray-800 rounded-full shadow-soft hover:shadow-soft-hover transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+                            >
+                                <FaBell className="text-xl" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 text-white text-xs flex items-center justify-center font-bold">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                            <NotificationDropdown
+                                isOpen={isNotificationsOpen}
+                                onClose={() => setIsNotificationsOpen(false)}
+                            />
+                        </div>
+
+                        {/* Profile Picture */}
+                        <Link to="/profile/Zeynep_Yildiz" className="hidden sm:block">
+                            <img
+                                src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
+                                alt="User"
+                                className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-md cursor-pointer hover:border-coral transition-colors"
+                            />
+                        </Link>
+                    </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
-                    {/* Dark Mode Toggle */}
-                    <button
-                        onClick={toggleTheme}
-                        className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
-                        title={isDark ? 'Açık Mod' : 'Koyu Mod'}
-                    >
-                        {isDark ? <FaSun className="text-lg" /> : <FaMoon className="text-lg" />}
-                    </button>
-
-                    <Link to="/ask">
-                        <button className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-4 md:px-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-sm md:text-base">
-                            Soru Sor
-                        </button>
-                    </Link>
-
-                    {/* Auth Buttons */}
-                    <Link to="/login" className="hidden lg:block">
-                        <button className="text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm">
-                            Giriş
-                        </button>
-                    </Link>
-                    <Link to="/signup" className="hidden lg:block">
-                        <button className="bg-gray-800 text-white font-semibold py-2 px-4 rounded-2xl hover:bg-gray-700 transition-all text-sm">
-                            Kayıt Ol
-                        </button>
-                    </Link>
-
-                    <div className="relative">
-                        <button
-                            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                            className="relative p-2 text-gray-500 hover:text-coral bg-white rounded-full shadow-soft hover:shadow-soft-hover transition-all"
-                        >
-                            <FaBell className="text-xl" />
-                            {unreadCount > 0 && (
-                                <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full border-2 border-white text-white text-xs flex items-center justify-center font-bold">
-                                    {unreadCount}
-                                </span>
-                            )}
-                        </button>
-                        <NotificationDropdown
-                            isOpen={isNotificationsOpen}
-                            onClose={() => setIsNotificationsOpen(false)}
+                {/* Mobile Search Bar (Expandable) */}
+                {isMobileSearchOpen && (
+                    <div className="md:hidden mt-3 relative">
+                        <input
+                            type="text"
+                            placeholder="Ara..."
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                            className="w-full bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm"
+                            autoFocus
                         />
+                        <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-coral transition-colors">
+                            <FaSearch />
+                        </button>
+                    </div>
+                )}
+            </header>
+
+            {/* Mobile Menu Overlay */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={closeMobileMenu}
+                />
+            )}
+
+            {/* Mobile Menu Sidebar */}
+            <div
+                className={`fixed top-0 left-0 h-full w-80 bg-white dark:bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 md:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                    }`}
+            >
+                <div className="flex flex-col h-full">
+                    {/* Mobile Menu Header */}
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                        <Link to="/profile/Zeynep_Yildiz" onClick={closeMobileMenu} className="flex items-center gap-3">
+                            <img
+                                src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
+                                alt="User"
+                                className="w-12 h-12 rounded-full border-2 border-coral"
+                            />
+                            <div>
+                                <p className="font-semibold text-gray-800 dark:text-white">Zeynep Yıldız</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">@Zeynep_Yildiz</p>
+                            </div>
+                        </Link>
+                        <button
+                            onClick={closeMobileMenu}
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        >
+                            <FaTimes className="text-xl text-gray-700 dark:text-gray-300" />
+                        </button>
                     </div>
 
-                    <Link to="/profile/Zeynep_Yildiz">
-                        <img
-                            src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
-                            alt="User"
-                            className="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer hover:border-coral transition-colors"
-                        />
-                    </Link>
+                    {/* Mobile Menu Links */}
+                    <nav className="flex-1 overflow-y-auto p-4">
+                        <Link
+                            to="/"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                        >
+                            <FaHome className="text-xl text-coral" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Ana Sayfa</span>
+                        </Link>
+                        <Link
+                            to="/ask"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                        >
+                            <FaQuestionCircle className="text-xl text-coral" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Soru Sor</span>
+                        </Link>
+                        <Link
+                            to="/messages"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                        >
+                            <FaEnvelope className="text-xl text-coral" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Mesajlar</span>
+                        </Link>
+                        <Link
+                            to="/profile/Zeynep_Yildiz"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                        >
+                            <FaUser className="text-xl text-coral" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Profilim</span>
+                        </Link>
+
+                        <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+
+                        <Link
+                            to="/login"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] lg:hidden"
+                        >
+                            <FaSignInAlt className="text-xl text-gray-600 dark:text-gray-400" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Giriş Yap</span>
+                        </Link>
+                        <Link
+                            to="/signup"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-h-[50px] lg:hidden"
+                        >
+                            <FaUserPlus className="text-xl text-gray-600 dark:text-gray-400" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Kayıt Ol</span>
+                        </Link>
+                    </nav>
+
+                    {/* Mobile Menu Footer */}
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                            © 2026 Kızilinkalarsoruyor
+                        </p>
+                    </div>
                 </div>
             </div>
-        </header>
+        </>
     );
 };
 
