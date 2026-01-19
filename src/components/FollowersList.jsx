@@ -6,7 +6,7 @@ const FollowersList = ({ followers, type = 'followers' }) => {
     return (
         <div className="space-y-4">
             {followers.map(user => (
-                <div key={user.id} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
+                <div key={user.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-start gap-4">
                         <Link to={`/profile/${user.username}`}>
                             <img

@@ -8,7 +8,7 @@ const ProfileBadges = ({ badges }) => {
                 return (
                     <div
                         key={badge.id}
-                        className="flex items-center gap-1 bg-gray-50 px-3 py-1 rounded-full border border-gray-200"
+                        className="flex items-center gap-1 bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded-full border border-gray-200"
                         title={badge.name}
                     >
                         <Icon className={`${badge.color} text-sm`} />

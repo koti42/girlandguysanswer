@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaSearch, FaBell, FaHeart } from 'react-icons/fa';
+import { FaSearch, FaBell, FaHeart, FaMoon, FaSun } from 'react-icons/fa';
+import { useTheme } from '../context/ThemeContext';
 import NotificationDropdown from './NotificationDropdown';
 import { notifications } from '../data/mockData';
 
 const Header = ({ onSearch }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const { isDark, toggleTheme } = useTheme();
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -19,7 +21,7 @@ const Header = ({ onSearch }) => {
     };
 
     return (
-        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-gray-200 shadow-sm py-3 px-4 md:px-8">
+        <header className="sticky top-0 z-50 bg-background/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm py-3 px-4 md:px-8">
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-1 shrink-0 hover:opacity-80 transition-opacity">
@@ -39,7 +41,7 @@ const Header = ({ onSearch }) => {
                         placeholder="Binlerce soru arasında ara..."
                         value={searchQuery}
                         onChange={handleSearchChange}
-                        className="w-full bg-white border border-gray-300 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm"
+                        className="w-full bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm"
                     />
                     <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-coral transition-colors">
                         <FaSearch />
@@ -48,6 +50,15 @@ const Header = ({ onSearch }) => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0">
+                    {/* Dark Mode Toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                        title={isDark ? 'Açık Mod' : 'Koyu Mod'}
+                    >
+                        {isDark ? <FaSun className="text-lg" /> : <FaMoon className="text-lg" />}
+                    </button>
+
                     <Link to="/ask">
                         <button className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-4 md:px-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-sm md:text-base">
                             Soru Sor
@@ -56,7 +67,7 @@ const Header = ({ onSearch }) => {
 
                     {/* Auth Buttons */}
                     <Link to="/login" className="hidden lg:block">
-                        <button className="text-gray-700 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 transition-all text-sm">
+                        <button className="text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm">
                             Giriş
                         </button>
                     </Link>

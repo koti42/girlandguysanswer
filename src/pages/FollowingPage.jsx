@@ -50,7 +50,7 @@ const FollowingPage = () => {
         <MainLayout sidebar={SidebarContent}>
             <div className="flex flex-col gap-6">
                 {/* Header */}
-                <div className="bg-white rounded-2xl shadow-soft p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">Takip Edilenler</h1>
@@ -65,7 +65,7 @@ const FollowingPage = () => {
                 {/* Following List */}
                 <div className="flex flex-col gap-4">
                     {following.map(user => (
-                        <div key={user.id} className="bg-white rounded-2xl shadow-soft p-6 hover:shadow-soft-hover transition-all">
+                        <div key={user.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 hover:shadow-soft-hover transition-all">
                             <div className="flex items-start gap-4">
                                 <Link to={`/profile/${user.username}`}>
                                     <img

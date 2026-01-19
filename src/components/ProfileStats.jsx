@@ -9,7 +9,7 @@ const ProfileStats = ({ stats }) => {
     ];
 
     return (
-        <div className="bg-white rounded-2xl shadow-soft p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
             <div className="grid grid-cols-3 gap-6">
                 {statItems.map((item, idx) => {
                     const Icon = item.icon;

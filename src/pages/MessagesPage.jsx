@@ -82,7 +82,7 @@ const MessagesPage = () => {
 
     return (
         <MainLayout>
-            <div className="bg-white rounded-2xl shadow-soft overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
                 <div className="flex h-full">
                     {/* Conversations List */}
                     <div className="w-full md:w-1/3 border-r border-gray-200 flex flex-col">

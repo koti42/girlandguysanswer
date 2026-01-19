@@ -85,7 +85,7 @@ const SignupPage = () => {
                 </div>
 
                 {/* Signup Card */}
-                <div className="bg-white rounded-2xl shadow-soft p-8">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">Kayıt Ol</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">

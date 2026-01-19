@@ -55,7 +55,7 @@ function HomePage() {
                                     <QuestionCard key={q.id} question={q} />
                                 ))
                             ) : (
-                                <div className="bg-white rounded-2xl p-12 text-center">
+                                <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center">
                                     <p className="text-gray-400 text-lg">Arama sonucu bulunamadı</p>
                                     <p className="text-gray-500 text-sm mt-2">Farklı kelimeler deneyin</p>
                                 </div>

@@ -19,7 +19,7 @@ const QuestionDetailPage = () => {
     if (!question) {
         return (
             <MainLayout>
-                <div className="bg-white rounded-2xl p-12 text-center">
+                <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl p-12 text-center">
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">Soru Bulunamadı</h2>
                     <p className="text-gray-600 mb-6">Aradığınız soru mevcut değil veya silinmiş olabilir.</p>
                     <Link to="/" className="text-coral hover:underline font-semibold">Ana Sayfaya Dön</Link>
@@ -141,14 +141,14 @@ const QuestionDetailPage = () => {
         <MainLayout sidebar={SidebarContent}>
             <div className="flex flex-col gap-6">
                 {/* Question Card */}
-                <div className="bg-white rounded-2xl p-6 shadow-soft">
+                <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                     {/* User Header */}
                     <div className="flex items-center gap-3 mb-4">
                         <Link to={`/profile/${question.user.name}`}>
                             <img
                                 src={question.user.avatar}
                                 alt={question.user.name}
-                                className="w-12 h-12 rounded-full border border-gray-100 hover:border-coral transition-colors"
+                                className="w-12 h-12 rounded-full border border-gray-100 dark:border-gray-700 hover:border-coral transition-colors"
                             />
                         </Link>
                         <div className="flex-1">
@@ -207,14 +207,14 @@ const QuestionDetailPage = () => {
                                 <span>{question.stats.views}</span>
                             </div>
                         </div>
-                        <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors">
+                        <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 transition-colors">
                             <FaShare /> Paylaş
                         </button>
                     </div>
                 </div>
 
                 {/* Answer Form - Right after question */}
-                <div className="bg-white rounded-2xl p-6 shadow-soft">
+                <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                     <h3 className="text-lg font-bold text-gray-800 mb-4">Cevap Yaz</h3>
                     <form onSubmit={handleSubmitComment}>
                         <textarea
@@ -248,20 +248,20 @@ const QuestionDetailPage = () => {
                 </div>
 
                 {/* Answers Section */}
-                <div className="bg-white rounded-2xl p-6 shadow-soft">
+                <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                     <h2 className="text-xl font-bold text-gray-800 mb-4">
                         {answers.length} Cevap
                     </h2>
 
                     <div className="space-y-6">
                         {answers.map(answer => (
-                            <div key={answer.id} className="border-b border-gray-100 last:border-0 pb-6 last:pb-0">
+                            <div key={answer.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 pb-6 last:pb-0">
                                 <div className="flex gap-4">
                                     <Link to={`/profile/${answer.user.name}`}>
                                         <img
                                             src={answer.user.avatar}
                                             alt={answer.user.name}
-                                            className="w-10 h-10 rounded-full border border-gray-100 hover:border-coral transition-colors"
+                                            className="w-10 h-10 rounded-full border border-gray-100 dark:border-gray-700 hover:border-coral transition-colors"
                                         />
                                     </Link>
                                     <div className="flex-1">
@@ -276,7 +276,7 @@ const QuestionDetailPage = () => {
                                             )}
                                             <span className="text-gray-400 text-sm">• {answer.createdAt}</span>
                                         </div>
-                                        <p className="text-gray-700 leading-relaxed mb-3">
+                                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
                                             {answer.content}
                                         </p>
                                         <div className="flex items-center gap-4">
@@ -301,7 +301,7 @@ const QuestionDetailPage = () => {
                                                             <img
                                                                 src={reply.user.avatar}
                                                                 alt={reply.user.name}
-                                                                className="w-8 h-8 rounded-full border border-gray-100 hover:border-coral transition-colors"
+                                                                className="w-8 h-8 rounded-full border border-gray-100 dark:border-gray-700 hover:border-coral transition-colors"
                                                             />
                                                         </Link>
                                                         <div className="flex-1">
@@ -316,7 +316,7 @@ const QuestionDetailPage = () => {
                                                                 )}
                                                                 <span className="text-gray-400 text-xs">• {reply.createdAt}</span>
                                                             </div>
-                                                            <p className="text-gray-700 text-sm leading-relaxed">
+                                                            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                                                                 {reply.content}
                                                             </p>
                                                         </div>

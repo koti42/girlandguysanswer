@@ -81,7 +81,7 @@ const ProfilePage = () => {
         <MainLayout sidebar={<><TrendsWidget /><TopUsersWidget /></>}>
             <div className="flex flex-col gap-6">
                 {/* Profile Header */}
-                <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden">
                     <ProfileCover
                         coverPhoto={profileData.coverPhoto}
                         onCoverUpload={handleCoverUpload}
@@ -103,58 +103,58 @@ const ProfilePage = () => {
                                             type="text"
                                             value={editForm.name}
                                             onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                                            className="w-full px-3 py-2 rounded-lg border focus:border-coral focus:ring-1 focus:ring-coral/20"
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-coral focus:ring-1 focus:ring-coral/20"
                                         />
                                         <textarea
                                             value={editForm.bio}
                                             onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
                                             rows={2}
-                                            className="w-full px-3 py-2 rounded-lg border focus:border-coral focus:ring-1 focus:ring-coral/20"
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-coral focus:ring-1 focus:ring-coral/20"
                                         />
                                         <div className="flex gap-2">
                                             <button onClick={handleSave} className="bg-coral text-white px-4 py-2 rounded-lg">Kaydet</button>
-                                            <button onClick={() => setIsEditing(false)} className="border px-4 py-2 rounded-lg">İptal</button>
+                                            <button onClick={() => setIsEditing(false)} className="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-lg dark:text-gray-300">İptal</button>
                                         </div>
                                     </div>
                                 ) : (
                                     <>
-                                        <h1 className="text-2xl font-bold text-gray-800">{profileData.name}</h1>
-                                        <p className="text-gray-500">@{profileData.username}</p>
+                                        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{profileData.name}</h1>
+                                        <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>
                                         <div className="mt-3">
                                             <ProfileBadges badges={profileData.badges} />
                                         </div>
                                         <p className="text-gray-700 mt-3">{profileData.bio}</p>
-                                        <div className="flex gap-4 mt-2 text-sm text-gray-500">
+                                        <div className="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
                                             <div className="flex items-center gap-1"><FaMapMarkerAlt />{profileData.location}</div>
                                             <div className="flex items-center gap-1"><FaCalendarAlt />Katıldı {profileData.joinedDate}</div>
                                         </div>
                                         <div className="flex gap-2 mt-4">
-                                            <button onClick={() => setIsEditing(true)} className="bg-gray-100 px-4 py-2 rounded-xl flex items-center gap-2"><FaEdit />Düzenle</button>
+                                            <button onClick={() => setIsEditing(true)} className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-xl flex items-center gap-2"><FaEdit />Düzenle</button>
                                             <Link to={`/messages/${username}`}><button className="border-2 border-coral text-coral px-4 py-2 rounded-xl">Mesaj</button></Link>
                                             <button className="bg-coral text-white px-4 py-2 rounded-xl">Takip Et</button>
                                         </div>
 
                                         {/* Stats Tabs - Moved below buttons */}
                                         <div className="grid grid-cols-5 gap-2 mt-6">
-                                            <button onClick={() => setActiveTab('questions')} className={`text-center hover:bg-gray-50 rounded-lg p-2 transition-colors ${activeTab === 'questions' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                            <button onClick={() => setActiveTab('questions')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'questions' ? 'bg-coral/10 border border-coral' : ''}`}>
                                                 <div className="font-bold text-lg">{profileData.stats.questions}</div>
-                                                <div className="text-xs text-gray-500">Sorular</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">Sorular</div>
                                             </button>
-                                            <button onClick={() => setActiveTab('answers')} className={`text-center hover:bg-gray-50 rounded-lg p-2 transition-colors ${activeTab === 'answers' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                            <button onClick={() => setActiveTab('answers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'answers' ? 'bg-coral/10 border border-coral' : ''}`}>
                                                 <div className="font-bold text-lg">{profileData.stats.answers}</div>
-                                                <div className="text-xs text-gray-500">Cevaplar</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">Cevaplar</div>
                                             </button>
-                                            <button onClick={() => setActiveTab('followers')} className={`text-center hover:bg-gray-50 rounded-lg p-2 transition-colors ${activeTab === 'followers' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                            <button onClick={() => setActiveTab('followers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'followers' ? 'bg-coral/10 border border-coral' : ''}`}>
                                                 <div className="font-bold text-lg">{profileData.stats.followers}</div>
-                                                <div className="text-xs text-gray-500">Takipçi</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">Takipçi</div>
                                             </button>
-                                            <button onClick={() => setActiveTab('following')} className={`text-center hover:bg-gray-50 rounded-lg p-2 transition-colors ${activeTab === 'following' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                            <button onClick={() => setActiveTab('following')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'following' ? 'bg-coral/10 border border-coral' : ''}`}>
                                                 <div className="font-bold text-lg">{profileData.stats.following}</div>
-                                                <div className="text-xs text-gray-500">Takip</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">Takip</div>
                                             </button>
-                                            <button onClick={() => setActiveTab('liked')} className={`text-center hover:bg-gray-50 rounded-lg p-2 transition-colors ${activeTab === 'liked' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                            <button onClick={() => setActiveTab('liked')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'liked' ? 'bg-coral/10 border border-coral' : ''}`}>
                                                 <div className="font-bold text-lg text-coral">{profileData.stats.likes}</div>
-                                                <div className="text-xs text-gray-500">Beğeni</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">Beğeni</div>
                                             </button>
                                         </div>
                                     </>
@@ -173,9 +173,9 @@ const ProfilePage = () => {
 
                             {/* About Section - Only in questions tab */}
                             {profileData.about && (
-                                <div className="bg-white rounded-2xl shadow-soft p-6">
+                                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
                                     <h2 className="text-lg font-bold mb-2">Hakkımda</h2>
-                                    <p className="text-gray-700">{profileData.about}</p>
+                                    <p className="text-gray-700 dark:text-gray-300">{profileData.about}</p>
                                 </div>
                             )}
 
@@ -184,12 +184,12 @@ const ProfilePage = () => {
                         </>
                     )}
                     {activeTab === 'answers' && (
-                        <div className="bg-white rounded-2xl p-12 text-center text-gray-400">Cevaplar yakında</div>
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Cevaplar yakında</div>
                     )}
                     {activeTab === 'followers' && <FollowersList followers={mockFollowers} type="followers" />}
                     {activeTab === 'following' && <FollowersList followers={mockFollowing} type="following" />}
                     {activeTab === 'liked' && (
-                        <div className="bg-white rounded-2xl p-12 text-center text-gray-400">Beğenilenler yakında</div>
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Beğenilenler yakında</div>
                     )}
                 </div>
             </div>

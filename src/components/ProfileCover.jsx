@@ -60,7 +60,7 @@ const ProfileCover = ({ coverPhoto, onCoverUpload, onCoverRemove }) => {
                         onClick={handleCancel}
                     ></div>
                     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
                             <div className="flex justify-end p-4">
                                 <button
                                     onClick={handleCancel}

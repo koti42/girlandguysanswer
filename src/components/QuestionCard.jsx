@@ -22,7 +22,7 @@ const QuestionCard = ({ question }) => {
     };
 
     return (
-        <div className="bg-white rounded-2xl p-6 shadow-soft hover:shadow-soft-hover transition-all duration-300 border border-gray-50 flex flex-col gap-4">
+        <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl p-6 shadow-soft hover:shadow-soft-hover transition-all duration-300 border border-gray-50 dark:border-gray-700 flex flex-col gap-4">
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
@@ -30,12 +30,12 @@ const QuestionCard = ({ question }) => {
                         <img
                             src={question.user.avatar}
                             alt={question.user.name}
-                            className="w-12 h-12 rounded-full border border-gray-100 hover:border-coral transition-colors cursor-pointer"
+                            className="w-12 h-12 rounded-full border border-gray-100 dark:border-gray-600 hover:border-coral transition-colors cursor-pointer"
                         />
                     </Link>
                     <div>
                         <div className="flex items-center gap-1">
-                            <Link to={`/profile/${question.user.name}`} className="font-bold text-gray-800 hover:underline">
+                            <Link to={`/profile/${question.user.name}`} className="font-bold text-gray-800 dark:text-gray-100 hover:underline">
                                 {question.user.name}
                             </Link>
                             {question.user.gender === 'female' ? (
@@ -44,7 +44,7 @@ const QuestionCard = ({ question }) => {
                                 <FaMars className="text-blue-500" />
                             )}
                         </div>
-                        <span className="text-xs text-gray-500">{question.category}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{question.category}</span>
                     </div>
                 </div>
                 <QuestionActionsMenu />
@@ -53,14 +53,14 @@ const QuestionCard = ({ question }) => {
             {/* Content */}
             <div>
                 <Link to={`/question/${question.id}`}>
-                    <h3 className="text-lg font-bold text-gray-800 mb-3 leading-snug hover:text-coral transition-colors cursor-pointer">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 leading-snug hover:text-coral transition-colors cursor-pointer">
                         {question.title}
                     </h3>
                 </Link>
 
                 <div className="flex flex-wrap gap-2 mb-4">
                     {question.tags.map((tag, idx) => (
-                        <span key={idx} className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium hover:bg-gray-200 transition-colors">
+                        <span key={idx} className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                             {tag}
                         </span>
                     ))}
@@ -76,8 +76,8 @@ const QuestionCard = ({ question }) => {
             </div>
 
             {/* Footer / Stats */}
-            <div className="pt-4 border-t border-gray-50">
-                <div className="flex items-center justify-between text-gray-500 text-sm mb-3">
+            <div className="pt-4 border-t border-gray-50 dark:border-gray-700">
+                <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 text-sm mb-3">
                     <div className="flex gap-6">
                         <button className="flex items-center gap-2 hover:text-coral transition-colors">
                             <FaHeart /> <span>{question.stats.likes}</span>
@@ -103,14 +103,14 @@ const QuestionCard = ({ question }) => {
 
             {/* Quick Reply Box */}
             {showReplyBox && (
-                <form onSubmit={handleSubmitReply} className="mt-4 pt-4 border-t border-gray-100">
+                <form onSubmit={handleSubmitReply} className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex gap-2">
                         <input
                             type="text"
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
                             placeholder="Hızlı cevap yaz..."
-                            className="flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all text-sm"
+                            className="flex-1 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all text-sm"
                             autoFocus
                         />
                         <button
@@ -126,8 +126,8 @@ const QuestionCard = ({ question }) => {
                             type="button"
                             onClick={() => setIsAnonymous(!isAnonymous)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnonymous
-                                    ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
-                                    : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
+                                ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                                : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
                                 }`}
                         >
                             <FaUserSecret className="text-lg" />

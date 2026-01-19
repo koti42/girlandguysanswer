@@ -3,7 +3,7 @@ import Header from '../components/Header';
 
 const MainLayout = ({ children, sidebar, onSearch }) => {
     return (
-        <div className="min-h-screen bg-background font-sans text-text-dark">
+        <div className="min-h-screen bg-background dark:bg-gray-900 font-sans text-text-dark dark:text-gray-100 transition-colors">
             <Header onSearch={onSearch} />
             <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 transition-all duration-300">
                 <div className="flex flex-col lg:flex-row gap-8">
