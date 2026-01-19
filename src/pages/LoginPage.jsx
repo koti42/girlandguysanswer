@@ -51,36 +51,36 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-coral/10 via-background to-gold/10 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-coral/10 via-background to-gold/10 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Logo/Header */}
                 <div className="text-center mb-8">
                     <Link to="/" className="inline-flex items-center gap-2 mb-4">
                         <span className="font-script text-5xl text-coral font-bold">Kızilinkalarsoruyor</span>
                     </Link>
-                    <p className="text-gray-600">Topluluğa hoş geldin!</p>
+                    <p className="text-gray-600 dark:text-gray-400">Topluluğa hoş geldin!</p>
                 </div>
 
                 {/* Login Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-8">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Giriş Yap</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Giriş Yap</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Email */}
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                 E-posta Adresi
                             </label>
                             <div className="relative">
-                                <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
                                     placeholder="ornek@email.com"
-                                    className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.email ? 'border-red-500' : 'border-gray-300'
-                                        } focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
+                                    className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                        } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
                                 />
                             </div>
                             {errors.email && <span className="text-red-500 text-sm mt-1 block">{errors.email}</span>}
@@ -88,19 +88,19 @@ const LoginPage = () => {
 
                         {/* Password */}
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                 Şifre
                             </label>
                             <div className="relative">
-                                <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                                 <input
                                     type="password"
                                     name="password"
                                     value={formData.password}
                                     onChange={handleInputChange}
                                     placeholder="••••••••"
-                                    className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.password ? 'border-red-500' : 'border-gray-300'
-                                        } focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
+                                    className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                        } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
                                 />
                             </div>
                             {errors.password && <span className="text-red-500 text-sm mt-1 block">{errors.password}</span>}
@@ -116,7 +116,7 @@ const LoginPage = () => {
                                     onChange={handleInputChange}
                                     className="w-4 h-4 text-coral border-gray-300 rounded focus:ring-coral"
                                 />
-                                <span className="text-sm text-gray-600">Beni Hatırla</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">Beni Hatırla</span>
                             </label>
                             <Link to="/forgot-password" className="text-sm text-coral hover:underline">
                                 Şifremi Unuttum
@@ -136,16 +136,16 @@ const LoginPage = () => {
                     {/* Divider */}
                     <div className="relative my-6">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-200"></div>
+                            <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-4 bg-white text-gray-500">veya</span>
+                            <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">veya</span>
                         </div>
                     </div>
 
                     {/* Signup Link */}
                     <div className="text-center">
-                        <p className="text-gray-600">
+                        <p className="text-gray-600 dark:text-gray-400">
                             Hesabın yok mu?{' '}
                             <Link to="/signup" className="text-coral font-semibold hover:underline">
                                 Kayıt Ol
