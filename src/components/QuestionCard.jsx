@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret } from 'react-icons/fa';
 import QuestionActionsMenu from './QuestionActionsMenu';
 
 const QuestionCard = ({ question }) => {
@@ -122,19 +122,17 @@ const QuestionCard = ({ question }) => {
                         </button>
                     </div>
                     <div className="flex items-center justify-between mt-3">
-                        <label className="flex items-center gap-3 cursor-pointer group">
-                            {/* Toggle Switch */}
-                            <div className="relative">
-                                <input
-                                    type="checkbox"
-                                    checked={isAnonymous}
-                                    onChange={(e) => setIsAnonymous(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-coral/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-coral"></div>
-                            </div>
-                            <span className="text-sm text-gray-700 font-medium group-hover:text-coral transition-colors">Anonim olarak cevapla</span>
-                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setIsAnonymous(!isAnonymous)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnonymous
+                                    ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                                    : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
+                                }`}
+                        >
+                            <FaUserSecret className="text-lg" />
+                            <span className="text-sm">{isAnonymous ? 'Anonim cevap' : 'Anonim olarak cevapla'}</span>
+                        </button>
                         <p className="text-xs text-gray-500">Detaylı cevap için soruya tıklayın</p>
                     </div>
                 </form>
