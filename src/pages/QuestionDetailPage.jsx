@@ -8,8 +8,8 @@ import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components
 const QuestionDetailPage = () => {
     const { id } = useParams();
     const [commentText, setCommentText] = useState('');
-    const [replyingTo, setReplyingTo] = useState(null);
-    const [replyText, setReplyText] = useState('');
+    const [replyingTo, setReplyingTo] = useState([]); // Array to support multiple replies
+    const [replyTexts, setReplyTexts] = useState({}); // Object to store reply text for each answer
 
     // Find question by ID
     const question = questions.find(q => q.id === parseInt(id));
@@ -26,7 +26,7 @@ const QuestionDetailPage = () => {
         );
     }
 
-    // Mock answers data
+    // Mock answers data with replies
     const answers = [
         {
             id: 1,
@@ -37,7 +37,19 @@ const QuestionDetailPage = () => {
             },
             content: 'Bence pastel tonlar bu sezon çok moda! Özellikle pudra pembesi ve lavanta renkleri düğünlerde çok şık duruyor. Ayrıca uzun tül etekli modeller çok popüler.',
             likes: 24,
-            createdAt: '2 saat önce'
+            createdAt: '2 saat önce',
+            replies: [
+                {
+                    id: 101,
+                    user: {
+                        name: 'Zeynep_Yildiz',
+                        avatar: 'https://i.pravatar.cc/150?u=r1',
+                        gender: 'female'
+                    },
+                    content: 'Çok teşekkürler! Pastel tonları deneyeceğim kesinlikle 💕',
+                    createdAt: '1 saat önce'
+                }
+            ]
         },
         {
             id: 2,
@@ -48,7 +60,29 @@ const QuestionDetailPage = () => {
             },
             content: 'Kesinlikle midi boydaki elbiseler çok trend! Şifon kumaşlar da hem şık hem rahat. Ben geçen hafta bir düğüne mint yeşili bir elbise ile gittim, herkes beğendi 😊',
             likes: 18,
-            createdAt: '3 saat önce'
+            createdAt: '3 saat önce',
+            replies: [
+                {
+                    id: 201,
+                    user: {
+                        name: 'Can_Yilmaz',
+                        avatar: 'https://i.pravatar.cc/150?u=r2',
+                        gender: 'male'
+                    },
+                    content: 'Mint yeşili çok güzel bir seçim! Fotoğraf var mı? 😄',
+                    createdAt: '2 saat önce'
+                },
+                {
+                    id: 202,
+                    user: {
+                        name: 'Ayşe_K',
+                        avatar: 'https://i.pravatar.cc/150?u=a2',
+                        gender: 'female'
+                    },
+                    content: '@Can_Yilmaz Profilimde paylaştım, bakabilirsin!',
+                    createdAt: '1 saat önce'
+                }
+            ]
         }
     ];
 
@@ -62,11 +96,26 @@ const QuestionDetailPage = () => {
 
     const handleSubmitReply = (e, answerId) => {
         e.preventDefault();
-        if (replyText.trim()) {
+        const replyText = replyTexts[answerId];
+        if (replyText && replyText.trim()) {
             console.log('Yanıt gönderildi:', replyText, 'Cevap ID:', answerId);
-            setReplyText('');
-            setReplyingTo(null);
+            setReplyTexts(prev => ({ ...prev, [answerId]: '' }));
+            setReplyingTo(prev => prev.filter(id => id !== answerId));
         }
+    };
+
+    const toggleReply = (answerId) => {
+        setReplyingTo(prev => {
+            if (prev.includes(answerId)) {
+                return prev.filter(id => id !== answerId);
+            } else {
+                return [...prev, answerId];
+            }
+        });
+    };
+
+    const handleReplyTextChange = (answerId, text) => {
+        setReplyTexts(prev => ({ ...prev, [answerId]: text }));
     };
 
     const SidebarContent = (
@@ -153,7 +202,7 @@ const QuestionDetailPage = () => {
                     </div>
                 </div>
 
-                {/* Answer Form - Moved here, right after question */}
+                {/* Answer Form - Right after question */}
                 <div className="bg-white rounded-2xl p-6 shadow-soft">
                     <h3 className="text-lg font-bold text-gray-800 mb-4">Cevap Yaz</h3>
                     <form onSubmit={handleSubmitComment}>
@@ -213,20 +262,54 @@ const QuestionDetailPage = () => {
                                                 <FaHeart /> {answer.likes}
                                             </button>
                                             <button
-                                                onClick={() => setReplyingTo(replyingTo === answer.id ? null : answer.id)}
-                                                className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors text-sm"
+                                                onClick={() => toggleReply(answer.id)}
+                                                className={`flex items-center gap-2 transition-colors text-sm ${replyingTo.includes(answer.id) ? 'text-blue-600' : 'text-gray-500 hover:text-blue-500'
+                                                    }`}
                                             >
-                                                <FaReply /> Cevapla
+                                                <FaReply /> {replyingTo.includes(answer.id) ? 'İptal' : 'Cevapla'}
                                             </button>
                                         </div>
 
+                                        {/* Existing Replies */}
+                                        {answer.replies && answer.replies.length > 0 && (
+                                            <div className="mt-4 ml-4 space-y-3">
+                                                {answer.replies.map(reply => (
+                                                    <div key={reply.id} className="flex gap-3 pl-4 border-l-2 border-gray-200">
+                                                        <Link to={`/profile/${reply.user.name}`}>
+                                                            <img
+                                                                src={reply.user.avatar}
+                                                                alt={reply.user.name}
+                                                                className="w-8 h-8 rounded-full border border-gray-100 hover:border-coral transition-colors"
+                                                            />
+                                                        </Link>
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <Link to={`/profile/${reply.user.name}`} className="font-semibold text-sm text-gray-800 hover:underline">
+                                                                    {reply.user.name}
+                                                                </Link>
+                                                                {reply.user.gender === 'female' ? (
+                                                                    <FaVenus className="text-pink-500 text-xs" />
+                                                                ) : (
+                                                                    <FaMars className="text-blue-500 text-xs" />
+                                                                )}
+                                                                <span className="text-gray-400 text-xs">• {reply.createdAt}</span>
+                                                            </div>
+                                                            <p className="text-gray-700 text-sm leading-relaxed">
+                                                                {reply.content}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
                                         {/* Reply Form */}
-                                        {replyingTo === answer.id && (
-                                            <div className="mt-4 ml-4 pl-4 border-l-2 border-gray-200">
+                                        {replyingTo.includes(answer.id) && (
+                                            <div className="mt-4 ml-4 pl-4 border-l-2 border-blue-200">
                                                 <form onSubmit={(e) => handleSubmitReply(e, answer.id)}>
                                                     <textarea
-                                                        value={replyText}
-                                                        onChange={(e) => setReplyText(e.target.value)}
+                                                        value={replyTexts[answer.id] || ''}
+                                                        onChange={(e) => handleReplyTextChange(answer.id, e.target.value)}
                                                         placeholder={`${answer.user.name} kullanıcısına yanıt yazın...`}
                                                         rows={3}
                                                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-3"
@@ -235,17 +318,14 @@ const QuestionDetailPage = () => {
                                                     <div className="flex gap-2 justify-end">
                                                         <button
                                                             type="button"
-                                                            onClick={() => {
-                                                                setReplyingTo(null);
-                                                                setReplyText('');
-                                                            }}
+                                                            onClick={() => toggleReply(answer.id)}
                                                             className="py-2 px-4 rounded-xl text-gray-600 hover:bg-gray-100 transition-all text-sm"
                                                         >
                                                             İptal
                                                         </button>
                                                         <button
                                                             type="submit"
-                                                            disabled={!replyText.trim()}
+                                                            disabled={!replyTexts[answer.id] || !replyTexts[answer.id].trim()}
                                                             className="bg-coral text-white font-semibold py-2 px-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
                                                             Yanıtla
