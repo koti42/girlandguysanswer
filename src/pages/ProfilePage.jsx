@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { FaMapMarkerAlt, FaCalendarAlt, FaHeart, FaComment, FaEye } from 'react-icons/fa';
+import { useParams, Link } from 'react-router-dom';
+import { FaMapMarkerAlt, FaCalendarAlt } from 'react-icons/fa';
+import MainLayout from '../layouts/MainLayout';
 import { questions } from '../data/mockData';
 import QuestionCard from '../components/QuestionCard';
+import { TrendsWidget, TopUsersWidget } from '../components/Widgets';
 
 const ProfilePage = () => {
     const { username } = useParams();
     const [activeTab, setActiveTab] = useState('questions');
 
-    // Mock user data - normally would fetch from API
+    // Mock user data
     const user = {
         username: username || 'Zeynep_Yildiz',
         name: 'Zeynep Yıldız',
@@ -25,73 +27,82 @@ const ProfilePage = () => {
         }
     };
 
-    // Filter questions by user
     const userQuestions = questions.filter(q => q.user.name === user.username).slice(0, 5);
 
+    const SidebarContent = (
+        <>
+            <TrendsWidget />
+            <TopUsersWidget />
+        </>
+    );
+
     return (
-        <div className="min-h-screen bg-background pb-12">
-            {/* Header Section */}
-            <div className="bg-gradient-to-r from-coral to-orange-400 h-48"></div>
+        <MainLayout sidebar={SidebarContent}>
+            <div className="flex flex-col gap-6">
+                {/* Profile Header Card */}
+                <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
+                    {/* Cover */}
+                    <div className="bg-gradient-to-r from-coral to-orange-400 h-32"></div>
 
-            <div className="max-w-5xl mx-auto px-4 md:px-6">
-                {/* Profile Card */}
-                <div className="bg-white rounded-2xl shadow-soft p-6 -mt-20 relative z-10">
-                    <div className="flex flex-col md:flex-row gap-6">
-                        {/* Avatar */}
-                        <div className="flex-shrink-0">
-                            <img
-                                src={user.avatar}
-                                alt={user.name}
-                                className="w-32 h-32 rounded-full border-4 border-white shadow-lg mx-auto md:mx-0"
-                            />
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex-1">
-                            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                                <div>
-                                    <h1 className="text-3xl font-bold text-gray-800">{user.name}</h1>
-                                    <p className="text-gray-500">@{user.username}</p>
-                                    <p className="text-gray-700 mt-3 max-w-2xl">{user.bio}</p>
-
-                                    <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-500">
-                                        <div className="flex items-center gap-1">
-                                            <FaMapMarkerAlt />
-                                            <span>{user.location}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <FaCalendarAlt />
-                                            <span>Katıldı {user.joinedDate}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button className="bg-coral text-white font-semibold py-2 px-6 rounded-2xl hover:scale-105 transition-all shadow-md">
-                                    Takip Et
-                                </button>
+                    {/* Profile Info */}
+                    <div className="p-6 -mt-16">
+                        <div className="flex flex-col md:flex-row gap-6">
+                            {/* Avatar */}
+                            <div className="flex-shrink-0">
+                                <img
+                                    src={user.avatar}
+                                    alt={user.name}
+                                    className="w-32 h-32 rounded-full border-4 border-white shadow-lg mx-auto md:mx-0"
+                                />
                             </div>
 
-                            {/* Stats */}
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-6 border-t border-gray-100">
-                                <div className="text-center">
-                                    <div className="font-bold text-2xl text-gray-800">{user.stats.questions}</div>
-                                    <div className="text-sm text-gray-500">Sorular</div>
+                            {/* Info */}
+                            <div className="flex-1">
+                                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                                    <div>
+                                        <h1 className="text-3xl font-bold text-gray-800">{user.name}</h1>
+                                        <p className="text-gray-500">@{user.username}</p>
+                                        <p className="text-gray-700 mt-3 max-w-2xl">{user.bio}</p>
+
+                                        <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-500">
+                                            <div className="flex items-center gap-1">
+                                                <FaMapMarkerAlt />
+                                                <span>{user.location}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <FaCalendarAlt />
+                                                <span>Katıldı {user.joinedDate}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button className="bg-coral text-white font-semibold py-2 px-6 rounded-2xl hover:scale-105 transition-all shadow-md">
+                                        Takip Et
+                                    </button>
                                 </div>
-                                <div className="text-center">
-                                    <div className="font-bold text-2xl text-gray-800">{user.stats.answers}</div>
-                                    <div className="text-sm text-gray-500">Cevaplar</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="font-bold text-2xl text-gray-800">{user.stats.followers}</div>
-                                    <div className="text-sm text-gray-500">Takipçi</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="font-bold text-2xl text-gray-800">{user.stats.following}</div>
-                                    <div className="text-sm text-gray-500">Takip</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="font-bold text-2xl text-coral">{user.stats.likes}</div>
-                                    <div className="text-sm text-gray-500">Beğeni</div>
+
+                                {/* Stats */}
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-6 border-t border-gray-100">
+                                    <div className="text-center">
+                                        <div className="font-bold text-2xl text-gray-800">{user.stats.questions}</div>
+                                        <div className="text-sm text-gray-500">Sorular</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="font-bold text-2xl text-gray-800">{user.stats.answers}</div>
+                                        <div className="text-sm text-gray-500">Cevaplar</div>
+                                    </div>
+                                    <Link to={`/profile/${username}/followers`} className="text-center hover:bg-gray-50 rounded-lg transition-colors cursor-pointer">
+                                        <div className="font-bold text-2xl text-gray-800">{user.stats.followers}</div>
+                                        <div className="text-sm text-gray-500">Takipçi</div>
+                                    </Link>
+                                    <Link to={`/profile/${username}/following`} className="text-center hover:bg-gray-50 rounded-lg transition-colors cursor-pointer">
+                                        <div className="font-bold text-2xl text-gray-800">{user.stats.following}</div>
+                                        <div className="text-sm text-gray-500">Takip</div>
+                                    </Link>
+                                    <div className="text-center">
+                                        <div className="font-bold text-2xl text-coral">{user.stats.likes}</div>
+                                        <div className="text-sm text-gray-500">Beğeni</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -99,7 +110,7 @@ const ProfilePage = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="mt-8 flex gap-6 border-b border-gray-200">
+                <div className="flex gap-6 border-b border-gray-200 bg-white rounded-t-2xl px-6 pt-4">
                     <button
                         onClick={() => setActiveTab('questions')}
                         className={`pb-3 px-2 font-semibold border-b-2 transition-colors ${activeTab === 'questions'
@@ -130,7 +141,7 @@ const ProfilePage = () => {
                 </div>
 
                 {/* Content */}
-                <div className="mt-6 flex flex-col gap-6">
+                <div className="flex flex-col gap-6">
                     {activeTab === 'questions' && (
                         <>
                             {userQuestions.length > 0 ? (
@@ -156,7 +167,7 @@ const ProfilePage = () => {
                     )}
                 </div>
             </div>
-        </div>
+        </MainLayout>
     );
 };
 

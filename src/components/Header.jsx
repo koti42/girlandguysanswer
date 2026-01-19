@@ -47,10 +47,24 @@ const Header = ({ onSearch }) => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-3 shrink-0">
-                    <button className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all hidden sm:block">
-                        Soru Sor
-                    </button>
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link to="/ask">
+                        <button className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-4 md:px-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-sm md:text-base">
+                            Soru Sor
+                        </button>
+                    </Link>
+
+                    {/* Auth Buttons */}
+                    <Link to="/login" className="hidden lg:block">
+                        <button className="text-gray-700 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 transition-all text-sm">
+                            Giriş
+                        </button>
+                    </Link>
+                    <Link to="/signup" className="hidden lg:block">
+                        <button className="bg-gray-800 text-white font-semibold py-2 px-4 rounded-2xl hover:bg-gray-700 transition-all text-sm">
+                            Kayıt Ol
+                        </button>
+                    </Link>
 
                     <div className="relative">
                         <button
