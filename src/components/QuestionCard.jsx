@@ -122,14 +122,18 @@ const QuestionCard = ({ question }) => {
                         </button>
                     </div>
                     <div className="flex items-center justify-between mt-3">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={isAnonymous}
-                                onChange={(e) => setIsAnonymous(e.target.checked)}
-                                className="w-4 h-4 text-coral border-gray-300 rounded focus:ring-coral focus:ring-2"
-                            />
-                            <span className="text-sm text-gray-600">Anonim olarak cevapla</span>
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                            {/* Toggle Switch */}
+                            <div className="relative">
+                                <input
+                                    type="checkbox"
+                                    checked={isAnonymous}
+                                    onChange={(e) => setIsAnonymous(e.target.checked)}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-coral/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-coral"></div>
+                            </div>
+                            <span className="text-sm text-gray-700 font-medium group-hover:text-coral transition-colors">Anonim olarak cevapla</span>
                         </label>
                         <p className="text-xs text-gray-500">Detaylı cevap için soruya tıklayın</p>
                     </div>
