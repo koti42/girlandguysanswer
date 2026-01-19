@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FaPaperPlane, FaArrowLeft, FaImage, FaMicrophone, FaPaperclip, FaSmile, FaTimes, FaPlay, FaPause, FaFileAlt } from 'react-icons/fa';
-import MainLayout from '../layouts/MainLayout';
+import Header from '../components/Header';
 
 const MessagesPage = () => {
     const { username } = useParams();
@@ -158,11 +158,12 @@ const MessagesPage = () => {
     };
 
     return (
-        <MainLayout>
-            {/* Centered container for better layout */}
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-background dark:bg-gray-900">
+            <Header />
+            {/* Centered container with larger max-width for messaging */}
+            <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-6">
                 {/* Full screen container */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden" style={{ height: 'calc(100vh - 120px)' }}>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden" style={{ height: 'calc(100vh - 140px)' }}>
                     <div className="flex h-full">
                         {/* Conversations List */}
                         <div className="w-full md:w-1/3 lg:w-1/4 border-r border-gray-200 dark:border-gray-700 flex flex-col">
@@ -359,7 +360,7 @@ const MessagesPage = () => {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </div>
     );
 };
 
