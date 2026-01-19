@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { FaHeart, FaComment, FaEye, FaEllipsisV, FaMars, FaVenus } from 'react-icons/fa';
 
 const QuestionCard = ({ question }) => {
@@ -7,14 +8,18 @@ const QuestionCard = ({ question }) => {
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                    <img
-                        src={question.user.avatar}
-                        alt={question.user.name}
-                        className="w-12 h-12 rounded-full border border-gray-100"
-                    />
+                    <Link to={`/profile/${question.user.name}`}>
+                        <img
+                            src={question.user.avatar}
+                            alt={question.user.name}
+                            className="w-12 h-12 rounded-full border border-gray-100 hover:border-coral transition-colors cursor-pointer"
+                        />
+                    </Link>
                     <div>
                         <div className="flex items-center gap-1">
-                            <span className="font-bold text-gray-800">{question.user.name}</span>
+                            <Link to={`/profile/${question.user.name}`} className="font-bold text-gray-800 hover:underline">
+                                {question.user.name}
+                            </Link>
                             {question.user.gender === 'female' ? (
                                 <FaVenus className="text-pink-500" />
                             ) : (
@@ -31,9 +36,11 @@ const QuestionCard = ({ question }) => {
 
             {/* Content */}
             <div>
-                <h3 className="text-lg font-bold text-gray-800 mb-3 leading-snug">
-                    {question.title}
-                </h3>
+                <Link to={`/question/${question.id}`}>
+                    <h3 className="text-lg font-bold text-gray-800 mb-3 leading-snug hover:text-coral transition-colors cursor-pointer">
+                        {question.title}
+                    </h3>
+                </Link>
 
                 <div className="flex flex-wrap gap-2 mb-4">
                     {question.tags.map((tag, idx) => (
@@ -44,9 +51,11 @@ const QuestionCard = ({ question }) => {
                 </div>
 
                 {question.image && (
-                    <div className="rounded-xl overflow-hidden mb-4 shadow-sm">
-                        <img src={question.image} alt="Question" className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500" />
-                    </div>
+                    <Link to={`/question/${question.id}`}>
+                        <div className="rounded-xl overflow-hidden mb-4 shadow-sm cursor-pointer">
+                            <img src={question.image} alt="Question" className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500" />
+                        </div>
+                    </Link>
                 )}
             </div>
 
@@ -56,9 +65,9 @@ const QuestionCard = ({ question }) => {
                     <button className="flex items-center gap-2 hover:text-coral transition-colors">
                         <FaHeart /> <span>{question.stats.likes}</span>
                     </button>
-                    <button className="flex items-center gap-2 hover:text-blue-500 transition-colors">
+                    <Link to={`/question/${question.id}`} className="flex items-center gap-2 hover:text-blue-500 transition-colors">
                         <FaComment /> <span>{question.stats.comments}</span>
-                    </button>
+                    </Link>
                 </div>
                 <div className="flex items-center gap-2">
                     <FaEye /> <span>{question.stats.views}</span>

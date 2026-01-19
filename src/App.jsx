@@ -7,12 +7,14 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import FollowersPage from './pages/FollowersPage';
 import FollowingPage from './pages/FollowingPage';
+import QuestionDetailPage from './pages/QuestionDetailPage';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/question/:id" element={<QuestionDetailPage />} />
         <Route path="/profile/:username" element={<ProfilePage />} />
         <Route path="/profile/:username/followers" element={<FollowersPage />} />
         <Route path="/profile/:username/following" element={<FollowingPage />} />
@@ -25,6 +27,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
