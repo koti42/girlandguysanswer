@@ -71,26 +71,34 @@ const QuestionCard = ({ question }) => {
             </div>
 
             {/* Footer / Stats */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-50 text-gray-500 text-sm">
-                <div className="flex gap-6">
-                    <button className="flex items-center gap-2 hover:text-coral transition-colors">
-                        <FaHeart /> <span>{question.stats.likes}</span>
-                    </button>
-                    <button
-                        onClick={() => setShowReplyBox(!showReplyBox)}
-                        className="flex items-center gap-2 hover:text-blue-500 transition-colors"
-                    >
-                        <FaComment /> <span>{question.stats.comments}</span>
-                    </button>
+            <div className="pt-4 border-t border-gray-50">
+                <div className="flex items-center justify-between text-gray-500 text-sm mb-3">
+                    <div className="flex gap-6">
+                        <button className="flex items-center gap-2 hover:text-coral transition-colors">
+                            <FaHeart /> <span>{question.stats.likes}</span>
+                        </button>
+                        <Link to={`/question/${question.id}`} className="flex items-center gap-2 hover:text-blue-500 transition-colors">
+                            <FaComment /> <span>{question.stats.comments}</span>
+                        </Link>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <FaEye /> <span>{question.stats.views}</span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <FaEye /> <span>{question.stats.views}</span>
-                </div>
+
+                {/* Reply Button */}
+                <button
+                    onClick={() => setShowReplyBox(!showReplyBox)}
+                    className="w-full py-2 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                    <FaComment />
+                    {showReplyBox ? 'İptal Et' : 'Cevapla'}
+                </button>
             </div>
 
             {/* Quick Reply Box */}
             {showReplyBox && (
-                <form onSubmit={handleSubmitReply} className="mt-2 pt-4 border-t border-gray-100">
+                <form onSubmit={handleSubmitReply} className="mt-4 pt-4 border-t border-gray-100">
                     <div className="flex gap-2">
                         <input
                             type="text"
