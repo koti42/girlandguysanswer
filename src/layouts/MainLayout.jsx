@@ -1,10 +1,10 @@
 import React from 'react';
 import Header from '../components/Header';
 
-const MainLayout = ({ children, sidebar }) => {
+const MainLayout = ({ children, sidebar, onSearch }) => {
     return (
         <div className="min-h-screen bg-background font-sans text-text-dark">
-            <Header />
+            <Header onSearch={onSearch} />
             <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 transition-all duration-300">
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Main Feed */}
@@ -19,8 +19,46 @@ const MainLayout = ({ children, sidebar }) => {
                 </div>
             </main>
 
-            <footer className="bg-[#1a1a1a] text-gray-400 py-12 mt-12 text-center text-sm">
-                <p>© 2026 Kızilinkalarsoruyor. Tüm hakları saklıdır.</p>
+            <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-gray-300 py-12 mt-16">
+                <div className="max-w-7xl mx-auto px-4 md:px-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                        <div>
+                            <h4 className="font-bold text-white mb-4">Hakkımızda</h4>
+                            <ul className="space-y-2 text-sm">
+                                <li><a href="#" className="hover:text-coral transition-colors">Biz Kimiz?</a></li>
+                                <li><a href="#" className="hover:text-coral transition-colors">Kariyer</a></li>
+                                <li><a href="#" className="hover:text-coral transition-colors">Basın</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-white mb-4">Topluluk</h4>
+                            <ul className="space-y-2 text-sm">
+                                <li><a href="#" className="hover:text-coral transition-colors">Kullanım Kuralları</a></li>
+                                <li><a href="#" className="hover:text-coral transition-colors">Yardım Merkezi</a></li>
+                                <li><a href="#" className="hover:text-coral transition-colors">Blog</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-white mb-4">Yasal</h4>
+                            <ul className="space-y-2 text-sm">
+                                <li><a href="#" className="hover:text-coral transition-colors">Gizlilik Politikası</a></li>
+                                <li><a href="#" className="hover:text-coral transition-colors">Kullanım Şartları</a></li>
+                                <li><a href="#" className="hover:text-coral transition-colors">Çerez Politikası</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-white mb-4">İletişim</h4>
+                            <ul className="space-y-2 text-sm">
+                                <li><a href="#" className="hover:text-coral transition-colors">Bize Ulaşın</a></li>
+                                <li><a href="#" className="hover:text-coral transition-colors">Reklam</a></li>
+                                <li><a href="#" className="hover:text-coral transition-colors">Ortaklık</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="border-t border-gray-700 pt-6 text-center text-sm">
+                        <p>© 2026 Kızilinkalarsoruyor. Tüm hakları saklıdır.</p>
+                    </div>
+                </div>
             </footer>
         </div>
     );
