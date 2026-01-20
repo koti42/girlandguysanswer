@@ -22,6 +22,7 @@ const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [profileData, setProfileData] = useState(null);
     const [userQuestions, setUserQuestions] = useState([]);
+    const [editForm, setEditForm] = useState({ name: '', bio: '', location: '' });
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -67,6 +68,14 @@ const ProfilePage = () => {
                 });
                 setUserQuestions(questionsData);
 
+                // Initialize edit form
+                if (isOwnProfile) {
+                    setEditForm({
+                        name: data.username || '', // Use username as name fallback
+                        bio: data.bio || '',
+                        location: data.location || '',
+                    });
+                }
             } catch (error) {
                 console.error("Profil yüklenirken hata:", error);
             } finally {
