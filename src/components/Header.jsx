@@ -48,8 +48,8 @@ const Header = ({ onSearch }) => {
 
     return (
         <>
-            <header className="sticky top-0 z-50 bg-background/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm py-3 px-4 md:px-8">
-                <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4">
+            <header className="sticky top-0 z-50 bg-background/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm py-2 px-2 sm:px-4 md:px-8">
+                <div className="max-w-7xl mx-auto flex items-center justify-between gap-1 sm:gap-2 md:gap-4">
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -59,9 +59,10 @@ const Header = ({ onSearch }) => {
                     </button>
 
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-1 shrink-0 hover:opacity-80 transition-opacity">
-                        <span className="font-script text-2xl md:text-4xl text-coral font-bold leading-none select-none">
-                            Kızilinkalarsoruyor
+                    <Link to="/" className="flex items-center gap-1 shrink-0 hover:opacity-80 transition-opacity min-w-0">
+                        <span className="font-script text-base xs:text-lg sm:text-xl md:text-3xl lg:text-4xl text-coral font-bold leading-none select-none truncate">
+                            <span className="hidden xs:inline">Kızılınkalar</span>
+                            <span className="xs:hidden">K.Q</span>
                         </span>
                         <div className="relative hidden sm:block">
                             <FaHeart className="text-gold text-xl md:text-2xl" />
@@ -84,22 +85,22 @@ const Header = ({ onSearch }) => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                    <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 shrink-0">
                         {/* Mobile Search Button */}
                         <button
                             onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-                            className="md:hidden p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                            className="md:hidden p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
                         >
-                            <FaSearch className="text-lg" />
+                            <FaSearch className="text-base sm:text-lg" />
                         </button>
 
                         {/* Dark Mode Toggle */}
                         <button
                             onClick={toggleTheme}
-                            className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                            className="hidden sm:block p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
                             title={isDark ? 'Açık Mod' : 'Koyu Mod'}
                         >
-                            {isDark ? <FaSun className="text-lg" /> : <FaMoon className="text-lg" />}
+                            {isDark ? <FaSun className="text-base sm:text-lg" /> : <FaMoon className="text-base sm:text-lg" />}
                         </button>
 
                         {/* Questions Button */}
@@ -110,11 +111,12 @@ const Header = ({ onSearch }) => {
                         </Link>
 
                         {/* Ask Question Button */}
-                        <Link to="/ask">
-                            <button className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-3 md:px-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-sm whitespace-nowrap">
-                                <span className="hidden sm:inline">Soru Sor</span>
-                                <span className="sm:hidden">Sor</span>
-                            </button>
+                        <Link
+                            to="/ask"
+                            className="bg-gradient-to-r from-coral to-orange-400 text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 rounded-full font-semibold hover:shadow-lg transition-all duration-300 text-xs sm:text-sm md:text-base whitespace-nowrap"
+                        >
+                            <span className="hidden sm:inline">Soru Sor</span>
+                            <span className="sm:hidden">+</span>
                         </Link>
 
                         {/* Desktop Auth Buttons */}
@@ -133,14 +135,15 @@ const Header = ({ onSearch }) => {
                         <div className="relative" ref={notificationsRef}>
                             <button
                                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                                className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative text-gray-700 dark:text-gray-300"
+                                className="relative p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
                             >
-                                <FaBell className="text-lg" />
+                                <FaBell className="text-base sm:text-lg" />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-1 right-1 w-2 h-2 bg-coral rounded-full"></span>
+                                    <span className="absolute -top-0.5 -right-0.5 bg-coral text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                                        {unreadCount}
+                                    </span>
                                 )}
                             </button>
-
                             <NotificationDropdown
                                 isOpen={isNotificationsOpen}
                                 onClose={() => setIsNotificationsOpen(false)}
