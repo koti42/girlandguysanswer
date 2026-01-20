@@ -19,18 +19,18 @@ const QuestionCard = ({ question }) => {
 
         setLoading(true);
         try {
-            const identifier = question.slug || question.id;
-            await questionsAPI.createAnswer(identifier, {
+            // Create comment on question using /comments endpoint
+            await commentsAPI.create({
                 content: replyText,
-                is_anonymous: isAnonymous
+                commentable_type: 'question',
+                commentable_id: question.id
             });
 
-            console.log('Hızlı cevap gönderildi:', {
-                text: replyText,
-                anonymous: isAnonymous
+            console.log('Hızlı yorum gönderildi:', {
+                text: replyText
             });
 
-            setSuccessMessage('Cevabınız başarıyla gönderildi! 🎉');
+            setSuccessMessage('Yorumunuz başarıyla gönderildi! 🎉');
             setReplyText('');
             setIsAnonymous(false);
             setShowReplyBox(false);
@@ -41,8 +41,12 @@ const QuestionCard = ({ question }) => {
             }, 3000);
 
         } catch (error) {
-            console.error('Cevap gönderme hatası:', error);
-            alert('Cevap gönderilirken bir hata oluştu.');
+            console.error('Yorum gönderme hatası:', error);
+            const errorMsg = error.response?.data?.message || 'Yorum gönderilemedi. Lütfen tekrar deneyin.';
+            setErrorMessage(errorMsg);
+            setTimeout(() => {
+                setErrorMessage('');
+            }, 3000);
         } finally {
             setLoading(false);
         }
