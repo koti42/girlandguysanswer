@@ -71,10 +71,17 @@ const SettingsPage = () => {
         try {
             setSettings(prev => ({ ...prev, is_private: newValue }));
             await usersAPI.updatePrivacy(newValue);
+
+            // Update user context
+            if (user) {
+                login({ ...user, is_private: newValue });
+            }
+
             showSuccess(`Hesap ${newValue ? 'gizli' : 'herkese açık'} olarak güncellendi.`);
         } catch (error) {
             console.error("Gizlilik ayarı güncellenemedi:", error);
             setSettings(prev => ({ ...prev, is_private: !newValue })); // Revert
+            alert('Gizlilik ayarı güncellenemedi. Lütfen tekrar deneyin.');
         }
     };
 
@@ -85,10 +92,17 @@ const SettingsPage = () => {
                 allow_messaging: newValue,
                 messaging_mode: settings.messaging_mode
             });
+
+            // Update user context
+            if (user) {
+                login({ ...user, allow_messaging: newValue });
+            }
+
             showSuccess(`Mesajlaşma ${newValue ? 'açıldı' : 'kapatıldı'}.`);
         } catch (error) {
             console.error("Mesaj ayarı güncellenemedi:", error);
             setSettings(prev => ({ ...prev, allow_messaging: !newValue }));
+            alert('Mesaj ayarı güncellenemedi. Lütfen tekrar deneyin.');
         }
     };
 
@@ -111,10 +125,17 @@ const SettingsPage = () => {
         try {
             setSettings(prev => ({ ...prev, allow_following: newValue }));
             await usersAPI.updateFollowing(newValue);
+
+            // Update user context
+            if (user) {
+                login({ ...user, allow_following: newValue });
+            }
+
             showSuccess(`Takip istekleri ${newValue ? 'kabul ediliyor' : 'kapatıldı'}.`);
         } catch (error) {
             console.error("Takip ayarı güncellenemedi:", error);
             setSettings(prev => ({ ...prev, allow_following: !newValue }));
+            alert('Takip ayarı güncellenemedi. Lütfen tekrar deneyin.');
         }
     };
 
@@ -183,8 +204,8 @@ const SettingsPage = () => {
                                 <button
                                     onClick={() => handleMessagingModeChange('everyone')}
                                     className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${settings.messaging_mode === 'everyone'
-                                            ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                                            : 'border-gray-200 dark:border-gray-700 text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                                        : 'border-gray-200 dark:border-gray-700 text-gray-600 hover:bg-gray-50'
                                         }`}
                                 >
                                     <div className="flex items-center justify-center gap-2">
@@ -194,8 +215,8 @@ const SettingsPage = () => {
                                 <button
                                     onClick={() => handleMessagingModeChange('followers')}
                                     className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${settings.messaging_mode === 'followers'
-                                            ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                                            : 'border-gray-200 dark:border-gray-700 text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                                        : 'border-gray-200 dark:border-gray-700 text-gray-600 hover:bg-gray-50'
                                         }`}
                                 >
                                     <div className="flex items-center justify-center gap-2">

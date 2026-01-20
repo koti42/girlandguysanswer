@@ -154,6 +154,13 @@ const ProfilePage = () => {
     // Social Action Handlers
     const handleFollowToggle = async () => {
         if (!profileData) return;
+
+        // Check if following is disabled
+        if (profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest) {
+            alert('Bu kullanıcı takip edilmeyi kapatmış.');
+            return;
+        }
+
         try {
             if (profileData.isFollowing) {
                 // Unfollow
@@ -182,6 +189,15 @@ const ProfilePage = () => {
             }
         } catch (error) {
             console.error("Takip işlemi hatası:", error);
+
+            // Handle specific error cases
+            if (error.response?.status === 403) {
+                alert('Bu kullanıcı takip edilmeyi kapatmış veya sizi engellemiş.');
+            } else if (error.response?.status === 404) {
+                alert('Kullanıcı bulunamadı.');
+            } else {
+                alert('Takip işlemi başarısız oldu. Lütfen tekrar deneyin.');
+            }
         }
     };
 
