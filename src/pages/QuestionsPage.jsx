@@ -7,7 +7,7 @@ import QuestionCard from '../components/QuestionCard';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { questions } from '../data/mockData';
 
-function HomePage() {
+function QuestionsPage() {
     const [searchQuery, setSearchQuery] = useState('');
 
     // Filter questions based on search
