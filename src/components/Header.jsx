@@ -60,9 +60,9 @@ const Header = ({ onSearch }) => {
 
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-1 shrink-0 hover:opacity-80 transition-opacity min-w-0">
-                        <span className="font-script text-base xs:text-lg sm:text-xl md:text-3xl lg:text-4xl text-coral font-bold leading-none select-none truncate">
-                            <span className="hidden xs:inline">Kızılınkalar</span>
-                            <span className="xs:hidden">K.Q</span>
+                        <span className="font-script text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl text-coral font-bold leading-none select-none truncate">
+                            <span className="hidden sm:inline">Kızılınkalarsoruyor</span>
+                            <span className="sm:hidden">K.Q</span>
                         </span>
                         <div className="relative hidden sm:block">
                             <FaHeart className="text-gold text-xl md:text-2xl" />
@@ -129,6 +129,15 @@ const Header = ({ onSearch }) => {
                             <button className="bg-gray-800 dark:bg-gray-700 text-white font-semibold py-2 px-4 rounded-2xl hover:bg-gray-700 dark:hover:bg-gray-600 transition-all text-sm">
                                 Kayıt Ol
                             </button>
+                        </Link>
+
+                        {/* Messages Button */}
+                        <Link
+                            to="/messages"
+                            className="hidden md:block p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                            title="Mesajlar"
+                        >
+                            <FaEnvelope className="text-base sm:text-lg" />
                         </Link>
 
                         {/* Notifications */}
