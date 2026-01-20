@@ -1,218 +1,247 @@
-# 📡 API Entegrasyon Bilgileri (Frontend İçin)
+# 📚 Nested Yorumlar - Frontend Kullanım Kılavuzu
 
-Frontend geliştirirken kullanacağınız temel endpointler aşağıdadır.
-**Base URL**: `http://localhost:3000/api`
+## 🎯 Nested Yorum Yapısı
 
-### Kimlik Doğrulama (Auth)
+API artık yorumları **nested (iç içe)** yapıda döndürüyor. Ana yorumlar `parent_id: null` olan yorumlardır ve her ana yorumun altında `replies` array'i bulunur.
 
-#### 1. Kayıt Ol (Register)
-- **URL**: `POST /auth/register`
-- **Body**:
-  ```json
-  {
-    "username": "kullanici_adi",
-    "email": "test@example.com",
-    "password": "sifre123",
-    "gender": "male"
-  }
-  ```
-- **Success Response (201 Created)**:
-  ```json
-  {
-    "success": true,
-    "message": "Kullanıcı başarıyla oluşturuldu",
-    "data": {
-      "user": {
-        "id": "c4d6ccde-58a4-45cf-ac8d-76382c817f54",
-        "username": "kullanici_adi",
-        "email": "test@example.com",
-        "gender": "male",
-        "createdAt": "2026-01-20T10:20:20.123+03:00"
-      },
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-  }
-  ```
+---
 
-#### 2. Giriş Yap (Login)
-- **URL**: `POST /auth/login`
-- **Body**:
-  ```json
-  {
-    "email": "test@example.com",
-    "password": "sifre123"
-  }
-  ```
-- **Success Response (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "message": "Giriş başarılı",
-    "data": {
-      "user": {
-        "id": "c4d6ccde-58a4-45cf-ac8d-76382c817f54",
-        "username": "kullanici_adi",
-        "email": "test@example.com",
-        "gender": "male",
-        "avatar": "https://i.pravatar.cc/150?u=1"
-      },
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-  }
-  ```
+## 📋 API Response Yapısı
 
-### Sorular (Questions)
+### Soru Detayı Response
 
-#### 3. Soruları Listele
-- **URL**: `GET /questions`
-- **Query Params**: `?page=1&limit=10&category=Moda`
-- **Success Response (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "questions": [
+```json
+{
+  "success": true,
+  "data": {
+    "question": {
+      "id": "...",
+      "title": "...",
+      "comments": [
         {
-          "id": "2a5bc6e7-8ae3-4c6a-9893-292332b00948",
-          "title": "En iyi cilt bakım rutini nedir?",
-          "description": "<p>Karma ciltler için...</p>",
-          "category": "Cilt Bakımı",
-          "tags": ["#ciltbakımı", "#güzellik"],
-          "userId": "c4d6ccde...",
+          "id": "comment-1-id",
+          "content": "Ana yorum 1",
+          "parent_id": null,
           "user": {
-            "id": "c4d6ccde...",
-            "username": "Zeynep_K",
-            "gender": "female",
-            "avatar": "https://i.pravatar.cc/150?u=3"
-          },
-          "likes": 8,
-          "commentsCount": 0,
-          "views": 90,
-          "createdAt": "2026-01-20T10:20:27.459+03:00"
-        }
-      ],
-      "pagination": {
-        "currentPage": 1,
-        "totalPages": 5,
-        "totalQuestions": 47,
-        "limit": 10,
-        "hasNextPage": true,
-        "hasPreviousPage": false
-      }
-    }
-  }
-  ```
-
-#### 4. Soru Detayı
-- **URL**: `GET /questions/:id`
-- **Success Response (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "question": {
-        "id": "2a5bc6e7-8ae3-4c6a-9893-292332b00948",
-        "title": "En iyi cilt bakım rutini nedir?",
-        "description": "<p>Detaylı açıklama...</p>",
-        "user": { ... },
-        "stats": { ... }
-      },
-      "answers": [
-        {
-          "id": "ce772b5b-b1e9-411e-baa8-960f85500978",
-          "content": "Cevap içeriği...",
-          "isAccepted": true,
-          "user": {
-            "username": "Ayse_K",
+            "id": "...",
+            "username": "Elif_Mavi",
             "avatar": "..."
           },
-          "likes": 12,
-          "createdAt": "2026-01-20T10:25:00Z"
+          "isOwner": true,
+          "canEdit": true,
+          "canDelete": true,
+          "created_at": "...",
+          "replies": [
+            {
+              "id": "reply-1-id",
+              "content": "Yoruma cevap 1",
+              "parent_id": "comment-1-id",
+              "user": {
+                "id": "...",
+                "username": "Ahmet_Yilmaz",
+                "avatar": "..."
+              },
+              "isOwner": false,
+              "canEdit": false,
+              "canDelete": false,
+              "created_at": "..."
+            }
+          ]
+        },
+        {
+          "id": "comment-2-id",
+          "content": "Ana yorum 2",
+          "parent_id": null,
+          "user": {...},
+          "replies": []
+        }
+      ]
+    },
+    "answers": [...]
+  }
+}
+```
+
+### Önemli Alanlar
+
+| Alan | Açıklama |
+|------|----------|
+| `parent_id` | `null` ise ana yorum, değer varsa cevaptır |
+| `replies` | Ana yoruma gelen cevapların array'i |
+| `isOwner` | Giriş yapan kullanıcının yorumu mu? |
+| `canEdit` | Kullanıcı bu yorumu düzenleyebilir mi? |
+| `canDelete` | Kullanıcı bu yorumu silebilir mi? |
+| `user` | Yorum sahibinin bilgileri (username, avatar, vb.) |
+
+---
+
+## 🔧 React Component Örneği
+
+### 2. Comment List Component
+
+```jsx
+import React, { useState } from 'react';
+
+const CommentsList = ({ questionId, comments, onCommentAdded }) => {
+  const [newCommentText, setNewCommentText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Ana yorum ekle
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    
+    if (!newCommentText.trim()) return;
+
+    setIsSubmitting(true);
+    
+    try {
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await fetch('http://127.0.0.1:8003/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: newCommentText,
+          commentable_type: 'question',
+          commentable_id: questionId
+          // parent_id YOK - Ana yorum
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Yeni yorumu replies: [] ile ekle
+        onCommentAdded({
+          ...data.data.comment,
+          replies: []
+        });
+        setNewCommentText('');
+      } else {
+        alert('Hata: ' + data.message);
+      }
+    } catch (error) {
+      alert('Bağlantı hatası: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Yoruma cevap ekle
+  const handleReplyToComment = async (parentCommentId, replyText) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await fetch('http://127.0.0.1:8003/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: replyText,
+          commentable_type: 'question',
+          commentable_id: questionId,
+          parent_id: parentCommentId  // Parent comment ID
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Parent comment'e reply ekle
+        onCommentAdded(data.data.comment, parentCommentId);
+      } else {
+        alert('Hata: ' + data.message);
+      }
+    } catch (error) {
+      alert('Bağlantı hatası: ' + error.message);
+    }
+  };
+
+  return (
+    <div className="comments-section">
+      <h3>Yorumlar ({comments.length})</h3>
+
+      {/* Ana Yorum Formu */}
+      <form onSubmit={handleAddComment} className="add-comment-form">
+        <textarea
+          value={newCommentText}
+          onChange={(e) => setNewCommentText(e.target.value)}
+          placeholder="Yorumunuzu yazın..."
+          maxLength={1000}
+          required
+        />
+        <button 
+          type="submit" 
+          disabled={isSubmitting || !newCommentText.trim()}
+        >
+          {isSubmitting ? 'Gönderiliyor...' : 'Yorum Yap'}
+        </button>
+      </form>
+
+      {/* Yorumlar Listesi */}
+      <div className="comments-list">
+        {comments.length === 0 ? (
+          <p className="no-comments">Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
+        ) : (
+          comments.map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              onReply={handleReplyToComment}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CommentsList;
+```
+
+---
+
+## 🧪 Kullanım Akışı
+
+### 1. Sayfa Yüklendiğinde
+
+```javascript
+// Soru detayını çek (yorumlar nested gelir)
+GET /api/questions/{slug}
+
+// Response:
+{
+  "success": true,
+  "data": {
+    "question": {
+      "comments": [
+        // Ana yorumlar (parent_id: null)
+        {
+          "id": "...",
+          "replies": [
+            // Cevaplar
+          ]
         }
       ]
     }
   }
-  ```
+}
+```
 
-#### 5. Soru Sor (Korumalı)
-- **URL**: `POST /questions`
-- **Headers**: `Authorization: Bearer <TOKEN>`
-- **Body**:
-  ```json
-  {
-    "title": "Soru başlığı minimum 10 karakter olmalı",
-    "description": "<p>HTML formatında detay</p>",
-    "category": "Moda & Güzellik",
-    "tags": ["#etiket1", "#etiket2"],
-    "image": "https://resim-linki.com/img.jpg"
-  }
-  ```
-- **Success Response (201 Created)**:
-  ```json
-  {
-    "success": true,
-    "message": "Soru başarıyla oluşturuldu",
-    "data": {
-      "question": {
-        "id": "yeni-soru-id-uuid",
-        "title": "Soru başlığı...",
-        "createdAt": "2026-01-20T10:30:00Z"
-      }
-    }
-  }
-  ```
-  ## Yorumlar (Comments)
+### 3. Kullanıcı Yoruma Cevap Yazdığında
 
-#### 6. Yorum Yap (Soruya veya Cevaba)
-- **URL**: `POST /comments`
-- **Headers**: `Authorization: Bearer <TOKEN>`
-- **Body (Soruya Yorum - Genel)**:
-  ```json
-  {
-    "content": "Bu soru çok önemli.",
-    "commentable_type": "question",
-    "commentable_id": "soru-uuid-buraya"
-  }
-  ```
-- **Body (Cevaba Yanıt / Reply to Answer)**:
-  ```json
-  {
-    "content": "Bu cevaba katılıyorum.",
-    "commentable_type": "answer",
-    "commentable_id": "cevap-uuid-buraya"
-  }
-  ```
-- **Body (Yoruma Yanıt / Nested Reply - Destekleniyorsa)**:
-  ```json
-  {
-    "content": "Teşekkür ederim.",
-    "commentable_type": "question", 
-    "commentable_id": "soru-uuid-buraya",
-    "parent_id": "yorum-uuid-buraya"
-  }
-  ```
-- **Success Response (201 Created)**:
-  ```json
-  {
-    "success": true,
-    "message": "Yorum başarıyla eklendi",
-    "data": {
-      "comment": {
-        "id": "yorum-id...",
-        "content": "Bu konuda katılıyorum.",
-        "commentable_type": "App\\Models\\Answer",
-        "commentable_id": "...",
-        "user_id": "...",
-        "createdAt": "..."
-      }
-    }
-  }
-  ```
-
-
-
-
-## 📝 Notlar
-- Kullanıcı şifreleri veritabanında **bcrypt** ile hashlenerek saklanır.
-- Resimler şimdilik URL string olarak tutulmaktadır (Unsplash vb. kullanılabilir).
-- Tarih formatları ISO 8601 olarak döner (örn: `2026-01-20T10:20:27.459+03:00`).
+```javascript
+// Yoruma cevap ekle
+POST /api/comments
+{
+  "content": "Cevap içeriği",
+  "commentable_type": "question",
+  "commentable_id": "question-id",
+  "parent_id": "parent-comment-id"  // ÖNEMLİ!
+}
+```
