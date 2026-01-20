@@ -22,42 +22,37 @@ const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [profileData, setProfileData] = useState(null);
     const [userQuestions, setUserQuestions] = useState([]);
+    const [followers, setFollowers] = useState([]);
+    const [following, setFollowing] = useState([]);
     const [editForm, setEditForm] = useState({ name: '', bio: '', location: '' });
 
     useEffect(() => {
         const fetchProfileData = async () => {
             setLoading(true);
             try {
-                // If own profile, we might use getCurrentUser or filter usersAPI
-                // Spec says GET /users/{username} works for everyone, but /user/me gives private details
+                // ... (existing profile fetch logic)
                 let data;
                 let questionsData = [];
 
                 if (isOwnProfile) {
-                    // For own profile, use /user/me to get potentially private details + edit permissions implicitly
-                    // However, to keep it simple and consistent with username param:
-                    // If we are on /profile/myUsername, we can fetch via username but we know it's us.
                     const response = await usersAPI.getProfile(username || currentUser.username);
                     data = response.data.data;
-
-                    // Fetch own questions
                     const qResponse = await questionsAPI.getMyQuestions();
                     questionsData = qResponse.data.data.questions;
                 } else {
                     const response = await usersAPI.getProfile(username);
                     data = response.data.data;
-                    questionsData = data.questions || []; // Spec says questions might be included or we filter
+                    questionsData = data.questions || [];
                 }
 
                 setProfileData({
                     ...data,
-                    // Map API fields to UI fields if necessary
-                    name: data.username, // UI uses name, API has username
+                    name: data.username,
                     coverPhoto: data.coverImage || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop',
                     avatar: data.avatar || 'https://i.pravatar.cc/200?u=default',
-                    location: data.location || 'Konum belirtilmedi', // API might not have location yet
+                    location: data.location || 'Konum belirtilmedi',
                     joinedDate: new Date(data.created_at || Date.now()).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
-                    badges: [], // API doesn't return badges yet
+                    badges: [],
                     stats: {
                         questions: data.stats?.questions || 0,
                         followers: data.stats?.followers || 0,
@@ -68,10 +63,12 @@ const ProfilePage = () => {
                 });
                 setUserQuestions(questionsData);
 
-                // Initialize edit form
+                // Fetch initial followers/following only if likely small or needed, 
+                // but better to fetch on tab change.
+
                 if (isOwnProfile) {
                     setEditForm({
-                        name: data.username || '', // Use username as name fallback
+                        name: data.username || '',
                         bio: data.bio || '',
                         location: data.location || '',
                     });
@@ -87,6 +84,34 @@ const ProfilePage = () => {
             fetchProfileData();
         }
     }, [username, currentUser, isOwnProfile]);
+
+    // New Effect for fetching tab data
+    useEffect(() => {
+        const fetchTabData = async () => {
+            if (!profileData || !profileData.id) return;
+
+            try {
+                if (activeTab === 'followers') {
+                    const res = await usersAPI.getFollowers(profileData.id); // Assuming API accepts ID or username. API_INTEGRATION says userId.
+                    // If API expects username, use profileData.username
+                    // Let's safe bet try username if id fails or check API def.
+                    // usersAPI.getFollowers(userId) -> /users/{userId}/followers
+                    // It likely expects ID.
+                    setFollowers(res.data.data || []);
+                } else if (activeTab === 'following') {
+                    const res = await usersAPI.getFollowing(profileData.id);
+                    setFollowing(res.data.data || []);
+                }
+            } catch (error) {
+                console.error("Tab verisi yüklenirken hata:", error);
+                // Fallback to empty to prevent crash
+                setFollowers([]);
+                setFollowing([]);
+            }
+        };
+
+        fetchTabData();
+    }, [activeTab, profileData]);
 
     if (loading) return <MainLayout><div className="flex justify-center p-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div></div></MainLayout>;
 
@@ -334,8 +359,8 @@ const ProfilePage = () => {
                     {activeTab === 'answers' && (
                         <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Cevaplar yakında</div>
                     )}
-                    {activeTab === 'followers' && <FollowersList followers={mockFollowers} type="followers" />}
-                    {activeTab === 'following' && <FollowersList followers={mockFollowing} type="following" />}
+                    {activeTab === 'followers' && <FollowersList followers={followers} type="followers" />}
+                    {activeTab === 'following' && <FollowersList followers={following} type="following" />}
                     {activeTab === 'liked' && (
                         <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Beğenilenler yakında</div>
                     )}
