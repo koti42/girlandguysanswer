@@ -211,6 +211,13 @@ const Header = ({ onSearch }) => {
                                             <FaEnvelope className="text-gray-400" />
                                             Mesajlar
                                         </Link>
+                                        <Link
+                                            to="/settings"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                        >
+                                            <FaUser className="text-gray-400" />
+                                            Ayarlar
+                                        </Link>
                                         <button
                                             onClick={handleLogout}
                                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors mt-1"
@@ -339,6 +346,14 @@ const Header = ({ onSearch }) => {
                                 >
                                     <FaUser className="text-xl text-coral" />
                                     <span className="text-gray-700 dark:text-gray-200 font-medium">Profilim</span>
+                                </Link>
+                                <Link
+                                    to="/settings"
+                                    onClick={closeMobileMenu}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                                >
+                                    <FaUser className="text-xl text-coral" />
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Ayarlar</span>
                                 </Link>
                                 <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
                                 <button
