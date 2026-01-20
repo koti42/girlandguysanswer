@@ -95,16 +95,18 @@ const QuestionDetailPage = () => {
         if (!replyText || !replyText.trim()) return;
 
         try {
-            // Replying to an Answer (which is a separate entity, not a comment)
-            // So we treat this as a new comment on the 'answer' entity.
-            const response = await commentsAPI.create({
+            // User insists on using "answers" endpoint/logic.
+            // Replying to an Answer using createAnswer with parent_id implies Nested Answers.
+            // This endpoint (/questions/:slug/answers) likely checks parent_id against answers table.
+            const response = await questionsAPI.createAnswer(question.slug, {
                 content: replyText,
-                commentable_type: 'answer', // Target the Answer model
-                commentable_id: answerId,   // The UUID of the Answer
-                // parent_id: null - We are not nesting under another comment, we are commenting on the answer
+                parent_id: answerId
             });
 
-            const newReply = response.data.data.comment;
+            // The response data structure might be inside 'answer' key now?
+            // Assuming the CREATE response structure is standard { data: { answer: ... } }
+            // If createAnswer returns 'answer' key:
+            const newReply = response.data.data.answer || response.data.data.comment;
 
             // Update state to include the new reply
             setAnswers(prevAnswers => prevAnswers.map(ans => {
