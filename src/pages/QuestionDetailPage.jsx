@@ -69,7 +69,7 @@ const QuestionDetailPage = () => {
 
         try {
             // API call to create answer (not general comment)
-            const response = await questionsAPI.createAnswer(id, {
+            const response = await questionsAPI.createAnswer(question.id, {
                 content: commentText
             });
 
@@ -154,19 +154,19 @@ const QuestionDetailPage = () => {
             <div className="flex flex-col gap-6">
                 {/* Question Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
-                    {/* User Header */}
+                    {/* Question User Header */}
                     <div className="flex items-center gap-3 mb-4">
-                        <Link to={`/profile/${question.user.name}`}>
+                        <Link to={`/profile/${question.user.username}`}>
                             <img
                                 src={question.user.avatar}
-                                alt={question.user.name}
+                                alt={question.user.username}
                                 className="w-12 h-12 rounded-full border border-gray-100 dark:border-gray-700 hover:border-coral transition-colors"
                             />
                         </Link>
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
-                                <Link to={`/profile/${question.user.name}`} className="font-bold text-gray-800 dark:text-white hover:underline">
-                                    {question.user.name}
+                                <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">
+                                    {question.user.username}
                                 </Link>
                                 {question.user.gender === 'female' ? (
                                     <FaVenus className="text-pink-500" />
@@ -322,16 +322,16 @@ const QuestionDetailPage = () => {
                                     : 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30'
                                     }`}>
                                     <div className="flex justify-between items-start mb-4">
-                                        <Link to={`/profile/${answer.user.name}`} className="flex items-center gap-3 group">
+                                        <Link to={`/profile/${answer.user.username}`} className="flex items-center gap-3 group">
                                             <img
                                                 src={answer.user.avatar || 'https://i.pravatar.cc/150?u=default'}
-                                                alt={answer.user.name}
+                                                alt={answer.user.username}
                                                 className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-700 group-hover:border-coral transition-colors object-cover"
                                             />
                                             <div>
                                                 <div className="flex items-center gap-1">
                                                     <span className="font-bold text-gray-800 dark:text-gray-200 group-hover:text-coral transition-colors">
-                                                        {answer.user.name}
+                                                        {answer.user.username}
                                                     </span>
                                                     {answer.user.gender === 'female' ? (
                                                         <FaVenus className="text-pink-500 text-sm" />
@@ -382,10 +382,10 @@ const QuestionDetailPage = () => {
                                                 return (
                                                     <div key={reply.id} className={`${replyGradientClass} rounded-xl p-4 ml-8 border-l-8 shadow-lg hover:shadow-xl transition-all`}>
                                                         <div className="flex gap-3">
-                                                            <Link to={`/profile/${reply.user.name}`}>
+                                                            <Link to={`/profile/${reply.user.username}`}>
                                                                 <img
                                                                     src={reply.user.avatar}
-                                                                    alt={reply.user.name}
+                                                                    alt={reply.user.username}
                                                                     className="w-11 h-11 rounded-full border-3 border-white dark:border-gray-600 shadow-md hover:border-coral transition-colors"
                                                                 />
                                                             </Link>
@@ -393,8 +393,8 @@ const QuestionDetailPage = () => {
                                                                 <div className="flex items-center gap-2 mb-1">
                                                                     <div className="flex items-center gap-1.5">
                                                                         <FaReply className="text-gray-400 dark:text-gray-500 text-xs" />
-                                                                        <Link to={`/profile/${reply.user.name}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">
-                                                                            {reply.user.name}
+                                                                        <Link to={`/profile/${reply.user.username}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">
+                                                                            {reply.user.username}
                                                                         </Link>
                                                                     </div>
                                                                     {reply.user.gender === 'female' ? (
@@ -422,7 +422,7 @@ const QuestionDetailPage = () => {
                                                 <textarea
                                                     value={replyTexts[answer.id] || ''}
                                                     onChange={(e) => handleReplyTextChange(answer.id, e.target.value)}
-                                                    placeholder={`${answer.user.name} kullanıcısına yanıt yazın...`}
+                                                    placeholder={`${answer.user.username} kullanıcısına yanıt yazın...`}
                                                     rows={3}
                                                     className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-3"
                                                     autoFocus
