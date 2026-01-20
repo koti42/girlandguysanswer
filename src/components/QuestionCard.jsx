@@ -4,21 +4,46 @@ import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret 
 import UserAvatar from './UserAvatar';
 import QuestionActionsMenu from './QuestionActionsMenu';
 
+import { questionsAPI } from '../services/api';
+
 const QuestionCard = ({ question }) => {
     const [showReplyBox, setShowReplyBox] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmitReply = (e) => {
+    const handleSubmitReply = async (e) => {
         e.preventDefault();
-        if (replyText.trim()) {
+        if (!replyText.trim()) return;
+
+        setLoading(true);
+        try {
+            await questionsAPI.createAnswer(question.id, {
+                content: replyText,
+                is_anonymous: isAnonymous
+            });
+
             console.log('Hızlı cevap gönderildi:', {
                 text: replyText,
                 anonymous: isAnonymous
             });
+
+            setSuccessMessage('Cevabınız başarıyla gönderildi! 🎉');
             setReplyText('');
             setIsAnonymous(false);
             setShowReplyBox(false);
+
+            // Hide success message after 3 seconds
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+
+        } catch (error) {
+            console.error('Cevap gönderme hatası:', error);
+            alert('Cevap gönderilirken bir hata oluştu.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -105,8 +130,15 @@ const QuestionCard = ({ question }) => {
                 </button>
             </div>
 
+            {/* Success Message Notification */}
+            {successMessage && (
+                <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-xl text-center text-sm font-medium animate-pulse">
+                    {successMessage}
+                </div>
+            )}
+
             {/* Quick Reply Box */}
-            {showReplyBox && (
+            {showReplyBox && !successMessage && (
                 <form onSubmit={handleSubmitReply} className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex gap-2">
                         <input
@@ -116,19 +148,21 @@ const QuestionCard = ({ question }) => {
                             placeholder="Hızlı cevap yaz..."
                             className="flex-1 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all text-sm"
                             autoFocus
+                            disabled={loading}
                         />
                         <button
                             type="submit"
-                            disabled={!replyText.trim()}
-                            className="bg-gradient-to-r from-coral to-orange-400 text-white p-2.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!replyText.trim() || loading}
+                            className="bg-gradient-to-r from-coral to-orange-400 text-white p-2.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[44px]"
                         >
-                            <FaPaperPlane />
+                            {loading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-b-transparent"></div> : <FaPaperPlane />}
                         </button>
                     </div>
                     <div className="flex items-center justify-between mt-3">
                         <button
                             type="button"
                             onClick={() => setIsAnonymous(!isAnonymous)}
+                            disabled={loading}
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnonymous
                                 ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
                                 : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
