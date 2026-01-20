@@ -425,36 +425,45 @@ const QuestionDetailPage = () => {
 
                                             {/* Replies Section */}
                                             {answer.replies && answer.replies.length > 0 && (
-                                                <div className="mt-4 space-y-3">
+                                                <div className="mt-6 space-y-3">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <FaReply className="text-coral text-sm" />
+                                                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                                                            {answer.replies.length} Yanıt
+                                                        </span>
+                                                    </div>
                                                     {answer.replies.map(reply => {
-                                                        // Gender-based gradient for replies (softer/lighter versions)
+                                                        // Gender-based gradient for replies (stronger/darker versions)
                                                         const replyGradientClass = reply.user.gender === 'female'
-                                                            ? 'bg-gradient-to-br from-pink-100/60 to-pink-50/40 dark:from-pink-900/15 dark:to-pink-800/10 border-pink-300 dark:border-pink-700/40'
-                                                            : 'bg-gradient-to-br from-cyan-100/60 to-cyan-50/40 dark:from-cyan-900/15 dark:to-cyan-800/10 border-cyan-300 dark:border-cyan-700/40';
+                                                            ? 'bg-gradient-to-br from-pink-100 to-pink-50 dark:from-pink-900/25 dark:to-pink-800/20 border-pink-400 dark:border-pink-600'
+                                                            : 'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-900/25 dark:to-cyan-800/20 border-cyan-400 dark:border-cyan-600';
 
                                                         return (
-                                                            <div key={reply.id} className={`${replyGradientClass} rounded-xl p-4 ml-6 border-l-4 shadow-sm`}>
+                                                            <div key={reply.id} className={`${replyGradientClass} rounded-xl p-4 ml-8 border-l-8 shadow-lg hover:shadow-xl transition-all`}>
                                                                 <div className="flex gap-3">
                                                                     <Link to={`/profile/${reply.user.name}`}>
                                                                         <img
                                                                             src={reply.user.avatar}
                                                                             alt={reply.user.name}
-                                                                            className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-sm hover:border-coral transition-colors"
+                                                                            className="w-11 h-11 rounded-full border-3 border-white dark:border-gray-600 shadow-md hover:border-coral transition-colors"
                                                                         />
                                                                     </Link>
                                                                     <div className="flex-1">
                                                                         <div className="flex items-center gap-2 mb-1">
-                                                                            <Link to={`/profile/${reply.user.name}`} className="font-semibold text-sm text-gray-800 dark:text-white hover:underline">
-                                                                                {reply.user.name}
-                                                                            </Link>
+                                                                            <div className="flex items-center gap-1.5">
+                                                                                <FaReply className="text-gray-400 dark:text-gray-500 text-xs" />
+                                                                                <Link to={`/profile/${reply.user.name}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">
+                                                                                    {reply.user.name}
+                                                                                </Link>
+                                                                            </div>
                                                                             {reply.user.gender === 'female' ? (
-                                                                                <FaVenus className="text-pink-500 text-xs" />
+                                                                                <FaVenus className="text-pink-600 dark:text-pink-400 text-sm" />
                                                                             ) : (
-                                                                                <FaMars className="text-cyan-500 text-xs" />
+                                                                                <FaMars className="text-cyan-600 dark:text-cyan-400 text-sm" />
                                                                             )}
                                                                             <span className="text-gray-500 dark:text-gray-400 text-xs">• {reply.createdAt}</span>
                                                                         </div>
-                                                                        <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed">
+                                                                        <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed font-medium">
                                                                             {reply.content}
                                                                         </p>
                                                                     </div>
