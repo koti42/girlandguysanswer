@@ -1,5 +1,12 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret } from 'react-icons/fa';
+import MainLayout from '../layouts/MainLayout';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import { questionsAPI, commentsAPI } from '../services/api';
+import UserAvatar from '../components/UserAvatar';
 
 // Helper function for formatting
 const formatDate = (dateString) => {
@@ -10,20 +17,6 @@ const formatDate = (dateString) => {
         return "Bilinmiyor";
     }
 };
-
-// ... inside component ...
-
-// Answer date (Line 370 approx) transformation:
-{ formatDate(answer.created_at) }
-
-// Comment date (Line 432 approx) transformation:
-<span className="text-gray-500 dark:text-gray-400 text-xs">• {formatDate(comment.created_at)}</span>
-import { useParams, Link } from 'react-router-dom';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret } from 'react-icons/fa';
-import MainLayout from '../layouts/MainLayout';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
-import { questionsAPI, commentsAPI } from '../services/api';
-import UserAvatar from '../components/UserAvatar';
 
 const QuestionDetailPage = () => {
     const { slug } = useParams();
