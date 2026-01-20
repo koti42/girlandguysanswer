@@ -4,6 +4,7 @@ import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSec
 import MainLayout from '../layouts/MainLayout';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { questionsAPI } from '../services/api';
+import UserAvatar from '../components/UserAvatar';
 
 const QuestionDetailPage = () => {
     const { slug } = useParams();
@@ -157,10 +158,10 @@ const QuestionDetailPage = () => {
                     {/* Question User Header */}
                     <div className="flex items-center gap-3 mb-4">
                         <Link to={`/profile/${question.user.username}`}>
-                            <img
-                                src={question.user.avatar}
-                                alt={question.user.username}
-                                className="w-12 h-12 rounded-full border border-gray-100 dark:border-gray-700 hover:border-coral transition-colors"
+                            <UserAvatar
+                                user={question.user}
+                                size="lg"
+                                className="hover:border-coral transition-colors"
                             />
                         </Link>
                         <div className="flex-1">
@@ -323,10 +324,10 @@ const QuestionDetailPage = () => {
                                     }`}>
                                     <div className="flex justify-between items-start mb-4">
                                         <Link to={`/profile/${answer.user.username}`} className="flex items-center gap-3 group">
-                                            <img
-                                                src={answer.user.avatar || 'https://i.pravatar.cc/150?u=default'}
-                                                alt={answer.user.username}
-                                                className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-700 group-hover:border-coral transition-colors object-cover"
+                                            <UserAvatar
+                                                user={answer.user}
+                                                size="md"
+                                                className="group-hover:border-coral transition-colors"
                                             />
                                             <div>
                                                 <div className="flex items-center gap-1">
@@ -383,10 +384,10 @@ const QuestionDetailPage = () => {
                                                     <div key={reply.id} className={`${replyGradientClass} rounded-xl p-4 ml-8 border-l-8 shadow-lg hover:shadow-xl transition-all`}>
                                                         <div className="flex gap-3">
                                                             <Link to={`/profile/${reply.user.username}`}>
-                                                                <img
-                                                                    src={reply.user.avatar}
-                                                                    alt={reply.user.username}
-                                                                    className="w-11 h-11 rounded-full border-3 border-white dark:border-gray-600 shadow-md hover:border-coral transition-colors"
+                                                                <UserAvatar
+                                                                    user={reply.user}
+                                                                    size="md"
+                                                                    className="w-11 h-11 border-3 border-white dark:border-gray-600 shadow-md hover:border-coral transition-colors"
                                                                 />
                                                             </Link>
                                                             <div className="flex-1">
