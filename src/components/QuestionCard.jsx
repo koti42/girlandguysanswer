@@ -56,7 +56,7 @@ const QuestionCard = ({ question }) => {
 
             {/* Content */}
             <div>
-                <Link to={`/question/${question.id}`}>
+                <Link to={`/question/${question.slug || question.id}`}>
                     <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 leading-snug hover:text-coral transition-colors cursor-pointer">
                         {question.title}
                     </h3>
@@ -71,7 +71,7 @@ const QuestionCard = ({ question }) => {
                 </div>
 
                 {question.image && (
-                    <Link to={`/question/${question.id}`}>
+                    <Link to={`/question/${question.slug || question.id}`}>
                         <div className="rounded-xl overflow-hidden mb-4 shadow-sm cursor-pointer">
                             <img src={question.image} alt="Question" className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500" />
                         </div>
@@ -86,7 +86,7 @@ const QuestionCard = ({ question }) => {
                         <button className="flex items-center gap-2 hover:text-coral transition-colors">
                             <FaHeart /> <span>{question.stats?.likes || question.likes || 0}</span>
                         </button>
-                        <Link to={`/question/${question.id}`} className="flex items-center gap-2 hover:text-blue-500 transition-colors">
+                        <Link to={`/question/${question.slug || question.id}`} className="flex items-center gap-2 hover:text-blue-500 transition-colors">
                             <FaComment /> <span>{question.stats?.comments || question.commentsCount || 0}</span>
                         </Link>
                     </div>
