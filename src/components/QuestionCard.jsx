@@ -39,10 +39,10 @@ const QuestionCard = ({ question }) => {
                     </Link>
                     <div>
                         <div className="flex items-center gap-1">
-                            <Link to={`/profile/${question.user.name}`} className="font-bold text-gray-800 dark:text-gray-100 hover:underline">
-                                {question.user.name}
+                            <Link to={`/profile/${question.user?.username}`} className="font-bold text-gray-800 dark:text-gray-100 hover:underline">
+                                {question.user?.username || 'Anonim'}
                             </Link>
-                            {question.user.gender === 'female' ? (
+                            {question.user?.gender === 'female' ? (
                                 <FaVenus className="text-pink-500" />
                             ) : (
                                 <FaMars className="text-blue-500" />
