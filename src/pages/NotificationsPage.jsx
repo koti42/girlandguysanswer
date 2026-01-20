@@ -20,6 +20,10 @@ const NotificationsPage = () => {
     } = useNotifications();
 
     const handleNotificationClick = async (notification) => {
+        console.log('🔔 Notification clicked:', notification);
+        console.log('📌 Type:', notification.type);
+        console.log('📦 Data:', notification.data);
+        
         if (!notification.is_read) {
             try {
                 await markAsRead(notification.id);
@@ -28,20 +32,50 @@ const NotificationsPage = () => {
             }
         }
 
+        const questionSlug = notification.data?.question_slug || notification.data?.slug;
+        
         switch (notification.type) {
             case 'answer_created':
-                navigate(`/questions/${notification.data.question_slug}`);
+                if (questionSlug) {
+                    console.log('✅ Navigating to:', `/question/${questionSlug}`);
+                    navigate(`/question/${questionSlug}`);
+                } else {
+                    console.error('❌ question_slug bulunamadı!', notification.data);
+                }
+                break;
+            case 'answer_comment_created':
+                if (questionSlug) {
+                    const answerId = notification.data?.answer_id;
+                    console.log('✅ Navigating to:', `/question/${questionSlug}#answer-${answerId}`);
+                    navigate(`/question/${questionSlug}#answer-${answerId}`);
+                } else {
+                    console.error('❌ question_slug bulunamadı!', notification.data);
+                }
                 break;
             case 'comment_reply':
-                navigate(`/questions/${notification.data.question_slug}#comment-${notification.data.comment_id}`);
+                if (questionSlug) {
+                    const commentId = notification.data?.comment_id || notification.data?.id;
+                    console.log('✅ Navigating to:', `/question/${questionSlug}#comment-${commentId}`);
+                    navigate(`/question/${questionSlug}#comment-${commentId}`);
+                } else {
+                    console.error('❌ question_slug bulunamadı!', notification.data);
+                }
                 break;
             case 'follow_request':
+                console.log('✅ Navigating to: /follow-requests');
                 navigate('/follow-requests');
                 break;
             case 'follow_request_accepted':
-                navigate(`/profile/${notification.data.user.username}`);
+                const username = notification.data?.user?.username;
+                if (username) {
+                    console.log('✅ Navigating to:', `/profile/${username}`);
+                    navigate(`/profile/${username}`);
+                } else {
+                    console.error('❌ username bulunamadı!', notification.data);
+                }
                 break;
             default:
+                console.warn('⚠️ Bilinmeyen bildirim tipi:', notification.type);
                 break;
         }
     };

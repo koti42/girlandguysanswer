@@ -17,6 +17,8 @@ const getNotificationIcon = (type) => {
     switch (type) {
         case 'answer_created':
             return <FaComment className="text-blue-500" />;
+        case 'answer_comment_created':
+            return <FaReply className="text-orange-500" />;
         case 'comment_reply':
             return <FaReply className="text-green-500" />;
         case 'follow_request':

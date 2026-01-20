@@ -1,14 +1,59 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { notificationsAPI } from '../services/api';
 
-const useNotifications = (autoRefresh = true, refreshInterval = 30000) => {
+const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSound = true) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const lastFetchTime = useRef(Date.now());
+    const isFetchingRef = useRef(false);
+    const previousUnreadCount = useRef(0);
+    const audioRef = useRef(null);
 
-    const fetchNotifications = useCallback(async (unreadOnly = false) => {
-        setLoading(true);
+    const playNotificationSound = useCallback(() => {
+        if (!enableSound) return;
+        
+        try {
+            if (!audioRef.current) {
+                audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjtS4+/XiSUFIHHH8N2UQAoUXbPo7aJYFAg+m9vvwHAiAytT3u3YjCYEHG/D7d6XQAkSW6/l6qRcFAg6ltjuxnQiAytT3+/ZiCQEGm7C7N+XQAkRWrHm6aJeEgg7ldbuvnQjAitS3+/Xhi==');
+            }
+            audioRef.current.volume = 0.3;
+            audioRef.current.play().catch(err => console.log('Sound play failed:', err));
+        } catch (err) {
+            console.log('Sound error:', err);
+        }
+    }, [enableSound]);
+
+    const showBrowserNotification = useCallback((notification) => {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+                const notif = new Notification('Yeni Bildirim', {
+                    body: notification.data?.message || 'Yeni bir bildiriminiz var',
+                    icon: notification.data?.user?.avatar || '/vite.svg',
+                    badge: '/vite.svg',
+                    tag: notification.id,
+                    requireInteraction: false,
+                    silent: false
+                });
+
+                notif.onclick = () => {
+                    window.focus();
+                    notif.close();
+                };
+
+                setTimeout(() => notif.close(), 5000);
+            } catch (err) {
+                console.log('Browser notification error:', err);
+            }
+        }
+    }, []);
+
+    const fetchNotifications = useCallback(async (unreadOnly = false, silent = false) => {
+        if (isFetchingRef.current) return;
+        
+        isFetchingRef.current = true;
+        if (!silent) setLoading(true);
         setError(null);
 
         try {
@@ -18,15 +63,30 @@ const useNotifications = (autoRefresh = true, refreshInterval = 30000) => {
             const response = await notificationsAPI.getAll(params);
             const data = response.data.data;
 
-            setNotifications(data.notifications || []);
-            setUnreadCount(data.unread_count || 0);
+            const newNotifications = data.notifications || [];
+            const newUnreadCount = data.unread_count || 0;
+
+            // Check for new notifications
+            if (previousUnreadCount.current > 0 && newUnreadCount > previousUnreadCount.current) {
+                const latestNotification = newNotifications.find(n => !n.is_read);
+                if (latestNotification) {
+                    playNotificationSound();
+                    showBrowserNotification(latestNotification);
+                }
+            }
+
+            setNotifications(newNotifications);
+            setUnreadCount(newUnreadCount);
+            previousUnreadCount.current = newUnreadCount;
+            lastFetchTime.current = Date.now();
         } catch (err) {
             console.error('Bildirimler yüklenemedi:', err);
             setError(err.message);
         } finally {
             setLoading(false);
+            isFetchingRef.current = false;
         }
-    }, []);
+    }, [playNotificationSound, showBrowserNotification]);
 
     const markAsRead = useCallback(async (notificationId) => {
         try {
@@ -41,6 +101,9 @@ const useNotifications = (autoRefresh = true, refreshInterval = 30000) => {
                 )
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
+
+            // Trigger cross-tab sync
+            localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
             console.error('Bildirim işaretlenemedi:', err);
             throw err;
@@ -56,6 +119,9 @@ const useNotifications = (autoRefresh = true, refreshInterval = 30000) => {
                 prev.map(n => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
             );
             setUnreadCount(0);
+
+            // Trigger cross-tab sync
+            localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
             console.error('Bildirimler işaretlenemedi:', err);
             throw err;
@@ -73,6 +139,9 @@ const useNotifications = (autoRefresh = true, refreshInterval = 30000) => {
             if (notification && !notification.is_read) {
                 setUnreadCount(prev => Math.max(0, prev - 1));
             }
+
+            // Trigger cross-tab sync
+            localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
             console.error('Bildirim silinemedi:', err);
             throw err;
@@ -86,6 +155,9 @@ const useNotifications = (autoRefresh = true, refreshInterval = 30000) => {
             // Clear all
             setNotifications([]);
             setUnreadCount(0);
+
+            // Trigger cross-tab sync
+            localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
             console.error('Bildirimler silinemedi:', err);
             throw err;
@@ -93,24 +165,75 @@ const useNotifications = (autoRefresh = true, refreshInterval = 30000) => {
     }, []);
 
     const refresh = useCallback(() => {
-        fetchNotifications();
+        fetchNotifications(false, true);
     }, [fetchNotifications]);
+
+    const requestNotificationPermission = useCallback(async () => {
+        if ('Notification' in window && Notification.permission === 'default') {
+            try {
+                const permission = await Notification.requestPermission();
+                return permission === 'granted';
+            } catch (err) {
+                console.error('Notification permission error:', err);
+                return false;
+            }
+        }
+        return Notification.permission === 'granted';
+    }, []);
 
     // Initial fetch
     useEffect(() => {
         fetchNotifications();
     }, [fetchNotifications]);
 
-    // Auto-refresh
     useEffect(() => {
         if (!autoRefresh) return;
 
         const interval = setInterval(() => {
-            fetchNotifications();
+            fetchNotifications(false, true);
         }, refreshInterval);
 
         return () => clearInterval(interval);
     }, [autoRefresh, refreshInterval, fetchNotifications]);
+
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                const timeSinceLastFetch = Date.now() - lastFetchTime.current;
+                if (timeSinceLastFetch > 5000) {
+                    fetchNotifications(false, true);
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [fetchNotifications]);
+
+    // Window focus - fetch when window gets focus
+    useEffect(() => {
+        const handleFocus = () => {
+            const timeSinceLastFetch = Date.now() - lastFetchTime.current;
+            if (timeSinceLastFetch > 5000) {
+                fetchNotifications(false, true);
+            }
+        };
+
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [fetchNotifications]);
+
+    // Cross-tab synchronization using localStorage
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === 'notifications_update') {
+                fetchNotifications(false, true);
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, [fetchNotifications]);
 
     return {
         notifications,
@@ -123,6 +246,7 @@ const useNotifications = (autoRefresh = true, refreshInterval = 30000) => {
         deleteNotification,
         deleteAllNotifications,
         refresh,
+        requestNotificationPermission,
     };
 };
 
