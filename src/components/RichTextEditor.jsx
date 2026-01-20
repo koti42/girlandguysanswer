@@ -28,7 +28,6 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
                 // Insert image into editor
                 document.execCommand('insertImage', false, imageUrl);
             } catch (error) {
-                console.error("Resim yükleme hatası:", error);
                 alert("Resim yüklenirken bir hata oluştu.");
             }
         }

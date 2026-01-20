@@ -50,7 +50,6 @@ const ProfilePage = () => {
                 } else {
                     const response = await usersAPI.getProfile(username);
                     data = response.data.data;
-                    console.log('Profile data from backend:', data);
                     questionsData = data.questions || [];
                 }
 
@@ -90,7 +89,7 @@ const ProfilePage = () => {
                     });
                 }
             } catch (error) {
-                console.error("Profil yüklenirken hata:", error);
+                // Handle error silently or show toast
             } finally {
                 setLoading(false);
             }
@@ -124,7 +123,6 @@ const ProfilePage = () => {
                     }
                 }
             } catch (error) {
-                console.error("Tab verisi yüklenirken hata:", error);
                 // Fallback to empty to prevent crash
                 if (activeTab === 'followers') setFollowers([]);
                 if (activeTab === 'following') setFollowing([]);
@@ -187,9 +185,7 @@ const ProfilePage = () => {
                 }));
             } else if (profileData.hasPendingRequest) {
                 // Cancel Request
-                console.log('Canceling follow request for:', profileData.username);
                 await usersAPI.unfollow(profileData.username);
-                console.log('Request canceled, updating state');
                 setProfileData(prev => ({ ...prev, hasPendingRequest: false }));
             } else {
                 // Follow
@@ -204,8 +200,6 @@ const ProfilePage = () => {
                 }));
             }
         } catch (error) {
-            console.error("Takip işlemi hatası:", error);
-
             // Show backend error message if available
             const backendMessage = error.response?.data?.message;
 
@@ -230,7 +224,7 @@ const ProfilePage = () => {
             alert("Kullanıcı engellendi.");
             // navigate('/'); // Optional: redirect home
         } catch (error) {
-            console.error("Engelleme hatası:", error);
+            showToast('Engelleme işlemi başarısız oldu.', 'error');
         }
     };
 

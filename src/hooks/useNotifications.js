@@ -19,9 +19,9 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
                 audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjtS4+/XiSUFIHHH8N2UQAoUXbPo7aJYFAg+m9vvwHAiAytT3u3YjCYEHG/D7d6XQAkSW6/l6qRcFAg6ltjuxnQiAytT3+/ZiCQEGm7C7N+XQAkRWrHm6aJeEgg7ldbuvnQjAitS3+/Xhi==');
             }
             audioRef.current.volume = 0.3;
-            audioRef.current.play().catch(err => console.log('Sound play failed:', err));
+            audioRef.current.play().catch(() => {});
         } catch (err) {
-            console.log('Sound error:', err);
+            // Sound error ignored
         }
     }, [enableSound]);
 
@@ -44,7 +44,7 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
 
                 setTimeout(() => notif.close(), 5000);
             } catch (err) {
-                console.log('Browser notification error:', err);
+                // Browser notification error ignored
             }
         }
     }, []);
@@ -80,7 +80,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
             previousUnreadCount.current = newUnreadCount;
             lastFetchTime.current = Date.now();
         } catch (err) {
-            console.error('Bildirimler yüklenemedi:', err);
             setError(err.message);
         } finally {
             setLoading(false);
@@ -105,7 +104,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
             // Trigger cross-tab sync
             localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
-            console.error('Bildirim işaretlenemedi:', err);
             throw err;
         }
     }, []);
@@ -123,7 +121,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
             // Trigger cross-tab sync
             localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
-            console.error('Bildirimler işaretlenemedi:', err);
             throw err;
         }
     }, []);
@@ -143,7 +140,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
             // Trigger cross-tab sync
             localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
-            console.error('Bildirim silinemedi:', err);
             throw err;
         }
     }, [notifications]);
@@ -159,7 +155,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
             // Trigger cross-tab sync
             localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
-            console.error('Bildirimler silinemedi:', err);
             throw err;
         }
     }, []);
@@ -174,7 +169,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
                 const permission = await Notification.requestPermission();
                 return permission === 'granted';
             } catch (err) {
-                console.error('Notification permission error:', err);
                 return false;
             }
         }

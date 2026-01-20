@@ -12,7 +12,6 @@ const QuestionActionsMenu = () => {
     ];
 
     const handleAction = (actionId) => {
-        console.log('Action:', actionId);
         setIsOpen(false);
     };
 

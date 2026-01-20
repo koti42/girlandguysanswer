@@ -23,7 +23,6 @@ const FollowRequestsPage = () => {
             const response = await usersAPI.getFollowRequests();
             setRequests(response.data.data.requests || response.data.data || []);
         } catch (error) {
-            console.error('Takip istekleri yüklenemedi:', error);
             showToast('Takip istekleri yüklenemedi', 'error');
         } finally {
             setLoading(false);
@@ -42,7 +41,6 @@ const FollowRequestsPage = () => {
             setRequests(prev => prev.filter(r => r.id !== request.id));
             showToast(`${request.user.username} artık sizi takip ediyor`, 'success');
         } catch (error) {
-            console.error('İstek kabul edilemedi:', error);
             showToast('İstek kabul edilemedi', 'error');
         } finally {
             setProcessingIds(prev => {
@@ -61,7 +59,6 @@ const FollowRequestsPage = () => {
             setRequests(prev => prev.filter(r => r.id !== request.id));
             showToast('Takip isteği reddedildi', 'success');
         } catch (error) {
-            console.error('İstek reddedilemedi:', error);
             showToast('İstek reddedilemedi', 'error');
         } finally {
             setProcessingIds(prev => {

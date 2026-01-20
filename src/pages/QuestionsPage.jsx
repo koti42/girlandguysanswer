@@ -34,7 +34,6 @@ const QuestionsPage = () => {
                 setQuestions(response.data.data.questions);
                 // Pagination verilerini de alabiliriz: response.data.data.pagination
             } catch (err) {
-                console.error("Sorular yüklenirken hata:", err);
                 setError("Sorular yüklenirken bir sorun oluştu.");
             } finally {
                 setLoading(false);

@@ -28,10 +28,6 @@ const NotificationBell = () => {
     }, [isOpen]);
 
     const handleNotificationClick = async (notification) => {
-        console.log('🔔 Notification clicked:', notification);
-        console.log('📌 Type:', notification.type);
-        console.log('📦 Data:', notification.data);
-        
         setIsOpen(false);
 
         // Mark as read
@@ -39,7 +35,6 @@ const NotificationBell = () => {
             try {
                 await markAsRead(notification.id);
             } catch (error) {
-                console.error('Failed to mark as read:', error);
             }
         }
 
@@ -49,45 +44,31 @@ const NotificationBell = () => {
         switch (notification.type) {
             case 'answer_created':
                 if (questionSlug) {
-                    console.log('✅ Navigating to:', `/question/${questionSlug}`);
                     navigate(`/question/${questionSlug}`);
-                } else {
-                    console.error('❌ question_slug bulunamadı!', notification.data);
                 }
                 break;
             case 'answer_comment_created':
                 if (questionSlug) {
                     const answerId = notification.data?.answer_id;
-                    console.log('✅ Navigating to:', `/question/${questionSlug}#answer-${answerId}`);
                     navigate(`/question/${questionSlug}#answer-${answerId}`);
-                } else {
-                    console.error('❌ question_slug bulunamadı!', notification.data);
                 }
                 break;
             case 'comment_reply':
                 if (questionSlug) {
                     const commentId = notification.data?.comment_id || notification.data?.id;
-                    console.log('✅ Navigating to:', `/question/${questionSlug}#comment-${commentId}`);
                     navigate(`/question/${questionSlug}#comment-${commentId}`);
-                } else {
-                    console.error('❌ question_slug bulunamadı!', notification.data);
                 }
                 break;
             case 'follow_request':
-                console.log('✅ Navigating to: /follow-requests');
                 navigate('/follow-requests');
                 break;
             case 'follow_request_accepted':
                 const username = notification.data?.user?.username;
                 if (username) {
-                    console.log('✅ Navigating to:', `/profile/${username}`);
                     navigate(`/profile/${username}`);
-                } else {
-                    console.error('❌ username bulunamadı!', notification.data);
                 }
                 break;
             default:
-                console.warn('⚠️ Bilinmeyen bildirim tipi:', notification.type);
                 break;
         }
     };

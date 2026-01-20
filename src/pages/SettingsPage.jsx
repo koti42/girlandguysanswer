@@ -47,7 +47,6 @@ const SettingsPage = () => {
             try {
                 // Fetch current user's settings from /user/me endpoint
                 const response = await usersAPI.getMe();
-                console.log('Fetched user data:', response.data);
 
                 const userData = response.data.data.user;
                 const detail = userData.detail;
@@ -59,7 +58,7 @@ const SettingsPage = () => {
                     allow_following: detail.allow_following !== undefined ? detail.allow_following : true
                 });
             } catch (error) {
-                console.error("Ayarlar yüklenemedi:", error);
+                // Ayarlar yüklenemedi
             } finally {
                 setLoading(false);
             }
@@ -75,10 +74,8 @@ const SettingsPage = () => {
 
     const handlePrivacyChange = async (newValue) => {
         try {
-            console.log('Privacy change:', newValue);
             setSettings(prev => ({ ...prev, is_private: newValue }));
             const response = await usersAPI.updatePrivacy(newValue);
-            console.log('Privacy update response:', response.data);
 
             // Update from backend response
             if (response.data.data?.settings) {
@@ -98,8 +95,6 @@ const SettingsPage = () => {
 
             showSuccess(response.data.message || `Hesap ${newValue ? 'gizli' : 'herkese açık'} olarak güncellendi.`);
         } catch (error) {
-            console.error("Gizlilik ayarı güncellenemedi:", error);
-            console.error("Error response:", error.response?.data);
             setSettings(prev => ({ ...prev, is_private: !newValue })); // Revert
 
             const errorMsg = error.response?.data?.message || 'Gizlilik ayarı güncellenemedi. Lütfen tekrar deneyin.';
@@ -109,13 +104,11 @@ const SettingsPage = () => {
 
     const handleMessagingToggle = async (newValue) => {
         try {
-            console.log('Messaging toggle:', newValue);
             setSettings(prev => ({ ...prev, allow_messaging: newValue }));
             const response = await usersAPI.updateMessaging({
                 allow_messaging: newValue,
                 messaging_mode: settings.messaging_mode
             });
-            console.log('Messaging update response:', response.data);
 
             // Update from backend response
             if (response.data.data?.settings) {
@@ -135,8 +128,6 @@ const SettingsPage = () => {
 
             showSuccess(response.data.message || `Mesajlaşma ${newValue ? 'açıldı' : 'kapatıldı'}.`);
         } catch (error) {
-            console.error("Mesaj ayarı güncellenemedi:", error);
-            console.error("Error response:", error.response?.data);
             setSettings(prev => ({ ...prev, allow_messaging: !newValue }));
 
             const errorMsg = error.response?.data?.message || 'Mesaj ayarı güncellenemedi. Lütfen tekrar deneyin.';
@@ -154,7 +145,6 @@ const SettingsPage = () => {
             });
             showSuccess(`Mesaj tercihiniz güncellendi.`);
         } catch (error) {
-            console.error("Mesaj modu güncellenemedi:", error);
             setSettings(prev => ({ ...prev, messaging_mode: settings.messaging_mode }));
             const errorMsg = error.response?.data?.message || 'Mesaj modu güncellenemedi. Lütfen tekrar deneyin.';
             showToast(errorMsg, 'error');
@@ -163,10 +153,8 @@ const SettingsPage = () => {
 
     const handleFollowingToggle = async (newValue) => {
         try {
-            console.log('Following toggle:', newValue);
             setSettings(prev => ({ ...prev, allow_following: newValue }));
             const response = await usersAPI.updateFollowing(newValue);
-            console.log('Following update response:', response.data);
 
             // Update from backend response
             if (response.data.data?.settings) {
@@ -186,8 +174,6 @@ const SettingsPage = () => {
 
             showSuccess(response.data.message || `Takip istekleri ${newValue ? 'kabul ediliyor' : 'kapatıldı'}.`);
         } catch (error) {
-            console.error("Takip ayarı güncellenemedi:", error);
-            console.error("Error response:", error.response?.data);
             setSettings(prev => ({ ...prev, allow_following: !newValue }));
 
             const errorMsg = error.response?.data?.message || 'Takip ayarı güncellenemedi. Lütfen tekrar deneyin.';

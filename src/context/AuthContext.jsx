@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }) => {
             try {
                 setUser(JSON.parse(storedUser));
             } catch (e) {
-                console.error("User parsing error", e);
                 localStorage.removeItem('user');
                 localStorage.removeItem('token');
             }
@@ -31,7 +30,6 @@ export const AuthProvider = ({ children }) => {
         setError(null);
         try {
             const response = await authAPI.login({ email, password });
-            console.log("Login Response:", response.data); // Debug log
 
             // Handle potential variations in API response structure
             const token = response.data.data?.token || response.data.token || response.data.access_token;
@@ -45,7 +43,6 @@ export const AuthProvider = ({ children }) => {
                 setUser(user);
                 return { success: true };
             } else {
-                console.error("Login structure mismatch:", response.data);
                 throw new Error("Giriş verileri alınamadı");
             }
         } catch (err) {
@@ -62,7 +59,6 @@ export const AuthProvider = ({ children }) => {
         setError(null);
         try {
             const response = await authAPI.register(userData);
-            console.log("Register Response:", response.data);
 
             const token = response.data.data?.token || response.data.token || response.data.access_token;
             const user = response.data.data?.user || response.data.user || response.data.data;

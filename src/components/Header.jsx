@@ -20,7 +20,6 @@ const Header = ({ onSearch }) => {
             await logout(); // AuthContext uses api.logout internally
             navigate('/');
         } catch (error) {
-            console.error("Çıkış yapılırken hata:", error);
             // Force local cleanup anyway
             localStorage.removeItem('token');
             localStorage.removeItem('user');

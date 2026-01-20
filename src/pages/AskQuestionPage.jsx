@@ -108,7 +108,6 @@ const AskQuestionPage = () => {
                 navigate('/questions');
             }, 1000);
         } catch (error) {
-            console.error('Soru oluşturma hatası:', error);
             showToast('error', error.response?.data?.message || 'Soru yayınlanırken bir hata oluştu');
         } finally {
             setIsSubmitting(false);

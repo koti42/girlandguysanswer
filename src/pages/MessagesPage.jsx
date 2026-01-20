@@ -94,7 +94,6 @@ const MessagesPage = () => {
     const handleSendMessage = (e) => {
         e.preventDefault();
         if (messageText.trim() || attachedFile) {
-            console.log('Mesaj gönderildi:', messageText, attachedFile);
             setMessageText('');
             setAttachedFile(null);
             setShowEmojiPicker(false);
@@ -116,7 +115,6 @@ const MessagesPage = () => {
     const handleVoiceRecord = () => {
         setIsRecording(!isRecording);
         // Voice recording logic would go here
-        console.log(isRecording ? 'Kayıt durduruluyor...' : 'Kayıt başlıyor...');
     };
 
     const addEmoji = (emoji) => {

@@ -30,17 +30,12 @@ const QuestionCard = ({ question }) => {
                 commentable_id: question.id
             });
 
-            console.log('Hızlı yorum gönderildi:', {
-                text: replyText
-            });
-
             showToast('Yorumunuz başarıyla gönderildi! 🎉', 'success');
             setReplyText('');
             setIsAnonymous(false);
             setShowReplyBox(false);
 
         } catch (error) {
-            console.error('Yorum gönderme hatası:', error);
             const errorMsg = error.response?.data?.message || 'Yorum gönderilemedi. Lütfen tekrar deneyin.';
             showToast(errorMsg, 'error');
         } finally {
