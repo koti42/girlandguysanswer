@@ -1,21 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
 import { notifications } from '../data/mockData';
 
 const Header = ({ onSearch }) => {
+    const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const { isDark, toggleTheme } = useTheme();
+    const { user, isAuthenticated, logout } = useAuth();
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
     // Ref for notifications dropdown
     const notificationsRef = useRef(null);
+
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
 
     // Close notifications when clicking outside
     useEffect(() => {
@@ -166,6 +174,48 @@ const Header = ({ onSearch }) => {
                                 className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-md cursor-pointer hover:border-coral transition-colors"
                             />
                         </Link>
+
+                        {/* User Menu or Auth Buttons */}
+                        {isAuthenticated ? (
+                            <div className="relative group">
+                                <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                    <FaUser className="text-gray-600 dark:text-gray-300" />
+                                    <span className="hidden md:inline text-sm font-semibold text-gray-700 dark:text-gray-300">{user?.username}</span>
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                    <Link
+                                        to={`/profile/${user?.username}`}
+                                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg"
+                                    >
+                                        Profilim
+                                    </Link>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg flex items-center gap-2"
+                                    >
+                                        <FaSignOutAlt />
+                                        Çıkış Yap
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <Link
+                                    to="/login"
+                                    className="hidden sm:block px-3 py-2 text-sm rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-medium"
+                                >
+                                    Giriş
+                                </Link>
+                                <Link
+                                    to="/signup"
+                                    className="hidden sm:block px-3 py-2 text-sm rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:shadow-lg transition-all font-medium"
+                                >
+                                    Kayıt Ol
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
 

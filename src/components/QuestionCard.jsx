@@ -23,8 +23,8 @@ const QuestionCard = ({ question }) => {
 
     return (
         <div className={`rounded-2xl p-6 shadow-soft hover:shadow-soft-hover transition-all duration-300 border flex flex-col gap-4 ${question.user.gender === 'female'
-                ? 'bg-gradient-to-br from-pink-100 via-pink-200 to-rose-200 dark:from-pink-800/40 dark:via-pink-700/30 dark:to-rose-700/30 border-pink-200 dark:border-pink-700/50'
-                : 'bg-gradient-to-br from-blue-100 via-sky-200 to-cyan-200 dark:from-blue-800/40 dark:via-blue-700/30 dark:to-cyan-700/30 border-blue-200 dark:border-blue-700/50'
+            ? 'bg-gradient-to-br from-pink-100 via-pink-200 to-rose-200 dark:from-pink-800/40 dark:via-pink-700/30 dark:to-rose-700/30 border-pink-200 dark:border-pink-700/50'
+            : 'bg-gradient-to-br from-blue-100 via-sky-200 to-cyan-200 dark:from-blue-800/40 dark:via-blue-700/30 dark:to-cyan-700/30 border-blue-200 dark:border-blue-700/50'
             }`}>
             {/* Header */}
             <div className="flex justify-between items-start">
@@ -83,14 +83,14 @@ const QuestionCard = ({ question }) => {
                 <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 text-sm mb-3">
                     <div className="flex gap-6">
                         <button className="flex items-center gap-2 hover:text-coral transition-colors">
-                            <FaHeart /> <span>{question.stats.likes}</span>
+                            <FaHeart /> <span>{question.stats?.likes || question.likes || 0}</span>
                         </button>
                         <Link to={`/question/${question.id}`} className="flex items-center gap-2 hover:text-blue-500 transition-colors">
-                            <FaComment /> <span>{question.stats.comments}</span>
+                            <FaComment /> <span>{question.stats?.comments || question.commentsCount || 0}</span>
                         </Link>
                     </div>
                     <div className="flex items-center gap-2">
-                        <FaEye /> <span>{question.stats.views}</span>
+                        <FaEye /> <span>{question.stats?.views || question.views || 0}</span>
                     </div>
                 </div>
 
