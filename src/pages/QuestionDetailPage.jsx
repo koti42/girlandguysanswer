@@ -92,22 +92,26 @@ const QuestionDetailPage = () => {
         if (!commentText.trim()) return;
 
         try {
-            // API call to create answer using question ID
-            const response = await questionsAPI.createAnswer(question.id, {
-                content: commentText
+            // Create comment on question using /comments endpoint
+            const response = await commentsAPI.create({
+                content: commentText,
+                commentable_type: 'question',
+                commentable_id: question.id
             });
 
-            const newAnswer = response.data.data.answer;
-            // Ensure array fields exist for UI safety
-            if (!newAnswer.comments) newAnswer.comments = [];
-            if (!newAnswer.likes_count) newAnswer.likes_count = 0;
+            const newComment = response.data.data.comment;
 
-            setAnswers(prev => [newAnswer, ...prev]);
+            // Add comment to question's comments list
+            setQuestion(prev => ({
+                ...prev,
+                comments: [...(prev.comments || []), newComment]
+            }));
+
             setCommentText('');
-            // isAnonymous is not supported in createAnswer spec yet, ignoring for now or adding if backend updates
+            displayToast('Yorumunuz başarıyla gönderildi! 🎉', 'success');
         } catch (err) {
-            console.error("Cevap gönderilirken hata:", err);
-            const errorMsg = err.response?.data?.message || "Cevap gönderilemedi. Lütfen tekrar deneyin.";
+            console.error("Yorum gönderilirken hata:", err);
+            const errorMsg = err.response?.data?.message || "Yorum gönderilemedi. Lütfen tekrar deneyin.";
             displayToast(errorMsg, 'error');
         }
     };
