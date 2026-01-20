@@ -35,20 +35,22 @@ api.interceptors.response.use(
 export const authAPI = {
     login: (credentials) => api.post('/auth/login', credentials),
     register: (userData) => api.post('/auth/register', userData),
-    getCurrentUser: () => api.get('/user/me'), // Updated endpoint
+    logout: () => api.post('/auth/logout'),
+    getCurrentUser: () => api.get('/user/me'),
 };
 
 export const questionsAPI = {
     getAll: (params) => api.get('/questions', { params }),
     getById: (id) => api.get(`/questions/${id}`),
     create: (data) => api.post('/questions', data),
-    getMyQuestions: () => api.get('/user/me/questions'), // New endpoint
+    createAnswer: (questionId, data) => api.post(`/questions/${questionId}/answers`, data),
+    getMyQuestions: () => api.get('/user/me/questions'),
 };
 
 export const usersAPI = {
-    getProfile: (username) => api.get(`/users/${username}`), // Updated for username param
+    getProfile: (username) => api.get(`/users/${username}`),
     updateProfile: (data) => api.put('/user/me', data),
-    getFollowers: (userId) => api.get(`/users/${userId}/followers`), // Assuming endpoints exists or similar pattern
+    getFollowers: (userId) => api.get(`/users/${userId}/followers`),
     getFollowing: (userId) => api.get(`/users/${userId}/following`),
     follow: (userId) => api.post(`/users/${userId}/follow`),
     unfollow: (userId) => api.delete(`/users/${userId}/follow`),
