@@ -118,6 +118,53 @@ const ProfilePage = () => {
         setProfileData(prev => ({ ...prev, coverPhoto: defaultCover }));
     };
 
+    // Social Action Handlers
+    const handleFollowToggle = async () => {
+        if (!profileData) return;
+        try {
+            if (profileData.isFollowing) {
+                // Unfollow
+                await usersAPI.unfollow(profileData.username);
+                setProfileData(prev => ({
+                    ...prev,
+                    isFollowing: false,
+                    hasPendingRequest: false,
+                    stats: { ...prev.stats, followers: Math.max(0, (prev.stats?.followers || 0) - 1) }
+                }));
+            } else if (profileData.hasPendingRequest) {
+                // Cancel Request
+                await usersAPI.unfollow(profileData.username);
+                setProfileData(prev => ({ ...prev, hasPendingRequest: false }));
+            } else {
+                // Follow
+                const res = await usersAPI.follow(profileData.username);
+                const isRequest = res.data.data?.type === 'request';
+
+                setProfileData(prev => ({
+                    ...prev,
+                    isFollowing: !isRequest,
+                    hasPendingRequest: isRequest,
+                    stats: !isRequest ? { ...prev.stats, followers: (prev.stats?.followers || 0) + 1 } : prev.stats
+                }));
+            }
+        } catch (error) {
+            console.error("Takip işlemi hatası:", error);
+        }
+    };
+
+    const handleBlockToggle = async () => {
+        if (!profileData) return;
+        if (!window.confirm("Bu kullanıcıyı engellemek istediğinize emin misiniz?")) return;
+
+        try {
+            await usersAPI.block(profileData.username);
+            alert("Kullanıcı engellendi.");
+            // navigate('/'); // Optional: redirect home
+        } catch (error) {
+            console.error("Engelleme hatası:", error);
+        }
+    };
+
     const handleSave = () => {
         setProfileData(prev => ({ ...prev, ...editForm }));
         setIsEditing(false);
@@ -182,16 +229,31 @@ const ProfilePage = () => {
                                                     <FaEdit /> Düzenle
                                                 </button>
                                             ) : (
-                                                <>
+                                                <div className="flex items-center gap-2">
                                                     <Link to={`/messages/${profileData.username}`}>
                                                         <button className="border-2 border-coral text-coral px-4 py-2 rounded-xl hover:bg-coral hover:text-white transition-colors">
                                                             Mesaj
                                                         </button>
                                                     </Link>
-                                                    <button className="bg-coral text-white px-4 py-2 rounded-xl hover:bg-coral-dark transition-colors shadow-md hover:shadow-lg">
-                                                        Takip Et
+                                                    <button
+                                                        onClick={handleFollowToggle}
+                                                        className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${profileData.isFollowing
+                                                                ? 'bg-gray-500 hover:bg-gray-600'
+                                                                : profileData.hasPendingRequest
+                                                                    ? 'bg-yellow-500 hover:bg-yellow-600'
+                                                                    : 'bg-coral hover:bg-coral-dark'
+                                                            }`}
+                                                    >
+                                                        {profileData.isFollowing ? 'Takip Ediliyor' : profileData.hasPendingRequest ? 'İstek Gönderildi' : 'Takip Et'}
                                                     </button>
-                                                </>
+                                                    <button
+                                                        onClick={handleBlockToggle}
+                                                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                                        title="Kullanıcıyı Engelle"
+                                                    >
+                                                        🚫
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
 
