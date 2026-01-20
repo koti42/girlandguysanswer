@@ -328,21 +328,20 @@ const QuestionDetailPage = () => {
                                                 className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-700 group-hover:border-coral transition-colors object-cover"
                                             />
                                             <div>
-                                                <div>
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="font-bold text-gray-800 dark:text-gray-200 group-hover:text-coral transition-colors">
-                                                            {answer.user.name}
-                                                        </span>
-                                                        {answer.user.gender === 'female' ? (
-                                                            <FaVenus className="text-pink-500 text-sm" />
-                                                        ) : (
-                                                            <FaMars className="text-blue-500 text-sm" />
-                                                        )}
-                                                    </div>
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {new Date(answer.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-bold text-gray-800 dark:text-gray-200 group-hover:text-coral transition-colors">
+                                                        {answer.user.name}
                                                     </span>
+                                                    {answer.user.gender === 'female' ? (
+                                                        <FaVenus className="text-pink-500 text-sm" />
+                                                    ) : (
+                                                        <FaMars className="text-blue-500 text-sm" />
+                                                    )}
                                                 </div>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {new Date(answer.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
                                         </Link>
                                     </div>
 
