@@ -325,6 +325,31 @@ const QuestionDetailPage = () => {
                         </form>
                     </div>
 
+                    {/* Question Comments Section */}
+                    {question.comments && question.comments.length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                                <FaComment className="text-coral" />
+                                Yorumlar ({question.comments.length})
+                            </h3>
+                            <div className="flex flex-col gap-3">
+                                {question.comments.map((comment) => (
+                                    <div key={comment.id} className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <Link to={`/profile/${comment.user.username}`} className="font-bold text-sm text-gray-800 dark:text-gray-100 hover:text-coral transition-colors">
+                                                    {comment.user.username}
+                                                </Link>
+                                                <span className="text-xs text-gray-500">• {formatDate(comment.created_at)}</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-gray-700 dark:text-gray-300 text-sm">{comment.content}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Answers Section */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 shadow-soft">
                         {/* Filter & Sort Bar */}
