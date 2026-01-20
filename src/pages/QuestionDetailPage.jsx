@@ -38,6 +38,12 @@ const QuestionDetailPage = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('success');
 
+    const displayToast = (message, type = 'success') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast(true);
+    };
+
     useEffect(() => {
         const fetchQuestionDetail = async () => {
             setLoading(true);
@@ -102,7 +108,8 @@ const QuestionDetailPage = () => {
             // isAnonymous is not supported in createAnswer spec yet, ignoring for now or adding if backend updates
         } catch (err) {
             console.error("Cevap gönderilirken hata:", err);
-            alert("Cevap gönderilemedi. Lütfen tekrar deneyin.");
+            const errorMsg = err.response?.data?.message || "Cevap gönderilemedi. Lütfen tekrar deneyin.";
+            displayToast(errorMsg, 'error');
         }
     };
 
@@ -144,7 +151,8 @@ const QuestionDetailPage = () => {
             setShowToast(true);
         } catch (err) {
             console.error("Yanıt gönderilirken hata:", err);
-            alert("Yanıt gönderilemedi. Lütfen tekrar deneyin. " + (err.response?.data?.message || err.message));
+            const errorMsg = err.response?.data?.message || "Yanıt gönderilemedi. Lütfen tekrar deneyin.";
+            displayToast(errorMsg, 'error');
         }
     };
 
