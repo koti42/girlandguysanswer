@@ -277,12 +277,12 @@ const ProfilePage = () => {
                                                         onClick={handleFollowToggle}
                                                         disabled={profileData.allow_following === false}
                                                         className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${profileData.allow_following === false
-                                                                ? 'bg-gray-300 cursor-not-allowed'
-                                                                : profileData.isFollowing
-                                                                    ? 'bg-gray-500 hover:bg-gray-600'
-                                                                    : profileData.hasPendingRequest
-                                                                        ? 'bg-yellow-500 hover:bg-yellow-600'
-                                                                        : 'bg-coral hover:bg-coral-dark'
+                                                            ? 'bg-gray-300 cursor-not-allowed'
+                                                            : profileData.isFollowing
+                                                                ? 'bg-gray-500 hover:bg-gray-600'
+                                                                : profileData.hasPendingRequest
+                                                                    ? 'bg-yellow-500 hover:bg-yellow-600'
+                                                                    : 'bg-coral hover:bg-coral-dark'
                                                             }`}
                                                         title={profileData.allow_following === false ? 'Bu kullanıcı takip edilmeyi kapatmış' : ''}
                                                     >
@@ -318,14 +318,37 @@ const ProfilePage = () => {
                                                 <div className="font-bold text-lg">{profileData.stats.answers}</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400">Cevaplar</div>
                                             </button>
-                                            <button onClick={() => setActiveTab('followers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'followers' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                <div className="font-bold text-lg">{profileData.stats.followers}</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400">Takipçi</div>
-                                            </button>
-                                            <button onClick={() => setActiveTab('following')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'following' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                <div className="font-bold text-lg">{profileData.stats.following}</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400">Takip</div>
-                                            </button>
+
+                                            {/* Followers Tab - Hidden for private accounts when not following */}
+                                            {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
+                                                <button onClick={() => setActiveTab('followers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'followers' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                                    <div className="font-bold text-lg">{profileData.stats.followers}</div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Takipçi</div>
+                                                </button>
+                                            ) : (
+                                                <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
+                                                    <div className="font-bold text-lg flex items-center justify-center gap-1">
+                                                        <FaLock className="text-sm" />
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Takipçi</div>
+                                                </button>
+                                            )}
+
+                                            {/* Following Tab - Hidden for private accounts when not following */}
+                                            {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
+                                                <button onClick={() => setActiveTab('following')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'following' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                                    <div className="font-bold text-lg">{profileData.stats.following}</div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Takip</div>
+                                                </button>
+                                            ) : (
+                                                <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
+                                                    <div className="font-bold text-lg flex items-center justify-center gap-1">
+                                                        <FaLock className="text-sm" />
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Takip</div>
+                                                </button>
+                                            )}
+
                                             <button onClick={() => setActiveTab('liked')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'liked' ? 'bg-coral/10 border border-coral' : ''}`}>
                                                 <div className="font-bold text-lg text-coral">{profileData.stats.likes}</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400">Beğeni</div>

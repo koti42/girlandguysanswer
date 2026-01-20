@@ -3,9 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import NotificationDropdown from './NotificationDropdown';
+import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
-import { notifications } from '../data/mockData';
 
 const Header = ({ onSearch }) => {
     const navigate = useNavigate();
@@ -15,11 +14,6 @@ const Header = ({ onSearch }) => {
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const { isDark, toggleTheme } = useTheme();
     const { user, isAuthenticated, logout } = useAuth();
-
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    // Ref for notifications dropdown
-    const notificationsRef = useRef(null);
 
     const handleLogout = async () => {
         try {
@@ -34,22 +28,7 @@ const Header = ({ onSearch }) => {
         }
     };
 
-    // Close notifications when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
-                setIsNotificationsOpen(false);
-            }
-        };
 
-        if (isNotificationsOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isNotificationsOpen]);
 
     const handleSearchChange = (e) => {
         const query = e.target.value;
@@ -162,23 +141,7 @@ const Header = ({ onSearch }) => {
                         </Link>
 
                         {/* Notifications */}
-                        <div className="relative" ref={notificationsRef}>
-                            <button
-                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                                className="relative p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
-                            >
-                                <FaBell className="text-base sm:text-lg" />
-                                {unreadCount > 0 && (
-                                    <span className="absolute -top-0.5 -right-0.5 bg-coral text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                                        {unreadCount}
-                                    </span>
-                                )}
-                            </button>
-                            <NotificationDropdown
-                                isOpen={isNotificationsOpen}
-                                onClose={() => setIsNotificationsOpen(false)}
-                            />
-                        </div>
+                        <NotificationBell />
                         {/* Profile Picture */}
 
 
