@@ -524,8 +524,9 @@ const QuestionDetailPage = () => {
                         </div>
                     </div>
                 </div >
-            </MainLayout >
-            );
+            </MainLayout>
+        </>
+    );
 };
 
-            export default QuestionDetailPage;
+export default QuestionDetailPage;
