@@ -95,11 +95,13 @@ const QuestionDetailPage = () => {
         if (!replyText || !replyText.trim()) return;
 
         try {
+            // Replying to an Answer (which is a separate entity, not a comment)
+            // So we treat this as a new comment on the 'answer' entity.
             const response = await commentsAPI.create({
                 content: replyText,
-                commentable_type: 'question',
-                commentable_id: question.id, // UUID required
-                parent_id: answerId // The ID of the answer being replied to
+                commentable_type: 'answer', // Target the Answer model
+                commentable_id: answerId,   // The UUID of the Answer
+                // parent_id: null - We are not nesting under another comment, we are commenting on the answer
             });
 
             const newReply = response.data.data.comment;
