@@ -70,7 +70,8 @@ const QuestionDetailPage = () => {
 
         try {
             // API call to create answer (not general comment)
-            const response = await questionsAPI.createAnswer(question.id, {
+            // Using slug as ID since GET endpoint supports slug, likely POST does too or prefers it
+            const response = await questionsAPI.createAnswer(question.slug, {
                 content: commentText
             });
 
