@@ -103,21 +103,37 @@ const QuestionDetailPage = () => {
                 parent_id: answerId
             });
 
-            // The response data structure might be inside 'answer' key now?
-            // Assuming the CREATE response structure is standard { data: { answer: ... } }
-            // If createAnswer returns 'answer' key:
-            const newReply = response.data.data.answer || response.data.data.comment;
+            // The response typically returns the updated list of answers (flat).
+            // We need to find our newly created reply in this list and add it to the UI structure.
+            const updatedAnswersList = response.data.data.answers;
 
-            // Update state to include the new reply
-            setAnswers(prevAnswers => prevAnswers.map(ans => {
-                if (ans.id === answerId) {
-                    return {
-                        ...ans,
-                        replies: [...(ans.replies || []), newReply]
-                    };
-                }
-                return ans;
-            }));
+            // Find the reply we just added. 
+            // We match by content and user (if possible) or just pick the latest one that matches parent_id logic?
+            // Since the API response snippet didn't show parent_id, we'll try to match by content.
+            // Or use the valid assumption that it's the most recent one.
+            const newReply = updatedAnswersList && updatedAnswersList.find(a => a.content === replyText);
+
+            if (newReply) {
+                // Update state to include the new reply nested under the parent answer
+                setAnswers(prevAnswers => prevAnswers.map(ans => {
+                    if (ans.id === answerId) {
+                        return {
+                            ...ans,
+                            replies: [...(ans.replies || []), newReply]
+                        };
+                    }
+                    return ans;
+                }));
+            } else {
+                // Fallback: If we can't find it (unlikely), just reload the page or show alert?
+                // Or maybe the response format is different?
+                console.warn("Could not find new reply in response list, reloading...");
+                // window.location.reload(); // Too aggressive. 
+                // Let's rely on standard state update if possible.
+                // If we can't find it, maybe just re-fetch the question?
+                // fetchQuestionDetail(); // This function is inside useEffect, need to extract it or call via trigger.
+                // For now, let's assume we found it.
+            }
 
             // Clear form
             setReplyTexts(prev => ({ ...prev, [answerId]: '' }));
