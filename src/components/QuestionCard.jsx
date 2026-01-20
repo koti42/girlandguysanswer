@@ -5,13 +5,18 @@ import UserAvatar from './UserAvatar';
 import QuestionActionsMenu from './QuestionActionsMenu';
 
 import { questionsAPI, commentsAPI } from '../services/api';
+import Toast from './Toast';
 
 const QuestionCard = ({ question }) => {
     const [showReplyBox, setShowReplyBox] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+    };
 
     const handleSubmitReply = async (e) => {
         e.preventDefault();
@@ -19,7 +24,6 @@ const QuestionCard = ({ question }) => {
 
         setLoading(true);
         try {
-            // Create comment on question using /comments endpoint
             await commentsAPI.create({
                 content: replyText,
                 commentable_type: 'question',
@@ -30,23 +34,15 @@ const QuestionCard = ({ question }) => {
                 text: replyText
             });
 
-            setSuccessMessage('Yorumunuz başarıyla gönderildi! 🎉');
+            showToast('Yorumunuz başarıyla gönderildi! 🎉', 'success');
             setReplyText('');
             setIsAnonymous(false);
             setShowReplyBox(false);
 
-            // Hide success message after 3 seconds
-            setTimeout(() => {
-                setSuccessMessage('');
-            }, 3000);
-
         } catch (error) {
             console.error('Yorum gönderme hatası:', error);
             const errorMsg = error.response?.data?.message || 'Yorum gönderilemedi. Lütfen tekrar deneyin.';
-            setErrorMessage(errorMsg);
-            setTimeout(() => {
-                setErrorMessage('');
-            }, 3000);
+            showToast(errorMsg, 'error');
         } finally {
             setLoading(false);
         }
@@ -135,15 +131,17 @@ const QuestionCard = ({ question }) => {
                 </button>
             </div>
 
-            {/* Success Message Notification */}
-            {successMessage && (
-                <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-xl text-center text-sm font-medium animate-pulse">
-                    {successMessage}
-                </div>
+            {/* Toast Notification */}
+            {toast.show && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
             )}
 
             {/* Quick Reply Box */}
-            {showReplyBox && !successMessage && (
+            {showReplyBox && (
                 <form onSubmit={handleSubmitReply} className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex gap-2">
                         <input
