@@ -410,27 +410,27 @@ const QuestionDetailPage = () => {
                                         </button>
                                     </div>
 
-                                    {/* Replies Section */}
-                                    {answer.replies && answer.replies.length > 0 && (
+                                    {/* Comments Section (formerly Replies) */}
+                                    {answer.comments && answer.comments.length > 0 && (
                                         <div className="mt-6 space-y-3">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <FaReply className="text-coral text-sm" />
                                                 <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                                                    {answer.replies.length} Yanıt
+                                                    {answer.comments.length} Yanıt
                                                 </span>
                                             </div>
-                                            {answer.replies.map(reply => {
-                                                // Gender-based gradient for replies (stronger/darker versions)
-                                                const replyGradientClass = reply.user.gender === 'female'
+                                            {answer.comments.map(comment => {
+                                                // Gender-based gradient for comments
+                                                const commentGradientClass = comment.user?.gender === 'female'
                                                     ? 'bg-gradient-to-br from-pink-100 to-pink-50 dark:from-pink-900/25 dark:to-pink-800/20 border-pink-400 dark:border-pink-600'
                                                     : 'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-900/25 dark:to-cyan-800/20 border-cyan-400 dark:border-cyan-600';
 
                                                 return (
-                                                    <div key={reply.id} className={`${replyGradientClass} rounded-xl p-4 ml-8 border-l-8 shadow-lg hover:shadow-xl transition-all`}>
+                                                    <div key={comment.id} className={`${commentGradientClass} rounded-xl p-4 ml-8 border-l-8 shadow-lg hover:shadow-xl transition-all`}>
                                                         <div className="flex gap-3">
-                                                            <Link to={`/profile/${reply.user.username}`}>
+                                                            <Link to={`/profile/${comment.user?.username}`}>
                                                                 <UserAvatar
-                                                                    user={reply.user}
+                                                                    user={comment.user}
                                                                     size="md"
                                                                     className="w-11 h-11 border-3 border-white dark:border-gray-600 shadow-md hover:border-coral transition-colors"
                                                                 />
@@ -439,19 +439,19 @@ const QuestionDetailPage = () => {
                                                                 <div className="flex items-center gap-2 mb-1">
                                                                     <div className="flex items-center gap-1.5">
                                                                         <FaReply className="text-gray-400 dark:text-gray-500 text-xs" />
-                                                                        <Link to={`/profile/${reply.user.username}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">
-                                                                            {reply.user.username}
+                                                                        <Link to={`/profile/${comment.user?.username}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">
+                                                                            {comment.user?.username}
                                                                         </Link>
                                                                     </div>
-                                                                    {reply.user.gender === 'female' ? (
+                                                                    {comment.user?.gender === 'female' ? (
                                                                         <FaVenus className="text-pink-600 dark:text-pink-400 text-sm" />
                                                                     ) : (
                                                                         <FaMars className="text-cyan-600 dark:text-cyan-400 text-sm" />
                                                                     )}
-                                                                    <span className="text-gray-500 dark:text-gray-400 text-xs">• {reply.createdAt}</span>
+                                                                    <span className="text-gray-500 dark:text-gray-400 text-xs">• {comment.created_at || "Az önce"}</span>
                                                                 </div>
                                                                 <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed font-medium">
-                                                                    {reply.content}
+                                                                    {comment.content}
                                                                 </p>
                                                             </div>
                                                         </div>
