@@ -4,6 +4,7 @@ import MainLayout from '../layouts/MainLayout';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI } from '../services/api';
 import { TopUsersWidget } from '../components/Widgets';
+import Toast from '../components/Toast';
 
 const Toggle = ({ enabled, onChange, label, description }) => (
     <div className="flex items-center justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-0">
@@ -34,6 +35,11 @@ const SettingsPage = () => {
         allow_following: true
     });
     const [successMessage, setSuccessMessage] = useState('');
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+    };
 
     useEffect(() => {
         const fetchSettings = async () => {
