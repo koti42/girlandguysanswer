@@ -92,9 +92,8 @@ const QuestionDetailPage = () => {
         if (!commentText.trim()) return;
 
         try {
-            // API call to create answer (not general comment)
-            // Using slug as ID since GET endpoint supports slug, likely POST does too or prefers it
-            const response = await questionsAPI.createAnswer(question.slug, {
+            // API call to create answer using question ID
+            const response = await questionsAPI.createAnswer(question.id, {
                 content: commentText
             });
 
