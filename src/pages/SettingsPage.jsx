@@ -98,7 +98,7 @@ const SettingsPage = () => {
             setSettings(prev => ({ ...prev, is_private: !newValue })); // Revert
 
             const errorMsg = error.response?.data?.message || 'Gizlilik ayarı güncellenemedi. Lütfen tekrar deneyin.';
-            alert(errorMsg);
+            showToast(errorMsg, 'error');
         }
     };
 
@@ -135,7 +135,7 @@ const SettingsPage = () => {
             setSettings(prev => ({ ...prev, allow_messaging: !newValue }));
 
             const errorMsg = error.response?.data?.message || 'Mesaj ayarı güncellenemedi. Lütfen tekrar deneyin.';
-            alert(errorMsg);
+            showToast(errorMsg, 'error');
         }
     };
 
@@ -151,6 +151,8 @@ const SettingsPage = () => {
         } catch (error) {
             console.error("Mesaj modu güncellenemedi:", error);
             setSettings(prev => ({ ...prev, messaging_mode: settings.messaging_mode }));
+            const errorMsg = error.response?.data?.message || 'Mesaj modu güncellenemedi. Lütfen tekrar deneyin.';
+            showToast(errorMsg, 'error');
         }
     };
 
@@ -184,7 +186,7 @@ const SettingsPage = () => {
             setSettings(prev => ({ ...prev, allow_following: !newValue }));
 
             const errorMsg = error.response?.data?.message || 'Takip ayarı güncellenemedi. Lütfen tekrar deneyin.';
-            alert(errorMsg);
+            showToast(errorMsg, 'error');
         }
     };
 
