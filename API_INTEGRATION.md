@@ -166,21 +166,29 @@ Frontend geliştirirken kullanacağınız temel endpointler aşağıdadır.
 #### 6. Yorum Yap (Soruya veya Cevaba)
 - **URL**: `POST /comments`
 - **Headers**: `Authorization: Bearer <TOKEN>`
-- **Body (Soruya Yorum)**:
+- **Body (Soruya Yorum - Genel)**:
   ```json
   {
-    "content": "Bu konuda katılıyorum.",
-    "ownerType": "question",
-    "ownerId": "soru-uuid-buraya"
+    "content": "Bu soru çok önemli.",
+    "commentable_type": "question",
+    "commentable_id": "soru-uuid-buraya"
   }
   ```
-- **Body (Yoruma Cevap / Reply)**:
+- **Body (Cevaba Yanıt / Reply to Answer)**:
+  ```json
+  {
+    "content": "Bu cevaba katılıyorum.",
+    "commentable_type": "answer",
+    "commentable_id": "cevap-uuid-buraya"
+  }
+  ```
+- **Body (Yoruma Yanıt / Nested Reply - Destekleniyorsa)**:
   ```json
   {
     "content": "Teşekkür ederim.",
-    "ownerType": "question", // Ana öğe tipi (question/answer)
-    "ownerId": "soru-uuid-buraya", // Ana öğe ID'si
-    "parentId": "yorum-uuid-buraya" // Cevap verilen yorumun ID'si
+    "commentable_type": "question", 
+    "commentable_id": "soru-uuid-buraya",
+    "parent_id": "yorum-uuid-buraya"
   }
   ```
 - **Success Response (201 Created)**:
@@ -192,9 +200,9 @@ Frontend geliştirirken kullanacağınız temel endpointler aşağıdadır.
       "comment": {
         "id": "yorum-id...",
         "content": "Bu konuda katılıyorum.",
-        "ownerType": "question",
-        "ownerId": "...",
-        "userId": "...",
+        "commentable_type": "App\\Models\\Answer",
+        "commentable_id": "...",
+        "user_id": "...",
         "createdAt": "..."
       }
     }
