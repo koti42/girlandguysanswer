@@ -1,7 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
-import HomePage from './pages/HomePage';
+import LandingPage from './pages/LandingPage';
+import QuestionsPage from './pages/QuestionsPage';
 import ProfilePage from './pages/ProfilePage';
 import AskQuestionPage from './pages/AskQuestionPage';
 import LoginPage from './pages/LoginPage';
@@ -16,7 +17,8 @@ function App() {
     <ThemeProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/questions" element={<QuestionsPage />} />
           <Route path="/question/:id" element={<QuestionDetailPage />} />
           <Route path="/profile/:username" element={<ProfilePage />} />
           <Route path="/profile/:username/followers" element={<FollowersPage />} />

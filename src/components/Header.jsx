@@ -82,6 +82,13 @@ const Header = ({ onSearch }) => {
                             {isDark ? <FaSun className="text-lg" /> : <FaMoon className="text-lg" />}
                         </button>
 
+                        {/* Questions Button */}
+                        <Link to="/questions" className="hidden sm:block">
+                            <button className="text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm">
+                                Sorular
+                            </button>
+                        </Link>
+
                         {/* Ask Question Button */}
                         <Link to="/ask">
                             <button className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-3 md:px-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-sm whitespace-nowrap">
@@ -188,12 +195,12 @@ const Header = ({ onSearch }) => {
                     {/* Mobile Menu Links */}
                     <nav className="flex-1 overflow-y-auto p-4">
                         <Link
-                            to="/"
+                            to="/questions"
                             onClick={closeMobileMenu}
                             className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                         >
                             <FaHome className="text-xl text-coral" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Ana Sayfa</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Sorular</span>
                         </Link>
                         <Link
                             to="/ask"
