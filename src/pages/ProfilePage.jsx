@@ -50,6 +50,7 @@ const ProfilePage = () => {
                 } else {
                     const response = await usersAPI.getProfile(username);
                     data = response.data.data;
+                    console.log('Profile data from backend:', data);
                     questionsData = data.questions || [];
                 }
 
@@ -61,6 +62,13 @@ const ProfilePage = () => {
                     location: data.location || 'Konum belirtilmedi',
                     joinedDate: new Date(data.created_at || Date.now()).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
                     badges: [],
+                    // Include relationship status from backend
+                    isFollowing: data.isFollowing || false,
+                    hasPendingRequest: data.hasPendingRequest || false,
+                    isPrivate: data.isPrivate || false,
+                    allow_following: data.allow_following !== undefined ? data.allow_following : true,
+                    allow_messaging: data.allow_messaging !== undefined ? data.allow_messaging : true,
+                    messaging_mode: data.messaging_mode || 'everyone',
                     stats: {
                         questions: data.stats?.questions || 0,
                         followers: data.stats?.followers || 0,
@@ -179,7 +187,9 @@ const ProfilePage = () => {
                 }));
             } else if (profileData.hasPendingRequest) {
                 // Cancel Request
+                console.log('Canceling follow request for:', profileData.username);
                 await usersAPI.unfollow(profileData.username);
+                console.log('Request canceled, updating state');
                 setProfileData(prev => ({ ...prev, hasPendingRequest: false }));
             } else {
                 // Follow
