@@ -163,7 +163,6 @@ const ProfilePage = () => {
         setProfileData(prev => ({ ...prev, coverPhoto: defaultCover }));
     };
 
-    // Social Action Handlers
     const handleFollowToggle = async () => {
         if (!profileData) return;
 
@@ -183,10 +182,12 @@ const ProfilePage = () => {
                     hasPendingRequest: false,
                     stats: { ...prev.stats, followers: Math.max(0, (prev.stats?.followers || 0) - 1) }
                 }));
+                showToast('Takipten çıkıldı.', 'success');
             } else if (profileData.hasPendingRequest) {
                 // Cancel Request
                 await usersAPI.unfollow(profileData.username);
                 setProfileData(prev => ({ ...prev, hasPendingRequest: false }));
+                showToast('Takip isteği iptal edildi.', 'success');
             } else {
                 // Follow
                 const res = await usersAPI.follow(profileData.username);
@@ -198,9 +199,9 @@ const ProfilePage = () => {
                     hasPendingRequest: isRequest,
                     stats: !isRequest ? { ...prev.stats, followers: (prev.stats?.followers || 0) + 1 } : prev.stats
                 }));
+                showToast(isRequest ? 'Takip isteği gönderildi.' : 'Takip edildi.', 'success');
             }
         } catch (error) {
-            // Show backend error message if available
             const backendMessage = error.response?.data?.message;
 
             if (backendMessage) {
@@ -313,11 +314,11 @@ const ProfilePage = () => {
                                                                 </Link>
                                                             )}
 
-                                                        {/* Follow Button - Disabled if allow_following is false */}
+                                                        {/* Follow Button - Disabled if allow_following is false AND not following yet */}
                                                         <button
                                                             onClick={handleFollowToggle}
-                                                            disabled={profileData.allow_following === false}
-                                                            className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${profileData.allow_following === false
+                                                            disabled={profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest}
+                                                            className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${(profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest)
                                                                 ? 'bg-gray-300 cursor-not-allowed'
                                                                 : profileData.isFollowing
                                                                     ? 'bg-gray-500 hover:bg-gray-600'
@@ -325,14 +326,14 @@ const ProfilePage = () => {
                                                                         ? 'bg-yellow-500 hover:bg-yellow-600'
                                                                         : 'bg-coral hover:bg-coral-dark'
                                                                 }`}
-                                                            title={profileData.allow_following === false ? 'Bu kullanıcı takip edilmeyi kapatmış' : ''}
+                                                            title={(profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest) ? 'Bu kullanıcı takip edilmeyi kapatmış' : ''}
                                                         >
-                                                            {profileData.allow_following === false
-                                                                ? 'Takip Kapalı'
-                                                                : profileData.isFollowing
-                                                                    ? 'Takip Ediliyor'
-                                                                    : profileData.hasPendingRequest
-                                                                        ? 'İstek Gönderildi'
+                                                            {profileData.isFollowing
+                                                                ? 'Takip Ediliyor'
+                                                                : profileData.hasPendingRequest
+                                                                    ? 'İstek Gönderildi'
+                                                                    : profileData.allow_following === false
+                                                                        ? 'Takip Kapalı'
                                                                         : profileData.isPrivate
                                                                             ? 'Takip İsteği Gönder'
                                                                             : 'Takip Et'

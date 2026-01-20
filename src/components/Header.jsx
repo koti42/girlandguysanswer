@@ -161,6 +161,13 @@ const Header = ({ onSearch }) => {
                                             Mesajlar
                                         </Link>
                                         <Link
+                                            to="/follow-requests"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                        >
+                                            <FaUserPlus className="text-purple-500" />
+                                            <span>Takip İstekleri</span>
+                                        </Link>
+                                        <Link
                                             to="/settings"
                                             className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                         >
@@ -287,6 +294,14 @@ const Header = ({ onSearch }) => {
                                 >
                                     <FaEnvelope className="text-xl text-coral" />
                                     <span className="text-gray-700 dark:text-gray-200 font-medium">Mesajlar</span>
+                                </Link>
+                                <Link
+                                    to="/follow-requests"
+                                    onClick={closeMobileMenu}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                                >
+                                    <FaUserPlus className="text-xl text-purple-500" />
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Takip İstekleri</span>
                                 </Link>
                                 <Link
                                     to={`/profile/${user?.username}`}
