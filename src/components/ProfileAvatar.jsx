@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { FaCamera, FaTimes } from 'react-icons/fa';
+import UserAvatar from './UserAvatar';
 
-const ProfileAvatar = ({ avatar, onAvatarUpload, onAvatarRemove }) => {
+const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
 
@@ -38,9 +39,9 @@ const ProfileAvatar = ({ avatar, onAvatarUpload, onAvatarRemove }) => {
     return (
         <>
             <div className="relative group">
-                <img
-                    src={avatar}
-                    alt="Profile"
+                <UserAvatar
+                    user={{ avatar, username }}
+                    size="3xl"
                     className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
                 />
                 <button

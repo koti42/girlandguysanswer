@@ -139,6 +139,7 @@ const ProfilePage = () => {
                         <div className="flex flex-col md:flex-row gap-6">
                             <ProfileAvatar
                                 avatar={profileData.avatar}
+                                username={profileData.username}
                                 onAvatarUpload={handleAvatarUpload}
                                 onAvatarRemove={handleAvatarRemove}
                             />
