@@ -205,108 +205,118 @@ const SettingsPage = () => {
     );
 
     return (
-        <MainLayout sidebar={<TopUsersWidget />}>
-            <div className="max-w-2xl mx-auto">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Hesap Ayarları</h1>
+        <>
+            {toast.show && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
+            )}
 
-                {successMessage && (
-                    <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-xl animate-bounce-short text-center">
-                        {successMessage}
-                    </div>
-                )}
+            <MainLayout sidebar={<TopUsersWidget />}>
+                <div className="max-w-2xl mx-auto">
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Hesap Ayarları</h1>
 
-                {/* Privacy Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
-                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
-                            <FaUserSecret className="text-xl" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Gizlilik</h2>
-                            <p className="text-xs text-gray-500">Profilinizin görünürlüğünü yönetin</p>
-                        </div>
-                    </div>
-
-                    <Toggle
-                        label="Gizli Hesap"
-                        description="Hesabınız gizli olduğunda, sadece sizi takip edenler paylaşımlarınızı görebilir. Mevcut takipçileriniz etkilenmez."
-                        enabled={settings.is_private}
-                        onChange={handlePrivacyChange}
-                    />
-                </div>
-
-                {/* Messaging Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                            <FaEnvelope className="text-xl" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Mesajlaşma</h2>
-                            <p className="text-xs text-gray-500">Kimlerin size mesaj atabileceğini seçin</p>
-                        </div>
-                    </div>
-
-                    <Toggle
-                        label="Mesajlara İzin Ver"
-                        description="Kullanıcıların size özel mesaj göndermesine izin verin."
-                        enabled={settings.allow_messaging}
-                        onChange={handleMessagingToggle}
-                    />
-
-                    {settings.allow_messaging && (
-                        <div className="mt-4 pl-4 border-l-2 border-gray-100 dark:border-gray-700">
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Kimler mesaj atabilir?</p>
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={() => handleMessagingModeChange('everyone')}
-                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${settings.messaging_mode === 'everyone'
-                                        ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                                        : 'border-gray-200 dark:border-gray-700 text-gray-600 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-2">
-                                        <FaGlobe /> Herkes
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => handleMessagingModeChange('followers')}
-                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${settings.messaging_mode === 'followers'
-                                        ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                                        : 'border-gray-200 dark:border-gray-700 text-gray-600 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-2">
-                                        <FaUserFriends /> Sadece Takipçiler
-                                    </div>
-                                </button>
-                            </div>
+                    {successMessage && (
+                        <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-xl animate-bounce-short text-center">
+                            {successMessage}
                         </div>
                     )}
-                </div>
 
-                {/* Following Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
-                    <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
-                        <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
-                            <FaUserFriends className="text-xl" />
+                    {/* Privacy Section */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mb-6">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+                                <FaUserSecret className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Gizlilik</h2>
+                                <p className="text-xs text-gray-500">Profilinizin görünürlüğünü yönetin</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Takip Ayarları</h2>
-                            <p className="text-xs text-gray-500">Takip isteklerini yönetin</p>
-                        </div>
+
+                        <Toggle
+                            label="Gizli Hesap"
+                            description="Hesabınız gizli olduğunda, sadece sizi takip edenler paylaşımlarınızı görebilir. Mevcut takipçileriniz etkilenmez."
+                            enabled={settings.is_private}
+                            onChange={handlePrivacyChange}
+                        />
                     </div>
 
-                    <Toggle
-                        label="Takip İsteklerine İzin Ver"
-                        description="Kullanıcıların sizi takip etmesine veya takip isteği göndermesine izin verin."
-                        enabled={settings.allow_following}
-                        onChange={handleFollowingToggle}
-                    />
-                </div>
+                    {/* Messaging Section */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mb-6">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                <FaEnvelope className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Mesajlaşma</h2>
+                                <p className="text-xs text-gray-500">Kimlerin size mesaj atabileceğini seçin</p>
+                            </div>
+                        </div>
 
-            </div>
+                        <Toggle
+                            label="Mesajlara İzin Ver"
+                            description="Kullanıcıların size özel mesaj göndermesine izin verin."
+                            enabled={settings.allow_messaging}
+                            onChange={handleMessagingToggle}
+                        />
+
+                        {settings.allow_messaging && (
+                            <div className="mt-4 pl-4 border-l-2 border-gray-100 dark:border-gray-700">
+                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Kimler mesaj atabilir?</p>
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => handleMessagingModeChange('everyone')}
+                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${settings.messaging_mode === 'everyone'
+                                            ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                                            : 'border-gray-200 dark:border-gray-700 text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-center gap-2">
+                                            <FaGlobe /> Herkes
+                                        </div>
+                                    </button>
+                                    <button
+                                        onClick={() => handleMessagingModeChange('followers')}
+                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all border ${settings.messaging_mode === 'followers'
+                                            ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                                            : 'border-gray-200 dark:border-gray-700 text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-center gap-2">
+                                            <FaUserFriends /> Sadece Takipçiler
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Following Section */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
+                                <FaUserFriends className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Takip Ayarları</h2>
+                                <p className="text-xs text-gray-500">Takip isteklerini yönetin</p>
+                            </div>
+                        </div>
+
+                        <Toggle
+                            label="Takip İsteklerine İzin Ver"
+                            description="Kullanıcıların sizi takip etmesine veya takip isteği göndermesine izin verin."
+                            enabled={settings.allow_following}
+                            onChange={handleFollowingToggle}
+                        />
+                    </div>
+
+                </div>
         </MainLayout>
+        </>
     );
 };
 
