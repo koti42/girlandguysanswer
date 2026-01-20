@@ -207,9 +207,9 @@ const MessagesPage = () => {
                         </div>
 
                         {/* Chat Area - Full width on mobile when open */}
-                        <div className={`flex-1 flex flex-col ${!username || !showChatOnMobile ? 'hidden md:flex' : 'flex'
+                        <div className={`flex-1 flex flex-col ${!username ? 'hidden md:flex' : 'flex'
                             }`}>
-                            {activeConversation ? (
+                            {username && activeConversation ? (
                                 <div className="flex-1 flex flex-col">
                                     {/* Chat Header */}
                                     <div className="p-4 md:p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-coral/5 to-orange-400/5 dark:from-coral/10 dark:to-orange-400/10">
