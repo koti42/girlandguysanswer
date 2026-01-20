@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FaUserPlus, FaCheck } from 'react-icons/fa';
+import UserAvatar from '../components/UserAvatar';
 import MainLayout from '../layouts/MainLayout';
 import { TrendsWidget, TopUsersWidget } from '../components/Widgets';
 
@@ -80,10 +81,10 @@ const FollowersPage = () => {
                         <div key={follower.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 hover:shadow-soft-hover transition-all">
                             <div className="flex items-start gap-4">
                                 <Link to={`/profile/${follower.username}`}>
-                                    <img
-                                        src={follower.avatar}
-                                        alt={follower.name}
-                                        className="w-16 h-16 rounded-full border-2 border-gray-100 hover:border-coral transition-colors"
+                                    <UserAvatar
+                                        user={follower}
+                                        size="xl"
+                                        className="hover:border-coral transition-colors"
                                     />
                                 </Link>
 

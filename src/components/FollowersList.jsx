@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import UserAvatar from './UserAvatar';
 import { FaUserPlus, FaCheck } from 'react-icons/fa';
 
 const FollowersList = ({ followers, type = 'followers' }) => {
@@ -9,10 +10,10 @@ const FollowersList = ({ followers, type = 'followers' }) => {
                 <div key={user.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-start gap-4">
                         <Link to={`/profile/${user.username}`}>
-                            <img
-                                src={user.avatar}
-                                alt={user.name}
-                                className="w-14 h-14 rounded-full border-2 border-gray-100 hover:border-coral transition-colors"
+                            <UserAvatar
+                                user={user}
+                                size="lg"
+                                className="w-14 h-14 hover:border-coral transition-colors"
                             />
                         </Link>
 
