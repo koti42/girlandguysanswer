@@ -5,6 +5,7 @@ import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
 import { categories } from '../data/mockData';
+import { questionsAPI } from '../services/api';
 
 const AskQuestionPage = () => {
     const navigate = useNavigate();
@@ -84,16 +85,34 @@ const AskQuestionPage = () => {
 
         setIsSubmitting(true);
 
-        setTimeout(() => {
-            setIsSubmitting(false);
+        try {
+            // API expects 'content' for the question body, mapping from 'description'
+            const payload = {
+                title: formData.title,
+                content: formData.description,
+                category_id: categories.find(c => c.title === formData.category)?.id, // If API needs ID. If it takes name, use formData.category
+                category: formData.category, // sending both for safety/fallback depending on backend expectation
+                tags: formData.tags
+            };
+
+            // If the backend expects just category name or id, we might need adjustments. 
+            // Assuming it takes standard fields.
+
+            await questionsAPI.create(payload);
+
             showToast('success', 'Sorunuz başarıyla yayınlandı!');
             // Taslağı temizle
             localStorage.removeItem('questionDraft');
 
             setTimeout(() => {
                 navigate('/questions');
-            }, 2000);
-        }, 1500);
+            }, 1000);
+        } catch (error) {
+            console.error('Soru oluşturma hatası:', error);
+            showToast('error', error.response?.data?.message || 'Soru yayınlanırken bir hata oluştu');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // Sidebar Widgets
