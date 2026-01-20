@@ -45,19 +45,18 @@ const SettingsPage = () => {
         const fetchSettings = async () => {
             if (!user?.username) return;
             try {
-                // Fetch latest profile data which we assume contains settings for owner
-                const response = await usersAPI.getProfile(user.username);
-                const profileData = response.data.data;
-                console.log('Fetched profile data:', profileData);
+                // Fetch current user's settings from /user/me endpoint
+                const response = await usersAPI.getMe();
+                console.log('Fetched user data:', response.data);
 
-                // Backend returns settings in profileData directly or in profileData.settings
-                const settingsData = profileData.settings || profileData;
+                const userData = response.data.data.user;
+                const detail = userData.detail;
 
                 setSettings({
-                    is_private: settingsData.is_private || false,
-                    allow_messaging: settingsData.allow_messaging !== undefined ? settingsData.allow_messaging : true,
-                    messaging_mode: settingsData.messaging_mode || 'everyone',
-                    allow_following: settingsData.allow_following !== undefined ? settingsData.allow_following : true
+                    is_private: detail.is_private || false,
+                    allow_messaging: detail.allow_messaging !== undefined ? detail.allow_messaging : true,
+                    messaging_mode: detail.messaging_mode || 'everyone',
+                    allow_following: detail.allow_following !== undefined ? detail.allow_following : true
                 });
             } catch (error) {
                 console.error("Ayarlar yüklenemedi:", error);
@@ -315,7 +314,7 @@ const SettingsPage = () => {
                     </div>
 
                 </div>
-        </MainLayout>
+            </MainLayout>
         </>
     );
 };

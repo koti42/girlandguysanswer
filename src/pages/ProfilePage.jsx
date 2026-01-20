@@ -475,8 +475,7 @@ const ProfilePage = () => {
                         )}
                     </div>
                 </div>
-            </div>
-        </MainLayout>
+            </MainLayout>
         </>
     );
 };

@@ -48,6 +48,7 @@ export const questionsAPI = {
 };
 
 export const usersAPI = {
+    getMe: () => api.get('/user/me'),
     getProfile: (username) => api.get(`/users/${username}`),
     updateProfile: (data) => api.put('/user/me', data),
     getFollowers: (username) => api.get(`/users/${username}/followers`),
