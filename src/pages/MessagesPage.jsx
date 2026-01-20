@@ -10,7 +10,6 @@ const MessagesPage = () => {
     const [attachedFile, setAttachedFile] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
     const [showChatOnMobile, setShowChatOnMobile] = useState(!!username);
-    const [showChatOnMobile, setShowChatOnMobile] = useState(false);
 
     // Mock conversations
     const conversations = [
