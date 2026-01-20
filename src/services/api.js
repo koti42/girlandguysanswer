@@ -58,8 +58,8 @@ export const usersAPI = {
     block: (username) => api.post(`/users/${username}/block`),
     unblock: (username) => api.delete(`/users/${username}/unblock`),
     getFollowRequests: () => api.get('/user/me/follow-requests'),
-    acceptFollowRequest: (username, requestId) => api.post(`/users/${username}/follow-requests/${requestId}/accept`),
-    rejectFollowRequest: (username, requestId) => api.delete(`/users/${username}/follow-requests/${requestId}/reject`),
+    acceptFollowRequest: (requestId) => api.post(`/user/me/follow-requests/${requestId}/accept`),
+    rejectFollowRequest: (requestId) => api.delete(`/user/me/follow-requests/${requestId}/reject`),
     updatePrivacy: (isPrivate) => api.post('/user/me/settings/privacy', { is_private: isPrivate }),
     updateMessaging: (settings) => api.post('/user/me/settings/messaging', settings),
     updateFollowing: (allowFollowing) => api.post('/user/me/settings/following', { allow_following: allowFollowing }),
@@ -73,6 +73,14 @@ export const uploadAPI = {
 
 export const commentsAPI = {
     create: (data) => api.post('/comments', data),
+};
+
+export const notificationsAPI = {
+    getAll: (params) => api.get('/notifications', { params }),
+    markAsRead: (id) => api.post(`/notifications/${id}/read`),
+    markAllAsRead: () => api.post('/notifications/read-all'),
+    delete: (id) => api.delete(`/notifications/${id}`),
+    deleteAll: () => api.delete('/notifications'),
 };
 
 export default api;

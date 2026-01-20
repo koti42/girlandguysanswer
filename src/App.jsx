@@ -13,6 +13,8 @@ import FollowingPage from './pages/FollowingPage';
 import QuestionDetailPage from './pages/QuestionDetailPage';
 import MessagesPage from './pages/MessagesPage';
 import SettingsPage from './pages/SettingsPage';
+import NotificationsPage from './pages/NotificationsPage';
+import FollowRequestsPage from './pages/FollowRequestsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -34,6 +36,8 @@ function App() {
               <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+              <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
             </Routes>
           </div>
         </Router>
