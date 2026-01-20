@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
-import { questionsAPI } from '../services/api';
+import { questionsAPI, commentsAPI } from '../services/api';
 import UserAvatar from '../components/UserAvatar';
 
 const QuestionDetailPage = () => {
@@ -89,18 +89,41 @@ const QuestionDetailPage = () => {
         }
     };
 
-    const handleSubmitReply = (e, answerId) => {
+    const handleSubmitReply = async (e, answerId) => {
         e.preventDefault();
         const replyText = replyTexts[answerId];
-        if (replyText && replyText.trim()) {
-            console.log('Yanıt gönderildi:', {
-                text: replyText,
-                answerId: answerId,
-                anonymous: replyAnonymous[answerId] || false
+        if (!replyText || !replyText.trim()) return;
+
+        try {
+            const response = await commentsAPI.create({
+                content: replyText,
+                commentable_type: 'question',
+                commentable_id: question.id, // UUID required
+                parent_id: answerId // The ID of the answer being replied to
             });
+
+            const newReply = response.data.data.comment;
+
+            // Update state to include the new reply
+            setAnswers(prevAnswers => prevAnswers.map(ans => {
+                if (ans.id === answerId) {
+                    return {
+                        ...ans,
+                        replies: [...(ans.replies || []), newReply]
+                    };
+                }
+                return ans;
+            }));
+
+            // Clear form
             setReplyTexts(prev => ({ ...prev, [answerId]: '' }));
             setReplyAnonymous(prev => ({ ...prev, [answerId]: false }));
             setReplyingTo(prev => prev.filter(id => id !== answerId));
+
+            console.log('Yanıt başarıyla gönderildi:', newReply);
+        } catch (err) {
+            console.error("Yanıt gönderilirken hata:", err);
+            alert("Yanıt gönderilemedi. Lütfen tekrar deneyin. " + (err.response?.data?.message || err.message));
         }
     };
 
