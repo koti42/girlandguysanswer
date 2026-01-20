@@ -31,12 +31,23 @@ export const AuthProvider = ({ children }) => {
         setError(null);
         try {
             const response = await authAPI.login({ email, password });
-            const { user, token } = response.data.data;
+            console.log("Login Response:", response.data); // Debug log
 
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            setUser(user);
-            return { success: true };
+            // Handle potential variations in API response structure
+            const token = response.data.data?.token || response.data.token || response.data.access_token;
+            const user = response.data.data?.user || response.data.user || response.data.data;
+
+            if (token && user) {
+                localStorage.setItem('token', token);
+                // Ensure user has a username, fallback if needed
+                if (!user.username && user.name) user.username = user.name;
+                localStorage.setItem('user', JSON.stringify(user));
+                setUser(user);
+                return { success: true };
+            } else {
+                console.error("Login structure mismatch:", response.data);
+                throw new Error("Giriş verileri alınamadı");
+            }
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Giriş yapılırken bir hata oluştu';
             setError(errorMessage);
@@ -51,12 +62,20 @@ export const AuthProvider = ({ children }) => {
         setError(null);
         try {
             const response = await authAPI.register(userData);
-            const { user, token } = response.data.data;
+            console.log("Register Response:", response.data);
 
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            setUser(user);
-            return { success: true };
+            const token = response.data.data?.token || response.data.token || response.data.access_token;
+            const user = response.data.data?.user || response.data.user || response.data.data;
+
+            if (token && user) {
+                localStorage.setItem('token', token);
+                if (!user.username && user.name) user.username = user.name;
+                localStorage.setItem('user', JSON.stringify(user));
+                setUser(user);
+                return { success: true };
+            } else {
+                throw new Error("Kayıt verileri alınamadı");
+            }
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.response?.data?.errors?.username || 'Kayıt olurken bir hata oluştu';
             setError(errorMessage);
