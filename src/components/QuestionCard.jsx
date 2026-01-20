@@ -4,7 +4,7 @@ import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret 
 import UserAvatar from './UserAvatar';
 import QuestionActionsMenu from './QuestionActionsMenu';
 
-import { questionsAPI } from '../services/api';
+import { questionsAPI, commentsAPI } from '../services/api';
 
 const QuestionCard = ({ question }) => {
     const [showReplyBox, setShowReplyBox] = useState(false);
@@ -19,7 +19,6 @@ const QuestionCard = ({ question }) => {
 
         setLoading(true);
         try {
-            // Use slug if available, otherwise id. Backend likely expects slug.
             const identifier = question.slug || question.id;
             await questionsAPI.createAnswer(identifier, {
                 content: replyText,
