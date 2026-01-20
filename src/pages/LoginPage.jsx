@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaCheckCircle } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
     const navigate = useNavigate();
+    const { login, loading } = useAuth(); // AuthContext'ten login ve loading al
     const [formData, setFormData] = useState({
         email: '',
         password: '',
         remember: false
     });
     const [errors, setErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -41,13 +42,14 @@ const LoginPage = () => {
         e.preventDefault();
         if (!validateForm()) return;
 
-        setIsSubmitting(true);
+        const result = await login(formData.email, formData.password);
 
-        // Simulate API call
-        setTimeout(() => {
-            setIsSubmitting(false);
+        if (result.success) {
             navigate('/');
-        }, 1500);
+        } else {
+            // API hatasını göster
+            setErrors(prev => ({ ...prev, submit: result.error }));
+        }
     };
 
     return (
@@ -124,12 +126,19 @@ const LoginPage = () => {
                         </div>
 
                         {/* Submit Button */}
+                        {/* General Error Message */}
+                        {errors.submit && (
+                            <div className="p-3 bg-red-50 text-red-500 text-sm rounded-lg text-center mb-4">
+                                {errors.submit}
+                            </div>
+                        )}
+
                         <button
                             type="submit"
-                            disabled={isSubmitting}
+                            disabled={loading}
                             className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isSubmitting ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+                            {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
                         </button>
                     </form>
 

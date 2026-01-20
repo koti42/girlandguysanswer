@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
-import { questions } from '../data/mockData';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import { questionsAPI } from '../services/api';
 
 const QuestionDetailPage = () => {
     const { id } = useParams();
+    const [question, setQuestion] = useState(null);
+    const [answers, setAnswers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     const [commentText, setCommentText] = useState('');
     const [isCommentAnonymous, setIsCommentAnonymous] = useState(false);
     const [replyingTo, setReplyingTo] = useState([]); // Array to support multiple replies
@@ -15,125 +20,71 @@ const QuestionDetailPage = () => {
     const [genderFilter, setGenderFilter] = useState('all'); // 'all' | 'female' | 'male'
     const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'likes' | 'replies'
 
-    // Find question by ID
-    const question = questions.find(q => q.id === parseInt(id));
+    useEffect(() => {
+        const fetchQuestionDetail = async () => {
+            setLoading(true);
+            try {
+                const response = await questionsAPI.getById(id);
+                setQuestion(response.data.data.question);
+                setAnswers(response.data.data.answers);
+            } catch (err) {
+                console.error("Soru detayı yüklenirken hata:", err);
+                setError("Soru bulunamadı veya yüklenirken bir hata oluştu.");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    if (!question) {
+        if (id) {
+            fetchQuestionDetail();
+        }
+    }, [id]);
+
+    if (loading) {
         return (
             <MainLayout>
-                <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl p-12 text-center">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Soru Bulunamadı</h2>
-                    <p className="text-gray-600 mb-6">Aradığınız soru mevcut değil veya silinmiş olabilir.</p>
+                <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div>
+                </div>
+            </MainLayout>
+        );
+    }
+
+    if (error || !question) {
+        return (
+            <MainLayout>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Soru Bulunamadı</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">{error || "Aradığınız soru mevcut değil veya silinmiş olabilir."}</p>
                     <Link to="/" className="text-coral hover:underline font-semibold">Ana Sayfaya Dön</Link>
                 </div>
             </MainLayout>
         );
     }
 
-    // Mock answers data with replies
-    const answers = [
-        {
-            id: 1,
-            user: {
-                name: 'Elif_Mavi',
-                avatar: 'https://i.pravatar.cc/150?u=a1',
-                gender: 'female'
-            },
-            content: 'Bence pastel tonlar bu sezon çok moda! Özellikle pudra pembesi ve lavanta renkleri düğünlerde çok şık duruyor. Ayrıca uzun tül etekli modeller çok popüler.',
-            likes: 24,
-            createdAt: '2 saat önce',
-            replies: [
-                {
-                    id: 101,
-                    user: {
-                        name: 'Zeynep_Yildiz',
-                        avatar: 'https://i.pravatar.cc/150?u=r1',
-                        gender: 'female'
-                    },
-                    content: 'Çok teşekkürler! Pastel tonları deneyeceğim kesinlikle 💕',
-                    createdAt: '1 saat önce'
-                }
-            ]
-        },
-        {
-            id: 2,
-            user: {
-                name: 'Ayşe_K',
-                avatar: 'https://i.pravatar.cc/150?u=a2',
-                gender: 'female'
-            },
-            content: 'Kesinlikle midi boydaki elbiseler çok trend! Şifon kumaşlar da hem şık hem rahat. Ben geçen hafta bir düğüne mint yeşili bir elbise ile gittim, herkes beğendi 😊',
-            likes: 18,
-            createdAt: '3 saat önce',
-            replies: [
-                {
-                    id: 201,
-                    user: {
-                        name: 'Can_Yilmaz',
-                        avatar: 'https://i.pravatar.cc/150?u=r2',
-                        gender: 'male'
-                    },
-                    content: 'Mint yeşili çok güzel bir seçim! Fotoğraf var mı? 😄',
-                    createdAt: '2 saat önce'
-                },
-                {
-                    id: 202,
-                    user: {
-                        name: 'Ayşe_K',
-                        avatar: 'https://i.pravatar.cc/150?u=a2',
-                        gender: 'female'
-                    },
-                    content: '@Can_Yilmaz Profilimde paylaştım, bakabilirsin!',
-                    createdAt: '1 saat önce'
-                }
-            ]
-        },
-        {
-            id: 3,
-            user: {
-                name: 'Mehmet_Demir',
-                avatar: 'https://i.pravatar.cc/150?u=m1',
-                gender: 'male'
-            },
-            content: 'Erkek bakış açısından söyleyeyim: Basit ama zarif kesimler her zaman göz alıcı oluyor. Klasik siyah veya lacivert tonlar asla bitmez. Abartısız aksesuar kullanımı da önemli.',
-            likes: 15,
-            createdAt: '4 saat önce',
-            replies: []
-        },
-        {
-            id: 4,
-            user: {
-                name: 'Ahmet_Kaya',
-                avatar: 'https://i.pravatar.cc/150?u=m2',
-                gender: 'male'
-            },
-            content: 'Şahsen ben de eşim için tercih yaparken kumaş kalitesine çok dikkat ediyorum. İpek veya saten kumaşlar düğünlerde çok şık duruyor. Ayrıca rahat bir kesim önemli, akşam boyunca rahat edebilmeli.',
-            likes: 12,
-            createdAt: '5 saat önce',
-            replies: [
-                {
-                    id: 401,
-                    user: {
-                        name: 'Elif_Mavi',
-                        avatar: 'https://i.pravatar.cc/150?u=a1',
-                        gender: 'female'
-                    },
-                    content: 'Çok doğru bir tespit! Konfor gerçekten çok önemli 👍',
-                    createdAt: '4 saat önce'
-                }
-            ]
-        }
-    ];
-
-    const handleSubmitComment = (e) => {
+    const handleSubmitComment = async (e) => {
         e.preventDefault();
-        if (commentText.trim()) {
-            console.log('Cevap gönderildi:', {
-                text: commentText,
-                anonymous: isCommentAnonymous
+        if (!commentText.trim()) return;
+
+        try {
+            // API call to create comment/answer
+            const response = await questionsAPI.createComment({
+                content: commentText,
+                ownerType: 'question',
+                ownerId: id,
+                isAnonymous: isCommentAnonymous
             });
+
+            const newAnswer = response.data.data.comment;
+            if (!newAnswer.replies) newAnswer.replies = [];
+            if (!newAnswer.likes) newAnswer.likes = 0;
+
+            setAnswers(prev => [newAnswer, ...prev]);
             setCommentText('');
             setIsCommentAnonymous(false);
+        } catch (err) {
+            console.error("Yorum gönderilirken hata:", err);
+            alert("Yorum gönderilemedi. Lütfen tekrar deneyin.");
         }
     };
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
 import QuestionsPage from './pages/QuestionsPage';
 import ProfilePage from './pages/ProfilePage';
@@ -11,27 +12,30 @@ import FollowersPage from './pages/FollowersPage';
 import FollowingPage from './pages/FollowingPage';
 import QuestionDetailPage from './pages/QuestionDetailPage';
 import MessagesPage from './pages/MessagesPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <div className="overflow-x-hidden">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/questions" element={<QuestionsPage />} />
-            <Route path="/question/:id" element={<QuestionDetailPage />} />
-            <Route path="/profile/:username" element={<ProfilePage />} />
-            <Route path="/profile/:username/followers" element={<FollowersPage />} />
-            <Route path="/profile/:username/following" element={<FollowingPage />} />
-            <Route path="/ask" element={<AskQuestionPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/messages" element={<MessagesPage />} />
-            <Route path="/messages/:username" element={<MessagesPage />} />
-          </Routes>
-        </div>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <div className="overflow-x-hidden">
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/questions" element={<QuestionsPage />} />
+              <Route path="/question/:id" element={<QuestionDetailPage />} />
+              <Route path="/profile/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="/profile/:username/followers" element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
+              <Route path="/profile/:username/following" element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
+              <Route path="/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+              <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

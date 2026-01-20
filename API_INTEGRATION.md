@@ -161,6 +161,48 @@ Frontend geliştirirken kullanacağınız temel endpointler aşağıdadır.
     }
   }
   ```
+  ## Yorumlar (Comments)
+
+#### 6. Yorum Yap (Soruya veya Cevaba)
+- **URL**: `POST /comments`
+- **Headers**: `Authorization: Bearer <TOKEN>`
+- **Body (Soruya Yorum)**:
+  ```json
+  {
+    "content": "Bu konuda katılıyorum.",
+    "ownerType": "question",
+    "ownerId": "soru-uuid-buraya"
+  }
+  ```
+- **Body (Yoruma Cevap / Reply)**:
+  ```json
+  {
+    "content": "Teşekkür ederim.",
+    "ownerType": "question", // Ana öğe tipi (question/answer)
+    "ownerId": "soru-uuid-buraya", // Ana öğe ID'si
+    "parentId": "yorum-uuid-buraya" // Cevap verilen yorumun ID'si
+  }
+  ```
+- **Success Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "message": "Yorum başarıyla eklendi",
+    "data": {
+      "comment": {
+        "id": "yorum-id...",
+        "content": "Bu konuda katılıyorum.",
+        "ownerType": "question",
+        "ownerId": "...",
+        "userId": "...",
+        "createdAt": "..."
+      }
+    }
+  }
+  ```
+
+
+
 
 ## 📝 Notlar
 - Kullanıcı şifreleri veritabanında **bcrypt** ile hashlenerek saklanır.

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaMars, FaVenus } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 const SignupPage = () => {
     const navigate = useNavigate();
+    const { register, loading, error: authError } = useAuth(); // AuthContext'ten register ve loading al
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -13,7 +15,10 @@ const SignupPage = () => {
         agreeTerms: false
     });
     const [errors, setErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Auth error'u form error'ları ile birleştirebiliriz veya ayrıca gösterebiliriz
+    // Simdilik submit'te authError gelirse alert veya toast ile gösterebiliriz
+    // Veya errors state'ine ekleyebiliriz
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -25,6 +30,8 @@ const SignupPage = () => {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
+
+    // ... validateForm functions (unchanged) ...
 
     const validateForm = () => {
         const newErrors = {};
@@ -69,13 +76,20 @@ const SignupPage = () => {
         e.preventDefault();
         if (!validateForm()) return;
 
-        setIsSubmitting(true);
+        // Register fonksiyonunu çağır
+        const result = await register({
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            gender: formData.gender
+        });
 
-        // Simulate API call
-        setTimeout(() => {
-            setIsSubmitting(false);
+        if (result.success) {
             navigate('/');
-        }, 1500);
+        } else {
+            // API hatasını göster
+            setErrors(prev => ({ ...prev, submit: result.error }));
+        }
     };
 
     return (
@@ -181,8 +195,8 @@ const SignupPage = () => {
                             </label>
                             <div className="grid grid-cols-2 gap-3">
                                 <label className={`relative flex items-center justify-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.gender === 'female'
-                                        ? 'border-pink-400 bg-pink-50 dark:bg-pink-900/20'
-                                        : 'border-gray-300 dark:border-gray-600 hover:border-pink-300 dark:hover:border-pink-700'
+                                    ? 'border-pink-400 bg-pink-50 dark:bg-pink-900/20'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-pink-300 dark:hover:border-pink-700'
                                     }`}>
                                     <input
                                         type="radio"
@@ -198,8 +212,8 @@ const SignupPage = () => {
                                     </span>
                                 </label>
                                 <label className={`relative flex items-center justify-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.gender === 'male'
-                                        ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700'
+                                    ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700'
                                     }`}>
                                     <input
                                         type="radio"
@@ -237,13 +251,20 @@ const SignupPage = () => {
                             {errors.agreeTerms && <span className="text-red-500 text-sm mt-1 block">{errors.agreeTerms}</span>}
                         </div>
 
+                        {/* General Error Message */}
+                        {errors.submit && (
+                            <div className="p-3 bg-red-50 text-red-500 text-sm rounded-lg text-center">
+                                {errors.submit}
+                            </div>
+                        )}
+
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={isSubmitting}
+                            disabled={loading}
                             className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
                         >
-                            {isSubmitting ? 'Kayıt Oluşturuluyor...' : 'Kayıt Ol'}
+                            {loading ? 'Kayıt Oluşturuluyor...' : 'Kayıt Ol'}
                         </button>
                     </form>
 
