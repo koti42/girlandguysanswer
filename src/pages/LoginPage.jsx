@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaCheckCircle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
     const navigate = useNavigate();
-    const { login, loading } = useAuth(); // AuthContext'ten login ve loading al
+    const { login, loading, isAuthenticated } = useAuth();
     const [formData, setFormData] = useState({
         email: '',
         password: '',
         remember: false
     });
     const [errors, setErrors] = useState({});
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/');
+        }
+    }, [isAuthenticated, navigate]);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;

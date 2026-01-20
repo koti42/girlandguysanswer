@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaMars, FaVenus } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 const SignupPage = () => {
     const navigate = useNavigate();
-    const { register, loading, error: authError } = useAuth(); // AuthContext'ten register ve loading al
+    const { register, loading, error: authError, isAuthenticated } = useAuth();
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -15,6 +15,12 @@ const SignupPage = () => {
         agreeTerms: false
     });
     const [errors, setErrors] = useState({});
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/');
+        }
+    }, [isAuthenticated, navigate]);
 
     // Auth error'u form error'ları ile birleştirebiliriz veya ayrıca gösterebiliriz
     // Simdilik submit'te authError gelirse alert veya toast ile gösterebiliriz
