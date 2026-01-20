@@ -87,6 +87,41 @@ const QuestionDetailPage = () => {
                     createdAt: '1 saat önce'
                 }
             ]
+        },
+        {
+            id: 3,
+            user: {
+                name: 'Mehmet_Demir',
+                avatar: 'https://i.pravatar.cc/150?u=m1',
+                gender: 'male'
+            },
+            content: 'Erkek bakış açısından söyleyeyim: Basit ama zarif kesimler her zaman göz alıcı oluyor. Klasik siyah veya lacivert tonlar asla bitmez. Abartısız aksesuar kullanımı da önemli.',
+            likes: 15,
+            createdAt: '4 saat önce',
+            replies: []
+        },
+        {
+            id: 4,
+            user: {
+                name: 'Ahmet_Kaya',
+                avatar: 'https://i.pravatar.cc/150?u=m2',
+                gender: 'male'
+            },
+            content: 'Şahsen ben de eşim için tercih yaparken kumaş kalitesine çok dikkat ediyorum. İpek veya saten kumaşlar düğünlerde çok şık duruyor. Ayrıca rahat bir kesim önemli, akşam boyunca rahat edebilmeli.',
+            likes: 12,
+            createdAt: '5 saat önce',
+            replies: [
+                {
+                    id: 401,
+                    user: {
+                        name: 'Elif_Mavi',
+                        avatar: 'https://i.pravatar.cc/150?u=a1',
+                        gender: 'female'
+                    },
+                    content: 'Çok doğru bir tespit! Konfor gerçekten çok önemli 👍',
+                    createdAt: '4 saat önce'
+                }
+            ]
         }
     ];
 
@@ -249,7 +284,7 @@ const QuestionDetailPage = () => {
                             onChange={(e) => setCommentText(e.target.value)}
                             placeholder="Cevabınızı buraya yazın..."
                             rows={4}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-4"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-4"
                         />
                         <div className="flex items-center justify-between">
                             <button
