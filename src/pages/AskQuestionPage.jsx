@@ -139,18 +139,6 @@ const AskQuestionPage = () => {
         </div>
     );
 
-    if (isSuccess) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-soft p-12 text-center max-w-md">
-                    <FaCheckCircle className="text-green-500 text-6xl mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white dark:text-gray-100 mb-2">Sorunuz Gönderildi!</h2>
-                    <p className="text-gray-600 dark:text-gray-400">Ana sayfaya yönlendiriliyorsunuz...</p>
-                </div>
-            </div>
-        );
-    }
-
     const SidebarContent = (
         <>
             <TipsWidget />
