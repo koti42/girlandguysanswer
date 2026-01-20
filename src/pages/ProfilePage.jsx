@@ -119,8 +119,9 @@ const ProfilePage = () => {
     };
 
     const handleSave = () => {
-        setProfileData(editForm);
+        setProfileData(prev => ({ ...prev, ...editForm }));
         setIsEditing(false);
+        // Here you would typically call an API to update the user profile
     };
 
     return (
