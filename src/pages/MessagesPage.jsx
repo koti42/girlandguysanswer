@@ -9,6 +9,7 @@ const MessagesPage = () => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [attachedFile, setAttachedFile] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
+    const [showChatOnMobile, setShowChatOnMobile] = useState(!!username);
     const [showChatOnMobile, setShowChatOnMobile] = useState(false);
 
     // Mock conversations
@@ -165,8 +166,8 @@ const MessagesPage = () => {
                 <div className="w-full mx-auto p-3 md:p-6">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden" style={{ height: 'calc(100vh - 140px)' }}>
                         <div className="flex h-full">
-                            {/* Conversations List - Hidden on mobile when chat is open */}
-                            <div className={`w-full md:w-[35%] border-r border-gray-200 dark:border-gray-700 flex flex-col ${username && showChatOnMobile ? 'hidden md:flex' : 'flex'
+                            {/* Conversations List */}
+                            <div className={`w-full md:w-1/3 lg:w-1/4 border-r border-gray-200 dark:border-gray-700 flex flex-col ${showChatOnMobile ? 'hidden md:flex' : 'flex'
                                 }`}>
                                 {/* Header */}
                                 <div className="p-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-coral/5 to-orange-400/5 dark:from-coral/10 dark:to-orange-400/10">
@@ -222,9 +223,6 @@ const MessagesPage = () => {
                                                 >
                                                     <FaArrowLeft className="text-gray-600 dark:text-gray-400" />
                                                 </button>
-                                                <Link to="/messages" className="md:hidden text-gray-600 dark:text-gray-400 hover:text-coral transition-colors">
-                                                    <FaArrowLeft />
-                                                </Link>
                                                 <img src={activeConversation.avatar} alt={activeConversation.name} className="w-12 h-12 rounded-full border-2 border-coral/20" />
                                                 <div>
                                                     <h3 className="font-bold text-gray-800 dark:text-white text-lg">{activeConversation.name}</h3>
