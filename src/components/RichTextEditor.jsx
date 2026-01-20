@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { FaBold, FaItalic, FaListUl, FaImage } from 'react-icons/fa';
+import { uploadAPI } from '../services/api';
 
 const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yazın...' }) => {
     const editorRef = useRef(null);
@@ -10,16 +11,26 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
         editorRef.current?.focus();
     };
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImageUrl(reader.result);
+            try {
+                // Show loading state or optimized preview immediately if needed
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('folder', 'uploads'); // Optional as per spec
+
+                const response = await uploadAPI.upload(formData);
+                const imageUrl = response.data.data.url;
+
+                setImageUrl(imageUrl);
                 // Insert image into editor
-                document.execCommand('insertImage', false, reader.result);
-            };
-            reader.readAsDataURL(file);
+                document.execCommand('insertImage', false, imageUrl);
+            } catch (error) {
+                console.error("Resim yükleme hatası:", error);
+                alert("Resim yüklenirken bir hata oluştu.");
+            }
         }
     };
 

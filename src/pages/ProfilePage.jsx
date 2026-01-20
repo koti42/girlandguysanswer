@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FaMapMarkerAlt, FaCalendarAlt, FaEdit, FaTrophy, FaMedal, FaStar, FaCrown } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import ProfileCover from '../components/ProfileCover';
@@ -8,45 +8,82 @@ import ProfileBadges from '../components/ProfileBadges';
 import ProfileStats from '../components/ProfileStats';
 import FollowersList from '../components/FollowersList';
 import QuestionCard from '../components/QuestionCard';
-import { questions } from '../data/mockData';
 import { TrendsWidget, TopUsersWidget } from '../components/Widgets';
+import { useAuth } from '../context/AuthContext';
+import { usersAPI, questionsAPI } from '../services/api';
 
 const ProfilePage = () => {
     const { username } = useParams();
+    const { user: currentUser } = useAuth();
+    const isOwnProfile = !username || (currentUser && currentUser.username === username); // !username is for /profile route if exists, likely /profile/:username is mandatory
+
     const [activeTab, setActiveTab] = useState('questions');
     const [isEditing, setIsEditing] = useState(false);
-    const [profileData, setProfileData] = useState({
-        username: username || 'Zeynep_Yildiz',
-        name: 'Zeynep Yıldız',
-        avatar: 'https://i.pravatar.cc/200?u=4',
-        coverPhoto: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop',
-        bio: 'Moda ve güzellik konularına meraklı bir kadın.',
-        about: 'Moda tasarımı mezunuyum. 5 yıldır profesyonel olarak styling yapıyorum.',
-        location: 'İstanbul, Türkiye',
-        joinedDate: 'Ocak 2024',
-        stats: { questions: 142, answers: 1283, followers: 5420, following: 892, likes: 12450 },
-        badges: [
-            { id: 1, name: 'Moda Gurusu', icon: FaCrown, color: 'text-gold' },
-            { id: 2, name: 'Yardımsever', icon: FaTrophy, color: 'text-blue-500' },
-            { id: 3, name: 'Popüler', icon: FaStar, color: 'text-coral' },
-            { id: 4, name: 'Aktif Üye', icon: FaMedal, color: 'text-green-500' }
-        ]
-    });
-    const [editForm, setEditForm] = useState({ ...profileData });
-    // Default images
-    const defaultAvatar = 'https://i.pravatar.cc/200?u=default';
-    const defaultCover = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop';
+    const [loading, setLoading] = useState(true);
+    const [profileData, setProfileData] = useState(null);
+    const [userQuestions, setUserQuestions] = useState([]);
 
-    // Mock data
-    const userQuestions = questions.filter(q => q.user.name === profileData.username).slice(0, 5);
-    const mockFollowers = [
-        { id: 1, username: 'Ahmet_K', name: 'Ahmet Kaya', avatar: 'https://i.pravatar.cc/150?u=f1', bio: 'Teknoloji ve oyun', isFollowing: false },
-        { id: 2, username: 'Elif_M', name: 'Elif Metin', avatar: 'https://i.pravatar.cc/150?u=f2', bio: 'Moda bloggeri', isFollowing: true }
-    ];
-    const mockFollowing = [
-        { id: 1, username: 'Zeynep_Y', name: 'Zeynep Yıldız', avatar: 'https://i.pravatar.cc/150?u=fw1', bio: 'Moda ve güzellik' },
-        { id: 2, username: 'Berk_D', name: 'Berk Demir', avatar: 'https://i.pravatar.cc/150?u=fw2', bio: 'İlişki danışmanı' }
-    ];
+    useEffect(() => {
+        const fetchProfileData = async () => {
+            setLoading(true);
+            try {
+                // If own profile, we might use getCurrentUser or filter usersAPI
+                // Spec says GET /users/{username} works for everyone, but /user/me gives private details
+                let data;
+                let questionsData = [];
+
+                if (isOwnProfile) {
+                    // For own profile, use /user/me to get potentially private details + edit permissions implicitly
+                    // However, to keep it simple and consistent with username param:
+                    // If we are on /profile/myUsername, we can fetch via username but we know it's us.
+                    const response = await usersAPI.getProfile(username || currentUser.username);
+                    data = response.data.data;
+
+                    // Fetch own questions
+                    const qResponse = await questionsAPI.getMyQuestions();
+                    questionsData = qResponse.data.data.questions;
+                } else {
+                    const response = await usersAPI.getProfile(username);
+                    data = response.data.data;
+                    questionsData = data.questions || []; // Spec says questions might be included or we filter
+                }
+
+                setProfileData({
+                    ...data,
+                    // Map API fields to UI fields if necessary
+                    name: data.username, // UI uses name, API has username
+                    coverPhoto: data.coverImage || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop',
+                    avatar: data.avatar || 'https://i.pravatar.cc/200?u=default',
+                    location: data.location || 'Konum belirtilmedi', // API might not have location yet
+                    joinedDate: new Date(data.created_at || Date.now()).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
+                    // stats mapping logic...
+                    stats: {
+                        questions: data.stats?.questions || 0,
+                        followers: data.stats?.followers || 0,
+                        following: data.stats?.following || 0,
+                        answers: 0, // API doesn't seem to return answer count in user detail yet
+                        likes: 0
+                    }
+                });
+                setUserQuestions(questionsData);
+
+            } catch (error) {
+                console.error("Profil yüklenirken hata:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (username || currentUser) {
+            fetchProfileData();
+        }
+    }, [username, currentUser, isOwnProfile]);
+
+    if (loading) return <MainLayout><div className="flex justify-center p-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div></div></MainLayout>;
+
+    if (!profileData) return <MainLayout><div className="text-center p-10">Kullanıcı bulunamadı</div></MainLayout>;
+
+    // Rest of component...
 
     const handleAvatarUpload = (file) => {
         const reader = new FileReader();
@@ -129,9 +166,22 @@ const ProfilePage = () => {
                                             <div className="flex items-center gap-1"><FaCalendarAlt />Katıldı {profileData.joinedDate}</div>
                                         </div>
                                         <div className="flex gap-2 mt-4">
-                                            <button onClick={() => setIsEditing(true)} className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-xl flex items-center gap-2"><FaEdit />Düzenle</button>
-                                            <Link to={`/messages/${username}`}><button className="border-2 border-coral text-coral px-4 py-2 rounded-xl">Mesaj</button></Link>
-                                            <button className="bg-coral text-white px-4 py-2 rounded-xl">Takip Et</button>
+                                            {isOwnProfile ? (
+                                                <button onClick={() => setIsEditing(true)} className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                                    <FaEdit /> Düzenle
+                                                </button>
+                                            ) : (
+                                                <>
+                                                    <Link to={`/messages/${profileData.username}`}>
+                                                        <button className="border-2 border-coral text-coral px-4 py-2 rounded-xl hover:bg-coral hover:text-white transition-colors">
+                                                            Mesaj
+                                                        </button>
+                                                    </Link>
+                                                    <button className="bg-coral text-white px-4 py-2 rounded-xl hover:bg-coral-dark transition-colors shadow-md hover:shadow-lg">
+                                                        Takip Et
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
 
                                         {/* Stats Tabs - Moved below buttons */}
@@ -179,8 +229,21 @@ const ProfilePage = () => {
                                 </div>
                             )}
 
-                            {/* Questions */}
-                            {userQuestions.map(q => <QuestionCard key={q.id} question={q} />)}
+                            {/* Content Tabs */}
+                            <div className="space-y-4">
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                                    {isOwnProfile ? 'Sorularım' : `${profileData.name} Soruları`}
+                                </h3>
+                                {userQuestions.length > 0 ? (
+                                    userQuestions.map(q => (
+                                        <QuestionCard key={q.id} question={q} />
+                                    ))
+                                ) : (
+                                    <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl">
+                                        <p className="text-gray-500">Henüz hiç soru sorulmamış.</p>
+                                    </div>
+                                )}
+                            </div>
                         </>
                     )}
                     {activeTab === 'answers' && (

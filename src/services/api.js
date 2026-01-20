@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://127.0.0.1:8003/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -26,7 +26,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
- 
+
         }
         return Promise.reject(error);
     }
@@ -35,13 +35,29 @@ api.interceptors.response.use(
 export const authAPI = {
     login: (credentials) => api.post('/auth/login', credentials),
     register: (userData) => api.post('/auth/register', userData),
-    getCurrentUser: () => api.get('/auth/me'), 
+    getCurrentUser: () => api.get('/user/me'), // Updated endpoint
 };
 
 export const questionsAPI = {
     getAll: (params) => api.get('/questions', { params }),
     getById: (id) => api.get(`/questions/${id}`),
     create: (data) => api.post('/questions', data),
+    getMyQuestions: () => api.get('/user/me/questions'), // New endpoint
+};
+
+export const usersAPI = {
+    getProfile: (username) => api.get(`/users/${username}`), // Updated for username param
+    updateProfile: (data) => api.put('/user/me', data),
+    getFollowers: (userId) => api.get(`/users/${userId}/followers`), // Assuming endpoints exists or similar pattern
+    getFollowing: (userId) => api.get(`/users/${userId}/following`),
+    follow: (userId) => api.post(`/users/${userId}/follow`),
+    unfollow: (userId) => api.delete(`/users/${userId}/follow`),
+};
+
+export const uploadAPI = {
+    upload: (formData) => api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
 };
 
 export const commentsAPI = {
