@@ -277,17 +277,31 @@ const Header = ({ onSearch }) => {
                 <div className="flex flex-col h-full">
                     {/* Mobile Menu Header */}
                     <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                        <Link to="/profile/Zeynep_Yildiz" onClick={closeMobileMenu} className="flex items-center gap-3">
-                            <img
-                                src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
-                                alt="User"
-                                className="w-12 h-12 rounded-full border-2 border-coral"
-                            />
-                            <div>
-                                <p className="font-semibold text-gray-800 dark:text-white">Zeynep Yıldız</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">@Zeynep_Yildiz</p>
+                        {isAuthenticated && user ? (
+                            <Link to={`/profile/${user.username}`} onClick={closeMobileMenu} className="flex items-center gap-3">
+                                {user.avatar ? (
+                                    <img src={user.avatar} alt={user.username} className="w-12 h-12 rounded-full border-2 border-coral object-cover" />
+                                ) : (
+                                    <div className="w-12 h-12 rounded-full bg-coral/10 text-coral flex items-center justify-center border-2 border-coral">
+                                        <FaUser className="text-xl" />
+                                    </div>
+                                )}
+                                <div>
+                                    <p className="font-semibold text-gray-800 dark:text-white">{user.username}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
+                                </div>
+                            </Link>
+                        ) : (
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                    <FaUser className="text-gray-400 text-xl" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-800 dark:text-white">Misafir Kullanıcı</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Hoş geldiniz</p>
+                                </div>
                             </div>
-                        </Link>
+                        )}
                         <button
                             onClick={closeMobileMenu}
                             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -306,49 +320,66 @@ const Header = ({ onSearch }) => {
                             <FaHome className="text-xl text-coral" />
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Sorular</span>
                         </Link>
-                        <Link
-                            to="/ask"
-                            onClick={closeMobileMenu}
-                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
-                        >
-                            <FaQuestionCircle className="text-xl text-coral" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Soru Sor</span>
-                        </Link>
-                        <Link
-                            to="/messages"
-                            onClick={closeMobileMenu}
-                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
-                        >
-                            <FaEnvelope className="text-xl text-coral" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Mesajlar</span>
-                        </Link>
-                        <Link
-                            to="/profile/Zeynep_Yildiz"
-                            onClick={closeMobileMenu}
-                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
-                        >
-                            <FaUser className="text-xl text-coral" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Profilim</span>
-                        </Link>
 
-                        <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
-
-                        <Link
-                            to="/login"
-                            onClick={closeMobileMenu}
-                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] lg:hidden"
-                        >
-                            <FaSignInAlt className="text-xl text-gray-600 dark:text-gray-400" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Giriş Yap</span>
-                        </Link>
-                        <Link
-                            to="/signup"
-                            onClick={closeMobileMenu}
-                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-h-[50px] lg:hidden"
-                        >
-                            <FaUserPlus className="text-xl text-gray-600 dark:text-gray-400" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Kayıt Ol</span>
-                        </Link>
+                        {isAuthenticated ? (
+                            <>
+                                <Link
+                                    to="/ask"
+                                    onClick={closeMobileMenu}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                                >
+                                    <FaQuestionCircle className="text-xl text-coral" />
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Soru Sor</span>
+                                </Link>
+                                <Link
+                                    to="/messages"
+                                    onClick={closeMobileMenu}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                                >
+                                    <FaEnvelope className="text-xl text-coral" />
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Mesajlar</span>
+                                </Link>
+                                <Link
+                                    to={`/profile/${user?.username}`}
+                                    onClick={closeMobileMenu}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                                >
+                                    <FaUser className="text-xl text-coral" />
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Profilim</span>
+                                </Link>
+                                <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+                                <button
+                                    onClick={() => {
+                                        handleLogout();
+                                        closeMobileMenu();
+                                    }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors mb-2 min-h-[50px] text-red-600 dark:text-red-400"
+                                >
+                                    <FaSignOutAlt className="text-xl" />
+                                    <span className="font-medium">Çıkış Yap</span>
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+                                <Link
+                                    to="/login"
+                                    onClick={closeMobileMenu}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                                >
+                                    <FaSignInAlt className="text-xl text-gray-600 dark:text-gray-400" />
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Giriş Yap</span>
+                                </Link>
+                                <Link
+                                    to="/signup"
+                                    onClick={closeMobileMenu}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-h-[50px]"
+                                >
+                                    <FaUserPlus className="text-xl text-gray-600 dark:text-gray-400" />
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Kayıt Ol</span>
+                                </Link>
+                            </>
+                        )}
                     </nav>
 
                     {/* Mobile Menu Footer */}
