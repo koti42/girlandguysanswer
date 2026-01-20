@@ -161,8 +161,8 @@ const MessagesPage = () => {
     return (
         <div className="min-h-screen bg-background dark:bg-gray-900">
             <Header />
-            <div className="h-[calc(100vh-80px)] px-2 md:px-4 py-2 md:py-4">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden h-full">
+            <div className="h-[calc(100vh-64px)] p-0 sm:px-2 sm:py-2 md:px-4 md:py-4">
+                <div className="bg-white dark:bg-gray-800 sm:rounded-2xl shadow-soft overflow-hidden h-full">
                     <div className="flex h-full">
                         {/* Conversations List - Hidden on mobile when chat is open */}
                         <div className={`w-full md:w-1/3 lg:w-1/4 border-r border-gray-200 dark:border-gray-700 flex flex-col ${showChatOnMobile ? 'hidden md:flex' : 'flex'
