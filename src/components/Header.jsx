@@ -4,6 +4,7 @@ import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQu
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
+import UserAvatar from './UserAvatar';
 import { notifications } from '../data/mockData';
 
 const Header = ({ onSearch }) => {
@@ -185,13 +186,7 @@ const Header = ({ onSearch }) => {
                         {isAuthenticated && user ? (
                             <div className="relative group">
                                 <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                                    {user.avatar ? (
-                                        <img src={user.avatar} alt={user.username} className="w-8 h-8 rounded-full object-cover" />
-                                    ) : (
-                                        <div className="w-8 h-8 rounded-full bg-coral/10 text-coral flex items-center justify-center">
-                                            <FaUser />
-                                        </div>
-                                    )}
+                                    <UserAvatar user={user} size="sm" className="w-8 h-8 text-xs" />
                                     <span className="hidden md:inline text-sm font-semibold text-gray-700 dark:text-gray-300 max-w-[100px] truncate">{user.username}</span>
                                 </button>
 
@@ -283,13 +278,7 @@ const Header = ({ onSearch }) => {
                     <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                         {isAuthenticated && user ? (
                             <Link to={`/profile/${user.username}`} onClick={closeMobileMenu} className="flex items-center gap-3">
-                                {user.avatar ? (
-                                    <img src={user.avatar} alt={user.username} className="w-12 h-12 rounded-full border-2 border-coral object-cover" />
-                                ) : (
-                                    <div className="w-12 h-12 rounded-full bg-coral/10 text-coral flex items-center justify-center border-2 border-coral">
-                                        <FaUser className="text-xl" />
-                                    </div>
-                                )}
+                                <UserAvatar user={user} size="lg" className="w-12 h-12 text-base border-2 border-coral" />
                                 <div>
                                     <p className="font-semibold text-gray-800 dark:text-white">{user.username}</p>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>

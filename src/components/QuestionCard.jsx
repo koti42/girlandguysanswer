@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret } from 'react-icons/fa';
+import UserAvatar from './UserAvatar';
 import QuestionActionsMenu from './QuestionActionsMenu';
 
 const QuestionCard = ({ question }) => {
@@ -30,10 +31,10 @@ const QuestionCard = ({ question }) => {
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                     <Link to={`/profile/${question.user.name}`}>
-                        <img
-                            src={question.user.avatar}
-                            alt={question.user.name}
-                            className="w-12 h-12 rounded-full border border-gray-100 dark:border-gray-600 hover:border-coral transition-colors cursor-pointer"
+                        <UserAvatar
+                            user={question.user}
+                            size="lg"
+                            className="hover:border-coral transition-colors cursor-pointer"
                         />
                     </Link>
                     <div>
