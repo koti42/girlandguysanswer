@@ -459,8 +459,12 @@ const QuestionDetailPage = () => {
                                         </div>
                                     )}
                                 </div>
-                            );
-                        })}
+                            ))
+                        ) : (
+                            <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+                                <p>Henüz cevap yok. İlk cevabı sen yaz!</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div >
