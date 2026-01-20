@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaImage, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
+import Toast from '../components/Toast';
 import { categories } from '../data/mockData';
 
 const AskQuestionPage = () => {
@@ -11,13 +12,12 @@ const AskQuestionPage = () => {
         title: '',
         category: '',
         description: '',
-        tags: [],
-        image: null
+        tags: []
     });
     const [tagInput, setTagInput] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
+    const [toast, setToast] = useState(null);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -47,15 +47,18 @@ const AskQuestionPage = () => {
         }));
     };
 
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData(prev => ({ ...prev, image: reader.result }));
-            };
-            reader.readAsDataURL(file);
+    const showToast = (type, message) => {
+        setToast({ type, message });
+    };
+
+    const handleSaveDraft = () => {
+        if (!formData.title.trim()) {
+            showToast('warning', 'Taslağı kaydetmek için en azından bir başlık girin');
+            return;
         }
+        // Taslağı localStorage'a kaydet
+        localStorage.setItem('questionDraft', JSON.stringify(formData));
+        showToast('success', 'Taslak başarıyla kaydedildi!');
     };
 
     const validateForm = () => {
@@ -74,16 +77,21 @@ const AskQuestionPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!validateForm()) return;
+        if (!validateForm()) {
+            showToast('error', 'Lütfen tüm zorunlu alanları doldurun');
+            return;
+        }
 
         setIsSubmitting(true);
 
         setTimeout(() => {
             setIsSubmitting(false);
-            setIsSuccess(true);
+            showToast('success', 'Sorunuz başarıyla yayınlandı!');
+            // Taslağı temizle
+            localStorage.removeItem('questionDraft');
 
             setTimeout(() => {
-                navigate('/');
+                navigate('/questions');
             }, 2000);
         }, 1500);
     };
@@ -256,51 +264,49 @@ const AskQuestionPage = () => {
                             <span className="text-gray-400 dark:text-gray-500 text-sm block mt-2">Metin editörü ile zengin içerik oluşturabilirsiniz</span>
                         </div>
 
-                        {/* Image Upload */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                Görsel Ekle <span className="text-gray-400 font-normal">(Opsiyonel)</span>
-                            </label>
-                            {formData.image ? (
-                                <div className="relative rounded-xl overflow-hidden border border-gray-200">
-                                    <img src={formData.image} alt="Preview" className="w-full h-64 object-cover" />
-                                    <button
-                                        type="button"
-                                        onClick={() => setFormData(prev => ({ ...prev, image: null }))}
-                                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-                                    >
-                                        <FaTimes />
-                                    </button>
-                                </div>
-                            ) : (
-                                <label className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-coral transition-colors">
-                                    <FaImage className="text-4xl text-gray-400 mb-3" />
-                                    <span className="text-gray-600 dark:text-gray-400 mb-1">Görsel yüklemek için tıklayın</span>
-                                    <span className="text-gray-400 text-sm">PNG, JPG (max. 5MB)</span>
-                                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                                </label>
-                            )}
+                        {/* Actions */}
+                        <div className="flex gap-3 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => navigate(-1)}
+                                className="px-6 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                            >
+                                İptal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSaveDraft}
+                                className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-coral text-coral font-semibold hover:bg-coral/10 dark:hover:bg-coral/20 transition-all"
+                            >
+                                <FaSave />
+                                Taslak Kaydet
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white font-semibold hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            >
+                                {isSubmitting ? (
+                                    <span className="flex items-center gap-2 justify-center">
+                                        <FaCheckCircle className="animate-spin" />
+                                        Yayınlanıyor...
+                                    </span>
+                                ) : (
+                                    'Yayınla'
+                                )}
+                            </button>
                         </div>
                     </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-4">
-                        <button
-                            type="button"
-                            onClick={() => navigate(-1)}
-                            className="flex-1 py-3 px-6 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:bg-gray-700 transition-colors"
-                        >
-                            İptal
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? 'Gönderiliyor...' : 'Soru Sor'}
-                        </button>
-                    </div>
                 </form>
+
+                {/* Toast Notification */}
+                {toast && (
+                    <Toast
+                        type={toast.type}
+                        message={toast.message}
+                        onClose={() => setToast(null)}
+                    />
+                )}
             </div>
         </MainLayout>
     );
