@@ -1,511 +1,168 @@
-# API Entegrasyon Dokümantasyonu
+# 📡 API Entegrasyon Bilgileri (Frontend İçin)
 
-Bu dokümantasyon, Kızılınkalarsoruyor frontend uygulamasının backend API ile nasıl entegre edileceğini açıklar.
+Frontend geliştirirken kullanacağınız temel endpointler aşağıdadır.
+**Base URL**: `http://localhost:3000/api`
 
-## Base URL
-```
-http://localhost:3000/api
-```
-veya production:
-```
-https://api.kizilinkalarsoruyor.com/api
-```
+### Kimlik Doğrulama (Auth)
 
----
-
-## 1. Kullanıcı Kaydı (Register)
-
-### Endpoint
-```
-POST /auth/register
-```
-
-### Request Headers
-```json
-{
-  "Content-Type": "application/json"
-}
-```
-
-### Request Body
-```json
-{
-  "username": "ornek_kullanici",
-  "email": "kullanici@example.com",
-  "password": "123456",
-  "gender": "female"
-}
-```
-
-#### Field Açıklamaları:
-- `username` (string, required): Kullanıcı adı, minimum 2 karakter
-- `email` (string, required): Geçerli email adresi
-- `password` (string, required): Minimum 6 karakter
-- `gender` (string, required): `"male"` veya `"female"`
-
-### Success Response (201 Created)
-```json
-{
-  "success": true,
-  "message": "Kullanıcı başarıyla oluşturuldu",
-  "data": {
-    "user": {
-      "id": 1,
-      "username": "ornek_kullanici",
-      "email": "kullanici@example.com",
-      "gender": "female",
-      "createdAt": "2026-01-20T10:05:00Z"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+#### 1. Kayıt Ol (Register)
+- **URL**: `POST /auth/register`
+- **Body**:
+  ```json
+  {
+    "username": "kullanici_adi",
+    "email": "test@example.com",
+    "password": "sifre123",
+    "gender": "male"
   }
-}
-```
-
-### Error Response (400 Bad Request)
-```json
-{
-  "success": false,
-  "message": "Validation error",
-  "errors": {
-    "username": "Kullanıcı adı zaten kullanılıyor",
-    "email": "E-posta adresi geçersiz"
-  }
-}
-```
-
----
-
-## 2. Kullanıcı Girişi (Login)
-
-### Endpoint
-```
-POST /auth/login
-```
-
-### Request Headers
-```json
-{
-  "Content-Type": "application/json"
-}
-```
-
-### Request Body
-```json
-{
-  "email": "kullanici@example.com",
-  "password": "123456"
-}
-```
-
-#### Field Açıklamaları:
-- `email` (string, required): Kayıtlı email adresi
-- `password` (string, required): Kullanıcı şifresi
-
-### Success Response (200 OK)
-```json
-{
-  "success": true,
-  "message": "Giriş başarılı",
-  "data": {
-    "user": {
-      "id": 1,
-      "username": "ornek_kullanici",
-      "email": "kullanici@example.com",
-      "gender": "female",
-      "avatar": "https://i.pravatar.cc/150?u=1",
-      "createdAt": "2026-01-20T10:05:00Z"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
-### Error Response (401 Unauthorized)
-```json
-{
-  "success": false,
-  "message": "E-posta veya şifre hatalı"
-}
-```
-
----
-
-## 3. Soru Sorma (Create Question)
-
-### Endpoint
-```
-POST /questions
-```
-
-### Request Headers
-```json
-{
-  "Content-Type": "application/json",
-  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-### Request Body
-```json
-{
-  "title": "Bu yaz düğün sezonu için abiye elbise önerileriniz neler?",
-  "description": "<p>Detaylı açıklama HTML formatında...</p>",
-  "category": "Moda & Güzellik",
-  "tags": ["#düğünkombini", "#abiye"],
-  "image": "https://images.unsplash.com/photo-123.jpg"
-}
-```
-
-#### Field Açıklamaları:
-- `title` (string, required): Soru başlığı, minimum 10 karakter
-- `description` (string, optional): HTML formatında detaylı açıklama
-- `category` (string, required): Kategori adı (mockData.js'deki categories listesinden)
-- `tags` (array, optional): Etiketler dizisi, maksimum 5 etiket
-- `image` (string, optional): Soru görseli URL'si
-
-### Success Response (201 Created)
-```json
-{
-  "success": true,
-  "message": "Soru başarıyla oluşturuldu",
-  "data": {
-    "question": {
-      "id": 123,
-      "title": "Bu yaz düğün sezonu için abiye elbise önerileriniz neler?",
-      "description": "<p>Detaylı açıklama HTML formatında...</p>",
-      "category": "Moda & Güzellik",
-      "tags": ["#düğünkombini", "#abiye"],
-      "image": "https://images.unsplash.com/photo-123.jpg",
+  ```
+- **Success Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "message": "Kullanıcı başarıyla oluşturuldu",
+    "data": {
       "user": {
-        "id": 1,
-        "username": "ornek_kullanici",
-        "gender": "female",
+        "id": "c4d6ccde-58a4-45cf-ac8d-76382c817f54",
+        "username": "kullanici_adi",
+        "email": "test@example.com",
+        "gender": "male",
+        "createdAt": "2026-01-20T10:20:20.123+03:00"
+      },
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+  }
+  ```
+
+#### 2. Giriş Yap (Login)
+- **URL**: `POST /auth/login`
+- **Body**:
+  ```json
+  {
+    "email": "test@example.com",
+    "password": "sifre123"
+  }
+  ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Giriş başarılı",
+    "data": {
+      "user": {
+        "id": "c4d6ccde-58a4-45cf-ac8d-76382c817f54",
+        "username": "kullanici_adi",
+        "email": "test@example.com",
+        "gender": "male",
         "avatar": "https://i.pravatar.cc/150?u=1"
       },
-      "stats": {
-        "likes": 0,
-        "comments": 0,
-        "views": 0
-      },
-      "createdAt": "2026-01-20T10:10:00Z"
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     }
   }
-}
-```
+  ```
 
-### Error Response (400 Bad Request)
-```json
-{
-  "success": false,
-  "message": "Validation error",
-  "errors": {
-    "title": "Soru başlığı en az 10 karakter olmalıdır",
-    "category": "Kategori seçimi zorunludur"
-  }
-}
-```
+### Sorular (Questions)
 
-### Error Response (401 Unauthorized)
-```json
-{
-  "success": false,
-  "message": "Oturum açmanız gerekiyor"
-}
-```
-
----
-
-## 4. Soruları Listeleme (Get Questions)
-
-### Endpoint
-```
-GET /questions
-```
-
-### Query Parameters
-- `page` (number, optional): Sayfa numarası (default: 1)
-- `limit` (number, optional): Sayfa başına soru sayısı (default: 10)
-- `category` (string, optional): Kategori filtresi (örn: "Moda & Güzellik")
-- `gender` (string, optional): Cinsiyet filtresi (`"male"`, `"female"`)
-- `search` (string, optional): Arama terimi
-- `sort` (string, optional): Sıralama (`"latest"`, `"popular"`, `"trending"`)
-
-### Example Request
-```
-GET /questions?page=1&limit=10&gender=female&sort=latest
-```
-
-### Request Headers
-```json
-{
-  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-*Not: Authorization opsiyonel, ancak giriş yapmış kullanıcılar için önerilir*
-
-### Success Response (200 OK)
-```json
-{
-  "success": true,
-  "data": {
-    "questions": [
-      {
-        "id": 1,
-        "title": "Bu yaz düğün sezonu için abiye elbise önerileriniz neler?",
-        "category": "Moda & Güzellik",
-        "tags": ["#düğünkombini", "#abiye"],
-        "image": "https://images.unsplash.com/photo-123.jpg",
-        "user": {
-          "id": 4,
-          "username": "Zeynep_Yildiz",
-          "gender": "female",
-          "avatar": "https://i.pravatar.cc/150?u=4",
-          "badge": null
-        },
-        "stats": {
-          "likes": 245,
-          "comments": 34,
-          "views": 1205
-        },
-        "createdAt": "2026-01-20T08:30:00Z",
-        "updatedAt": "2026-01-20T09:15:00Z"
+#### 3. Soruları Listele
+- **URL**: `GET /questions`
+- **Query Params**: `?page=1&limit=10&category=Moda`
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "questions": [
+        {
+          "id": "2a5bc6e7-8ae3-4c6a-9893-292332b00948",
+          "title": "En iyi cilt bakım rutini nedir?",
+          "description": "<p>Karma ciltler için...</p>",
+          "category": "Cilt Bakımı",
+          "tags": ["#ciltbakımı", "#güzellik"],
+          "userId": "c4d6ccde...",
+          "user": {
+            "id": "c4d6ccde...",
+            "username": "Zeynep_K",
+            "gender": "female",
+            "avatar": "https://i.pravatar.cc/150?u=3"
+          },
+          "likes": 8,
+          "commentsCount": 0,
+          "views": 90,
+          "createdAt": "2026-01-20T10:20:27.459+03:00"
+        }
+      ],
+      "pagination": {
+        "currentPage": 1,
+        "totalPages": 5,
+        "totalQuestions": 47,
+        "limit": 10,
+        "hasNextPage": true,
+        "hasPreviousPage": false
       }
-    ],
-    "pagination": {
-      "currentPage": 1,
-      "totalPages": 5,
-      "totalQuestions": 47,
-      "limit": 10,
-      "hasNextPage": true,
-      "hasPreviousPage": false
     }
   }
-}
-```
+  ```
 
-### Error Response (400 Bad Request)
-```json
-{
-  "success": false,
-  "message": "Invalid query parameters",
-  "errors": {
-    "gender": "Gender must be 'male' or 'female'"
+#### 4. Soru Detayı
+- **URL**: `GET /questions/:id`
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "question": {
+        "id": "2a5bc6e7-8ae3-4c6a-9893-292332b00948",
+        "title": "En iyi cilt bakım rutini nedir?",
+        "description": "<p>Detaylı açıklama...</p>",
+        "user": { ... },
+        "stats": { ... }
+      },
+      "answers": [
+        {
+          "id": "ce772b5b-b1e9-411e-baa8-960f85500978",
+          "content": "Cevap içeriği...",
+          "isAccepted": true,
+          "user": {
+            "username": "Ayse_K",
+            "avatar": "..."
+          },
+          "likes": 12,
+          "createdAt": "2026-01-20T10:25:00Z"
+        }
+      ]
+    }
   }
-}
-```
+  ```
 
----
-
-## 5. Tek Soru Detayı (Get Question Detail)
-
-### Endpoint
-```
-GET /questions/:id
-```
-
-### Example Request
-```
-GET /questions/123
-```
-
-### Success Response (200 OK)
-```json
-{
-  "success": true,
-  "data": {
-    "question": {
-      "id": 123,
-      "title": "Bu yaz düğün sezonu için abiye elbise önerileriniz neler?",
-      "description": "<p>Detaylı açıklama HTML formatında...</p>",
-      "category": "Moda & Güzellik",
-      "tags": ["#düğünkombini", "#abiye"],
-      "image": "https://images.unsplash.com/photo-123.jpg",
-      "user": {
-        "id": 1,
-        "username": "ornek_kullanici",
-        "gender": "female",
-        "avatar": "https://i.pravatar.cc/150?u=1"
-      },
-      "stats": {
-        "likes": 245,
-        "comments": 34,
-        "views": 1205
-      },
-      "createdAt": "2026-01-20T08:30:00Z",
-      "updatedAt": "2026-01-20T09:15:00Z"
-    },
-    "answers": [
-      {
-        "id": 1,
-        "content": "<p>Cevap içeriği...</p>",
-        "user": {
-          "id": 2,
-          "username": "Ayse_K",
-          "gender": "female",
-          "avatar": "https://i.pravatar.cc/150?u=2"
-        },
-        "likes": 12,
-        "isAccepted": true,
-        "createdAt": "2026-01-20T09:00:00Z"
+#### 5. Soru Sor (Korumalı)
+- **URL**: `POST /questions`
+- **Headers**: `Authorization: Bearer <TOKEN>`
+- **Body**:
+  ```json
+  {
+    "title": "Soru başlığı minimum 10 karakter olmalı",
+    "description": "<p>HTML formatında detay</p>",
+    "category": "Moda & Güzellik",
+    "tags": ["#etiket1", "#etiket2"],
+    "image": "https://resim-linki.com/img.jpg"
+  }
+  ```
+- **Success Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "message": "Soru başarıyla oluşturuldu",
+    "data": {
+      "question": {
+        "id": "yeni-soru-id-uuid",
+        "title": "Soru başlığı...",
+        "createdAt": "2026-01-20T10:30:00Z"
       }
-    ]
-  }
-}
-```
-
----
-
-## Genel Notlar
-
-### Authentication
-- Login ve Register'dan dönen `token`'ı localStorage'a kaydedin
-- Her API isteğinde `Authorization: Bearer {token}` header'ı gönderin
-- Token süresi dolduğunda 401 hatası alırsınız, kullanıcıyı login sayfasına yönlendirin
-
-### Error Handling
-Tüm error response'lar şu formatta gelir:
-```json
-{
-  "success": false,
-  "message": "Hata mesajı",
-  "errors": {
-    "field": "Alan bazlı hata mesajı"
-  }
-}
-```
-
-### HTTP Status Codes
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request (validation errors)
-- `401` - Unauthorized (authentication required)
-- `403` - Forbidden (insufficient permissions)
-- `404` - Not Found
-- `500` - Internal Server Error
-
-### Rate Limiting
-- Login/Register: 5 istek / dakika / IP
-- Soru sorma: 10 soru / saat / kullanıcı
-- Diğer endpoint'ler: 100 istek / dakika / kullanıcı
-
----
-
-## Frontend Entegrasyon Örneği
-
-### Axios Setup
-```javascript
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Request interceptor - token ekle
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
     }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor - hata yönetimi
-api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error.response?.data || error);
   }
-);
+  ```
 
-export default api;
-```
-
-### Kullanım Örnekleri
-
-#### Register
-```javascript
-import api from './api';
-
-const handleRegister = async (formData) => {
-  try {
-    const response = await api.post('/auth/register', {
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-      gender: formData.gender
-    });
-    
-    localStorage.setItem('authToken', response.data.token);
-    navigate('/');
-  } catch (error) {
-    setErrors(error.errors || {});
-  }
-};
-```
-
-#### Login
-```javascript
-const handleLogin = async (formData) => {
-  try {
-    const response = await api.post('/auth/login', {
-      email: formData.email,
-      password: formData.password
-    });
-    
-    localStorage.setItem('authToken', response.data.token);
-    navigate('/');
-  } catch (error) {
-    setError(error.message);
-  }
-};
-```
-
-#### Soru Sorma
-```javascript
-const handleAskQuestion = async (formData) => {
-  try {
-    const response = await api.post('/questions', {
-      title: formData.title,
-      description: formData.description,
-      category: formData.category,
-      tags: formData.tags,
-      image: formData.image
-    });
-    
-    navigate(`/question/${response.data.question.id}`);
-  } catch (error) {
-    setErrors(error.errors || {});
-  }
-};
-```
-
-#### Soruları Listeleme
-```javascript
-const fetchQuestions = async (filters) => {
-  try {
-    const params = new URLSearchParams({
-      page: filters.page || 1,
-      limit: 10,
-      ...(filters.gender && { gender: filters.gender }),
-      ...(filters.category && { category: filters.category }),
-      ...(filters.search && { search: filters.search })
-    });
-    
-    const response = await api.get(`/questions?${params}`);
-    setQuestions(response.data.questions);
-    setPagination(response.data.pagination);
-  } catch (error) {
-    console.error('Sorular yüklenemedi:', error);
-  }
-};
-```
+## 📝 Notlar
+- Kullanıcı şifreleri veritabanında **bcrypt** ile hashlenerek saklanır.
+- Resimler şimdilik URL string olarak tutulmaktadır (Unsplash vb. kullanılabilir).
+- Tarih formatları ISO 8601 olarak döner (örn: `2026-01-20T10:20:27.459+03:00`).
