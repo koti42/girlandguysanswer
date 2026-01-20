@@ -82,12 +82,11 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
                 </label>
             </div>
 
-            {/* Editor Area */}
             <div
                 ref={editorRef}
                 contentEditable
                 onInput={handleInput}
-                className="min-h-[150px] p-4 outline-none prose prose-sm max-w-none dark:bg-gray-800 dark:text-white"
+                className="min-h-[150px] p-4 outline-none prose prose-sm max-w-none dark:bg-gray-800 dark:text-white text-left dir-ltr"
                 dangerouslySetInnerHTML={{ __html: value }}
                 data-placeholder={placeholder}
                 style={{
