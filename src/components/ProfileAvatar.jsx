@@ -44,12 +44,15 @@ const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => 
                     size="3xl"
                     className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
                 />
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="absolute inset-0 w-32 h-32 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                >
-                    <FaCamera className="text-white text-2xl" />
-                </button>
+                {/* Only show edit button if handler is provided (own profile) */}
+                {onAvatarUpload && (
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="absolute inset-0 w-32 h-32 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    >
+                        <FaCamera className="text-white text-2xl" />
+                    </button>
+                )}
             </div>
 
             {/* Modern Modal - Inspired Design */}

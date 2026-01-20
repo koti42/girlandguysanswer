@@ -42,14 +42,17 @@ const ProfileCover = ({ coverPhoto, onCoverUpload, onCoverRemove }) => {
                     alt="Cover"
                     className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl hover:bg-white transition-all shadow-lg"
-                    >
-                        <FaCamera className="text-gray-700 text-xl" />
-                    </button>
-                </div>
+                {/* Only show edit button if handler is provided (own profile) */}
+                {onCoverUpload && (
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl hover:bg-white transition-all shadow-lg"
+                        >
+                            <FaCamera className="text-gray-700 text-xl" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Modern Modal */}
