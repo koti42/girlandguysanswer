@@ -95,11 +95,12 @@ const QuestionDetailPage = () => {
         if (!replyText || !replyText.trim()) return;
 
         try {
-            // User insists on using "answers" endpoint/logic.
-            // Replying to an Answer using createAnswer with parent_id implies Nested Answers.
-            // This endpoint (/questions/:slug/answers) likely checks parent_id against answers table.
-            const response = await questionsAPI.createAnswer(question.slug, {
+            // As per new Nested Comments structure:
+            // Replies are comments on the question with a parent_id
+            const response = await commentsAPI.create({
                 content: replyText,
+                commentable_type: 'question',
+                commentable_id: question.id,
                 parent_id: answerId
             });
 
