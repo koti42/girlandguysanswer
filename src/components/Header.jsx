@@ -141,15 +141,10 @@ const Header = ({ onSearch }) => {
                                 )}
                             </button>
 
-                            {/* Notifications Dropdown */}
-                            {isNotificationsOpen && (
-                                <div className="absolute right-0 mt-2 z-50">
-                                    <NotificationDropdown
-                                        notifications={notifications}
-                                        onClose={() => setIsNotificationsOpen(false)}
-                                    />
-                                </div>
-                            )}
+                            <NotificationDropdown
+                                isOpen={isNotificationsOpen}
+                                onClose={() => setIsNotificationsOpen(false)}
+                            />
                         </div>
                         {/* Profile Picture */}
                         <Link to="/profile/Zeynep_Yildiz" className="hidden sm:block">
