@@ -98,26 +98,29 @@ const AskQuestionPage = () => {
 
     // Sidebar Widgets
     const TipsWidget = () => (
-        <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-soft p-6">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <FaLightbulb className="text-gold" />
+        <div className="relative bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-3xl shadow-xl p-6 border border-purple-100 dark:border-purple-800/30 overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-indigo-400/20 dark:from-purple-600/10 dark:to-indigo-600/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-white relative z-10">
+                <div className="p-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl">
+                    <FaLightbulb className="text-white text-lg" />
+                </div>
                 İpuçları
             </h3>
-            <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                <li className="flex gap-2">
-                    <span className="text-coral">•</span>
+            <ul className="space-y-3 text-sm text-gray-700 dark:text-gray-300 relative z-10">
+                <li className="flex gap-3 items-start p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-100 dark:border-purple-800/30">
+                    <span className="text-xl">💡</span>
                     <span>Başlığınızı açık ve net yazın</span>
                 </li>
-                <li className="flex gap-2">
-                    <span className="text-coral">•</span>
+                <li className="flex gap-3 items-start p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-100 dark:border-purple-800/30">
+                    <span className="text-xl">🎯</span>
                     <span>Doğru kategori seçimi önemli</span>
                 </li>
-                <li className="flex gap-2">
-                    <span className="text-coral">•</span>
+                <li className="flex gap-3 items-start p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-100 dark:border-purple-800/30">
+                    <span className="text-xl">🏷️</span>
                     <span>Etiketler sorunuzun bulunmasını kolaylaştırır</span>
                 </li>
-                <li className="flex gap-2">
-                    <span className="text-coral">•</span>
+                <li className="flex gap-3 items-start p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-100 dark:border-purple-800/30">
+                    <span className="text-xl">🖼️</span>
                     <span>Görsel eklemek daha fazla ilgi çeker</span>
                 </li>
             </ul>
@@ -125,16 +128,31 @@ const AskQuestionPage = () => {
     );
 
     const RulesWidget = () => (
-        <div className="bg-orange-50 dark:bg-gray-800 rounded-2xl shadow-soft p-6 border border-orange-100 dark:border-gray-700">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-white">
-                <FaExclamationTriangle className="text-orange-500" />
+        <div className="relative bg-gradient-to-br from-coral-50 to-orange-50 dark:from-coral-900/20 dark:to-orange-900/20 rounded-3xl shadow-xl p-6 border border-coral-100 dark:border-coral-800/30 overflow-hidden">
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-coral-400/20 to-orange-400/20 dark:from-coral-600/10 dark:to-orange-600/10 rounded-full -ml-16 -mb-16 blur-2xl"></div>
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-white relative z-10">
+                <div className="p-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-xl">
+                    <FaExclamationTriangle className="text-white text-lg" />
+                </div>
                 Topluluk Kuralları
             </h3>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li>✓ Saygılı ve nazik olun</li>
-                <li>✓ Spam yapmayın</li>
-                <li>✓ Kişisel bilgi paylaşmayın</li>
-                <li>✓ Açık ve dürüst olun</li>
+            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300 relative z-10">
+                <li className="flex gap-2 items-center p-2">
+                    <span className="text-green-500 text-lg">✓</span>
+                    <span>Saygılı ve nazik olun</span>
+                </li>
+                <li className="flex gap-2 items-center p-2">
+                    <span className="text-green-500 text-lg">✓</span>
+                    <span>Spam yapmayın</span>
+                </li>
+                <li className="flex gap-2 items-center p-2">
+                    <span className="text-green-500 text-lg">✓</span>
+                    <span>Kişisel bilgi paylaşmayın</span>
+                </li>
+                <li className="flex gap-2 items-center p-2">
+                    <span className="text-green-500 text-lg">✓</span>
+                    <span>Açık ve dürüst olun</span>
+                </li>
             </ul>
         </div>
     );
@@ -149,15 +167,20 @@ const AskQuestionPage = () => {
     return (
         <MainLayout sidebar={SidebarContent}>
             <div className="flex flex-col gap-6">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-coral to-orange-400 rounded-2xl p-8 text-white">
-                    <h1 className="text-3xl font-bold mb-2">Soru Sor</h1>
-                    <p className="text-white/90">Topluluğa sormak istediğin soruyu detaylı bir şekilde anlat</p>
+                {/* Header with animated gradient */}
+                <div className="relative bg-gradient-to-r from-coral via-orange-400 to-pink-400 rounded-3xl p-8 md:p-10 text-white shadow-2xl overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-transparent to-blue-600/20 animate-pulse"></div>
+                    <div className="relative z-10">
+                        <h1 className="text-3xl md:text-4xl font-bold mb-3 drop-shadow-lg">Soru Sor 💡</h1>
+                        <p className="text-white/95 text-lg">Topluluğa sormak istediğin soruyu detaylı bir şekilde anlat</p>
+                    </div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24 blur-3xl"></div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Main Form Card */}
-                    <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-soft p-6 md:p-8">
+                    {/* Main Form Card with glassmorphism */}
+                    <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-200/50 dark:border-gray-700/50">
                         {/* Title */}
                         <div className="mb-6">
                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
