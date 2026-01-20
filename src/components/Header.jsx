@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
@@ -13,6 +13,26 @@ const Header = ({ onSearch }) => {
     const { isDark, toggleTheme } = useTheme();
 
     const unreadCount = notifications.filter(n => !n.read).length;
+
+    // Ref for notifications dropdown
+    const notificationsRef = useRef(null);
+
+    // Close notifications when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+                setIsNotificationsOpen(false);
+            }
+        };
+
+        if (isNotificationsOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isNotificationsOpen]);
 
     const handleSearchChange = (e) => {
         const query = e.target.value;
@@ -110,24 +130,27 @@ const Header = ({ onSearch }) => {
                         </Link>
 
                         {/* Notifications */}
-                        <div className="relative hidden sm:block">
+                        <div className="relative" ref={notificationsRef}>
                             <button
                                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                                className="relative p-2 text-gray-500 hover:text-coral bg-white dark:bg-gray-800 rounded-full shadow-soft hover:shadow-soft-hover transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative text-gray-700 dark:text-gray-300"
                             >
-                                <FaBell className="text-xl" />
+                                <FaBell className="text-lg" />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 text-white text-xs flex items-center justify-center font-bold">
-                                        {unreadCount}
-                                    </span>
+                                    <span className="absolute top-1 right-1 w-2 h-2 bg-coral rounded-full"></span>
                                 )}
                             </button>
-                            <NotificationDropdown
-                                isOpen={isNotificationsOpen}
-                                onClose={() => setIsNotificationsOpen(false)}
-                            />
-                        </div>
 
+                            {/* Notifications Dropdown */}
+                            {isNotificationsOpen && (
+                                <div className="absolute right-0 mt-2 z-50">
+                                    <NotificationDropdown
+                                        notifications={notifications}
+                                        onClose={() => setIsNotificationsOpen(false)}
+                                    />
+                                </div>
+                            )}
+                        </div>
                         {/* Profile Picture */}
                         <Link to="/profile/Zeynep_Yildiz" className="hidden sm:block">
                             <img
