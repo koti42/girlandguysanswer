@@ -1,4 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { tr } from 'date-fns/locale';
+
+// Helper function for formatting
+const formatDate = (dateString) => {
+    if (!dateString) return "Az önce";
+    try {
+        return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: tr });
+    } catch (e) {
+        return "Bilinmiyor";
+    }
+};
+
+// ... inside component ...
+
+// Answer date (Line 370 approx) transformation:
+{ formatDate(answer.created_at) }
+
+// Comment date (Line 432 approx) transformation:
+<span className="text-gray-500 dark:text-gray-400 text-xs">• {formatDate(comment.created_at)}</span>
 import { useParams, Link } from 'react-router-dom';
 import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
@@ -367,7 +386,7 @@ const QuestionDetailPage = () => {
                                                     )}
                                                 </div>
                                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                    {new Date(answer.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                                    {formatDate(answer.created_at)}
                                                 </span>
                                             </div>
                                         </Link>
@@ -429,7 +448,7 @@ const QuestionDetailPage = () => {
                                                                     ) : (
                                                                         <FaMars className="text-cyan-600 dark:text-cyan-400 text-sm" />
                                                                     )}
-                                                                    <span className="text-gray-500 dark:text-gray-400 text-xs">• {comment.created_at || "Az önce"}</span>
+                                                                    <span className="text-gray-500 dark:text-gray-400 text-xs">• {formatDate(comment.created_at)}</span>
                                                                 </div>
                                                                 <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed font-medium">
                                                                     {comment.content}
