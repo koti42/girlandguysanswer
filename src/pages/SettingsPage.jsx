@@ -25,7 +25,7 @@ const Toggle = ({ enabled, onChange, label, description }) => (
 );
 
 const SettingsPage = () => {
-    const { user, login } = useAuth(); // login behaves like updateUser here if we passed updated user object
+    const { user, updateUser } = useAuth();
     const [loading, setLoading] = useState(true);
     const [settings, setSettings] = useState({
         is_private: false,
@@ -74,7 +74,7 @@ const SettingsPage = () => {
 
             // Update user context
             if (user) {
-                login({ ...user, is_private: newValue });
+                updateUser({ is_private: newValue });
             }
 
             showSuccess(`Hesap ${newValue ? 'gizli' : 'herkese açık'} olarak güncellendi.`);
@@ -95,7 +95,7 @@ const SettingsPage = () => {
 
             // Update user context
             if (user) {
-                login({ ...user, allow_messaging: newValue });
+                updateUser({ allow_messaging: newValue });
             }
 
             showSuccess(`Mesajlaşma ${newValue ? 'açıldı' : 'kapatıldı'}.`);
