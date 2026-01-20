@@ -168,7 +168,7 @@ const QuestionDetailPage = () => {
         <MainLayout sidebar={SidebarContent}>
             <div className="flex flex-col gap-6">
                 {/* Question Card */}
-                <div className="bg-white dark:text-white dark:text-white rounded-2xl p-6 shadow-soft">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                     {/* User Header */}
                     <div className="flex items-center gap-3 mb-4">
                         <Link to={`/profile/${question.user.name}`}>
