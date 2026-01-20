@@ -42,15 +42,16 @@ const SettingsPage = () => {
                 // Fetch latest profile data which we assume contains settings for owner
                 const response = await usersAPI.getProfile(user.username);
                 const profileData = response.data.data;
+                console.log('Fetched profile data:', profileData);
 
-                // Merge likely settings fields. 
-                // Note: If API doesn't return these on public profile, this needs 'me' endpoint adjustment.
-                // Assuming /users/{username} returns these for the authenticated owner.
+                // Backend returns settings in profileData directly or in profileData.settings
+                const settingsData = profileData.settings || profileData;
+
                 setSettings({
-                    is_private: profileData.is_private || false,
-                    allow_messaging: profileData.allow_messaging !== undefined ? profileData.allow_messaging : true,
-                    messaging_mode: profileData.messaging_mode || 'everyone',
-                    allow_following: profileData.allow_following !== undefined ? profileData.allow_following : true
+                    is_private: settingsData.is_private || false,
+                    allow_messaging: settingsData.allow_messaging !== undefined ? settingsData.allow_messaging : true,
+                    messaging_mode: settingsData.messaging_mode || 'everyone',
+                    allow_following: settingsData.allow_following !== undefined ? settingsData.allow_following : true
                 });
             } catch (error) {
                 console.error("Ayarlar yüklenemedi:", error);
@@ -74,17 +75,30 @@ const SettingsPage = () => {
             const response = await usersAPI.updatePrivacy(newValue);
             console.log('Privacy update response:', response.data);
 
+            // Update from backend response
+            if (response.data.data?.settings) {
+                const backendSettings = response.data.data.settings;
+                setSettings({
+                    is_private: backendSettings.is_private,
+                    allow_messaging: backendSettings.allow_messaging,
+                    messaging_mode: backendSettings.messaging_mode,
+                    allow_following: backendSettings.allow_following
+                });
+            }
+
             // Update user context
             if (user) {
                 updateUser({ is_private: newValue });
             }
 
-            showSuccess(`Hesap ${newValue ? 'gizli' : 'herkese açık'} olarak güncellendi.`);
+            showSuccess(response.data.message || `Hesap ${newValue ? 'gizli' : 'herkese açık'} olarak güncellendi.`);
         } catch (error) {
             console.error("Gizlilik ayarı güncellenemedi:", error);
             console.error("Error response:", error.response?.data);
             setSettings(prev => ({ ...prev, is_private: !newValue })); // Revert
-            alert('Gizlilik ayarı güncellenemedi. Lütfen tekrar deneyin.');
+
+            const errorMsg = error.response?.data?.message || 'Gizlilik ayarı güncellenemedi. Lütfen tekrar deneyin.';
+            alert(errorMsg);
         }
     };
 
@@ -98,17 +112,30 @@ const SettingsPage = () => {
             });
             console.log('Messaging update response:', response.data);
 
+            // Update from backend response
+            if (response.data.data?.settings) {
+                const backendSettings = response.data.data.settings;
+                setSettings({
+                    is_private: backendSettings.is_private,
+                    allow_messaging: backendSettings.allow_messaging,
+                    messaging_mode: backendSettings.messaging_mode,
+                    allow_following: backendSettings.allow_following
+                });
+            }
+
             // Update user context
             if (user) {
                 updateUser({ allow_messaging: newValue });
             }
 
-            showSuccess(`Mesajlaşma ${newValue ? 'açıldı' : 'kapatıldı'}.`);
+            showSuccess(response.data.message || `Mesajlaşma ${newValue ? 'açıldı' : 'kapatıldı'}.`);
         } catch (error) {
             console.error("Mesaj ayarı güncellenemedi:", error);
             console.error("Error response:", error.response?.data);
             setSettings(prev => ({ ...prev, allow_messaging: !newValue }));
-            alert('Mesaj ayarı güncellenemedi. Lütfen tekrar deneyin.');
+
+            const errorMsg = error.response?.data?.message || 'Mesaj ayarı güncellenemedi. Lütfen tekrar deneyin.';
+            alert(errorMsg);
         }
     };
 
@@ -134,17 +161,30 @@ const SettingsPage = () => {
             const response = await usersAPI.updateFollowing(newValue);
             console.log('Following update response:', response.data);
 
+            // Update from backend response
+            if (response.data.data?.settings) {
+                const backendSettings = response.data.data.settings;
+                setSettings({
+                    is_private: backendSettings.is_private,
+                    allow_messaging: backendSettings.allow_messaging,
+                    messaging_mode: backendSettings.messaging_mode,
+                    allow_following: backendSettings.allow_following
+                });
+            }
+
             // Update user context
             if (user) {
                 updateUser({ allow_following: newValue });
             }
 
-            showSuccess(`Takip istekleri ${newValue ? 'kabul ediliyor' : 'kapatıldı'}.`);
+            showSuccess(response.data.message || `Takip istekleri ${newValue ? 'kabul ediliyor' : 'kapatıldı'}.`);
         } catch (error) {
             console.error("Takip ayarı güncellenemedi:", error);
             console.error("Error response:", error.response?.data);
             setSettings(prev => ({ ...prev, allow_following: !newValue }));
-            alert('Takip ayarı güncellenemedi. Lütfen tekrar deneyin.');
+
+            const errorMsg = error.response?.data?.message || 'Takip ayarı güncellenemedi. Lütfen tekrar deneyin.';
+            alert(errorMsg);
         }
     };
 
