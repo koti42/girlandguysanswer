@@ -190,8 +190,12 @@ const ProfilePage = () => {
         } catch (error) {
             console.error("Takip işlemi hatası:", error);
 
-            // Handle specific error cases
-            if (error.response?.status === 403) {
+            // Show backend error message if available
+            const backendMessage = error.response?.data?.message;
+
+            if (backendMessage) {
+                alert(backendMessage);
+            } else if (error.response?.status === 403) {
                 alert('Bu kullanıcı takip edilmeyi kapatmış veya sizi engellemiş.');
             } else if (error.response?.status === 404) {
                 alert('Kullanıcı bulunamadı.');
