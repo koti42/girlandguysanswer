@@ -20,9 +20,17 @@ const Header = ({ onSearch }) => {
     // Ref for notifications dropdown
     const notificationsRef = useRef(null);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/');
+    const handleLogout = async () => {
+        try {
+            await logout(); // AuthContext uses api.logout internally
+            navigate('/');
+        } catch (error) {
+            console.error("Çıkış yapılırken hata:", error);
+            // Force local cleanup anyway
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            navigate('/');
+        }
     };
 
     // Close notifications when clicking outside
@@ -176,45 +184,67 @@ const Header = ({ onSearch }) => {
                         </Link>
 
                         {/* User Menu or Auth Buttons */}
-                        {isAuthenticated ? (
+                        {isAuthenticated && user ? (
                             <div className="relative group">
                                 <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                                    <FaUser className="text-gray-600 dark:text-gray-300" />
-                                    <span className="hidden md:inline text-sm font-semibold text-gray-700 dark:text-gray-300">{user?.username}</span>
+                                    {user.avatar ? (
+                                        <img src={user.avatar} alt={user.username} className="w-8 h-8 rounded-full object-cover" />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-coral/10 text-coral flex items-center justify-center">
+                                            <FaUser />
+                                        </div>
+                                    )}
+                                    <span className="hidden md:inline text-sm font-semibold text-gray-700 dark:text-gray-300 max-w-[100px] truncate">{user.username}</span>
                                 </button>
 
                                 {/* Dropdown Menu */}
-                                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                                    <Link
-                                        to={`/profile/${user?.username}`}
-                                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg"
-                                    >
-                                        Profilim
-                                    </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg flex items-center gap-2"
-                                    >
-                                        <FaSignOutAlt />
-                                        Çıkış Yap
-                                    </button>
+                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform group-hover:translate-y-0 translate-y-2">
+                                    <div className="p-3 border-b border-gray-100 dark:border-gray-700">
+                                        <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{user.name || user.username}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                                    </div>
+                                    <div className="p-2">
+                                        <Link
+                                            to={`/profile/${user.username}`}
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                        >
+                                            <FaUser className="text-gray-400" />
+                                            Profilim
+                                        </Link>
+                                        <Link
+                                            to="/messages"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors md:hidden"
+                                        >
+                                            <FaEnvelope className="text-gray-400" />
+                                            Mesajlar
+                                        </Link>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors mt-1"
+                                        >
+                                            <FaSignOutAlt />
+                                            Çıkış Yap
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
-                            <>
-                                <Link
-                                    to="/login"
-                                    className="hidden sm:block px-3 py-2 text-sm rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-medium"
-                                >
-                                    Giriş
-                                </Link>
-                                <Link
-                                    to="/signup"
-                                    className="hidden sm:block px-3 py-2 text-sm rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:shadow-lg transition-all font-medium"
-                                >
-                                    Kayıt Ol
-                                </Link>
-                            </>
+                            !isAuthenticated && (
+                                <div className="flex items-center gap-2">
+                                    <Link
+                                        to="/login"
+                                        className="hidden sm:block px-4 py-2 text-sm rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-semibold"
+                                    >
+                                        Giriş Yap
+                                    </Link>
+                                    <Link
+                                        to="/signup"
+                                        className="hidden sm:block px-4 py-2 text-sm rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white hover:shadow-lg hover:scale-105 transition-all font-semibold"
+                                    >
+                                        Kayıt Ol
+                                    </Link>
+                                </div>
+                            )
                         )}
                     </div>
                 </div>
