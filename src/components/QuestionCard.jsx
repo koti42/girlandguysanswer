@@ -19,7 +19,9 @@ const QuestionCard = ({ question }) => {
 
         setLoading(true);
         try {
-            await questionsAPI.createAnswer(question.id, {
+            // Use slug if available, otherwise id. Backend likely expects slug.
+            const identifier = question.slug || question.id;
+            await questionsAPI.createAnswer(identifier, {
                 content: replyText,
                 is_anonymous: isAnonymous
             });
