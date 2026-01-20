@@ -128,7 +128,7 @@ const SettingsPage = () => {
 
             // Update user context
             if (user) {
-                login({ ...user, allow_following: newValue });
+                updateUser({ allow_following: newValue });
             }
 
             showSuccess(`Takip istekleri ${newValue ? 'kabul ediliyor' : 'kapatıldı'}.`);
