@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FaMapMarkerAlt, FaCalendarAlt, FaEdit, FaTrophy, FaMedal, FaStar, FaCrown } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCalendarAlt, FaEdit, FaTrophy, FaMedal, FaStar, FaCrown, FaUserSecret, FaLock } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import ProfileCover from '../components/ProfileCover';
 import ProfileAvatar from '../components/ProfileAvatar';
@@ -8,6 +8,7 @@ import ProfileBadges from '../components/ProfileBadges';
 import ProfileStats from '../components/ProfileStats';
 import FollowersList from '../components/FollowersList';
 import QuestionCard from '../components/QuestionCard';
+import AnswerCard from '../components/AnswerCard';
 import { TrendsWidget, TopUsersWidget } from '../components/Widgets';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI, questionsAPI } from '../services/api';
@@ -24,6 +25,7 @@ const ProfilePage = () => {
     const [userQuestions, setUserQuestions] = useState([]);
     const [followers, setFollowers] = useState([]);
     const [following, setFollowing] = useState([]);
+    const [answers, setAnswers] = useState([]);
     const [editForm, setEditForm] = useState({ name: '', bio: '', location: '' });
 
     useEffect(() => {
@@ -88,30 +90,36 @@ const ProfilePage = () => {
     // New Effect for fetching tab data
     useEffect(() => {
         const fetchTabData = async () => {
-            if (!profileData || !profileData.id) return;
+            if (!profileData || !profileData.username) return;
 
             try {
                 if (activeTab === 'followers') {
-                    const res = await usersAPI.getFollowers(profileData.id); // Assuming API accepts ID or username. API_INTEGRATION says userId.
-                    // If API expects username, use profileData.username
-                    // Let's safe bet try username if id fails or check API def.
-                    // usersAPI.getFollowers(userId) -> /users/{userId}/followers
-                    // It likely expects ID.
-                    setFollowers(res.data.data || []);
+                    const res = await usersAPI.getFollowers(profileData.username);
+                    setFollowers(res.data.data.followers || res.data.data || []);
                 } else if (activeTab === 'following') {
-                    const res = await usersAPI.getFollowing(profileData.id);
-                    setFollowing(res.data.data || []);
+                    const res = await usersAPI.getFollowing(profileData.username);
+                    setFollowing(res.data.data.following || res.data.data || []);
+                } else if (activeTab === 'answers') {
+                    // Check if we can view answers (privacy check)
+                    const canViewAnswers = isOwnProfile || !profileData.isPrivate || profileData.isFollowing;
+                    if (canViewAnswers) {
+                        const res = await usersAPI.getUserAnswers(profileData.username);
+                        setAnswers(res.data.data.answers || res.data.data || []);
+                    } else {
+                        setAnswers([]);
+                    }
                 }
             } catch (error) {
                 console.error("Tab verisi yüklenirken hata:", error);
                 // Fallback to empty to prevent crash
-                setFollowers([]);
-                setFollowing([]);
+                if (activeTab === 'followers') setFollowers([]);
+                if (activeTab === 'following') setFollowing([]);
+                if (activeTab === 'answers') setAnswers([]);
             }
         };
 
         fetchTabData();
-    }, [activeTab, profileData]);
+    }, [activeTab, profileData, isOwnProfile]);
 
     if (loading) return <MainLayout><div className="flex justify-center p-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div></div></MainLayout>;
 
@@ -255,21 +263,39 @@ const ProfilePage = () => {
                                                 </button>
                                             ) : (
                                                 <div className="flex items-center gap-2">
-                                                    <Link to={`/messages/${profileData.username}`}>
-                                                        <button className="border-2 border-coral text-coral px-4 py-2 rounded-xl hover:bg-coral hover:text-white transition-colors">
-                                                            Mesaj
-                                                        </button>
-                                                    </Link>
+                                                    {/* Message Button - Only if messaging is allowed */}
+                                                    {profileData.allow_messaging !== false && (
+                                                        <Link to={`/messages/${profileData.username}`}>
+                                                            <button className="border-2 border-coral text-coral px-4 py-2 rounded-xl hover:bg-coral hover:text-white transition-colors">
+                                                                Mesaj
+                                                            </button>
+                                                        </Link>
+                                                    )}
+
+                                                    {/* Follow Button - Disabled if allow_following is false */}
                                                     <button
                                                         onClick={handleFollowToggle}
-                                                        className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${profileData.isFollowing
-                                                            ? 'bg-gray-500 hover:bg-gray-600'
-                                                            : profileData.hasPendingRequest
-                                                                ? 'bg-yellow-500 hover:bg-yellow-600'
-                                                                : 'bg-coral hover:bg-coral-dark'
+                                                        disabled={profileData.allow_following === false}
+                                                        className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${profileData.allow_following === false
+                                                                ? 'bg-gray-300 cursor-not-allowed'
+                                                                : profileData.isFollowing
+                                                                    ? 'bg-gray-500 hover:bg-gray-600'
+                                                                    : profileData.hasPendingRequest
+                                                                        ? 'bg-yellow-500 hover:bg-yellow-600'
+                                                                        : 'bg-coral hover:bg-coral-dark'
                                                             }`}
+                                                        title={profileData.allow_following === false ? 'Bu kullanıcı takip edilmeyi kapatmış' : ''}
                                                     >
-                                                        {profileData.isFollowing ? 'Takip Ediliyor' : profileData.hasPendingRequest ? 'İstek Gönderildi' : 'Takip Et'}
+                                                        {profileData.allow_following === false
+                                                            ? 'Takip Kapalı'
+                                                            : profileData.isFollowing
+                                                                ? 'Takip Ediliyor'
+                                                                : profileData.hasPendingRequest
+                                                                    ? 'İstek Gönderildi'
+                                                                    : profileData.isPrivate
+                                                                        ? 'Takip İsteği Gönder'
+                                                                        : 'Takip Et'
+                                                        }
                                                     </button>
                                                     <button
                                                         onClick={handleBlockToggle}
@@ -357,7 +383,32 @@ const ProfilePage = () => {
                         )
                     )}
                     {activeTab === 'answers' && (
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Cevaplar yakında</div>
+                        profileData.isPrivate && !profileData.isFollowing && !isOwnProfile ? (
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center shadow-soft border border-gray-100 dark:border-gray-700">
+                                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <FaLock className="text-4xl text-gray-400" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Bu İçerik Gizli</h3>
+                                <p className="text-gray-500 dark:text-gray-400">
+                                    Bu kullanıcının cevaplarını görmek için takip etmelisin.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                                    {isOwnProfile ? 'Cevaplarım' : `${profileData.name} Cevapları`}
+                                </h3>
+                                {answers.length > 0 ? (
+                                    answers.map(answer => (
+                                        <AnswerCard key={answer.id} answer={answer} />
+                                    ))
+                                ) : (
+                                    <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl">
+                                        <p className="text-gray-500">Henüz hiç cevap verilmemiş.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )
                     )}
                     {activeTab === 'followers' && <FollowersList followers={followers} type="followers" />}
                     {activeTab === 'following' && <FollowersList followers={following} type="following" />}
