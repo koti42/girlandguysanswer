@@ -6,7 +6,7 @@ import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components
 import { questionsAPI } from '../services/api';
 
 const QuestionDetailPage = () => {
-    const { id } = useParams();
+    const { slug } = useParams();
     const [question, setQuestion] = useState(null);
     const [answers, setAnswers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,7 +24,8 @@ const QuestionDetailPage = () => {
         const fetchQuestionDetail = async () => {
             setLoading(true);
             try {
-                const response = await questionsAPI.getById(id);
+                // If backend supports slug, use it directly. Assuming getById handles slug or ID.
+                const response = await questionsAPI.getById(slug);
                 setQuestion(response.data.data.question);
                 setAnswers(response.data.data.answers);
             } catch (err) {
@@ -35,10 +36,10 @@ const QuestionDetailPage = () => {
             }
         };
 
-        if (id) {
+        if (slug) {
             fetchQuestionDetail();
         }
-    }, [id]);
+    }, [slug]);
 
     if (loading) {
         return (
