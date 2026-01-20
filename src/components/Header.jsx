@@ -116,20 +116,7 @@ const Header = ({ onSearch }) => {
                         </Link>
 
                         {/* Desktop Auth Buttons - Only show if NOT authenticated */}
-                        {!isAuthenticated && (
-                            <>
-                                <Link to="/login" className="hidden lg:block">
-                                    <button className="text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm">
-                                        Giriş
-                                    </button>
-                                </Link>
-                                <Link to="/signup" className="hidden lg:block">
-                                    <button className="bg-gray-800 dark:bg-gray-700 text-white font-semibold py-2 px-4 rounded-2xl hover:bg-gray-700 dark:hover:bg-gray-600 transition-all text-sm">
-                                        Kayıt Ol
-                                    </button>
-                                </Link>
-                            </>
-                        )}
+
 
                         {/* Messages Button */}
                         <Link
