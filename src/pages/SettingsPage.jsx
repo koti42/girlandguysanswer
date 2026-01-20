@@ -69,8 +69,10 @@ const SettingsPage = () => {
 
     const handlePrivacyChange = async (newValue) => {
         try {
+            console.log('Privacy change:', newValue);
             setSettings(prev => ({ ...prev, is_private: newValue }));
-            await usersAPI.updatePrivacy(newValue);
+            const response = await usersAPI.updatePrivacy(newValue);
+            console.log('Privacy update response:', response.data);
 
             // Update user context
             if (user) {
@@ -80,6 +82,7 @@ const SettingsPage = () => {
             showSuccess(`Hesap ${newValue ? 'gizli' : 'herkese açık'} olarak güncellendi.`);
         } catch (error) {
             console.error("Gizlilik ayarı güncellenemedi:", error);
+            console.error("Error response:", error.response?.data);
             setSettings(prev => ({ ...prev, is_private: !newValue })); // Revert
             alert('Gizlilik ayarı güncellenemedi. Lütfen tekrar deneyin.');
         }
@@ -87,11 +90,13 @@ const SettingsPage = () => {
 
     const handleMessagingToggle = async (newValue) => {
         try {
+            console.log('Messaging toggle:', newValue);
             setSettings(prev => ({ ...prev, allow_messaging: newValue }));
-            await usersAPI.updateMessaging({
+            const response = await usersAPI.updateMessaging({
                 allow_messaging: newValue,
                 messaging_mode: settings.messaging_mode
             });
+            console.log('Messaging update response:', response.data);
 
             // Update user context
             if (user) {
@@ -101,6 +106,7 @@ const SettingsPage = () => {
             showSuccess(`Mesajlaşma ${newValue ? 'açıldı' : 'kapatıldı'}.`);
         } catch (error) {
             console.error("Mesaj ayarı güncellenemedi:", error);
+            console.error("Error response:", error.response?.data);
             setSettings(prev => ({ ...prev, allow_messaging: !newValue }));
             alert('Mesaj ayarı güncellenemedi. Lütfen tekrar deneyin.');
         }
@@ -123,8 +129,10 @@ const SettingsPage = () => {
 
     const handleFollowingToggle = async (newValue) => {
         try {
+            console.log('Following toggle:', newValue);
             setSettings(prev => ({ ...prev, allow_following: newValue }));
-            await usersAPI.updateFollowing(newValue);
+            const response = await usersAPI.updateFollowing(newValue);
+            console.log('Following update response:', response.data);
 
             // Update user context
             if (user) {
@@ -134,6 +142,7 @@ const SettingsPage = () => {
             showSuccess(`Takip istekleri ${newValue ? 'kabul ediliyor' : 'kapatıldı'}.`);
         } catch (error) {
             console.error("Takip ayarı güncellenemedi:", error);
+            console.error("Error response:", error.response?.data);
             setSettings(prev => ({ ...prev, allow_following: !newValue }));
             alert('Takip ayarı güncellenemedi. Lütfen tekrar deneyin.');
         }
