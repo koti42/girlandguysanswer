@@ -459,12 +459,10 @@ const QuestionDetailPage = () => {
                                         </div>
                                     )}
                                 </div>
-                                    </div>
-                </div>
-                );
+                            );
                         })}
-            </div>
-        </div>
+                    </div>
+                </div>
             </div >
         </MainLayout >
     );
