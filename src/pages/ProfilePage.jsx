@@ -298,14 +298,16 @@ const ProfilePage = () => {
                                                     </button>
                                                 ) : (
                                                     <div className="flex items-center gap-2">
-                                                        {/* Message Button - Only if messaging is allowed */}
-                                                        {profileData.allow_messaging !== false && (
-                                                            <Link to={`/messages/${profileData.username}`}>
-                                                                <button className="border-2 border-coral text-coral px-4 py-2 rounded-xl hover:bg-coral hover:text-white transition-colors">
-                                                                    Mesaj
-                                                                </button>
-                                                            </Link>
-                                                        )}
+                                                        {/* Message Button - Check messaging settings */}
+                                                        {profileData.allow_messaging &&
+                                                            (profileData.messaging_mode === 'everyone' ||
+                                                                (profileData.messaging_mode === 'followers' && profileData.isFollowing)) && (
+                                                                <Link to={`/messages/${profileData.username}`}>
+                                                                    <button className="border-2 border-coral text-coral px-4 py-2 rounded-xl hover:bg-coral hover:text-white transition-colors">
+                                                                        Mesaj
+                                                                    </button>
+                                                                </Link>
+                                                            )}
 
                                                         {/* Follow Button - Disabled if allow_following is false */}
                                                         <button
