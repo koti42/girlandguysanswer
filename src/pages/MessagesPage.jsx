@@ -1,372 +1,353 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FaPaperPlane, FaArrowLeft, FaImage, FaMicrophone, FaPaperclip, FaSmile, FaTimes, FaPlay, FaPause, FaFileAlt } from 'react-icons/fa';
-import Header from '../components/Header';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { FaSearch, FaCircle } from 'react-icons/fa';
+import MainLayout from '../layouts/MainLayout';
+import ChatWindow from '../components/ChatWindow';
+import { messagesAPI, usersAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
+import { formatDistanceToNow } from 'date-fns';
+import { tr } from 'date-fns/locale';
 
 const MessagesPage = () => {
     const { username } = useParams();
-    const [messageText, setMessageText] = useState('');
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const [attachedFile, setAttachedFile] = useState(null);
-    const [isRecording, setIsRecording] = useState(false);
-    const [showChatOnMobile, setShowChatOnMobile] = useState(!!username);
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const [conversations, setConversations] = useState([]);
+    const [activeConversation, setActiveConversation] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [loadingNewConversation, setLoadingNewConversation] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showMobileChat, setShowMobileChat] = useState(false);
 
-    // Mock conversations
-    const conversations = [
-        {
-            id: 1,
-            username: 'Elif_Mavi',
-            name: 'Elif Mavi',
-            avatar: 'https://i.pravatar.cc/150?u=m1',
-            lastMessage: 'Teşekkürler, çok yardımcı oldun!',
-            time: '5 dk önce',
-            unread: 2
-        },
-        {
-            id: 2,
-            username: 'Ahmet_K',
-            name: 'Ahmet Kaya',
-            avatar: 'https://i.pravatar.cc/150?u=m2',
-            lastMessage: 'Yarın buluşalım mı?',
-            time: '1 saat önce',
-            unread: 0
-        },
-        {
-            id: 3,
-            username: 'Zeynep_Yildiz',
-            name: 'Zeynep Yıldız',
-            avatar: 'https://i.pravatar.cc/150?u=m3',
-            lastMessage: 'Elbise harikaydı!',
-            time: '3 saat önce',
-            unread: 1
+    useEffect(() => {
+        fetchConversations();
+        setupPusher();
+
+        return () => {
+            if (user) {
+                unsubscribeFromChannel(user.id);
+            }
+        };
+    }, [user]);
+
+    useEffect(() => {
+        if (username && conversations.length > 0) {
+            const conversation = conversations.find(
+                c => c.other_user.username === username
+            );
+            if (conversation) {
+                setActiveConversation(conversation);
+                setShowMobileChat(true);
+            } else {
+                // No existing conversation, fetch user info to start new conversation
+                fetchUserForNewConversation(username);
+            }
+        } else if (username && !loading && conversations.length === 0) {
+            // No conversations at all, fetch user info
+            fetchUserForNewConversation(username);
         }
-    ];
+    }, [username, conversations, loading]);
 
-    // Mock messages with different types
-    const messages = [
-        {
-            id: 1,
-            sender: 'Elif_Mavi',
-            content: 'Merhaba! Düğün için elbise öneriniz için çok teşekkürler.',
-            time: '10:30',
-            isMine: false,
-            type: 'text'
-        },
-        {
-            id: 2,
-            sender: 'me',
-            content: 'Rica ederim! Beğenmene sevindim, umarım düğün çok güzel geçer 😊',
-            time: '10:32',
-            isMine: true,
-            type: 'text'
-        },
-        {
-            id: 3,
-            sender: 'Elif_Mavi',
-            content: 'https://i.pravatar.cc/400?u=dress',
-            time: '10:35',
-            isMine: false,
-            type: 'image'
-        },
-        {
-            id: 4,
-            sender: 'me',
-            content: 'Çok şık! Bu tam sana göre 💕',
-            time: '10:36',
-            isMine: true,
-            type: 'text'
-        },
-        {
-            id: 5,
-            sender: 'Elif_Mavi',
-            content: 'voice_sample.mp3',
-            time: '10:38',
-            isMine: false,
-            type: 'voice',
-            duration: '0:12'
-        }
-    ];
+    const fetchUserForNewConversation = async (targetUsername) => {
+        try {
+            setLoadingNewConversation(true);
+            const response = await usersAPI.getProfile(targetUsername);
+            const userData = response.data.data;
 
-    const activeConversation = conversations.find(c => c.username === (username || 'Elif_Mavi'));
+            // Create a temporary conversation object
+            const tempConversation = {
+                id: null, // No conversation ID yet
+                other_user: {
+                    id: userData.id,
+                    username: userData.username,
+                    avatar: userData.avatar || 'https://i.pravatar.cc/200?u=default'
+                },
+                latest_message: null,
+                unread_count: 0,
+                last_message_at: null
+            };
 
-    const emojis = ['😊', '❤️', '👍', '😂', '🎉', '💕', '🔥', '✨', '🥰', '😍', '👏', '🙌'];
-
-    const handleSendMessage = (e) => {
-        e.preventDefault();
-        if (messageText.trim() || attachedFile) {
-            setMessageText('');
-            setAttachedFile(null);
-            setShowEmojiPicker(false);
+            setActiveConversation(tempConversation);
+            setShowMobileChat(true);
+        } catch (error) {
+            console.error('Error fetching user for new conversation:', error);
+            // User not found, redirect back to messages
+            navigate('/messages');
+        } finally {
+            setLoadingNewConversation(false);
         }
     };
 
-    const handleFileAttach = (e, type) => {
-        const file = e.target.files[0];
-        if (file) {
-            setAttachedFile({
-                name: file.name,
-                type: type,
-                url: URL.createObjectURL(file),
-                size: (file.size / 1024).toFixed(2) + ' KB'
+    const setupPusher = () => {
+        if (!user) return;
+
+        console.log('🔑 Setting up Pusher for user ID:', user.id);
+        subscribeToUserChannel(user.id, {
+            onNewMessage: (data) => {
+                handleNewMessageEvent(data.message);
+            }
+        });
+    };
+
+    const fetchConversations = async () => {
+        try {
+            setLoading(true);
+            const response = await messagesAPI.getConversations();
+            setConversations(response.data.data || []);
+        } catch (error) {
+            console.error('Error fetching conversations:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleNewMessageEvent = (message) => {
+        // Update conversation list
+        setConversations(prev => {
+            const updated = prev.map(conv => {
+                if (conv.id === message.conversation_id) {
+                    return {
+                        ...conv,
+                        latest_message: {
+                            content: message.content,
+                            type: message.type,
+                            created_at: message.created_at,
+                            is_mine: false
+                        },
+                        unread_count: activeConversation?.id === conv.id ? 0 : (conv.unread_count || 0) + 1,
+                        last_message_at: message.created_at
+                    };
+                }
+                return conv;
+            });
+
+            // Sort by last message time
+            return updated.sort((a, b) =>
+                new Date(b.last_message_at) - new Date(a.last_message_at)
+            );
+        });
+
+        // Add to active chat if applicable
+        if (activeConversation && message.conversation_id === activeConversation.id) {
+            // ChatWindow will handle adding the message to the list
+        } else {
+            // Show notification for other conversations
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(`Yeni mesaj: ${message.sender.username}`, {
+                    body: message.type === 'text' ? message.content : 'Bir dosya gönderdi',
+                    icon: message.sender.avatar
+                });
+            }
+        }
+    };
+
+    const handleConversationClick = (conversation) => {
+        setActiveConversation(conversation);
+        setShowMobileChat(true);
+        navigate(`/messages/${conversation.other_user.username}`);
+
+        // Mark as read
+        setConversations(prev =>
+            prev.map(conv =>
+                conv.id === conversation.id
+                    ? { ...conv, unread_count: 0 }
+                    : conv
+            )
+        );
+    };
+
+    const handleBack = () => {
+        setShowMobileChat(false);
+        navigate('/messages');
+    };
+
+    const handleNewMessage = (message, conversationData) => {
+        // Update conversation list with new message
+        setConversations(prev => {
+            // Check if this is a new conversation
+            const existingConv = prev.find(conv => conv.id === message.conversation_id);
+
+            if (!existingConv && conversationData) {
+                // Add new conversation to the list
+                const newConversation = {
+                    id: conversationData.id,
+                    other_user: conversationData.other_user,
+                    latest_message: {
+                        content: message.content,
+                        type: message.type,
+                        created_at: message.created_at,
+                        is_mine: true
+                    },
+                    unread_count: 0,
+                    last_message_at: message.created_at
+                };
+
+                return [newConversation, ...prev].sort((a, b) =>
+                    new Date(b.last_message_at) - new Date(a.last_message_at)
+                );
+            }
+
+            // Update existing conversation
+            const updated = prev.map(conv => {
+                if (conv.id === message.conversation_id) {
+                    return {
+                        ...conv,
+                        latest_message: {
+                            content: message.content,
+                            type: message.type,
+                            created_at: message.created_at,
+                            is_mine: true
+                        },
+                        last_message_at: message.created_at
+                    };
+                }
+                return conv;
+            });
+
+            return updated.sort((a, b) =>
+                new Date(b.last_message_at) - new Date(a.last_message_at)
+            );
+        });
+
+        // Update active conversation with real ID if it was temporary
+        if (conversationData && activeConversation?.id === null) {
+            setActiveConversation({
+                ...activeConversation,
+                id: conversationData.id
             });
         }
     };
 
-    const handleVoiceRecord = () => {
-        setIsRecording(!isRecording);
-        // Voice recording logic would go here
-    };
+    const filteredConversations = conversations.filter(conv =>
+        conv.other_user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-    const addEmoji = (emoji) => {
-        setMessageText(prev => prev + emoji);
-    };
+    const renderMessagePreview = (message) => {
+        if (!message) return 'Henüz mesaj yok';
 
-    const renderMessageContent = (msg) => {
-        switch (msg.type) {
+        switch (message.type) {
             case 'image':
-                return (
-                    <div className="rounded-xl overflow-hidden max-w-xs">
-                        <img src={msg.content} alt="Shared" className="w-full h-auto" />
-                    </div>
-                );
-            case 'voice':
-                return (
-                    <div className="flex items-center gap-3 min-w-[200px]">
-                        <button className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors">
-                            <FaPlay className="text-sm" />
-                        </button>
-                        <div className="flex-1 h-8 bg-white/20 rounded-full flex items-center px-2">
-                            <div className="h-1 bg-white/40 rounded-full w-2/3"></div>
-                        </div>
-                        <span className="text-xs opacity-80">{msg.duration}</span>
-                    </div>
-                );
-            case 'file':
-                return (
-                    <div className="flex items-center gap-3 p-3 bg-white/10 rounded-xl min-w-[250px]">
-                        <FaFileAlt className="text-2xl" />
-                        <div className="flex-1">
-                            <p className="text-sm font-medium">{msg.fileName}</p>
-                            <p className="text-xs opacity-70">{msg.fileSize}</p>
-                        </div>
-                    </div>
-                );
+                return '📷 Fotoğraf';
+            case 'audio':
+                return '🎵 Ses dosyası';
             default:
-                return <p className="text-sm">{msg.content}</p>;
+                return message.content || 'Mesaj';
         }
     };
 
     return (
-        <div className="min-h-screen bg-background dark:bg-gray-900">
-            <Header />
-            <div className="h-[calc(100vh-64px)] p-0 sm:px-2 sm:py-2 md:px-4 md:py-4">
-                <div className="bg-white dark:bg-gray-800 sm:rounded-2xl shadow-soft overflow-hidden h-full">
-                    <div className="flex h-full">
-                        {/* Conversations List - Hidden on mobile when chat is open */}
-                        <div className={`w-full md:w-1/3 lg:w-1/4 border-r border-gray-200 dark:border-gray-700 flex flex-col ${showChatOnMobile ? 'hidden md:flex' : 'flex'
-                            }`}>
-                            {/* Header */}
-                            <div className="p-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-coral/5 to-orange-400/5 dark:from-coral/10 dark:to-orange-400/10">
-                                <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                                    💬 Mesajlar
-                                </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{conversations.length} sohbet</p>
-                            </div>
+        <MainLayout>
+            <div className="flex h-[calc(100vh-80px)] bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden">
+                {/* Conversations List */}
+                <div className={`w-full md:w-96 border-r border-gray-200 dark:border-gray-700 flex flex-col ${showMobileChat ? 'hidden md:flex' : 'flex'}`}>
+                    {/* Header */}
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+                            Mesajlar
+                        </h2>
 
-                            {/* Conversation List */}
-                            <div className="flex-1 overflow-y-auto">
-                                {conversations.map(conv => (
-                                    <Link
-                                        key={conv.id}
-                                        to={`/messages/${conv.username}`}
-                                        onClick={() => setShowChatOnMobile(true)}
-                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 ${conv.username === (username || 'Elif_Mavi') ? 'bg-coral/5 dark:bg-coral/10 border-l-4 border-l-coral' : ''
-                                            }`}
-                                    >
-                                        <div className="relative">
-                                            <img src={conv.avatar} alt={conv.name} className="w-14 h-14 rounded-full border-2 border-gray-100 dark:border-gray-600" />
-                                            <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <h3 className="font-semibold text-gray-800 dark:text-white truncate">{conv.name}</h3>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400">{conv.time}</span>
-                                            </div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{conv.lastMessage}</p>
-                                        </div>
-                                        {conv.unread > 0 && (
-                                            <div className="bg-coral text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
-                                                {conv.unread}
-                                            </div>
-                                        )}
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Chat Area - Full width on mobile when open */}
-                        <div className={`flex-1 flex flex-col ${!username ? 'hidden md:flex' : 'flex'
-                            }`}>
-                            {username && activeConversation ? (
-                                <div className="flex-1 flex flex-col h-full max-h-full">
-                                    {/* Chat Header */}
-                                    <div className="p-4 md:p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-coral/5 to-orange-400/5 dark:from-coral/10 dark:to-orange-400/10 flex-shrink-0">
-                                        <div className="flex items-center gap-3">
-                                            {/* Back button for mobile */}
-                                            <button
-                                                onClick={() => setShowChatOnMobile(false)}
-                                                className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                                            >
-                                                <FaArrowLeft className="text-gray-600 dark:text-gray-400" />
-                                            </button>
-                                            <img src={activeConversation.avatar} alt={activeConversation.name} className="w-12 h-12 rounded-full border-2 border-coral/20" />
-                                            <div>
-                                                <h3 className="font-bold text-gray-800 dark:text-white text-lg">{activeConversation.name}</h3>
-                                                <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-                                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                                    Çevrimiçi
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Messages - Scrollable area with fixed height */}
-                                    <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-gray-50/50 dark:bg-gray-900/50 min-h-0">
-                                        {messages.map(msg => (
-                                            <div key={msg.id} className={`flex ${msg.isMine ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
-                                                <div
-                                                    className={`max-w-[70%] rounded-2xl px-5 py-3 ${msg.isMine
-                                                        ? 'bg-gradient-to-r from-coral to-orange-400 text-white shadow-lg'
-                                                        : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-md'
-                                                        }`}
-                                                >
-                                                    {renderMessageContent(msg)}
-                                                    <span className={`text-xs block mt-2 ${msg.isMine ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>
-                                                        {msg.time}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Attached File Preview */}
-                                    {attachedFile && (
-                                        <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                                            <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-xl">
-                                                {attachedFile.type === 'image' ? (
-                                                    <img src={attachedFile.url} alt="Preview" className="w-16 h-16 rounded-lg object-cover" />
-                                                ) : (
-                                                    <div className="w-16 h-16 bg-coral/10 rounded-lg flex items-center justify-center">
-                                                        <FaFileAlt className="text-2xl text-coral" />
-                                                    </div>
-                                                )}
-                                                <div className="flex-1">
-                                                    <p className="text-sm font-medium text-gray-800 dark:text-white truncate">{attachedFile.name}</p>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{attachedFile.size}</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => setAttachedFile(null)}
-                                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                                                >
-                                                    <FaTimes className="text-gray-500 dark:text-gray-400" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Message Input - Always visible at bottom */}
-                                    <form onSubmit={handleSendMessage} className="p-3 md:p-5 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
-                                        <div className="flex gap-3 items-end">
-                                            {/* Attachment Buttons */}
-                                            <div className="flex gap-2">
-                                                <label className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors cursor-pointer text-gray-600 dark:text-gray-400 hover:text-coral dark:hover:text-coral">
-                                                    <FaImage className="text-xl" />
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => handleFileAttach(e, 'image')}
-                                                        className="hidden"
-                                                    />
-                                                </label>
-                                                <label className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors cursor-pointer text-gray-600 dark:text-gray-400 hover:text-coral dark:hover:text-coral">
-                                                    <FaPaperclip className="text-xl" />
-                                                    <input
-                                                        type="file"
-                                                        onChange={(e) => handleFileAttach(e, 'file')}
-                                                        className="hidden"
-                                                    />
-                                                </label>
-                                                <button
-                                                    type="button"
-                                                    onClick={handleVoiceRecord}
-                                                    className={`p-3 rounded-xl transition-all ${isRecording
-                                                        ? 'bg-red-500 text-white animate-pulse'
-                                                        : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-coral dark:hover:text-coral'
-                                                        }`}
-                                                >
-                                                    <FaMicrophone className="text-xl" />
-                                                </button>
-                                            </div>
-
-                                            {/* Input Area */}
-                                            <div className="flex-1 relative">
-                                                <input
-                                                    type="text"
-                                                    value={messageText}
-                                                    onChange={(e) => setMessageText(e.target.value)}
-                                                    placeholder="Mesajınızı yazın..."
-                                                    className="w-full px-5 py-3 pr-12 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/20 transition-all text-sm"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-coral transition-colors"
-                                                >
-                                                    <FaSmile className="text-xl" />
-                                                </button>
-
-                                                {/* Emoji Picker */}
-                                                {showEmojiPicker && (
-                                                    <div className="absolute bottom-full right-0 mb-2 bg-white dark:bg-gray-700 rounded-xl shadow-lg p-3 grid grid-cols-6 gap-2 border border-gray-200 dark:border-gray-600">
-                                                        {emojis.map((emoji, idx) => (
-                                                            <button
-                                                                key={idx}
-                                                                type="button"
-                                                                onClick={() => addEmoji(emoji)}
-                                                                className="text-2xl hover:scale-125 transition-transform"
-                                                            >
-                                                                {emoji}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Send Button */}
-                                            <button
-                                                type="submit"
-                                                disabled={!messageText.trim() && !attachedFile}
-                                                className="bg-gradient-to-r from-coral to-orange-400 text-white p-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                            >
-                                                <FaPaperPlane className="text-lg" />
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            ) : (
-                                <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                                    <div className="text-center">
-                                        <div className="text-6xl mb-4">💬</div>
-                                        <p className="text-gray-400 dark:text-gray-500 text-lg">Bir sohbet seçin</p>
-                                        <p className="text-gray-300 dark:text-gray-600 text-sm mt-2">Mesajlaşmaya başlamak için soldaki listeden birini seçin</p>
-                                    </div>
-                                </div>
-                            )}
+                        {/* Search */}
+                        <div className="relative">
+                            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Ara..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 border-none rounded-xl text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-coral"
+                            />
                         </div>
                     </div>
+
+                    {/* Conversations */}
+                    <div className="flex-1 overflow-y-auto">
+                        {loading ? (
+                            <div className="flex justify-center items-center h-full">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div>
+                            </div>
+                        ) : filteredConversations.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    {searchQuery ? 'Sonuç bulunamadı' : 'Henüz mesaj yok'}
+                                </h3>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                    {searchQuery ? 'Farklı bir arama deneyin' : 'Bir kullanıcının profilinden mesaj göndererek başlayın'}
+                                </p>
+                            </div>
+                        ) : (
+                            filteredConversations.map(conversation => (
+                                <div
+                                    key={conversation.id}
+                                    onClick={() => handleConversationClick(conversation)}
+                                    className={`p-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer transition-colors ${activeConversation?.id === conversation.id
+                                        ? 'bg-coral/10 dark:bg-coral/20'
+                                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                        }`}
+                                >
+                                    <div className="flex items-start gap-3">
+                                        {/* Avatar */}
+                                        <div className="relative flex-shrink-0">
+                                            <img
+                                                src={conversation.other_user.avatar || 'https://i.pravatar.cc/200?u=default'}
+                                                alt={conversation.other_user.username}
+                                                className="w-14 h-14 rounded-full object-cover"
+                                            />
+                                            <FaCircle className="absolute bottom-0 right-0 text-green-500 text-xs border-2 border-white dark:border-gray-800 rounded-full" />
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <h3 className="font-semibold text-gray-800 dark:text-white truncate">
+                                                    {conversation.other_user.username}
+                                                </h3>
+                                                {conversation.latest_message && (
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">
+                                                        {formatDistanceToNow(new Date(conversation.latest_message.created_at), {
+                                                            locale: tr,
+                                                            addSuffix: true
+                                                        })}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <p className={`text-sm truncate ${conversation.unread_count > 0
+                                                    ? 'text-gray-800 dark:text-gray-200 font-semibold'
+                                                    : 'text-gray-500 dark:text-gray-400'
+                                                    }`}>
+                                                    {conversation.latest_message?.is_mine && 'Siz: '}
+                                                    {renderMessagePreview(conversation.latest_message)}
+                                                </p>
+                                                {conversation.unread_count > 0 && (
+                                                    <span className="ml-2 bg-coral text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
+                                                        {conversation.unread_count}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Chat Window */}
+                <div className={`flex-1 ${showMobileChat ? 'flex' : 'hidden md:flex'}`}>
+                    <ChatWindow
+                        conversation={activeConversation}
+                        onBack={handleBack}
+                        onNewMessage={handleNewMessage}
+                    />
                 </div>
             </div>
-        </div>
+        </MainLayout>
     );
 };
 

@@ -76,6 +76,16 @@ export const commentsAPI = {
     create: (data) => api.post('/comments', data),
 };
 
+export const messagesAPI = {
+    getConversations: () => api.get('/messages/conversations'),
+    getMessages: (conversationId) => api.get(`/messages/conversations/${conversationId}`),
+    sendMessage: (data) => api.post('/messages/send', data),
+    sendFile: (formData) => api.post('/messages/send', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    markAsRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`)
+};
+
 export const notificationsAPI = {
     getAll: (params) => api.get('/notifications', { params }),
     markAsRead: (id) => api.post(`/notifications/${id}/read`),
