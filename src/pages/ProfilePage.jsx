@@ -238,10 +238,10 @@ const ProfilePage = () => {
                                                     <button
                                                         onClick={handleFollowToggle}
                                                         className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${profileData.isFollowing
-                                                                ? 'bg-gray-500 hover:bg-gray-600'
-                                                                : profileData.hasPendingRequest
-                                                                    ? 'bg-yellow-500 hover:bg-yellow-600'
-                                                                    : 'bg-coral hover:bg-coral-dark'
+                                                            ? 'bg-gray-500 hover:bg-gray-600'
+                                                            : profileData.hasPendingRequest
+                                                                ? 'bg-yellow-500 hover:bg-yellow-600'
+                                                                : 'bg-coral hover:bg-coral-dark'
                                                             }`}
                                                     >
                                                         {profileData.isFollowing ? 'Takip Ediliyor' : profileData.hasPendingRequest ? 'İstek Gönderildi' : 'Takip Et'}
@@ -289,35 +289,47 @@ const ProfilePage = () => {
 
                 {/* Content - Right after tabs */}
                 <div className="flex flex-col gap-6">
-                    {activeTab === 'questions' && (
-                        <>
-                            {/* Profile Statistics - Only in questions tab */}
-                            <ProfileStats stats={profileData.stats} />
+                    {profileData.isPrivate && !profileData.isFollowing && !isOwnProfile ? (
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center shadow-soft border border-gray-100 dark:border-gray-700">
+                            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FaUserSecret className="text-4xl text-gray-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Bu Hesap Gizli</h3>
+                            <p className="text-gray-500 dark:text-gray-400">
+                                Bu kullanıcının paylaşımlarını görmek için takip etmelisin.
+                            </p>
+                        </div>
+                    ) : (
+                        activeTab === 'questions' && (
+                            <>
+                                {/* Profile Statistics - Only in questions tab */}
+                                <ProfileStats stats={profileData.stats} />
 
-                            {/* About Section - Only in questions tab */}
-                            {profileData.about && (
-                                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
-                                    <h2 className="text-lg font-bold mb-2">Hakkımda</h2>
-                                    <p className="text-gray-700 dark:text-gray-300">{profileData.about}</p>
-                                </div>
-                            )}
-
-                            {/* Content Tabs */}
-                            <div className="space-y-4">
-                                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-                                    {isOwnProfile ? 'Sorularım' : `${profileData.name} Soruları`}
-                                </h3>
-                                {userQuestions.length > 0 ? (
-                                    userQuestions.map(q => (
-                                        <QuestionCard key={q.id} question={q} />
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl">
-                                        <p className="text-gray-500">Henüz hiç soru sorulmamış.</p>
+                                {/* About Section - Only in questions tab */}
+                                {profileData.about && (
+                                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
+                                        <h2 className="text-lg font-bold mb-2">Hakkımda</h2>
+                                        <p className="text-gray-700 dark:text-gray-300">{profileData.about}</p>
                                     </div>
                                 )}
-                            </div>
-                        </>
+
+                                {/* Content Tabs */}
+                                <div className="space-y-4">
+                                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                                        {isOwnProfile ? 'Sorularım' : `${profileData.name} Soruları`}
+                                    </h3>
+                                    {userQuestions.length > 0 ? (
+                                        userQuestions.map(q => (
+                                            <QuestionCard key={q.id} question={q} />
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl">
+                                            <p className="text-gray-500">Henüz hiç soru sorulmamış.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )
                     )}
                     {activeTab === 'answers' && (
                         <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Cevaplar yakında</div>
