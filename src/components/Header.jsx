@@ -175,13 +175,7 @@ const Header = ({ onSearch }) => {
                             />
                         </div>
                         {/* Profile Picture */}
-                        <Link to="/profile/Zeynep_Yildiz" className="hidden sm:block">
-                            <img
-                                src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
-                                alt="User"
-                                className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-md cursor-pointer hover:border-coral transition-colors"
-                            />
-                        </Link>
+
 
                         {/* User Menu or Auth Buttons */}
                         {isAuthenticated && user ? (

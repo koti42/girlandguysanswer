@@ -328,124 +328,145 @@ const QuestionDetailPage = () => {
                                                 className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-700 group-hover:border-coral transition-colors object-cover"
                                             />
                                             <div>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="font-bold text-gray-800 dark:text-gray-200 group-hover:text-coral transition-colors">
-                                                        {answer.user.name}
-                                                        <FaHeart className="text-lg group-hover:scale-110 transition-transform" />
-                                                        <span className="font-semibold">{answer.likes}</span>
-                                                    </button>
+                                                <div>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="font-bold text-gray-800 dark:text-gray-200 group-hover:text-coral transition-colors">
+                                                            {answer.user.name}
+                                                        </span>
+                                                        {answer.user.gender === 'female' ? (
+                                                            <FaVenus className="text-pink-500 text-sm" />
+                                                        ) : (
+                                                            <FaMars className="text-blue-500 text-sm" />
+                                                        )}
+                                                    </div>
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {new Date(answer.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                        </Link>
+                                    </div>
+
+                                    <div className="prose prose-sm dark:prose-invert max-w-none mb-4 text-gray-700 dark:text-gray-300">
+                                        <p>{answer.content}</p>
+                                    </div>
+
+                                    <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+                                        <button className="flex items-center gap-2 hover:text-coral transition-colors">
+                                            <FaHeart />
+                                            <span>{answer.likes_count || 0}</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setReplyingTo(prev => prev.includes(answer.id) ? prev.filter(id => id !== answer.id) : [...prev, answer.id])}
+                                            className="flex items-center gap-2 hover:text-blue-500 transition-colors"
+                                        >
+                                            <FaReply />
+                                            <span>Yanıtla</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Replies Section */}
+                                    {answer.replies && answer.replies.length > 0 && (
+                                        <div className="mt-6 space-y-3">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <FaReply className="text-coral text-sm" />
+                                                <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                                                    {answer.replies.length} Yanıt
+                                                </span>
+                                            </div>
+                                            {answer.replies.map(reply => {
+                                                // Gender-based gradient for replies (stronger/darker versions)
+                                                const replyGradientClass = reply.user.gender === 'female'
+                                                    ? 'bg-gradient-to-br from-pink-100 to-pink-50 dark:from-pink-900/25 dark:to-pink-800/20 border-pink-400 dark:border-pink-600'
+                                                    : 'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-900/25 dark:to-cyan-800/20 border-cyan-400 dark:border-cyan-600';
+
+                                                return (
+                                                    <div key={reply.id} className={`${replyGradientClass} rounded-xl p-4 ml-8 border-l-8 shadow-lg hover:shadow-xl transition-all`}>
+                                                        <div className="flex gap-3">
+                                                            <Link to={`/profile/${reply.user.name}`}>
+                                                                <img
+                                                                    src={reply.user.avatar}
+                                                                    alt={reply.user.name}
+                                                                    className="w-11 h-11 rounded-full border-3 border-white dark:border-gray-600 shadow-md hover:border-coral transition-colors"
+                                                                />
+                                                            </Link>
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <FaReply className="text-gray-400 dark:text-gray-500 text-xs" />
+                                                                        <Link to={`/profile/${reply.user.name}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">
+                                                                            {reply.user.name}
+                                                                        </Link>
+                                                                    </div>
+                                                                    {reply.user.gender === 'female' ? (
+                                                                        <FaVenus className="text-pink-600 dark:text-pink-400 text-sm" />
+                                                                    ) : (
+                                                                        <FaMars className="text-cyan-600 dark:text-cyan-400 text-sm" />
+                                                                    )}
+                                                                    <span className="text-gray-500 dark:text-gray-400 text-xs">• {reply.createdAt}</span>
+                                                                </div>
+                                                                <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed font-medium">
+                                                                    {reply.content}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {/* Reply Form */}
+                                    {replyingTo.includes(answer.id) && (
+                                        <div className="mt-4 ml-4 pl-4 border-l-2 border-blue-200">
+                                            <form onSubmit={(e) => handleSubmitReply(e, answer.id)}>
+                                                <textarea
+                                                    value={replyTexts[answer.id] || ''}
+                                                    onChange={(e) => handleReplyTextChange(answer.id, e.target.value)}
+                                                    placeholder={`${answer.user.name} kullanıcısına yanıt yazın...`}
+                                                    rows={3}
+                                                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-3"
+                                                    autoFocus
+                                                />
+                                                <div className="mb-3">
                                                     <button
-                                                        onClick={() => toggleReply(answer.id)}
-                                                        className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-coral dark:hover:text-coral transition-colors"
+                                                        type="button"
+                                                        onClick={() => setReplyAnonymous(prev => ({ ...prev, [answer.id]: !prev[answer.id] }))}
+                                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-sm ${replyAnonymous[answer.id]
+                                                            ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                                                            : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
+                                                            }`}
                                                     >
-                                                        <FaReply className="text-lg" />
-                                                        <span className="font-semibold">{answer.replies.length} Yanıt</span>
+                                                        <FaUserSecret />
+                                                        <span className="text-xs">{replyAnonymous[answer.id] ? 'Anonim yanıt' : 'Anonim olarak yanıtla'}</span>
                                                     </button>
                                                 </div>
-
-                                                {/* Replies Section */}
-                                                {answer.replies && answer.replies.length > 0 && (
-                                                    <div className="mt-6 space-y-3">
-                                                        <div className="flex items-center gap-2 mb-3">
-                                                            <FaReply className="text-coral text-sm" />
-                                                            <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                                                                {answer.replies.length} Yanıt
-                                                            </span>
-                                                        </div>
-                                                        {answer.replies.map(reply => {
-                                                            // Gender-based gradient for replies (stronger/darker versions)
-                                                            const replyGradientClass = reply.user.gender === 'female'
-                                                                ? 'bg-gradient-to-br from-pink-100 to-pink-50 dark:from-pink-900/25 dark:to-pink-800/20 border-pink-400 dark:border-pink-600'
-                                                                : 'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-900/25 dark:to-cyan-800/20 border-cyan-400 dark:border-cyan-600';
-
-                                                            return (
-                                                                <div key={reply.id} className={`${replyGradientClass} rounded-xl p-4 ml-8 border-l-8 shadow-lg hover:shadow-xl transition-all`}>
-                                                                    <div className="flex gap-3">
-                                                                        <Link to={`/profile/${reply.user.name}`}>
-                                                                            <img
-                                                                                src={reply.user.avatar}
-                                                                                alt={reply.user.name}
-                                                                                className="w-11 h-11 rounded-full border-3 border-white dark:border-gray-600 shadow-md hover:border-coral transition-colors"
-                                                                            />
-                                                                        </Link>
-                                                                        <div className="flex-1">
-                                                                            <div className="flex items-center gap-2 mb-1">
-                                                                                <div className="flex items-center gap-1.5">
-                                                                                    <FaReply className="text-gray-400 dark:text-gray-500 text-xs" />
-                                                                                    <Link to={`/profile/${reply.user.name}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">
-                                                                                        {reply.user.name}
-                                                                                    </Link>
-                                                                                </div>
-                                                                                {reply.user.gender === 'female' ? (
-                                                                                    <FaVenus className="text-pink-600 dark:text-pink-400 text-sm" />
-                                                                                ) : (
-                                                                                    <FaMars className="text-cyan-600 dark:text-cyan-400 text-sm" />
-                                                                                )}
-                                                                                <span className="text-gray-500 dark:text-gray-400 text-xs">• {reply.createdAt}</span>
-                                                                            </div>
-                                                                            <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed font-medium">
-                                                                                {reply.content}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-
-                                                {/* Reply Form */}
-                                                {replyingTo.includes(answer.id) && (
-                                                    <div className="mt-4 ml-4 pl-4 border-l-2 border-blue-200">
-                                                        <form onSubmit={(e) => handleSubmitReply(e, answer.id)}>
-                                                            <textarea
-                                                                value={replyTexts[answer.id] || ''}
-                                                                onChange={(e) => handleReplyTextChange(answer.id, e.target.value)}
-                                                                placeholder={`${answer.user.name} kullanıcısına yanıt yazın...`}
-                                                                rows={3}
-                                                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-3"
-                                                                autoFocus
-                                                            />
-                                                            <div className="mb-3">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setReplyAnonymous(prev => ({ ...prev, [answer.id]: !prev[answer.id] }))}
-                                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-sm ${replyAnonymous[answer.id]
-                                                                        ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
-                                                                        : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
-                                                                        }`}
-                                                                >
-                                                                    <FaUserSecret />
-                                                                    <span className="text-xs">{replyAnonymous[answer.id] ? 'Anonim yanıt' : 'Anonim olarak yanıtla'}</span>
-                                                                </button>
-                                                            </div>
-                                                            <div className="flex gap-2 justify-end">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => toggleReply(answer.id)}
-                                                                    className="py-2 px-4 rounded-xl text-gray-600 hover:bg-gray-100 transition-all text-sm"
-                                                                >
-                                                                    İptal
-                                                                </button>
-                                                                <button
-                                                                    type="submit"
-                                                                    disabled={!replyTexts[answer.id] || !replyTexts[answer.id].trim()}
-                                                                    className="bg-coral text-white font-semibold py-2 px-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                                                                >
-                                                                    Yanıtla
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                )}
-                                            </div>
-                                    </div>
+                                                <div className="flex gap-2 justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleReply(answer.id)}
+                                                        className="py-2 px-4 rounded-xl text-gray-600 hover:bg-gray-100 transition-all text-sm"
+                                                    >
+                                                        İptal
+                                                    </button>
+                                                    <button
+                                                        type="submit"
+                                                        disabled={!replyTexts[answer.id] || !replyTexts[answer.id].trim()}
+                                                        className="bg-coral text-white font-semibold py-2 px-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                    >
+                                                        Yanıtla
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    )}
                                 </div>
-                            );
-                        })}
-                    </div>
+                                    </div>
                 </div>
+                );
+                        })}
             </div>
+        </div>
+            </div >
         </MainLayout >
     );
 };
