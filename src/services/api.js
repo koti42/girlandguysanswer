@@ -52,8 +52,16 @@ export const usersAPI = {
     updateProfile: (data) => api.put('/user/me', data),
     getFollowers: (userId) => api.get(`/users/${userId}/followers`),
     getFollowing: (userId) => api.get(`/users/${userId}/following`),
-    follow: (userId) => api.post(`/users/${userId}/follow`),
-    unfollow: (userId) => api.delete(`/users/${userId}/follow`),
+    follow: (username) => api.post(`/users/${username}/follow`),
+    unfollow: (username) => api.delete(`/users/${username}/follow`),
+    block: (username) => api.post(`/users/${username}/block`),
+    unblock: (username) => api.delete(`/users/${username}/unblock`),
+    getFollowRequests: () => api.get('/user/me/follow-requests'),
+    acceptFollowRequest: (username, requestId) => api.post(`/users/${username}/follow-requests/${requestId}/accept`),
+    rejectFollowRequest: (username, requestId) => api.delete(`/users/${username}/follow-requests/${requestId}/reject`),
+    updatePrivacy: (isPrivate) => api.post('/user/me/settings/privacy', { is_private: isPrivate }),
+    updateMessaging: (settings) => api.post('/user/me/settings/messaging', settings),
+    updateFollowing: (allowFollowing) => api.post('/user/me/settings/following', { allow_following: allowFollowing }),
 };
 
 export const uploadAPI = {
