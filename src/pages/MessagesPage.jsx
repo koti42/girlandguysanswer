@@ -82,7 +82,6 @@ const MessagesPage = () => {
     const setupPusher = () => {
         if (!user) return;
 
-        console.log('🔑 Setting up Pusher for user ID:', user.id);
         subscribeToUserChannel(user.id, {
             onNewMessage: (data) => {
                 handleNewMessageEvent(data.message);

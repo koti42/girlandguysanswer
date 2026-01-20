@@ -31,22 +31,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     useEffect(() => {
         if (!user) return;
 
-        console.log('💬 ChatWindow: Setting up Pusher listener for user:', user.id, 'conversation:', conversation?.id);
-
         const channel = subscribeToUserChannel(user.id, {
             onNewMessage: (data) => {
-                console.log('💬 ChatWindow: Message received, conversation_id:', data.message.conversation_id, 'current conversation:', conversation?.id);
-
                 // Only add message if it's for the current conversation
                 if (conversation && data.message.conversation_id === conversation.id) {
-                    console.log('✅ ChatWindow: Message is for current conversation, adding to chat');
                     setMessages(prev => {
                         // Check if message already exists to avoid duplicates
                         const exists = prev.some(msg => msg.id === data.message.id);
-                        if (exists) {
-                            console.log('⚠️ ChatWindow: Duplicate message detected, ignoring');
-                            return prev;
-                        }
+                        if (exists) return prev;
                         return [...prev, data.message];
                     });
 
@@ -54,14 +46,11 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     if (conversation.id) {
                         markAsRead();
                     }
-                } else {
-                    console.log('ℹ️ ChatWindow: Message is for different conversation, ignoring');
                 }
             }
         });
 
         return () => {
-            console.log('🔌 ChatWindow: Cleaning up Pusher listener');
             unsubscribeFromChannel(user.id);
         };
     }, [conversation?.id, user]);
@@ -189,16 +178,16 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-white dark:bg-gray-800">
+        <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
             {/* Header */}
-            <div className="border-b border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
-                <div className="flex items-center gap-3">
+            <div className="border-b border-gray-200 dark:border-gray-700 p-5 sm:p-6 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 shadow-sm">
+                <div className="flex items-center gap-4">
                     {/* Back Button (Mobile) */}
                     <button
                         onClick={onBack}
-                        className="md:hidden text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg transition-colors"
+                        className="md:hidden text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 p-2.5 rounded-xl transition-all hover:scale-105 active:scale-95"
                     >
-                        <FaArrowLeft />
+                        <FaArrowLeft className="text-lg" />
                     </button>
 
                     {/* User Avatar */}
@@ -206,9 +195,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         <img
                             src={conversation.other_user.avatar || 'https://i.pravatar.cc/200?u=default'}
                             alt={conversation.other_user.username}
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover ring-4 ring-white dark:ring-gray-800 shadow-lg"
                         />
-                        <FaCircle className="absolute bottom-0 right-0 text-green-500 text-xs border-2 border-white dark:border-gray-800 rounded-full" />
+                        <FaCircle className="absolute bottom-0 right-0 text-green-500 text-sm border-4 border-white dark:border-gray-800 rounded-full" />
                     </div>
 
                     {/* User Info */}
@@ -216,10 +205,10 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         className="flex-1 cursor-pointer"
                         onClick={() => navigate(`/profile/${conversation.other_user.username}`)}
                     >
-                        <h3 className="font-semibold text-gray-800 dark:text-white">
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">
                             {conversation.other_user.username}
                         </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-green-500 dark:text-green-400 font-medium">
                             Aktif
                         </p>
                     </div>
@@ -227,16 +216,24 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 scroll-smooth">
                 {loading ? (
                     <div className="flex justify-center items-center h-full">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-coral"></div>
                     </div>
                 ) : messages.length === 0 ? (
                     <div className="flex justify-center items-center h-full">
-                        <div className="text-center">
+                        <div className="text-center animate-in fade-in zoom-in duration-500">
+                            <div className="w-32 h-32 bg-gradient-to-br from-coral/10 to-coral/5 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                                <svg className="w-16 h-16 text-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                            </div>
+                            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Henüz mesaj yok
+                            </p>
                             <p className="text-gray-500 dark:text-gray-400">
-                                Henüz mesaj yok. İlk mesajı sen gönder! 👋
+                                İlk mesajı sen gönder! 👋
                             </p>
                         </div>
                     </div>

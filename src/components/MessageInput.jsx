@@ -66,31 +66,31 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
     };
 
     return (
-        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-5">
             {/* File Preview */}
             {selectedFile && (
-                <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-between">
+                <div className="mb-4 p-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-700/50 dark:to-gray-700/30 rounded-2xl border border-gray-200 dark:border-gray-600 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-3">
                         {fileType === 'image' ? (
-                            <img src={previewUrl} alt="Preview" className="w-16 h-16 rounded object-cover" />
+                            <img src={previewUrl} alt="Preview" className="w-20 h-20 rounded-xl object-cover shadow-md" />
                         ) : (
-                            <div className="flex items-center gap-2">
-                                <FaMicrophone className="text-coral" />
-                                <span className="text-sm text-gray-700 dark:text-gray-300">{previewUrl}</span>
+                            <div className="flex items-center gap-3 bg-white dark:bg-gray-800 px-4 py-2 rounded-xl">
+                                <FaMicrophone className="text-coral text-xl" />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{previewUrl}</span>
                             </div>
                         )}
                     </div>
                     <button
                         onClick={clearFile}
-                        className="text-gray-500 hover:text-red-500 transition-colors"
+                        className="p-2.5 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
                     >
-                        <FaTimes />
+                        <FaTimes className="text-lg" />
                     </button>
                 </div>
             )}
 
             {/* Input Area */}
-            <div className="flex items-end gap-2">
+            <div className="flex items-end gap-2 sm:gap-3">
                 {/* File Upload Buttons */}
                 <input
                     ref={imageInputRef}
@@ -110,7 +110,7 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
                 <button
                     onClick={() => imageInputRef.current?.click()}
                     disabled={disabled || selectedFile}
-                    className="p-3 text-gray-500 hover:text-coral hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-3.5 text-gray-500 hover:text-coral hover:bg-gradient-to-br hover:from-coral/10 hover:to-coral/5 dark:hover:bg-gray-700 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                     title="Resim gönder"
                 >
                     <FaImage className="text-xl" />
@@ -119,7 +119,7 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
                 <button
                     onClick={() => audioInputRef.current?.click()}
                     disabled={disabled || selectedFile}
-                    className="p-3 text-gray-500 hover:text-coral hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-3.5 text-gray-500 hover:text-coral hover:bg-gradient-to-br hover:from-coral/10 hover:to-coral/5 dark:hover:bg-gray-700 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                     title="Ses dosyası gönder"
                 >
                     <FaMicrophone className="text-xl" />
@@ -133,22 +133,22 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
                     placeholder="Mesaj yaz..."
                     disabled={disabled}
                     rows={1}
-                    className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ maxHeight: '120px', minHeight: '48px' }}
+                    className="flex-1 px-5 py-3.5 border border-gray-300 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed text-[15px] transition-all"
+                    style={{ maxHeight: '120px', minHeight: '52px' }}
                 />
 
                 {/* Send Button */}
                 <button
                     onClick={handleSend}
                     disabled={disabled || (!message.trim() && !selectedFile)}
-                    className="p-3 bg-gradient-to-r from-coral to-coral-dark text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                    className="p-3.5 bg-gradient-to-br from-coral via-coral to-coral-dark text-white rounded-2xl hover:shadow-2xl hover:shadow-coral/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:scale-105 active:scale-95 min-w-[52px] min-h-[52px] flex items-center justify-center"
                 >
                     <FaPaperPlane className="text-xl" />
                 </button>
             </div>
 
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                Enter ile gönder, Shift+Enter ile yeni satır
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 px-1">
+                <span className="font-medium">Enter</span> ile gönder, <span className="font-medium">Shift+Enter</span> ile yeni satır
             </p>
         </div>
     );

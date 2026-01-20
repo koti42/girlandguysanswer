@@ -7,7 +7,7 @@ const MessageBubble = ({ message, isMine }) => {
     const renderContent = () => {
         switch (message.type) {
             case 'text':
-                return <p className="whitespace-pre-wrap break-words">{message.content}</p>;
+                return <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed">{message.content}</p>;
 
             case 'image':
                 return (
@@ -15,7 +15,7 @@ const MessageBubble = ({ message, isMine }) => {
                         <img
                             src={message.file_url}
                             alt="Image message"
-                            className="rounded-lg max-w-xs cursor-pointer hover:opacity-90 transition-opacity"
+                            className="rounded-xl max-w-sm cursor-pointer hover:opacity-90 transition-opacity"
                             onClick={() => window.open(message.file_url, '_blank')}
                         />
                         {message.content && (
@@ -27,7 +27,7 @@ const MessageBubble = ({ message, isMine }) => {
             case 'audio':
                 return (
                     <div className="space-y-2">
-                        <audio controls className="max-w-xs">
+                        <audio controls className="max-w-sm">
                             <source src={message.file_url} />
                             Your browser does not support the audio element.
                         </audio>
@@ -38,25 +38,25 @@ const MessageBubble = ({ message, isMine }) => {
                 );
 
             default:
-                return <p>{message.content}</p>;
+                return <p className="text-[15px] leading-relaxed">{message.content}</p>;
         }
     };
 
     return (
-        <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-4`}>
-            <div className={`max-w-[70%] ${isMine ? 'order-2' : 'order-1'}`}>
+        <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-4 px-2 sm:px-4 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+            <div className={`max-w-[85%] sm:max-w-[75%] md:max-w-[70%] ${isMine ? 'order-2' : 'order-1'}`}>
                 <div
-                    className={`rounded-2xl px-4 py-2.5 ${isMine
-                            ? 'bg-gradient-to-br from-coral to-coral-dark text-white rounded-br-sm'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-sm'
-                        } shadow-sm`}
+                    className={`rounded-2xl px-5 py-3.5 ${isMine
+                            ? 'bg-gradient-to-br from-coral via-coral to-coral-dark text-white rounded-br-md shadow-lg shadow-coral/20'
+                            : 'bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-700/80 text-gray-800 dark:text-gray-100 rounded-bl-md shadow-md'
+                        } transition-all hover:shadow-xl`}
                 >
                     {renderContent()}
                 </div>
 
                 {/* Timestamp and Read Status */}
-                <div className={`flex items-center gap-1 mt-1 px-2 ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                <div className={`flex items-center gap-1.5 mt-1.5 px-2 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
                         {format(new Date(message.created_at), 'HH:mm', { locale: tr })}
                     </span>
                     {isMine && (
@@ -64,7 +64,7 @@ const MessageBubble = ({ message, isMine }) => {
                             {message.is_read ? (
                                 <FaCheckDouble className="text-blue-500" />
                             ) : (
-                                <FaCheck className="text-gray-400" />
+                                <FaCheck className="text-gray-400 dark:text-gray-500" />
                             )}
                         </span>
                     )}
