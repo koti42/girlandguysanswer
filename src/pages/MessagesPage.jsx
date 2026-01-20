@@ -210,9 +210,9 @@ const MessagesPage = () => {
                         <div className={`flex-1 flex flex-col ${!username ? 'hidden md:flex' : 'flex'
                             }`}>
                             {username && activeConversation ? (
-                                <div className="flex-1 flex flex-col">
+                                <div className="flex-1 flex flex-col h-full max-h-full">
                                     {/* Chat Header */}
-                                    <div className="p-4 md:p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-coral/5 to-orange-400/5 dark:from-coral/10 dark:to-orange-400/10">
+                                    <div className="p-4 md:p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-coral/5 to-orange-400/5 dark:from-coral/10 dark:to-orange-400/10 flex-shrink-0">
                                         <div className="flex items-center gap-3">
                                             {/* Back button for mobile */}
                                             <button
@@ -232,8 +232,8 @@ const MessagesPage = () => {
                                         </div>
                                     </div>
 
-                                    {/* Messages */}
-                                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50 dark:bg-gray-900/50">
+                                    {/* Messages - Scrollable area with fixed height */}
+                                    <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-gray-50/50 dark:bg-gray-900/50 min-h-0">
                                         {messages.map(msg => (
                                             <div key={msg.id} className={`flex ${msg.isMine ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
                                                 <div
@@ -276,8 +276,8 @@ const MessagesPage = () => {
                                         </div>
                                     )}
 
-                                    {/* Message Input */}
-                                    <form onSubmit={handleSendMessage} className="p-5 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                                    {/* Message Input - Always visible at bottom */}
+                                    <form onSubmit={handleSendMessage} className="p-3 md:p-5 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
                                         <div className="flex gap-3 items-end">
                                             {/* Attachment Buttons */}
                                             <div className="flex gap-2">
