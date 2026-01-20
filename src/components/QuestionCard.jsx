@@ -23,8 +23,8 @@ const QuestionCard = ({ question }) => {
 
     return (
         <div className={`rounded-2xl p-6 shadow-soft hover:shadow-soft-hover transition-all duration-300 border flex flex-col gap-4 ${question.user.gender === 'female'
-                ? 'bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 border-pink-100 dark:border-pink-800/30'
-                : 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-100 dark:border-blue-800/30'
+                ? 'bg-gradient-to-br from-pink-100 via-pink-200 to-rose-200 dark:from-pink-800/40 dark:via-pink-700/30 dark:to-rose-700/30 border-pink-200 dark:border-pink-700/50'
+                : 'bg-gradient-to-br from-blue-100 via-sky-200 to-cyan-200 dark:from-blue-800/40 dark:via-blue-700/30 dark:to-cyan-700/30 border-blue-200 dark:border-blue-700/50'
             }`}>
             {/* Header */}
             <div className="flex justify-between items-start">
