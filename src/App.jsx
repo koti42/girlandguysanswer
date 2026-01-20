@@ -23,7 +23,7 @@ function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/questions" element={<QuestionsPage />} />
-              <Route path="/question/:id" element={<QuestionDetailPage />} />
+              <Route path="/question/:slug" element={<QuestionDetailPage />} />
               <Route path="/profile/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/profile/:username/followers" element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
               <Route path="/profile/:username/following" element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />

@@ -207,15 +207,15 @@ const QuestionDetailPage = () => {
                         <div className="flex gap-6">
                             <button className="flex items-center gap-2 text-gray-500 hover:text-coral transition-colors">
                                 <FaHeart className="text-lg" />
-                                <span className="font-semibold">{question.stats.likes}</span>
+                                <span className="font-semibold">{question.stats?.likes || 0}</span>
                             </button>
                             <button className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                 <FaComment className="text-lg" />
-                                <span className="font-semibold">{question.stats.comments}</span>
+                                <span className="font-semibold">{question.stats?.comments || 0}</span>
                             </button>
                             <div className="flex items-center gap-2 text-gray-500">
                                 <FaEye />
-                                <span>{question.stats.views}</span>
+                                <span>{question.stats?.views || 0}</span>
                             </div>
                         </div>
                         <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 transition-colors">
