@@ -180,7 +180,7 @@ const QuestionDetailPage = () => {
                         </Link>
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
-                                <Link to={`/profile/${question.user.name}`} className="font-bold text-gray-800 hover:underline">
+                                <Link to={`/profile/${question.user.name}`} className="font-bold text-gray-800 dark:text-white hover:underline">
                                     {question.user.name}
                                 </Link>
                                 {question.user.gender === 'female' ? (
@@ -189,8 +189,8 @@ const QuestionDetailPage = () => {
                                     <FaMars className="text-blue-500" />
                                 )}
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <span className="bg-gray-100 px-2 py-0.5 rounded">{question.category}</span>
+                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                <span className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">{question.category}</span>
                                 <span>•</span>
                                 <span>5 saat önce</span>
                             </div>
