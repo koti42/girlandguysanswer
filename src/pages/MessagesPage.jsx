@@ -369,7 +369,9 @@ const MessagesPage = () => {
                         </div>
                     </div>
                 </div>
-                );
+            </div>
+        </div>
+    );
 };
 
-                export default MessagesPage;
+export default MessagesPage;
