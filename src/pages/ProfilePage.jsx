@@ -56,13 +56,13 @@ const ProfilePage = () => {
                     avatar: data.avatar || 'https://i.pravatar.cc/200?u=default',
                     location: data.location || 'Konum belirtilmedi', // API might not have location yet
                     joinedDate: new Date(data.created_at || Date.now()).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
-                    // stats mapping logic...
+                    badges: [], // API doesn't return badges yet
                     stats: {
                         questions: data.stats?.questions || 0,
                         followers: data.stats?.followers || 0,
                         following: data.stats?.following || 0,
-                        answers: 0, // API doesn't seem to return answer count in user detail yet
-                        likes: 0
+                        answers: data.stats?.answers || 0,
+                        likes: data.stats?.likes || 0
                     }
                 });
                 setUserQuestions(questionsData);
