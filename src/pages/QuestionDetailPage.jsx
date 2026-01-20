@@ -52,17 +52,7 @@ const QuestionDetailPage = () => {
                 const response = await questionsAPI.getById(slug);
                 setQuestion(response.data.data.question);
 
-                // Merge comments and answers, treating them both as "answers" for display
-                const rawAnswers = response.data.data.answers || [];
-                const rawComments = response.data.data.question.comments || [];
-
-                // You might want to map comments to look like answers if fields differ significantly
-                // But usually they are similar enough for this UI
-                const combined = [...rawAnswers, ...rawComments].sort((a, b) =>
-                    new Date(b.created_at) - new Date(a.created_at)
-                );
-
-                setAnswers(combined);
+                setAnswers(response.data.data.answers);
             } catch (err) {
                 console.error("Soru detayı yüklenirken hata:", err);
                 setError("Soru bulunamadı veya yüklenirken bir hata oluştu.");
@@ -103,24 +93,21 @@ const QuestionDetailPage = () => {
         if (!commentText.trim()) return;
 
         try {
-            // Create comment on question using /comments endpoint
-            const response = await commentsAPI.create({
-                content: commentText,
-                commentable_type: 'question',
-                commentable_id: question.id
+            const response = await questionsAPI.createAnswer(question.slug, {
+                content: commentText
             });
 
-            const newComment = response.data.data.comment;
+            const newAnswer = response.data.data.answer;
+            // Ensure array fields exist for UI safety
+            if (!newAnswer.comments) newAnswer.comments = [];
+            if (!newAnswer.likes_count) newAnswer.likes_count = 0;
 
-            // Add comment to answers list (merged view)
-            setAnswers(prev => [newComment, ...prev]);
-
+            setAnswers(prev => [newAnswer, ...prev]);
             setCommentText('');
             displayToast('Yorumunuz başarıyla gönderildi! 🎉', 'success');
         } catch (err) {
-            console.error("Yorum gönderilirken hata:", err);
-            const errorMsg = err.response?.data?.message || "Yorum gönderilemedi. Lütfen tekrar deneyin.";
-            displayToast(errorMsg, 'error');
+            console.error("Cevap gönderilirken hata:", err);
+            alert("Cevap gönderilemedi. Lütfen tekrar deneyin.");
         }
     };
 
@@ -130,8 +117,6 @@ const QuestionDetailPage = () => {
         if (!replyText || !replyText.trim()) return;
 
         try {
-            // Scenario 3: Comment on Answer
-            // We are creating a comment on the Answer entity.
             const response = await commentsAPI.create({
                 content: replyText,
                 commentable_type: 'answer',
