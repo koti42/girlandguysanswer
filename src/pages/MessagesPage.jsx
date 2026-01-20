@@ -355,16 +355,16 @@ const MessagesPage = () => {
                                                 </button>
                                             </div>
                                         </form>
-                                    </div>
+                                    </>
                                 ) : (
-                                <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                                    <div className="text-center">
-                                        <div className="text-6xl mb-4">💬</div>
-                                        <p className="text-gray-400 dark:text-gray-500 text-lg">Bir sohbet seçin</p>
-                                        <p className="text-gray-300 dark:text-gray-600 text-sm mt-2">Mesajlaşmaya başlamak için soldaki listeden birini seçin</p>
+                                    <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                                        <div className="text-center">
+                                            <div className="text-6xl mb-4">💬</div>
+                                            <p className="text-gray-400 dark:text-gray-500 text-lg">Bir sohbet seçin</p>
+                                            <p className="text-gray-300 dark:text-gray-600 text-sm mt-2">Mesajlaşmaya başlamak için soldaki listeden birini seçin</p>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
                             </div>
                         </div>
                     </div>
