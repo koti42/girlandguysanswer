@@ -4,10 +4,12 @@ import { FaCamera, FaTimes } from 'react-icons/fa';
 const ProfileCover = ({ coverPhoto, onCoverUpload, onCoverRemove }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
 
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
+            setSelectedFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreviewImage(reader.result);
@@ -17,20 +19,17 @@ const ProfileCover = ({ coverPhoto, onCoverUpload, onCoverRemove }) => {
     };
 
     const handleSave = () => {
-        if (previewImage) {
-            fetch(previewImage)
-                .then(res => res.blob())
-                .then(blob => {
-                    const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-                    onCoverUpload(file);
-                });
+        if (selectedFile) {
+            onCoverUpload(selectedFile);
         }
         setPreviewImage(null);
+        setSelectedFile(null);
         setIsModalOpen(false);
     };
 
     const handleCancel = () => {
         setPreviewImage(null);
+        setSelectedFile(null);
         setIsModalOpen(false);
     };
 

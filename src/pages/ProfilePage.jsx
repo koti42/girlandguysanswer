@@ -17,7 +17,7 @@ import Toast from '../components/Toast';
 const ProfilePage = () => {
     const { username } = useParams();
     const navigate = useNavigate();
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, updateUser } = useAuth();
     const isOwnProfile = !username || (currentUser && currentUser.username === username); // !username is for /profile route if exists, likely /profile/:username is mandatory
 
     const [activeTab, setActiveTab] = useState('questions');
@@ -160,24 +160,70 @@ const ProfilePage = () => {
 
     // Rest of component...
 
-    const handleAvatarUpload = (file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setProfileData(prev => ({ ...prev, avatar: reader.result }));
-        };
-        reader.readAsDataURL(file);
+    const handleAvatarUpload = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await usersAPI.uploadAvatar(formData);
+            console.log('Avatar Upload Response:', response.data);
+            if ((response.data.status === 'success' || response.data.success)) {
+                const newAvatarUrl = response.data.data.avatar_url;
+
+                if (newAvatarUrl) {
+                    setProfileData(prev => ({ ...prev, avatar: newAvatarUrl }));
+
+                    if (currentUser && (currentUser.username === profileData.username || isOwnProfile)) {
+                        updateUser({ avatar: newAvatarUrl });
+                    }
+                    showToast('Profil fotoğrafı güncellendi.', 'success');
+                } else {
+                    console.error('Avatar URL missing in response:', response.data);
+                    showToast('Sunucudan avatar adresi alınamadı.', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Avatar upload error:', error);
+            const errorMessage = error.response?.data?.errors?.file?.[0] ||
+                error.response?.data?.message ||
+                'Profil fotoğrafı yüklenirken bir hata oluştu.';
+            showToast(errorMessage, 'error');
+        }
     };
 
     const handleAvatarRemove = () => {
         setProfileData(prev => ({ ...prev, avatar: defaultAvatar }));
     };
 
-    const handleCoverUpload = (file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setProfileData(prev => ({ ...prev, coverPhoto: reader.result }));
-        };
-        reader.readAsDataURL(file);
+    const handleCoverUpload = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await usersAPI.uploadCoverImage(formData);
+            console.log('Cover Upload Response:', response.data);
+            if ((response.data.status === 'success' || response.data.success)) {
+                const newCoverUrl = response.data.data.cover_image_url || response.data.data.cover_url;
+
+                if (newCoverUrl) {
+                    setProfileData(prev => ({ ...prev, coverPhoto: newCoverUrl }));
+
+                    if (currentUser && (currentUser.username === profileData.username || isOwnProfile)) {
+                        updateUser({ cover_image: newCoverUrl });
+                    }
+                    showToast('Kapak fotoğrafı güncellendi.', 'success');
+                } else {
+                    console.error('Cover URL missing in response:', response.data);
+                    showToast('Sunucudan resim adresi alınamadı.', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Cover upload error:', error);
+            const errorMessage = error.response?.data?.errors?.file?.[0] ||
+                error.response?.data?.message ||
+                'Kapak fotoğrafı yüklenirken bir hata oluştu.';
+            showToast(errorMessage, 'error');
+        }
     };
 
     const handleCoverRemove = () => {
@@ -273,10 +319,10 @@ const ProfilePage = () => {
         try {
             await usersAPI.unblock(profileData.username);
             setShowUnblockModal(false);
-            
+
             const response = await usersAPI.getProfile(profileData.username);
             const data = response.data.data;
-            
+
             setProfileData({
                 ...data,
                 name: data.username,
@@ -301,7 +347,7 @@ const ProfilePage = () => {
                     likes: data.stats?.likes || 0
                 }
             });
-            
+
             showToast('Engel başarıyla kaldırıldı.', 'success');
         } catch (error) {
             setShowUnblockModal(false);
@@ -378,310 +424,310 @@ const ProfilePage = () => {
                     ) : (
                         /* Normal Profile */
                         <>
-                    {/* Profile Header */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden">
-                        <ProfileCover
-                            coverPhoto={profileData.coverPhoto}
-                            onCoverUpload={isOwnProfile ? handleCoverUpload : null}
-                            onCoverRemove={isOwnProfile ? handleCoverRemove : null}
-                        />
-
-                        <div className="p-6">
-                            <div className="flex flex-col md:flex-row gap-6">
-                                <ProfileAvatar
-                                    avatar={profileData.avatar}
-                                    username={profileData.username}
-                                    onAvatarUpload={isOwnProfile ? handleAvatarUpload : null}
-                                    onAvatarRemove={isOwnProfile ? handleAvatarRemove : null}
+                            {/* Profile Header */}
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden">
+                                <ProfileCover
+                                    coverPhoto={profileData.coverPhoto}
+                                    onCoverUpload={isOwnProfile ? handleCoverUpload : null}
+                                    onCoverRemove={isOwnProfile ? handleCoverRemove : null}
                                 />
 
-                                <div className="flex-1">
-                                    {isEditing ? (
-                                        <div className="space-y-3">
-                                            <input
-                                                type="text"
-                                                value={editForm.name}
-                                                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                                                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-coral focus:ring-1 focus:ring-coral/20"
-                                            />
-                                            <textarea
-                                                value={editForm.bio}
-                                                onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
-                                                rows={2}
-                                                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-coral focus:ring-1 focus:ring-coral/20"
-                                            />
-                                            <div className="flex gap-2">
-                                                <button onClick={handleSave} className="bg-coral text-white px-4 py-2 rounded-lg">Kaydet</button>
-                                                <button onClick={() => setIsEditing(false)} className="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-lg dark:text-gray-300">İptal</button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{profileData.name}</h1>
-                                            <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>
-                                            <div className="mt-3">
-                                                <ProfileBadges badges={profileData.badges} />
-                                            </div>
-                                            <p className="text-gray-700 mt-3">{profileData.bio}</p>
-                                            <div className="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                                <div className="flex items-center gap-1"><FaMapMarkerAlt />{profileData.location}</div>
-                                                <div className="flex items-center gap-1"><FaCalendarAlt />Katıldı {profileData.joinedDate}</div>
-                                            </div>
-                                            <div className="flex gap-2 mt-4">
-                                                {isOwnProfile ? (
-                                                    <button onClick={() => setIsEditing(true)} className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                                                        <FaEdit /> Düzenle
-                                                    </button>
-                                                ) : (
-                                                    <div className="flex items-center gap-2">
-                                                        {/* Message Button - Check messaging settings */}
-                                                        {profileData.allow_messaging &&
-                                                            (profileData.messaging_mode === 'everyone' ||
-                                                                (profileData.messaging_mode === 'followers' && profileData.isFollowing)) && (
-                                                                <Link to={`/messages/${profileData.username}`}>
-                                                                    <button className="border-2 border-coral text-coral px-4 py-2 rounded-xl hover:bg-coral hover:text-white transition-colors">
-                                                                        Mesaj
-                                                                    </button>
-                                                                </Link>
-                                                            )}
+                                <div className="p-6">
+                                    <div className="flex flex-col md:flex-row gap-6">
+                                        <ProfileAvatar
+                                            avatar={profileData.avatar}
+                                            username={profileData.username}
+                                            onAvatarUpload={isOwnProfile ? handleAvatarUpload : null}
+                                            onAvatarRemove={isOwnProfile ? handleAvatarRemove : null}
+                                        />
 
-                                                        {/* Follow Button - Disabled if allow_following is false AND not following yet */}
-                                                        <button
-                                                            onClick={handleFollowToggle}
-                                                            disabled={profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest}
-                                                            className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${(profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest)
-                                                                ? 'bg-gray-300 cursor-not-allowed'
-                                                                : profileData.isFollowing
-                                                                    ? 'bg-gray-500 hover:bg-gray-600'
-                                                                    : profileData.hasPendingRequest
-                                                                        ? 'bg-yellow-500 hover:bg-yellow-600'
-                                                                        : 'bg-coral hover:bg-coral-dark'
-                                                                }`}
-                                                            title={(profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest) ? 'Bu kullanıcı takip edilmeyi kapatmış' : ''}
-                                                        >
-                                                            {profileData.hasBlocked
-                                                                ? 'Engellenmiş'
-                                                                : profileData.isFollowing
-                                                                    ? 'Takip Ediliyor'
-                                                                    : profileData.hasPendingRequest
-                                                                        ? 'İstek Gönderildi'
-                                                                        : profileData.allow_following === false
-                                                                            ? 'Takip Kapalı'
-                                                                            : profileData.isPrivate
-                                                                                ? 'Takip İsteği Gönder'
-                                                                                : 'Takip Et'
-                                                            }
-                                                        </button>
-                                                        {/* More Options Menu (Block, Report) */}
-                                                        <div className="relative" ref={actionsMenuRef}>
-                                                            <button
-                                                                onClick={() => setShowActionsMenu(!showActionsMenu)}
-                                                                className={`p-2 rounded-xl transition-all ${showActionsMenu
-                                                                    ? 'bg-gray-200 text-gray-800'
-                                                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
-                                                                    }`}
-                                                            >
-                                                                <FaEllipsisH />
+                                        <div className="flex-1">
+                                            {isEditing ? (
+                                                <div className="space-y-3">
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.name}
+                                                        onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-coral focus:ring-1 focus:ring-coral/20"
+                                                    />
+                                                    <textarea
+                                                        value={editForm.bio}
+                                                        onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                                                        rows={2}
+                                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-coral focus:ring-1 focus:ring-coral/20"
+                                                    />
+                                                    <div className="flex gap-2">
+                                                        <button onClick={handleSave} className="bg-coral text-white px-4 py-2 rounded-lg">Kaydet</button>
+                                                        <button onClick={() => setIsEditing(false)} className="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-lg dark:text-gray-300">İptal</button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{profileData.name}</h1>
+                                                    <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>
+                                                    <div className="mt-3">
+                                                        <ProfileBadges badges={profileData.badges} />
+                                                    </div>
+                                                    <p className="text-gray-700 mt-3">{profileData.bio}</p>
+                                                    <div className="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                                        <div className="flex items-center gap-1"><FaMapMarkerAlt />{profileData.location}</div>
+                                                        <div className="flex items-center gap-1"><FaCalendarAlt />Katıldı {profileData.joinedDate}</div>
+                                                    </div>
+                                                    <div className="flex gap-2 mt-4">
+                                                        {isOwnProfile ? (
+                                                            <button onClick={() => setIsEditing(true)} className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                                                <FaEdit /> Düzenle
                                                             </button>
+                                                        ) : (
+                                                            <div className="flex items-center gap-2">
+                                                                {/* Message Button - Check messaging settings */}
+                                                                {profileData.allow_messaging &&
+                                                                    (profileData.messaging_mode === 'everyone' ||
+                                                                        (profileData.messaging_mode === 'followers' && profileData.isFollowing)) && (
+                                                                        <Link to={`/messages/${profileData.username}`}>
+                                                                            <button className="border-2 border-coral text-coral px-4 py-2 rounded-xl hover:bg-coral hover:text-white transition-colors">
+                                                                                Mesaj
+                                                                            </button>
+                                                                        </Link>
+                                                                    )}
 
-                                                            {showActionsMenu && (
-                                                                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
-                                                                    <div className="p-1">
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                setShowActionsMenu(false);
-                                                                                showToast('Kullanıcı şikayet edildi.', 'success');
-                                                                            }}
-                                                                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-2 transition-colors"
-                                                                        >
-                                                                            <FaFlag className="text-yellow-500" />
-                                                                            Şikayet Et
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                setShowActionsMenu(false);
-                                                                                if (profileData.hasBlocked) {
-                                                                                    handleUnblock();
-                                                                                } else {
-                                                                                    handleBlockToggle();
-                                                                                }
-                                                                            }}
-                                                                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center gap-2 transition-colors"
-                                                                        >
-                                                                            <FaBan />
-                                                                            {profileData.hasBlocked ? 'Engeli Kaldır' : 'Kullanıcıyı Engelle'}
-                                                                        </button>
-                                                                    </div>
+                                                                {/* Follow Button - Disabled if allow_following is false AND not following yet */}
+                                                                <button
+                                                                    onClick={handleFollowToggle}
+                                                                    disabled={profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest}
+                                                                    className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${(profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest)
+                                                                        ? 'bg-gray-300 cursor-not-allowed'
+                                                                        : profileData.isFollowing
+                                                                            ? 'bg-gray-500 hover:bg-gray-600'
+                                                                            : profileData.hasPendingRequest
+                                                                                ? 'bg-yellow-500 hover:bg-yellow-600'
+                                                                                : 'bg-coral hover:bg-coral-dark'
+                                                                        }`}
+                                                                    title={(profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest) ? 'Bu kullanıcı takip edilmeyi kapatmış' : ''}
+                                                                >
+                                                                    {profileData.hasBlocked
+                                                                        ? 'Engellenmiş'
+                                                                        : profileData.isFollowing
+                                                                            ? 'Takip Ediliyor'
+                                                                            : profileData.hasPendingRequest
+                                                                                ? 'İstek Gönderildi'
+                                                                                : profileData.allow_following === false
+                                                                                    ? 'Takip Kapalı'
+                                                                                    : profileData.isPrivate
+                                                                                        ? 'Takip İsteği Gönder'
+                                                                                        : 'Takip Et'
+                                                                    }
+                                                                </button>
+                                                                {/* More Options Menu (Block, Report) */}
+                                                                <div className="relative" ref={actionsMenuRef}>
+                                                                    <button
+                                                                        onClick={() => setShowActionsMenu(!showActionsMenu)}
+                                                                        className={`p-2 rounded-xl transition-all ${showActionsMenu
+                                                                            ? 'bg-gray-200 text-gray-800'
+                                                                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
+                                                                            }`}
+                                                                    >
+                                                                        <FaEllipsisH />
+                                                                    </button>
+
+                                                                    {showActionsMenu && (
+                                                                        <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
+                                                                            <div className="p-1">
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setShowActionsMenu(false);
+                                                                                        showToast('Kullanıcı şikayet edildi.', 'success');
+                                                                                    }}
+                                                                                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-2 transition-colors"
+                                                                                >
+                                                                                    <FaFlag className="text-yellow-500" />
+                                                                                    Şikayet Et
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setShowActionsMenu(false);
+                                                                                        if (profileData.hasBlocked) {
+                                                                                            handleUnblock();
+                                                                                        } else {
+                                                                                            handleBlockToggle();
+                                                                                        }
+                                                                                    }}
+                                                                                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center gap-2 transition-colors"
+                                                                                >
+                                                                                    <FaBan />
+                                                                                    {profileData.hasBlocked ? 'Engeli Kaldır' : 'Kullanıcıyı Engelle'}
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                            )}
-                                                        </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Stats Tabs - Moved below buttons */}
+                                                    <div className="grid grid-cols-5 gap-2 mt-6">
+                                                        {/* Questions Tab - Locked for private accounts when not following */}
+                                                        {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
+                                                            <button onClick={() => setActiveTab('questions')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'questions' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                                                <div className="font-bold text-lg">{profileData.stats.questions}</div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Sorular</div>
+                                                            </button>
+                                                        ) : (
+                                                            <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
+                                                                <div className="font-bold text-lg flex items-center justify-center gap-1">
+                                                                    <FaLock className="text-sm" />
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Sorular</div>
+                                                            </button>
+                                                        )}
+
+                                                        {/* Answers Tab - Locked for private accounts when not following */}
+                                                        {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
+                                                            <button onClick={() => setActiveTab('answers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'answers' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                                                <div className="font-bold text-lg">{profileData.stats.answers}</div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Cevaplar</div>
+                                                            </button>
+                                                        ) : (
+                                                            <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
+                                                                <div className="font-bold text-lg flex items-center justify-center gap-1">
+                                                                    <FaLock className="text-sm" />
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Cevaplar</div>
+                                                            </button>
+                                                        )}
+
+                                                        {/* Followers Tab - Hidden for private accounts when not following */}
+                                                        {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
+                                                            <button onClick={() => setActiveTab('followers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'followers' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                                                <div className="font-bold text-lg">{profileData.stats.followers}</div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Takipçi</div>
+                                                            </button>
+                                                        ) : (
+                                                            <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
+                                                                <div className="font-bold text-lg flex items-center justify-center gap-1">
+                                                                    <FaLock className="text-sm" />
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Takipçi</div>
+                                                            </button>
+                                                        )}
+
+                                                        {/* Following Tab - Hidden for private accounts when not following */}
+                                                        {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
+                                                            <button onClick={() => setActiveTab('following')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'following' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                                                <div className="font-bold text-lg">{profileData.stats.following}</div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Takip</div>
+                                                            </button>
+                                                        ) : (
+                                                            <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
+                                                                <div className="font-bold text-lg flex items-center justify-center gap-1">
+                                                                    <FaLock className="text-sm" />
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Takip</div>
+                                                            </button>
+                                                        )}
+
+                                                        {/* Liked Tab - Locked for private accounts when not following */}
+                                                        {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
+                                                            <button onClick={() => setActiveTab('liked')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'liked' ? 'bg-coral/10 border border-coral' : ''}`}>
+                                                                <div className="font-bold text-lg text-coral">{profileData.stats.likes}</div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Beğeni</div>
+                                                            </button>
+                                                        ) : (
+                                                            <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
+                                                                <div className="font-bold text-lg flex items-center justify-center gap-1">
+                                                                    <FaLock className="text-sm text-coral opacity-50" />
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">Beğeni</div>
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Content - Right after tabs */}
+                            <div className="flex flex-col gap-6">
+                                {profileData.isPrivate && !profileData.isFollowing && !isOwnProfile ? (
+                                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center shadow-soft border border-gray-100 dark:border-gray-700">
+                                        <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <FaUserSecret className="text-4xl text-gray-400" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Bu Hesap Gizli</h3>
+                                        <p className="text-gray-500 dark:text-gray-400">
+                                            Bu kullanıcının paylaşımlarını görmek için takip etmelisin.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    activeTab === 'questions' && (
+                                        <>
+                                            {/* Profile Statistics - Only in questions tab */}
+                                            <ProfileStats stats={profileData.stats} />
+
+                                            {/* About Section - Only in questions tab */}
+                                            {profileData.about && (
+                                                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
+                                                    <h2 className="text-lg font-bold mb-2">Hakkımda</h2>
+                                                    <p className="text-gray-700 dark:text-gray-300">{profileData.about}</p>
+                                                </div>
+                                            )}
+
+                                            {/* Content Tabs */}
+                                            <div className="space-y-4">
+                                                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                                                    {isOwnProfile ? 'Sorularım' : `${profileData.name} Soruları`}
+                                                </h3>
+                                                {userQuestions.length > 0 ? (
+                                                    userQuestions.map(q => (
+                                                        <QuestionCard key={q.id} question={q} />
+                                                    ))
+                                                ) : (
+                                                    <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl">
+                                                        <p className="text-gray-500">Henüz hiç soru sorulmamış.</p>
                                                     </div>
                                                 )}
                                             </div>
-
-                                            {/* Stats Tabs - Moved below buttons */}
-                                            <div className="grid grid-cols-5 gap-2 mt-6">
-                                                {/* Questions Tab - Locked for private accounts when not following */}
-                                                {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                    <button onClick={() => setActiveTab('questions')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'questions' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                        <div className="font-bold text-lg">{profileData.stats.questions}</div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Sorular</div>
-                                                    </button>
-                                                ) : (
-                                                    <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
-                                                        <div className="font-bold text-lg flex items-center justify-center gap-1">
-                                                            <FaLock className="text-sm" />
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Sorular</div>
-                                                    </button>
-                                                )}
-
-                                                {/* Answers Tab - Locked for private accounts when not following */}
-                                                {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                    <button onClick={() => setActiveTab('answers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'answers' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                        <div className="font-bold text-lg">{profileData.stats.answers}</div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Cevaplar</div>
-                                                    </button>
-                                                ) : (
-                                                    <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
-                                                        <div className="font-bold text-lg flex items-center justify-center gap-1">
-                                                            <FaLock className="text-sm" />
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Cevaplar</div>
-                                                    </button>
-                                                )}
-
-                                                {/* Followers Tab - Hidden for private accounts when not following */}
-                                                {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                    <button onClick={() => setActiveTab('followers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'followers' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                        <div className="font-bold text-lg">{profileData.stats.followers}</div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Takipçi</div>
-                                                    </button>
-                                                ) : (
-                                                    <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
-                                                        <div className="font-bold text-lg flex items-center justify-center gap-1">
-                                                            <FaLock className="text-sm" />
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Takipçi</div>
-                                                    </button>
-                                                )}
-
-                                                {/* Following Tab - Hidden for private accounts when not following */}
-                                                {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                    <button onClick={() => setActiveTab('following')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'following' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                        <div className="font-bold text-lg">{profileData.stats.following}</div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Takip</div>
-                                                    </button>
-                                                ) : (
-                                                    <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
-                                                        <div className="font-bold text-lg flex items-center justify-center gap-1">
-                                                            <FaLock className="text-sm" />
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Takip</div>
-                                                    </button>
-                                                )}
-
-                                                {/* Liked Tab - Locked for private accounts when not following */}
-                                                {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                    <button onClick={() => setActiveTab('liked')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'liked' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                        <div className="font-bold text-lg text-coral">{profileData.stats.likes}</div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Beğeni</div>
-                                                    </button>
-                                                ) : (
-                                                    <button disabled className="text-center rounded-lg p-2 opacity-50 cursor-not-allowed">
-                                                        <div className="font-bold text-lg flex items-center justify-center gap-1">
-                                                            <FaLock className="text-sm text-coral opacity-50" />
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Beğeni</div>
-                                                    </button>
-                                                )}
-                                            </div>
                                         </>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Content - Right after tabs */}
-                    <div className="flex flex-col gap-6">
-                        {profileData.isPrivate && !profileData.isFollowing && !isOwnProfile ? (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center shadow-soft border border-gray-100 dark:border-gray-700">
-                                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <FaUserSecret className="text-4xl text-gray-400" />
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Bu Hesap Gizli</h3>
-                                <p className="text-gray-500 dark:text-gray-400">
-                                    Bu kullanıcının paylaşımlarını görmek için takip etmelisin.
-                                </p>
-                            </div>
-                        ) : (
-                            activeTab === 'questions' && (
-                                <>
-                                    {/* Profile Statistics - Only in questions tab */}
-                                    <ProfileStats stats={profileData.stats} />
-
-                                    {/* About Section - Only in questions tab */}
-                                    {profileData.about && (
-                                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
-                                            <h2 className="text-lg font-bold mb-2">Hakkımda</h2>
-                                            <p className="text-gray-700 dark:text-gray-300">{profileData.about}</p>
-                                        </div>
-                                    )}
-
-                                    {/* Content Tabs */}
-                                    <div className="space-y-4">
-                                        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-                                            {isOwnProfile ? 'Sorularım' : `${profileData.name} Soruları`}
-                                        </h3>
-                                        {userQuestions.length > 0 ? (
-                                            userQuestions.map(q => (
-                                                <QuestionCard key={q.id} question={q} />
-                                            ))
-                                        ) : (
-                                            <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl">
-                                                <p className="text-gray-500">Henüz hiç soru sorulmamış.</p>
+                                    )
+                                )}
+                                {activeTab === 'answers' && (
+                                    profileData.isPrivate && !profileData.isFollowing && !isOwnProfile ? (
+                                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center shadow-soft border border-gray-100 dark:border-gray-700">
+                                            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <FaLock className="text-4xl text-gray-400" />
                                             </div>
-                                        )}
-                                    </div>
-                                </>
-                            )
-                        )}
-                        {activeTab === 'answers' && (
-                            profileData.isPrivate && !profileData.isFollowing && !isOwnProfile ? (
-                                <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center shadow-soft border border-gray-100 dark:border-gray-700">
-                                    <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <FaLock className="text-4xl text-gray-400" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Bu İçerik Gizli</h3>
-                                    <p className="text-gray-500 dark:text-gray-400">
-                                        Bu kullanıcının cevaplarını görmek için takip etmelisin.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-                                        {isOwnProfile ? 'Cevaplarım' : `${profileData.name} Cevapları`}
-                                    </h3>
-                                    {answers.length > 0 ? (
-                                        answers.map(answer => (
-                                            <AnswerCard key={answer.id} answer={answer} />
-                                        ))
-                                    ) : (
-                                        <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl">
-                                            <p className="text-gray-500">Henüz hiç cevap verilmemiş.</p>
+                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Bu İçerik Gizli</h3>
+                                            <p className="text-gray-500 dark:text-gray-400">
+                                                Bu kullanıcının cevaplarını görmek için takip etmelisin.
+                                            </p>
                                         </div>
-                                    )}
-                                </div>
-                            )
-                        )}
-                        {activeTab === 'followers' && <FollowersList followers={followers} type="followers" />}
-                        {activeTab === 'following' && <FollowersList followers={following} type="following" />}
-                        {activeTab === 'liked' && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Beğenilenler yakında</div>
-                        )}
-                    </div>
-                    </>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                                                {isOwnProfile ? 'Cevaplarım' : `${profileData.name} Cevapları`}
+                                            </h3>
+                                            {answers.length > 0 ? (
+                                                answers.map(answer => (
+                                                    <AnswerCard key={answer.id} answer={answer} />
+                                                ))
+                                            ) : (
+                                                <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl">
+                                                    <p className="text-gray-500">Henüz hiç cevap verilmemiş.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                )}
+                                {activeTab === 'followers' && <FollowersList followers={followers} type="followers" />}
+                                {activeTab === 'following' && <FollowersList followers={following} type="following" />}
+                                {activeTab === 'liked' && (
+                                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Beğenilenler yakında</div>
+                                )}
+                            </div>
+                        </>
                     )}
                 </div>
             </MainLayout>

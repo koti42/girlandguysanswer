@@ -5,10 +5,12 @@ import UserAvatar from './UserAvatar';
 const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
 
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
+            setSelectedFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreviewImage(reader.result);
@@ -18,21 +20,17 @@ const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => 
     };
 
     const handleSave = () => {
-        if (previewImage) {
-            // Convert dataURL to file-like object
-            fetch(previewImage)
-                .then(res => res.blob())
-                .then(blob => {
-                    const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
-                    onAvatarUpload(file);
-                });
+        if (selectedFile) {
+            onAvatarUpload(selectedFile);
         }
         setPreviewImage(null);
+        setSelectedFile(null);
         setIsModalOpen(false);
     };
 
     const handleCancel = () => {
         setPreviewImage(null);
+        setSelectedFile(null);
         setIsModalOpen(false);
     };
 

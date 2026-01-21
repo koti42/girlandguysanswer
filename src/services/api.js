@@ -64,6 +64,12 @@ export const usersAPI = {
     updatePrivacy: (isPrivate) => api.post('/user/me/settings/privacy', { is_private: isPrivate }),
     updateMessaging: (settings) => api.post('/user/me/settings/messaging', settings),
     updateFollowing: (allowFollowing) => api.post('/user/me/settings/following', { allow_following: allowFollowing }),
+    uploadAvatar: (formData) => api.post('/user/me/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    uploadCoverImage: (formData) => api.post('/user/me/cover-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
 };
 
 export const uploadAPI = {
