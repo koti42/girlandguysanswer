@@ -86,22 +86,18 @@ const AskQuestionPage = () => {
         setIsSubmitting(true);
 
         try {
-            // API expects 'content' for the question body, mapping from 'description'
             const payload = {
                 title: formData.title,
-                content: formData.description,
-                category_id: categories.find(c => c.title === formData.category)?.id, // If API needs ID. If it takes name, use formData.category
-                category: formData.category, // sending both for safety/fallback depending on backend expectation
+                category: formData.category,
+                description: formData.description || null,
                 tags: formData.tags
             };
 
-            // If the backend expects just category name or id, we might need adjustments. 
-            // Assuming it takes standard fields.
+
 
             await questionsAPI.create(payload);
 
             showToast('success', 'Sorunuz başarıyla yayınlandı!');
-            // Taslağı temizle
             localStorage.removeItem('questionDraft');
 
             setTimeout(() => {
@@ -114,7 +110,6 @@ const AskQuestionPage = () => {
         }
     };
 
-    // Sidebar Widgets
     const TipsWidget = () => (
         <div className="relative bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-3xl shadow-xl p-6 border border-purple-100 dark:border-purple-800/30 overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-indigo-400/20 dark:from-purple-600/10 dark:to-indigo-600/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
