@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaUserSecret } from 'react-icons/fa';
 
 const UserAvatar = ({ user, size = "md", className = "" }) => {
     // Determine size classes
@@ -13,6 +14,8 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
     };
 
     const currentSizeClass = sizeClasses[size] || sizeClasses.md;
+
+    const isAnonymous = user?.username === 'anonim' || user?.name === 'Anonim Kullanıcı';
 
     // Helper to get initials
     const getInitials = (name) => {
@@ -43,6 +46,26 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         }
         return colors[Math.abs(hash) % colors.length];
     };
+
+    // If user is anonymous, show special anonymous avatar
+    if (isAnonymous) {
+        let gradientClass = 'from-purple-500 to-purple-700 border-purple-300 dark:border-purple-600';
+
+        if (user?.gender === 'female') {
+            gradientClass = 'from-pink-400 to-rose-500 border-pink-200 dark:border-pink-600';
+        } else if (user?.gender === 'male') {
+            gradientClass = 'from-blue-400 to-cyan-500 border-blue-200 dark:border-blue-600';
+        }
+
+        return (
+            <div
+                className={`${currentSizeClass} rounded-full flex items-center justify-center text-white font-bold shadow-sm border bg-gradient-to-br ${gradientClass} ${className}`}
+                title="Anonim Kullanıcı"
+            >
+                <FaUserSecret className="text-white" />
+            </div>
+        );
+    }
 
     // Check if avatar exists and is not default/broken
     const hasAvatar = user?.avatar &&

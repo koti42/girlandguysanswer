@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 import QuestionActionsMenu from './QuestionActionsMenu';
 
 import { questionsAPI, commentsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import Toast from './Toast';
 
 const QuestionCard = ({ question }) => {
+    const { user: currentUser } = useAuth();
     const [showReplyBox, setShowReplyBox] = useState(false);
     const [replyText, setReplyText] = useState('');
-    const [isAnonymous, setIsAnonymous] = useState(false);
+    const [isAnonymous, setIsAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+    // Update isAnonymous when user preference changes
+    useEffect(() => {
+        if (currentUser?.last_action_is_anonymous !== undefined) {
+            setIsAnonymous(currentUser.last_action_is_anonymous);
+        }
+    }, [currentUser?.last_action_is_anonymous]);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -24,10 +33,11 @@ const QuestionCard = ({ question }) => {
 
         setLoading(true);
         try {
-  
+
 
             await questionsAPI.createAnswer(question.id, {
-                content: replyText
+                content: replyText,
+                is_anonymous: isAnonymous
             });
 
             showToast('Cevabınız başarıyla gönderildi! 🎉', 'success');

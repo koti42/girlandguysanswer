@@ -6,6 +6,7 @@ import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSec
 import MainLayout from '../layouts/MainLayout';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { questionsAPI, commentsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
 import Toast from '../components/Toast';
 
@@ -20,6 +21,7 @@ const formatDate = (dateString) => {
 
 const QuestionDetailPage = () => {
     const { slug } = useParams();
+    const { user: currentUser } = useAuth();
     const [question, setQuestion] = useState(null);
     const [answers, setAnswers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +29,7 @@ const QuestionDetailPage = () => {
 
     // Answer state
     const [answerText, setAnswerText] = useState('');
-    const [isAnswerAnonymous, setIsAnswerAnonymous] = useState(false);
+    const [isAnswerAnonymous, setIsAnswerAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
 
     // Comment state (for both question and answer comments)
     const [commentingOn, setCommentingOn] = useState(null); // { type: 'question'|'answer', id: 'uuid' }
@@ -60,7 +62,7 @@ const QuestionDetailPage = () => {
             try {
                 const response = await questionsAPI.getById(slug);
                 const questionData = response.data.data.question;
-                
+
                 setQuestion(questionData);
                 setAnswers(questionData.answers || []);
             } catch (err) {
@@ -98,10 +100,25 @@ const QuestionDetailPage = () => {
 
         try {
             const response = await questionsAPI.createAnswer(question.id, {
-                content: answerText
+                content: answerText,
+                is_anonymous: isAnswerAnonymous
             });
 
-            const newAnswer = response.data.data.answer;
+            let newAnswer = response.data.data.answer;
+
+            // If posting anonymously, immediately mask user data
+            if (isAnswerAnonymous) {
+                newAnswer = {
+                    ...newAnswer,
+                    user: {
+                        name: 'Anonim Kullanıcı',
+                        username: 'anonim',
+                        avatar: null,
+                        gender: newAnswer.user?.gender // Preserve gender for UI coloring
+                    }
+                };
+            }
+
             setAnswers(prev => [newAnswer, ...prev]);
             setAnswerText('');
             setIsAnswerAnonymous(false);
@@ -126,10 +143,24 @@ const QuestionDetailPage = () => {
                 content: commentText,
                 commentable_type: commentingOn.type,
                 commentable_id: commentingOn.id,
-                parent_id: null // Ana yorum
+                parent_id: null, // Ana yorum
+                is_anonymous: commentAnonymous[commentKey] || false
             });
 
-            const newComment = response.data.data.comment;
+            let newComment = response.data.data.comment;
+
+            // If posting anonymously, immediately mask user data
+            if (commentAnonymous[commentKey]) {
+                newComment = {
+                    ...newComment,
+                    user: {
+                        name: 'Anonim Kullanıcı',
+                        username: 'anonim',
+                        avatar: null,
+                        gender: newComment.user?.gender // Preserve gender for UI coloring
+                    }
+                };
+            }
 
             if (commentingOn.type === 'question') {
                 setQuestion(prev => ({
@@ -172,10 +203,24 @@ const QuestionDetailPage = () => {
                 content: replyText,
                 commentable_type: replyingTo.type,
                 commentable_id: replyingTo.targetId,
-                parent_id: replyingTo.mainCommentId // ✅ HER ZAMAN ANA YORUMUN ID'Sİ (FLAT REPLY)
+                parent_id: replyingTo.mainCommentId, // ✅ HER ZAMAN ANA YORUMUN ID'Sİ (FLAT REPLY)
+                is_anonymous: replyAnonymous[replyingTo.commentId] || false
             });
 
-            const newReply = response.data.data.comment;
+            let newReply = response.data.data.comment;
+
+            // If posting anonymously, immediately mask user data
+            if (replyAnonymous[replyingTo.commentId]) {
+                newReply = {
+                    ...newReply,
+                    user: {
+                        name: 'Anonim Kullanıcı',
+                        username: 'anonim',
+                        avatar: null,
+                        gender: newReply.user?.gender // Preserve gender for UI coloring
+                    }
+                };
+            }
 
             // Update nested comments (add to main comment's replies)
             if (replyingTo.type === 'question') {
@@ -265,13 +310,13 @@ const QuestionDetailPage = () => {
                             <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2">
                                 {comment.content}
                             </p>
-                            
+
                             <button
-                                onClick={() => setReplyingTo(isReplyingToThis ? null : { 
-                                    commentId: comment.id, 
+                                onClick={() => setReplyingTo(isReplyingToThis ? null : {
+                                    commentId: comment.id,
                                     mainCommentId: currentMainCommentId, // ✅ Ana yorumun ID'si
-                                    type, 
-                                    targetId 
+                                    type,
+                                    targetId
                                 })}
                                 className="text-xs text-gray-600 dark:text-gray-400 hover:text-coral dark:hover:text-coral transition-colors flex items-center gap-1"
                             >
@@ -465,7 +510,7 @@ const QuestionDetailPage = () => {
                                     <FaHeart className="text-lg" />
                                     <span className="font-semibold">{question.stats?.likes || 0}</span>
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setCommentingOn(isCommentingOnQuestion ? null : { type: 'question', id: question.id })}
                                     className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
                                 >
@@ -631,13 +676,13 @@ const QuestionDetailPage = () => {
                                     const isCommentingOnAnswer = commentingOn?.type === 'answer' && commentingOn?.id === answer.id;
 
                                     return (
-                                        <div 
-                                            key={answer.id} 
+                                        <div
+                                            key={answer.id}
                                             id={`answer-${answer.id}`}
                                             className={`p-4 md:p-6 rounded-2xl border transition-all scroll-mt-20 ${answer.user?.gender === 'female'
-                                            ? 'bg-pink-50/50 dark:bg-pink-900/10 border-pink-100 dark:border-pink-800/30'
-                                            : 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30'
-                                            }`}
+                                                ? 'bg-pink-50/50 dark:bg-pink-900/10 border-pink-100 dark:border-pink-800/30'
+                                                : 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/30'
+                                                }`}
                                         >
                                             <div className="flex justify-between items-start mb-4">
                                                 <Link to={`/profile/${answer.user?.username}`} className="flex items-center gap-3 group">
