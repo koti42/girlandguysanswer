@@ -18,18 +18,22 @@ const ProfilePage = () => {
     const { username } = useParams();
     const navigate = useNavigate();
     const { user: currentUser, updateUser } = useAuth();
-    const isOwnProfile = !username || (currentUser && currentUser.username === username); // !username is for /profile route if exists, likely /profile/:username is mandatory
+    const isOwnProfile = !username || (currentUser && currentUser.username === username);
+
+    const ensureHttps = (url) => {
+        if (!url) return url;
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        return `https://${url}`;
+    };
 
     const [activeTab, setActiveTab] = useState('questions');
     const [isEditing, setIsEditing] = useState(false);
 
-    // Actions Menu State
     const [showActionsMenu, setShowActionsMenu] = useState(false);
     const actionsMenuRef = useRef(null);
     const [showBlockModal, setShowBlockModal] = useState(false);
     const [showUnblockModal, setShowUnblockModal] = useState(false);
 
-    // Click outside handler for actions menu
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target)) {
@@ -54,7 +58,10 @@ const ProfilePage = () => {
 
     useEffect(() => {
         const fetchProfileData = async () => {
-            setLoading(true);
+            // Only set loading if we don't have profile data yet or if the username has changed
+            if (!profileData || (profileData.username !== (username || currentUser?.username))) {
+                setLoading(true);
+            }
             try {
                 // ... (existing profile fetch logic)
                 let data;
@@ -73,9 +80,10 @@ const ProfilePage = () => {
 
                 setProfileData({
                     ...data,
+                    ...data,
                     name: data.username,
-                    coverPhoto: data.coverImage || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop',
-                    avatar: data.avatar || 'https://i.pravatar.cc/200?u=default',
+                    coverPhoto: ensureHttps(data.coverImage) || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop',
+                    avatar: ensureHttps(data.avatar) || 'https://i.pravatar.cc/200?u=default',
                     location: data.location || 'Konum belirtilmedi',
                     joinedDate: new Date(data.created_at || Date.now()).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
                     badges: [],
@@ -168,7 +176,7 @@ const ProfilePage = () => {
             const response = await usersAPI.uploadAvatar(formData);
             console.log('Avatar Upload Response:', response.data);
             if ((response.data.status === 'success' || response.data.success)) {
-                const newAvatarUrl = response.data.data.avatar_url;
+                const newAvatarUrl = ensureHttps(response.data.data.avatar_url);
 
                 if (newAvatarUrl) {
                     setProfileData(prev => ({ ...prev, avatar: newAvatarUrl }));
@@ -203,7 +211,7 @@ const ProfilePage = () => {
             const response = await usersAPI.uploadCoverImage(formData);
             console.log('Cover Upload Response:', response.data);
             if ((response.data.status === 'success' || response.data.success)) {
-                const newCoverUrl = response.data.data.cover_image_url || response.data.data.cover_url;
+                const newCoverUrl = ensureHttps(response.data.data.cover_image_url || response.data.data.cover_url);
 
                 if (newCoverUrl) {
                     setProfileData(prev => ({ ...prev, coverPhoto: newCoverUrl }));
