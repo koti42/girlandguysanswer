@@ -24,19 +24,20 @@ const QuestionCard = ({ question }) => {
 
         setLoading(true);
         try {
-            await commentsAPI.create({
-                content: replyText,
-                commentable_type: 'question',
-                commentable_id: question.id
+  
+
+            await questionsAPI.createAnswer(question.id, {
+                content: replyText
             });
 
-            showToast('Yorumunuz başarıyla gönderildi! 🎉', 'success');
+            showToast('Cevabınız başarıyla gönderildi! 🎉', 'success');
             setReplyText('');
             setIsAnonymous(false);
             setShowReplyBox(false);
 
         } catch (error) {
-            const errorMsg = error.response?.data?.message || 'Yorum gönderilemedi. Lütfen tekrar deneyin.';
+            console.error('QuestionCard - Answer error:', error.response?.data);
+            const errorMsg = error.response?.data?.message || 'Cevap gönderilemedi. Lütfen tekrar deneyin.';
             showToast(errorMsg, 'error');
         } finally {
             setLoading(false);
