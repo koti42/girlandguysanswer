@@ -758,8 +758,23 @@ const ProfilePage = () => {
                                         </div>
                                     )
                                 )}
-                                {activeTab === 'followers' && <FollowersList followers={followers} type="followers" />}
-                                {activeTab === 'following' && <FollowersList followers={following} type="following" />}
+                                {tabLoading && (activeTab === 'followers' || activeTab === 'following' || activeTab === 'answers') && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {[1, 2, 3, 4].map(i => (
+                                            <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md animate-pulse">
+                                                <div className="flex items-start gap-4">
+                                                    <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                                                    <div className="flex-1">
+                                                        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2"></div>
+                                                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {!tabLoading && activeTab === 'followers' && <FollowersList followers={followers} type="followers" />}
+                                {!tabLoading && activeTab === 'following' && <FollowersList followers={following} type="following" />}
                                 {activeTab === 'liked' && (
                                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Beğenilenler yakında</div>
                                 )}

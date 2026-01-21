@@ -29,6 +29,10 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     useEffect(() => {
         conversationRef.current = conversation;
 
+        // Clear messages immediately when conversation changes
+        setMessages([]);
+        setLoading(true);
+
         if (conversation && conversation.id) {
             fetchMessages();
             markAsRead();
