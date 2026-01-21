@@ -109,43 +109,32 @@ const MessagesPage = () => {
     };
 
     const handleNewMessageEvent = (message) => {
-        // Update conversation list
-        setConversations(prev => {
-            const updated = prev.map(conv => {
-                if (conv.id === message.conversation_id) {
-                    return {
-                        ...conv,
-                        latest_message: {
-                            content: message.content,
-                            type: message.type,
-                            created_at: message.created_at,
-                            is_mine: false
-                        },
-                        unread_count: activeConversation?.id === conv.id ? 0 : (conv.unread_count || 0) + 1,
-                        last_message_at: message.created_at
-                    };
-                }
-                return conv;
-            });
-
-            // Sort by last message time
-            return updated.sort((a, b) =>
-                new Date(b.last_message_at) - new Date(a.last_message_at)
+        // Update the conversation list with new message
+        setConversations(prevConversations => {
+            const conversationIndex = prevConversations.findIndex(
+                c => c.id === message.conversation_id
             );
-        });
 
-        // Add to active chat if applicable
-        if (activeConversation && message.conversation_id === activeConversation.id) {
-            // ChatWindow will handle adding the message to the list
-        } else {
-            // Show notification for other conversations
-            if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(`Yeni mesaj: ${message.sender.username}`, {
-                    body: message.type === 'text' ? message.content : 'Bir dosya gönderdi',
-                    icon: message.sender.avatar
-                });
+            if (conversationIndex !== -1) {
+                const updatedConversations = [...prevConversations];
+                updatedConversations[conversationIndex] = {
+                    ...updatedConversations[conversationIndex],
+                    latest_message: {
+                        ...message,
+                        is_mine: message.sender_id === user.id
+                    },
+                    last_message_at: message.created_at,
+                    unread_count: activeConversation?.id === message.conversation_id
+                        ? 0
+                        : (updatedConversations[conversationIndex].unread_count || 0) + 1
+                };
+                // Move updated conversation to top
+                const [movedConv] = updatedConversations.splice(conversationIndex, 1);
+                return [movedConv, ...updatedConversations];
             }
-        }
+
+            return prevConversations;
+        });
     };
 
     const handleConversationClick = (conversation) => {
@@ -168,59 +157,53 @@ const MessagesPage = () => {
         navigate('/messages');
     };
 
-    const handleNewMessage = (message, conversationData) => {
-        // Update conversation list with new message
-        setConversations(prev => {
-            // Check if this is a new conversation
-            const existingConv = prev.find(conv => conv.id === message.conversation_id);
-
-            if (!existingConv && conversationData) {
-                // Add new conversation to the list
-                const newConversation = {
-                    id: conversationData.id,
-                    other_user: conversationData.other_user,
-                    latest_message: {
-                        content: message.content,
-                        type: message.type,
-                        created_at: message.created_at,
-                        is_mine: true
-                    },
-                    unread_count: 0,
-                    last_message_at: message.created_at
-                };
-
-                return [newConversation, ...prev].sort((a, b) =>
-                    new Date(b.last_message_at) - new Date(a.last_message_at)
-                );
-            }
-
-            // Update existing conversation
-            const updated = prev.map(conv => {
-                if (conv.id === message.conversation_id) {
-                    return {
-                        ...conv,
-                        latest_message: {
-                            content: message.content,
-                            type: message.type,
-                            created_at: message.created_at,
-                            is_mine: true
-                        },
-                        last_message_at: message.created_at
-                    };
-                }
-                return conv;
-            });
-
-            return updated.sort((a, b) =>
-                new Date(b.last_message_at) - new Date(a.last_message_at)
+    const handleNewMessage = (newMessage, conversationData) => {
+        // Update conversations list with the new message
+        setConversations(prevConversations => {
+            const conversationIndex = prevConversations.findIndex(
+                c => c.id === (conversationData?.id || activeConversation?.id)
             );
+
+            if (conversationIndex !== -1) {
+                // Update existing conversation
+                const updatedConversations = [...prevConversations];
+                updatedConversations[conversationIndex] = {
+                    ...updatedConversations[conversationIndex],
+                    latest_message: {
+                        ...newMessage,
+                        is_mine: newMessage.sender_id === user.id
+                    },
+                    last_message_at: newMessage.created_at
+                };
+                // Move to top
+                const [movedConv] = updatedConversations.splice(conversationIndex, 1);
+                return [movedConv, ...updatedConversations];
+            } else if (conversationData) {
+                // Add new conversation to the list
+                return [{
+                    id: conversationData.id,
+                    other_user: conversationData.other_user || activeConversation.other_user,
+                    latest_message: {
+                        ...newMessage,
+                        is_mine: newMessage.sender_id === user.id
+                    },
+                    last_message_at: newMessage.created_at,
+                    unread_count: 0
+                }, ...prevConversations];
+            }
+            return prevConversations;
         });
 
-        // Update active conversation with real ID if it was temporary
-        if (conversationData && activeConversation?.id === null) {
+        // Update active conversation if it exists
+        if (conversationData && !activeConversation?.id) {
             setActiveConversation({
                 ...activeConversation,
-                id: conversationData.id
+                id: conversationData.id,
+                latest_message: {
+                    ...newMessage,
+                    is_mine: newMessage.sender_id === user.id
+                },
+                last_message_at: newMessage.created_at
             });
         }
     };
@@ -243,10 +226,10 @@ const MessagesPage = () => {
     };
 
     return (
-        <MainLayout>
-            <div className="flex h-[calc(100vh-80px)] bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden">
+        <MainLayout sidebar={null}>
+            <div className="flex h-[calc(100vh-80px)] md:h-[calc(100vh-100px)] bg-white dark:bg-gray-900 rounded-2xl shadow-lg overflow-hidden">
                 {/* Conversations List */}
-                <div className={`w-full md:w-96 border-r border-gray-200 dark:border-gray-700 flex flex-col ${showMobileChat ? 'hidden md:flex' : 'flex'}`}>
+                <div className={`w-full md:w-96 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 flex flex-col ${showMobileChat ? 'hidden md:flex' : 'flex'}`}>
                     {/* Header */}
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">

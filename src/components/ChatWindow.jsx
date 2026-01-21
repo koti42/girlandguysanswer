@@ -88,6 +88,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             setLoading(true);
             const response = await messagesAPI.getMessages(conversation.id);
             setMessages(response.data.data.messages || []);
+            // Force scroll to bottom after fetching messages
+            setTimeout(() => scrollToBottom(true), 100);
         } catch (error) {
             console.error('Error fetching messages:', error);
         } finally {
@@ -219,7 +221,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     return (
         <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
             {/* Header */}
-            <div className="border-b border-gray-200 dark:border-gray-700 p-5 sm:p-6 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 shadow-sm">
+            <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 p-5 sm:p-6 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 shadow-sm">
                 <div className="flex items-center gap-4">
                     {/* Back Button (Mobile) */}
                     <button
@@ -285,10 +287,12 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             </div>
 
             {/* Message Input */}
-            <MessageInput
-                onSendMessage={handleSendMessage}
-                disabled={sending}
-            />
+            <div className="flex-shrink-0">
+                <MessageInput
+                    onSendMessage={handleSendMessage}
+                    disabled={sending}
+                />
+            </div>
         </div>
     );
 };

@@ -157,34 +157,34 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
     };
 
     return (
-        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-5">
+        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 sm:p-4">
             {/* Recording State */}
             {isRecording && (
-                <div className="mb-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-2xl border-2 border-red-200 dark:border-red-700 flex items-center justify-between shadow-lg animate-pulse">
-                    <div className="flex items-center gap-3">
+                <div className="mb-2 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl sm:rounded-2xl border-2 border-red-200 dark:border-red-700 flex items-center justify-between shadow-lg animate-pulse">
+                    <div className="flex items-center gap-2 sm:gap-3">
                         <div className="relative">
-                            <FaMicrophone className="text-red-500 text-2xl animate-pulse" />
-                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></span>
+                            <FaMicrophone className="text-red-500 text-lg sm:text-2xl animate-pulse" />
+                            <span className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full animate-ping"></span>
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-red-600 dark:text-red-400">Ses kaydediliyor...</p>
-                            <p className="text-xl font-mono font-bold text-red-700 dark:text-red-300">{formatTime(recordingTime)}</p>
+                            <p className="text-xs sm:text-sm font-bold text-red-600 dark:text-red-400">Ses kaydediliyor...</p>
+                            <p className="text-lg sm:text-xl font-mono font-bold text-red-700 dark:text-red-300">{formatTime(recordingTime)}</p>
                         </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2">
                         <button
                             onClick={stopRecording}
-                            className="p-3 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-xl hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                            className="p-2 sm:p-3 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-lg sm:rounded-xl hover:shadow-xl transition-all hover:scale-105 active:scale-95"
                             title="Gönder"
                         >
-                            <FaStop className="text-lg" />
+                            <FaStop className="text-sm sm:text-lg" />
                         </button>
                         <button
                             onClick={cancelRecording}
-                            className="p-3 bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-xl hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                            className="p-2 sm:p-3 bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-lg sm:rounded-xl hover:shadow-xl transition-all hover:scale-105 active:scale-95"
                             title="İptal"
                         >
-                            <FaTimes className="text-lg" />
+                            <FaTimes className="text-sm sm:text-lg" />
                         </button>
                     </div>
                 </div>
@@ -192,23 +192,23 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
 
             {/* File Preview */}
             {selectedFile && (
-                <div className="mb-4 p-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-700/50 dark:to-gray-700/30 rounded-2xl border border-gray-200 dark:border-gray-600 flex items-center justify-between shadow-sm">
-                    <div className="flex items-center gap-3">
+                <div className="mb-2 sm:mb-4 p-2 sm:p-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-700/50 dark:to-gray-700/30 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-600 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2 sm:gap-3">
                         {fileType === 'image' && (
-                            <img src={previewUrl} alt="Preview" className="w-20 h-20 rounded-xl object-cover shadow-md" />
+                            <img src={previewUrl} alt="Preview" className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl object-cover shadow-md" />
                         )}
                     </div>
                     <button
                         onClick={clearFile}
-                        className="p-2.5 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
+                        className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg sm:rounded-xl transition-all"
                     >
-                        <FaTimes className="text-lg" />
+                        <FaTimes className="text-base sm:text-lg" />
                     </button>
                 </div>
             )}
 
             {/* Input Area */}
-            <div className="flex items-end gap-2 sm:gap-3">
+            <div className="flex items-end gap-1.5 sm:gap-2">
                 {/* File Upload Buttons */}
                 <input
                     ref={imageInputRef}
@@ -221,22 +221,22 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
                 <button
                     onClick={() => imageInputRef.current?.click()}
                     disabled={disabled || selectedFile || isRecording}
-                    className="p-3.5 text-gray-500 hover:text-coral hover:bg-gradient-to-br hover:from-coral/10 hover:to-coral/5 dark:hover:bg-gray-700 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                    className="p-2 sm:p-3 text-gray-500 hover:text-coral hover:bg-gradient-to-br hover:from-coral/10 hover:to-coral/5 dark:hover:bg-gray-700 rounded-xl sm:rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shrink-0"
                     title="Resim gönder"
                 >
-                    <FaImage className="text-xl" />
+                    <FaImage className="text-base sm:text-xl" />
                 </button>
 
                 <button
                     onClick={isRecording ? stopRecording : startRecording}
                     disabled={disabled || selectedFile}
-                    className={`p-3.5 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 ${isRecording
-                            ? 'text-red-500 bg-red-100 dark:bg-red-900/30 animate-pulse'
-                            : 'text-gray-500 hover:text-coral hover:bg-gradient-to-br hover:from-coral/10 hover:to-coral/5 dark:hover:bg-gray-700'
+                    className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shrink-0 ${isRecording
+                        ? 'text-red-500 bg-red-100 dark:bg-red-900/30 animate-pulse'
+                        : 'text-gray-500 hover:text-coral hover:bg-gradient-to-br hover:from-coral/10 hover:to-coral/5 dark:hover:bg-gray-700'
                         }`}
                     title={isRecording ? "Kaydı durdur ve gönder" : "Ses kaydı"}
                 >
-                    <FaMicrophone className="text-xl" />
+                    <FaMicrophone className="text-base sm:text-xl" />
                 </button>
 
                 {/* Text Input */}
@@ -247,22 +247,22 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
                     placeholder="Mesaj yaz..."
                     disabled={disabled || isRecording}
                     rows={1}
-                    className="flex-1 px-5 py-3.5 border border-gray-300 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed text-[15px] transition-all"
-                    style={{ maxHeight: '120px', minHeight: '52px' }}
+                    className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-[15px] transition-all min-w-0"
+                    style={{ maxHeight: '100px', minHeight: '40px' }}
                 />
 
                 {/* Send Button */}
                 <button
                     onClick={handleSend}
                     disabled={disabled || (!message.trim() && !selectedFile) || isRecording}
-                    className="p-3.5 bg-gradient-to-br from-coral via-coral to-coral-dark text-white rounded-2xl hover:shadow-2xl hover:shadow-coral/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:scale-105 active:scale-95 min-w-[52px] min-h-[52px] flex items-center justify-center"
+                    className="p-2.5 sm:p-3.5 bg-gradient-to-br from-coral via-coral to-coral-dark text-white rounded-xl sm:rounded-2xl hover:shadow-2xl hover:shadow-coral/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:scale-105 active:scale-95 min-w-[40px] min-h-[40px] sm:min-w-[52px] sm:min-h-[52px] flex items-center justify-center shrink-0"
                 >
-                    <FaPaperPlane className="text-xl" />
+                    <FaPaperPlane className="text-base sm:text-xl" />
                 </button>
             </div>
 
             {!isRecording && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 px-1">
+                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 px-1 hidden sm:block">
                     <span className="font-medium">Enter</span> ile gönder, <span className="font-medium">Shift+Enter</span> ile yeni satır
                 </p>
             )}
