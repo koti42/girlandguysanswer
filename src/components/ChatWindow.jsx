@@ -15,9 +15,20 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [sending, setSending] = useState(false);
     const { user } = useAuth();
     const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
+    const conversationRef = useRef(conversation);
     const navigate = useNavigate();
 
+    // Helper to ensure HTTPS
+    const ensureHttps = (url) => {
+        if (!url) return url;
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        return `https://${url}`;
+    };
+
     useEffect(() => {
+        conversationRef.current = conversation;
+
         if (conversation && conversation.id) {
             fetchMessages();
             markAsRead();
@@ -55,8 +66,17 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         };
     }, [conversation?.id, user]);
 
+    // Auto-scroll only when viewing bottom already or when user sends message
     useEffect(() => {
-        scrollToBottom();
+        const container = messagesContainerRef.current;
+        if (!container) return;
+
+        // Check if user is near bottom (within 100px)
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+        if (isNearBottom) {
+            scrollToBottom();
+        }
     }, [messages]);
 
     const fetchMessages = async () => {
@@ -79,8 +99,18 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         }
     };
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = (force = false) => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
+
+        if (force) {
+            container.scrollTop = container.scrollHeight;
+        } else {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
     };
 
     const handleSendMessage = async ({ content, file, type }) => {
@@ -92,13 +122,13 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
             if (type === 'text') {
                 response = await messagesAPI.sendMessage({
-                    receiver_id: conversation.other_user.id,
+                    receiver_id: conversationRef.current.other_user.id,
                     content,
                     type: 'text'
                 });
             } else {
                 const formData = new FormData();
-                formData.append('receiver_id', conversation.other_user.id);
+                formData.append('receiver_id', conversationRef.current.other_user.id);
                 formData.append('type', type);
                 formData.append('file', file);
                 if (content) formData.append('content', content);
@@ -115,8 +145,13 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 onNewMessage(newMessage, conversationData);
             }
 
-            if (!conversation.id && conversationData) {
+            if (!conversationRef.current.id && conversationData) {
+                // Update conversation ref with new ID
+                conversationRef.current = { ...conversationRef.current, id: conversationData.id };
             }
+
+            // Force scroll to bottom after sending
+            setTimeout(() => scrollToBottom(true), 100);
         } catch (error) {
             console.error('Error sending message:', error);
             alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
@@ -193,7 +228,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     {/* User Avatar */}
                     <div className="relative">
                         <img
-                            src={conversation.other_user.avatar || 'https://i.pravatar.cc/200?u=default'}
+                            src={ensureHttps(conversation.other_user.avatar) || 'https://i.pravatar.cc/200?u=default'}
                             alt={conversation.other_user.username}
                             className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover ring-4 ring-white dark:ring-gray-800 shadow-lg"
                         />
@@ -216,7 +251,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 scroll-smooth">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 scroll-smooth">
                 {loading ? (
                     <div className="flex justify-center items-center h-full">
                         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-coral"></div>

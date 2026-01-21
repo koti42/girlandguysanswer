@@ -20,6 +20,13 @@ const MessagesPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showMobileChat, setShowMobileChat] = useState(false);
 
+    // Helper to ensure HTTPS
+    const ensureHttps = (url) => {
+        if (!url) return url;
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        return `https://${url}`;
+    };
+
     useEffect(() => {
         fetchConversations();
         setupPusher();
@@ -293,7 +300,7 @@ const MessagesPage = () => {
                                         {/* Avatar */}
                                         <div className="relative flex-shrink-0">
                                             <img
-                                                src={conversation.other_user.avatar || 'https://i.pravatar.cc/200?u=default'}
+                                                src={ensureHttps(conversation.other_user.avatar) || 'https://i.pravatar.cc/200?u=default'}
                                                 alt={conversation.other_user.username}
                                                 className="w-14 h-14 rounded-full object-cover"
                                             />
