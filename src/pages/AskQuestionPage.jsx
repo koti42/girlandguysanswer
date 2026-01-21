@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
 import { categories } from '../data/mockData';
 import { questionsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const AskQuestionPage = () => {
     const navigate = useNavigate();
+    const { user: currentUser } = useAuth();
     const [formData, setFormData] = useState({
         title: '',
         category: '',
@@ -19,6 +21,7 @@ const AskQuestionPage = () => {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
+    const [isAnonymous, setIsAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -90,7 +93,8 @@ const AskQuestionPage = () => {
                 title: formData.title,
                 category: formData.category,
                 description: formData.description || null,
-                tags: formData.tags
+                tags: formData.tags,
+                is_anonymous: isAnonymous
             };
 
 
@@ -286,6 +290,25 @@ const AskQuestionPage = () => {
                                 placeholder="Sorunuzla ilgili daha fazla detay paylaşabilirsiniz..."
                             />
                             <span className="text-gray-400 dark:text-gray-500 text-sm block mt-2">Metin editörü ile zengin içerik oluşturabilirsiniz</span>
+                        </div>
+
+                        {/* Anonymous Toggle */}
+                        <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-700/30">
+                            <button
+                                type="button"
+                                onClick={() => setIsAnonymous(!isAnonymous)}
+                                disabled={isSubmitting}
+                                className={`flex items-center gap-3 px-5 py-3 rounded-xl font-semibold transition-all ${isAnonymous
+                                    ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-lg'
+                                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400'
+                                    }`}
+                            >
+                                <FaUserSecret className="text-xl" />
+                                <span>{isAnonymous ? 'Anonim soru' : 'Anonim olarak sor'}</span>
+                            </button>
+                            <p className="text-sm text-purple-700 dark:text-purple-300">
+                                {isAnonymous ? '🎭 Kimliğiniz gizli kalacak' : '👤 Herkese açık olarak sorulacak'}
+                            </p>
                         </div>
 
                         {/* Actions */}

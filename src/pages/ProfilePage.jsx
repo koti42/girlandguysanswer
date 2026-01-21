@@ -74,11 +74,33 @@ const ProfilePage = () => {
                     const response = await usersAPI.getProfile(username || currentUser.username);
                     data = response.data.data;
                     const qResponse = await questionsAPI.getMyQuestions();
-                    questionsData = qResponse.data.data.questions;
+
+                    // Inject user object into questions
+                    questionsData = qResponse.data.data.questions.map(q => ({
+                        ...q,
+                        user: q.user || {
+                            id: data.id,
+                            username: data.username,
+                            name: data.name || data.username,
+                            avatar: data.avatar,
+                            gender: data.gender
+                        }
+                    }));
                 } else {
                     const response = await usersAPI.getProfile(username);
                     data = response.data.data;
-                    questionsData = data.questions || [];
+
+                    // Inject user object into questions
+                    questionsData = (data.questions || []).map(q => ({
+                        ...q,
+                        user: q.user || {
+                            id: data.id,
+                            username: data.username,
+                            name: data.name || data.username,
+                            avatar: data.avatar,
+                            gender: data.gender
+                        }
+                    }));
                 }
 
                 setIsVIP(data.username === 'theerriss');
@@ -377,7 +399,7 @@ const ProfilePage = () => {
                 />
             )}
 
-            <MainLayout sidebar={<><TrendsWidget /><TopUsersWidget /></>}>
+            <MainLayout sidebar={null}>
                 <div className="flex flex-col gap-6">
                     {/* Blocked by User (isBlocked: true) - Bu kullanıcı beni engelledi */}
                     {!isOwnProfile && profileData.isBlocked ? (

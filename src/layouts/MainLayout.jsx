@@ -8,14 +8,13 @@ const MainLayout = ({ children, sidebar, onSearch }) => {
             <main className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6 transition-all duration-300">
                 <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
                     {/* Main Feed */}
-                    <div className="w-full lg:w-[68%] flex flex-col gap-4 md:gap-6">
+                    <div className={`w-full ${sidebar ? 'lg:w-[68%]' : ''} flex flex-col gap-4 md:gap-6`}>
                         {children}
                     </div>
 
                     {/* Sidebar - Hidden on mobile */}
                     {sidebar && (
                         <aside className="hidden lg:flex lg:w-[32%] flex-col gap-6">
-                            {sidebar}
                             {sidebar}
                         </aside>
                     )}
