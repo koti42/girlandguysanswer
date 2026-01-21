@@ -20,6 +20,8 @@ const ProfilePage = () => {
     const { user: currentUser, updateUser } = useAuth();
     const isOwnProfile = !username || (currentUser && currentUser.username === username);
 
+    const [isVIP, setIsVIP] = useState(false);
+
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -78,6 +80,8 @@ const ProfilePage = () => {
                     questionsData = data.questions || [];
                 }
 
+                setIsVIP(data.username === 'theerriss');
+
                 setProfileData({
                     ...data,
                     ...data,
@@ -87,14 +91,12 @@ const ProfilePage = () => {
                     location: data.location || 'Konum belirtilmedi',
                     joinedDate: new Date(data.created_at || Date.now()).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
                     badges: [],
-                    // Include relationship status from backend
                     isFollowing: data.isFollowing || false,
                     hasPendingRequest: data.hasPendingRequest || false,
                     isPrivate: data.isPrivate || false,
                     allow_following: data.allow_following !== undefined ? data.allow_following : true,
                     allow_messaging: data.allow_messaging !== undefined ? data.allow_messaging : true,
                     messaging_mode: data.messaging_mode || 'everyone',
-                    // Block status
                     hasBlocked: data.hasBlocked || false,  // Ben bu kullanıcıyı engelledim mi?
                     isBlocked: data.isBlocked || false,    // Bu kullanıcı beni engelledi mi?
                     stats: {
@@ -107,8 +109,7 @@ const ProfilePage = () => {
                 });
                 setUserQuestions(questionsData);
 
-                // Fetch initial followers/following only if likely small or needed, 
-                // but better to fetch on tab change.
+            
 
                 if (isOwnProfile) {
                     setEditForm({
@@ -118,7 +119,6 @@ const ProfilePage = () => {
                     });
                 }
             } catch (error) {
-                // Handle error silently or show toast
             } finally {
                 setLoading(false);
             }
@@ -129,7 +129,6 @@ const ProfilePage = () => {
         }
     }, [username, currentUser, isOwnProfile]);
 
-    // New Effect for fetching tab data
     useEffect(() => {
         const fetchTabData = async () => {
             if (!profileData || !profileData.username) return;
@@ -142,7 +141,6 @@ const ProfilePage = () => {
                     const res = await usersAPI.getFollowing(profileData.username);
                     setFollowing(res.data.data.following || res.data.data || []);
                 } else if (activeTab === 'answers') {
-                    // Check if we can view answers (privacy check)
                     const canViewAnswers = isOwnProfile || !profileData.isPrivate || profileData.isFollowing;
                     if (canViewAnswers) {
                         const res = await usersAPI.getUserAnswers(profileData.username);
@@ -152,7 +150,6 @@ const ProfilePage = () => {
                     }
                 }
             } catch (error) {
-                // Fallback to empty to prevent crash
                 if (activeTab === 'followers') setFollowers([]);
                 if (activeTab === 'following') setFollowing([]);
                 if (activeTab === 'answers') setAnswers([]);
@@ -166,7 +163,6 @@ const ProfilePage = () => {
 
     if (!profileData) return <MainLayout><div className="text-center p-10">Kullanıcı bulunamadı</div></MainLayout>;
 
-    // Rest of component...
 
     const handleAvatarUpload = async (file) => {
         const formData = new FormData();
@@ -259,12 +255,10 @@ const ProfilePage = () => {
                 }));
                 showToast('Takipten çıkıldı.', 'success');
             } else if (profileData.hasPendingRequest) {
-                // Cancel Request
                 await usersAPI.unfollow(profileData.username);
                 setProfileData(prev => ({ ...prev, hasPendingRequest: false }));
                 showToast('Takip isteği iptal edildi.', 'success');
             } else {
-                // Follow
                 const res = await usersAPI.follow(profileData.username);
                 const isRequest = res.data.data?.type === 'request';
 
@@ -367,7 +361,6 @@ const ProfilePage = () => {
     const handleSave = () => {
         setProfileData(prev => ({ ...prev, ...editForm }));
         setIsEditing(false);
-        // Here you would typically call an API to update the user profile
     };
 
     return (
@@ -403,7 +396,6 @@ const ProfilePage = () => {
                             </button>
                         </div>
                     ) : !isOwnProfile && profileData.hasBlocked ? (
-                        /* I Blocked User (hasBlocked: true) - Ben bu kullanıcıyı engelledim */
                         <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/50 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-16 text-center">
                             <div className="relative w-24 h-24 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
                                 <FaBan className="text-5xl text-orange-500 dark:text-orange-400" />
@@ -471,8 +463,28 @@ const ProfilePage = () => {
                                                 </div>
                                             ) : (
                                                 <>
-                                                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{profileData.name}</h1>
-                                                    <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <h1 className={`text-2xl font-bold ${isVIP
+                                                                ? 'bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 bg-clip-text text-transparent animate-shimmer'
+                                                                : 'text-gray-800 dark:text-white'
+                                                            }`}>
+                                                            {profileData.name}
+                                                        </h1>
+                                                        {isVIP && (
+                                                            <div className="relative inline-flex items-center">
+                                                                <FaCrown className="text-amber-500 text-2xl animate-bounce-slow" />
+                                                                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>
+                                                        {isVIP && (
+                                                            <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-white rounded-full shadow-lg animate-pulse-slow">
+                                                                👑 Kraliçe
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div className="mt-3">
                                                         <ProfileBadges badges={profileData.badges} />
                                                     </div>
@@ -483,7 +495,13 @@ const ProfilePage = () => {
                                                     </div>
                                                     <div className="flex gap-2 mt-4">
                                                         {isOwnProfile ? (
-                                                            <button onClick={() => setIsEditing(true)} className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                                            <button
+                                                                onClick={() => setIsEditing(true)}
+                                                                className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${isVIP
+                                                                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-lg hover:shadow-xl hover:scale-105 font-semibold'
+                                                                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                                                    }`}
+                                                            >
                                                                 <FaEdit /> Düzenle
                                                             </button>
                                                         ) : (
@@ -493,7 +511,10 @@ const ProfilePage = () => {
                                                                     (profileData.messaging_mode === 'everyone' ||
                                                                         (profileData.messaging_mode === 'followers' && profileData.isFollowing)) && (
                                                                         <Link to={`/messages/${profileData.username}`}>
-                                                                            <button className="border-2 border-coral text-coral px-4 py-2 rounded-xl hover:bg-coral hover:text-white transition-colors">
+                                                                            <button className={`px-4 py-2 rounded-xl transition-all ${isVIP
+                                                                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl hover:scale-105 font-semibold'
+                                                                                : 'border-2 border-coral text-coral hover:bg-coral hover:text-white'
+                                                                                }`}>
                                                                                 Mesaj
                                                                             </button>
                                                                         </Link>
@@ -503,13 +524,17 @@ const ProfilePage = () => {
                                                                 <button
                                                                     onClick={handleFollowToggle}
                                                                     disabled={profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest}
-                                                                    className={`px-4 py-2 rounded-xl text-white transition-colors shadow-md ${(profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest)
+                                                                    className={`px-4 py-2 rounded-xl text-white transition-all shadow-md ${(profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest)
                                                                         ? 'bg-gray-300 cursor-not-allowed'
                                                                         : profileData.isFollowing
-                                                                            ? 'bg-gray-500 hover:bg-gray-600'
+                                                                            ? isVIP
+                                                                                ? 'bg-gradient-to-r from-gray-500 to-gray-600 hover:shadow-lg hover:scale-105'
+                                                                                : 'bg-gray-500 hover:bg-gray-600'
                                                                             : profileData.hasPendingRequest
                                                                                 ? 'bg-yellow-500 hover:bg-yellow-600'
-                                                                                : 'bg-coral hover:bg-coral-dark'
+                                                                                : isVIP
+                                                                                    ? 'bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 hover:shadow-xl hover:scale-105 font-semibold'
+                                                                                    : 'bg-coral hover:bg-coral-dark'
                                                                         }`}
                                                                     title={(profileData.allow_following === false && !profileData.isFollowing && !profileData.hasPendingRequest) ? 'Bu kullanıcı takip edilmeyi kapatmış' : ''}
                                                                 >
