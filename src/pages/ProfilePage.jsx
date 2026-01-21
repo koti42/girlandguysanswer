@@ -46,6 +46,7 @@ const ProfilePage = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
     const [loading, setLoading] = useState(true);
+    const [tabLoading, setTabLoading] = useState(false);
     const [profileData, setProfileData] = useState(null);
     const [userQuestions, setUserQuestions] = useState([]);
     const [followers, setFollowers] = useState([]);
@@ -109,7 +110,7 @@ const ProfilePage = () => {
                 });
                 setUserQuestions(questionsData);
 
-            
+
 
                 if (isOwnProfile) {
                     setEditForm({
@@ -133,6 +134,7 @@ const ProfilePage = () => {
         const fetchTabData = async () => {
             if (!profileData || !profileData.username) return;
 
+            setTabLoading(true);
             try {
                 if (activeTab === 'followers') {
                     const res = await usersAPI.getFollowers(profileData.username);
@@ -153,6 +155,8 @@ const ProfilePage = () => {
                 if (activeTab === 'followers') setFollowers([]);
                 if (activeTab === 'following') setFollowing([]);
                 if (activeTab === 'answers') setAnswers([]);
+            } finally {
+                setTabLoading(false);
             }
         };
 
@@ -465,8 +469,8 @@ const ProfilePage = () => {
                                                 <>
                                                     <div className="flex items-center gap-2">
                                                         <h1 className={`text-2xl font-bold ${isVIP
-                                                                ? 'bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 bg-clip-text text-transparent animate-shimmer'
-                                                                : 'text-gray-800 dark:text-white'
+                                                            ? 'bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 bg-clip-text text-transparent animate-shimmer'
+                                                            : 'text-gray-800 dark:text-white'
                                                             }`}>
                                                             {profileData.name}
                                                         </h1>
@@ -602,8 +606,8 @@ const ProfilePage = () => {
                                                     <div className="grid grid-cols-5 gap-2 mt-6">
                                                         {/* Questions Tab - Locked for private accounts when not following */}
                                                         {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                            <button onClick={() => setActiveTab('questions')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'questions' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                                <div className="font-bold text-lg">{profileData.stats.questions}</div>
+                                                            <button onClick={() => setActiveTab('questions')} className={`text-center rounded-lg p-2 transition-all ${activeTab === 'questions' ? (isVIP ? 'bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/40 dark:to-yellow-900/40 border-2 border-amber-400 shadow-lg' : 'bg-coral/10 border border-coral') : (isVIP ? 'hover:bg-amber-50 dark:hover:bg-amber-900/20' : 'hover:bg-gray-50 dark:bg-gray-700')}`}>
+                                                                <div className={`font-bold text-lg ${isVIP && activeTab === 'questions' ? 'text-amber-600 dark:text-amber-400' : ''}`}>{profileData.stats.questions}</div>
                                                                 <div className="text-xs text-gray-500 dark:text-gray-400">Sorular</div>
                                                             </button>
                                                         ) : (
@@ -617,8 +621,8 @@ const ProfilePage = () => {
 
                                                         {/* Answers Tab - Locked for private accounts when not following */}
                                                         {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                            <button onClick={() => setActiveTab('answers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'answers' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                                <div className="font-bold text-lg">{profileData.stats.answers}</div>
+                                                            <button onClick={() => setActiveTab('answers')} className={`text-center rounded-lg p-2 transition-all ${activeTab === 'answers' ? (isVIP ? 'bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/40 dark:to-pink-900/40 border-2 border-purple-400 shadow-lg' : 'bg-coral/10 border border-coral') : (isVIP ? 'hover:bg-purple-50 dark:hover:bg-purple-900/20' : 'hover:bg-gray-50 dark:bg-gray-700')}`}>
+                                                                <div className={`font-bold text-lg ${isVIP && activeTab === 'answers' ? 'text-purple-600 dark:text-purple-400' : ''}`}>{profileData.stats.answers}</div>
                                                                 <div className="text-xs text-gray-500 dark:text-gray-400">Cevaplar</div>
                                                             </button>
                                                         ) : (
@@ -632,8 +636,8 @@ const ProfilePage = () => {
 
                                                         {/* Followers Tab - Hidden for private accounts when not following */}
                                                         {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                            <button onClick={() => setActiveTab('followers')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'followers' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                                <div className="font-bold text-lg">{profileData.stats.followers}</div>
+                                                            <button onClick={() => setActiveTab('followers')} className={`text-center rounded-lg p-2 transition-all ${activeTab === 'followers' ? (isVIP ? 'bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/40 dark:to-rose-900/40 border-2 border-pink-400 shadow-lg' : 'bg-coral/10 border border-coral') : (isVIP ? 'hover:bg-pink-50 dark:hover:bg-pink-900/20' : 'hover:bg-gray-50 dark:bg-gray-700')}`}>
+                                                                <div className={`font-bold text-lg ${isVIP && activeTab === 'followers' ? 'text-pink-600 dark:text-pink-400' : ''}`}>{profileData.stats.followers}</div>
                                                                 <div className="text-xs text-gray-500 dark:text-gray-400">Takipçi</div>
                                                             </button>
                                                         ) : (
@@ -647,8 +651,8 @@ const ProfilePage = () => {
 
                                                         {/* Following Tab - Hidden for private accounts when not following */}
                                                         {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                            <button onClick={() => setActiveTab('following')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'following' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                                <div className="font-bold text-lg">{profileData.stats.following}</div>
+                                                            <button onClick={() => setActiveTab('following')} className={`text-center rounded-lg p-2 transition-all ${activeTab === 'following' ? (isVIP ? 'bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/40 dark:to-cyan-900/40 border-2 border-blue-400 shadow-lg' : 'bg-coral/10 border border-coral') : (isVIP ? 'hover:bg-blue-50 dark:hover:bg-blue-900/20' : 'hover:bg-gray-50 dark:bg-gray-700')}`}>
+                                                                <div className={`font-bold text-lg ${isVIP && activeTab === 'following' ? 'text-blue-600 dark:text-blue-400' : ''}`}>{profileData.stats.following}</div>
                                                                 <div className="text-xs text-gray-500 dark:text-gray-400">Takip</div>
                                                             </button>
                                                         ) : (
@@ -662,8 +666,8 @@ const ProfilePage = () => {
 
                                                         {/* Liked Tab - Locked for private accounts when not following */}
                                                         {isOwnProfile || !profileData.isPrivate || profileData.isFollowing ? (
-                                                            <button onClick={() => setActiveTab('liked')} className={`text-center hover:bg-gray-50 dark:bg-gray-700 rounded-lg p-2 transition-colors ${activeTab === 'liked' ? 'bg-coral/10 border border-coral' : ''}`}>
-                                                                <div className="font-bold text-lg text-coral">{profileData.stats.likes}</div>
+                                                            <button onClick={() => setActiveTab('liked')} className={`text-center rounded-lg p-2 transition-all ${activeTab === 'liked' ? (isVIP ? 'bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/40 dark:to-orange-900/40 border-2 border-red-400 shadow-lg' : 'bg-coral/10 border border-coral') : (isVIP ? 'hover:bg-red-50 dark:hover:bg-red-900/20' : 'hover:bg-gray-50 dark:bg-gray-700')}`}>
+                                                                <div className={`font-bold text-lg ${isVIP && activeTab === 'liked' ? 'text-red-600 dark:text-red-400' : 'text-coral'}`}>{profileData.stats.likes}</div>
                                                                 <div className="text-xs text-gray-500 dark:text-gray-400">Beğeni</div>
                                                             </button>
                                                         ) : (
@@ -698,7 +702,7 @@ const ProfilePage = () => {
                                     activeTab === 'questions' && (
                                         <>
                                             {/* Profile Statistics - Only in questions tab */}
-                                            <ProfileStats stats={profileData.stats} />
+                                            <ProfileStats stats={profileData.stats} isVIP={isVIP} />
 
                                             {/* About Section - Only in questions tab */}
                                             {profileData.about && (
