@@ -1,25 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaArrowLeft, FaCircle } from 'react-icons/fa';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import { messagesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
-import { format, isToday, isYesterday } from 'date-fns';
-import { tr } from 'date-fns/locale';
 
 const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [sending, setSending] = useState(false);
     const { user } = useAuth();
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
     const conversationRef = useRef(conversation);
     const navigate = useNavigate();
 
-    // Helper to ensure HTTPS
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -28,8 +24,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
     useEffect(() => {
         conversationRef.current = conversation;
-
-        // Clear messages immediately when conversation changes
         setMessages([]);
         setLoading(true);
 
@@ -42,22 +36,20 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         }
     }, [conversation?.id]);
 
-    // Pusher real-time message listener
+    // Pusher real-time with duplicate check
     useEffect(() => {
         if (!user) return;
 
         const channel = subscribeToUserChannel(user.id, {
             onNewMessage: (data) => {
-                // Only add message if it's for the current conversation
                 if (conversation && data.message.conversation_id === conversation.id) {
                     setMessages(prev => {
-                        // Check if message already exists to avoid duplicates
+                        // Duplicate check by ID
                         const exists = prev.some(msg => msg.id === data.message.id);
                         if (exists) return prev;
                         return [...prev, data.message];
                     });
 
-                    // Mark as read since we're in the chat
                     if (conversation.id) {
                         markAsRead();
                     }
@@ -70,12 +62,10 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         };
     }, [conversation?.id, user]);
 
-    // Auto-scroll only when viewing bottom already or when user sends message
     useEffect(() => {
         const container = messagesContainerRef.current;
         if (!container) return;
 
-        // Check if user is near bottom (within 100px)
         const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
 
         if (isNearBottom) {
@@ -88,7 +78,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             setLoading(true);
             const response = await messagesAPI.getMessages(conversation.id);
             setMessages(response.data.data.messages || []);
-            // Force scroll to bottom after fetching messages
             setTimeout(() => scrollToBottom(true), 100);
         } catch (error) {
             console.error('Error fetching messages:', error);
@@ -122,8 +111,22 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const handleSendMessage = async ({ content, file, type }) => {
         if (!conversation) return;
 
+        // Optimistic UI: Create temp message
+        const tempMessage = {
+            id: `temp-${Date.now()}`,
+            content: content || '',
+            file_url: file ? URL.createObjectURL(file) : null,
+            type: type,
+            sender_id: user.id,
+            created_at: new Date().toISOString(),
+            is_temp: true
+        };
+
+        // Immediately add to UI
+        setMessages(prev => [...prev, tempMessage]);
+        setTimeout(() => scrollToBottom(true), 50);
+
         try {
-            setSending(true);
             let response;
 
             if (type === 'text') {
@@ -145,73 +148,42 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             const newMessage = response.data.data.message;
             const conversationData = response.data.data.conversation;
 
-            setMessages(prev => [...prev, newMessage]);
+            // Replace temp message with real message
+            setMessages(prev => prev.map(m =>
+                m.id === tempMessage.id ? newMessage : m
+            ));
 
             if (onNewMessage) {
                 onNewMessage(newMessage, conversationData);
             }
 
             if (!conversationRef.current.id && conversationData) {
-                // Update conversation ref with new ID
                 conversationRef.current = { ...conversationRef.current, id: conversationData.id };
             }
 
-            // Force scroll to bottom after sending
             setTimeout(() => scrollToBottom(true), 100);
         } catch (error) {
             console.error('Error sending message:', error);
+            // Remove temp message on error
+            setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
             alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
-        } finally {
-            setSending(false);
         }
-    };
-
-    const getDateSeparator = (date) => {
-        const messageDate = new Date(date);
-        if (isToday(messageDate)) return 'Bugün';
-        if (isYesterday(messageDate)) return 'Dün';
-        return format(messageDate, 'd MMMM yyyy', { locale: tr });
-    };
-
-    const renderMessages = () => {
-        let currentDate = null;
-        return messages.map((message, index) => {
-            const messageDate = format(new Date(message.created_at), 'yyyy-MM-dd');
-            const showDateSeparator = messageDate !== currentDate;
-            currentDate = messageDate;
-
-            return (
-                <React.Fragment key={message.id}>
-                    {showDateSeparator && (
-                        <div className="flex justify-center my-4">
-                            <div className="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded-full text-xs text-gray-600 dark:text-gray-400">
-                                {getDateSeparator(message.created_at)}
-                            </div>
-                        </div>
-                    )}
-                    <MessageBubble
-                        message={message}
-                        isMine={message.sender_id === user.id}
-                    />
-                </React.Fragment>
-            );
-        });
     };
 
     if (!conversation) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+            <div className="flex flex-col items-center justify-center h-[100dvh] bg-gray-50">
                 <div className="text-center">
-                    <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
                         Mesajlarınız
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400">
-                        Bir sohbet seçin veya yeni bir konuşma başlatın
+                    <p className="text-gray-500">
+                        Bir soh bet seçin veya yeni bir konuşma başlatın
                     </p>
                 </div>
             </div>
@@ -219,78 +191,71 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-            {/* Header */}
-            <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 p-5 sm:p-6 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 shadow-sm">
-                <div className="flex items-center gap-4">
-                    {/* Back Button (Mobile) */}
+        <div className="flex flex-col h-full bg-white relative">
+            {/* Header - Pink Bar (Sticky Top) */}
+            <div className="flex-shrink-0 bg-pink-500 p-4 w-full z-10 sticky top-0">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={onBack}
-                        className="md:hidden text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 p-2.5 rounded-xl transition-all hover:scale-105 active:scale-95"
+                        className="text-white hover:bg-pink-600 p-2 rounded-lg transition-colors"
                     >
                         <FaArrowLeft className="text-lg" />
                     </button>
 
-                    {/* User Avatar */}
-                    <div className="relative">
-                        <img
-                            src={ensureHttps(conversation.other_user.avatar) || 'https://i.pravatar.cc/200?u=default'}
-                            alt={conversation.other_user.username}
-                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover ring-4 ring-white dark:ring-gray-800 shadow-lg"
-                        />
-                        <FaCircle className="absolute bottom-0 right-0 text-green-500 text-sm border-4 border-white dark:border-gray-800 rounded-full" />
-                    </div>
-
-                    {/* User Info */}
                     <div
                         className="flex-1 cursor-pointer"
                         onClick={() => navigate(`/profile/${conversation.other_user.username}`)}
                     >
-                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                        <h3 className="font-bold text-white">
                             {conversation.other_user.username}
                         </h3>
-                        <p className="text-sm text-green-500 dark:text-green-400 font-medium">
+                        <p className="text-xs text-white/80">
                             Aktif
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Messages Area */}
-            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 scroll-smooth">
+            {/* Messages Area - Scrollable (Flex-1) */}
+            <div
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto bg-white w-full"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+            >
                 {loading ? (
                     <div className="flex justify-center items-center h-full">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-coral"></div>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500"></div>
                     </div>
                 ) : messages.length === 0 ? (
-                    <div className="flex justify-center items-center h-full">
-                        <div className="text-center animate-in fade-in zoom-in duration-500">
-                            <div className="w-32 h-32 bg-gradient-to-br from-coral/10 to-coral/5 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                                <svg className="w-16 h-16 text-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                            </div>
-                            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <div className="flex justify-center items-center h-full px-4">
+                        <div className="text-center">
+                            <p className="text-lg font-semibold text-gray-700 mb-2">
                                 Henüz mesaj yok
                             </p>
-                            <p className="text-gray-500 dark:text-gray-400">
+                            <p className="text-gray-500">
                                 İlk mesajı sen gönder! 👋
                             </p>
                         </div>
                     </div>
                 ) : (
-                    <>
-                        {renderMessages()}
+                    <div className="py-4 w-full">
+                        {messages.map((message) => (
+                            <MessageBubble
+                                key={message.id}
+                                message={message}
+                                isMine={message.sender_id === user.id}
+                            />
+                        ))}
                         <div ref={messagesEndRef} />
-                    </>
+                    </div>
                 )}
             </div>
 
-            {/* Message Input */}
-            <div className="flex-shrink-0">
+            {/* Interaction Zone (Sticky Bottom) - Input Only */}
+            <div className="flex-shrink-0 w-full z-20 sticky bottom-0 bg-white">
                 <MessageInput
                     onSendMessage={handleSendMessage}
-                    disabled={sending}
+                    disabled={false}
                 />
             </div>
         </div>

@@ -21,7 +21,7 @@ const MainLayout = ({ children, sidebar, onSearch }) => {
                 </div>
             </main>
 
-            <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-gray-300 py-12 mt-16">
+            <footer className="hidden md:block bg-gradient-to-r from-gray-900 to-gray-800 text-gray-300 py-12 mt-16">
                 <div className="max-w-7xl mx-auto px-4 md:px-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                         <div>

@@ -36,6 +36,7 @@ function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+              <Route path="/search" element={<ProtectedRoute><QuestionsPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
               <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
