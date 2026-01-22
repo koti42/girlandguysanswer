@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+
+  html,
+  body {
+    @apply overflow-x-hidden;
+    max-width: 100vw;
+  }
+
   body {
     @apply bg-background text-text-dark font-sans antialiased;
   }
