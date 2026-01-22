@@ -239,7 +239,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                 </div>
             )}
 
-            <div className="flex items-center gap-1.5 mb-1">
+            <div className="flex items-center gap-1 sm:gap-1.5 mb-1">
                 {/* Avatar - Hidden on mobile */}
                 <img
                     src={ensureHttps(user?.avatar) || 'https://i.pravatar.cc/200?u=default'}
@@ -259,7 +259,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                 <button
                     onClick={() => imageInputRef.current?.click()}
                     disabled={disabled || selectedFile || isRecording}
-                    className="p-1.5 text-gray-500 hover:text-coral disabled:opacity-50 flex-shrink-0"
+                    className="p-1 sm:p-1.5 text-gray-500 hover:text-coral disabled:opacity-50 flex-shrink-0"
                 >
                     <FaImage className="text-base" />
                 </button>
@@ -268,7 +268,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                 <button
                     onClick={isRecording ? stopRecording : startRecording}
                     disabled={disabled || selectedFile}
-                    className={`p-1.5 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-gray-500 hover:text-coral'
+                    className={`p-1 sm:p-1.5 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-gray-500 hover:text-coral'
                         }`}
                 >
                     <FaMicrophone className="text-base" />
@@ -284,7 +284,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                         }
                     }}
                     onKeyPress={handleKeyPress}
-                    placeholder={replyingTo ? "Yanıtın..." : "Mesaj yaz..."}
+                    placeholder={replyingTo ? "Yanıt..." : "Mesaj..."}
                     disabled={disabled || isRecording}
                     className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 rounded-lg text-base md:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50"
                 />
@@ -293,7 +293,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                 <button
                     onClick={handleSend}
                     disabled={disabled || (!message.trim() && !selectedFile) || isRecording}
-                    className="p-2 md:px-4 md:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                    className="p-1.5 sm:p-2 md:px-4 md:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center min-w-[32px] sm:min-w-[36px]"
                 >
                     <FaPaperPlane className="text-sm md:hidden" />
                     <span className="hidden md:inline text-xs font-bold">GÖNDER</span>
