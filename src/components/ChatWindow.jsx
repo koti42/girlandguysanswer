@@ -54,18 +54,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         markAsRead();
                     }
                 }
-            },
-            onMessageRead: (data) => {
-                // When messages are read by the other user
-                if (conversation && data.conversation_id === conversation.id) {
-                    setMessages(prev => prev.map(msg => {
-                        // If message is mine and unread, mark as read
-                        if (msg.sender_id === user.id && !msg.read_at) {
-                            return { ...msg, read_at: data.read_at || new Date().toISOString() };
-                        }
-                        return msg;
-                    }));
-                }
             }
         });
 
