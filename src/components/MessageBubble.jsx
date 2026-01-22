@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaEllipsisV } from 'react-icons/fa';
+import { FaEllipsisV, FaCheck, FaCheckDouble } from 'react-icons/fa';
 
 const MessageBubble = ({ message, isMine, senderGender }) => {
     const ensureHttps = (url) => {
@@ -55,10 +55,21 @@ const MessageBubble = ({ message, isMine, senderGender }) => {
                 className={`max-w-[75%] px-4 py-3 rounded-lg shadow-sm ${bubbleClass}`}
             >
                 {/* Time + Menu */}
-                <div className="flex justify-between items-start mb-1.5 opacity-80">
-                    <span className="text-[10px]">
-                        {format(new Date(message.created_at), 'HH:mm', { locale: tr })}
-                    </span>
+                <div className="flex justify-between items-start mb-1.5 opacity-80 gap-2">
+                    <div className="flex items-center gap-1">
+                        <span className="text-[10px]">
+                            {format(new Date(message.created_at), 'HH:mm', { locale: tr })}
+                        </span>
+                        {isMine && (
+                            <span className="text-xs">
+                                {message.read_at ? (
+                                    <FaCheckDouble className="text-blue-200" title={`Okundu: ${format(new Date(message.read_at), 'HH:mm')}`} />
+                                ) : (
+                                    <FaCheck className="text-white/70" title="Gönderildi" />
+                                )}
+                            </span>
+                        )}
+                    </div>
                     <button className="text-white hover:text-white/80 transition-colors">
                         <FaEllipsisV className="text-xs" />
                     </button>
