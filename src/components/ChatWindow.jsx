@@ -55,14 +55,12 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 }
             },
             onMessagesRead: (data) => {
-                // Sadece okuyan kişi karşı taraf ise (yani benim mesajlarımı okuduysa) ve conversation ID eşleşiyorsa güncelle
-                // data.reader_id: mesajları okuyan kişinin ID'si
+
                 if (conversation &&
                     data.conversation_id === conversation.id &&
                     data.reader_id === conversation.other_user.id) {
 
                     setMessages(prev => prev.map(msg => {
-                        // Eğer mesaj bana aitse ve henüz okunmadıysa, okundu olarak işaretle
                         if (msg.sender_id === user.id && !msg.read_at) {
                             return { ...msg, read_at: data.read_at };
                         }
@@ -161,7 +159,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 response = await messagesAPI.sendFile(formData);
             }
 
-            // Clear reply state after sending
             setReplyingTo(null);
 
             const newMessage = response.data.data.message;
@@ -170,7 +167,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             console.log('Backend response - newMessage:', newMessage);
             console.log('read_at value:', newMessage.read_at);
 
-            // Replace temp message with real message
             setMessages(prev => prev.map(m =>
                 m.id === tempMessage.id ? newMessage : m
             ));
@@ -212,7 +208,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     }
 
     return (
-        <div className="flex flex-col h-full bg-white relative">
+        <div className="flex flex-col h-full bg-white relative w-full overflow-x-hidden">
             {/* Header - Pink Bar (Sticky Top) */}
             <div className="flex-shrink-0 bg-pink-500 p-4 w-full z-10 sticky top-0">
                 <div className="flex items-center gap-3">
