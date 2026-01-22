@@ -211,8 +211,8 @@ const MessagesPage = () => {
     };
 
     return (
-        <MainLayout>
-            <div className="flex flex-col h-[calc(100vh-80px)] bg-white -mx-3 -my-4 md:mx-0 md:my-0 w-[calc(100%+1.5rem)] md:w-full">
+        <MainLayout noMobilePadding={true}>
+            <div className="flex flex-col h-[calc(100vh-80px)] bg-white w-full">
                 {/* Main Content Area */}
                 <div className="flex-1 flex overflow-hidden">
                     {/* Conversations List Sidebar */}
