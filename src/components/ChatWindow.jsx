@@ -37,6 +37,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     }, [conversation?.id]);
 
     // Pusher real-time with duplicate check
+    // Pusher real-time with duplicate check
     useEffect(() => {
         if (!user) return;
 
@@ -44,7 +45,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             onNewMessage: (data) => {
                 if (conversation && data.message.conversation_id === conversation.id) {
                     setMessages(prev => {
-                        // Duplicate check by ID
                         const exists = prev.some(msg => msg.id === data.message.id);
                         if (exists) return prev;
                         return [...prev, data.message];
@@ -53,6 +53,18 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     if (conversation.id) {
                         markAsRead();
                     }
+                }
+            },
+            onMessageRead: (data) => {
+                // When messages are read by the other user
+                if (conversation && data.conversation_id === conversation.id) {
+                    setMessages(prev => prev.map(msg => {
+                        // If message is mine and unread, mark as read
+                        if (msg.sender_id === user.id && !msg.read_at) {
+                            return { ...msg, read_at: data.read_at || new Date().toISOString() };
+                        }
+                        return msg;
+                    }));
                 }
             }
         });

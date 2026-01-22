@@ -16,9 +16,17 @@ export const subscribeToUserChannel = (userId, callbacks) => {
     const channelName = `private-user.${userId}`;
     const channel = pusher.subscribe(channelName);
 
-    if (callbacks.onNewMessage) {
-        channel.bind('new-message', callbacks.onNewMessage);
-    }
+    channel.bind('App\\Events\\NewMessage', (data) => {
+        if (callbacks.onNewMessage) {
+            callbacks.onNewMessage(data);
+        }
+    });
+
+    channel.bind('App\\Events\\MessageRead', (data) => {
+        if (callbacks.onMessageRead) {
+            callbacks.onMessageRead(data);
+        }
+    });
 
     return channel;
 };
