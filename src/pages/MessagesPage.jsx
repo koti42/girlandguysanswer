@@ -76,7 +76,7 @@ const MessagesPage = () => {
     const fetchUserForNewConversation = async (username) => {
         try {
             setLoadingNewConversation(true);
-            const response = await usersAPI.getUserProfile(username);
+            const response = await usersAPI.getProfile(username);
             const userData = response.data.data;
 
             const tempConversation = {

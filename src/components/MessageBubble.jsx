@@ -33,15 +33,21 @@ const MessageBubble = ({ message, isMine, senderGender }) => {
         }
     };
 
-    const isFemale = senderGender === 'female' || senderGender === 'kiz' || senderGender === 'woman';
+
+
+    // Check for female gender (supports both English and Turkish)
+    const isFemale = senderGender === 'female' ||
+        senderGender === 'kiz' ||
+        senderGender === 'woman' ||
+        senderGender === 'kadın';
 
     const bubbleClass = isMine
         ? (isFemale
-            ? 'bg-gradient-to-br from-pink-400 to-rose-400 text-white'  
-            : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white') 
+            ? 'bg-gradient-to-br from-pink-400 to-rose-400 text-white'
+            : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white')
         : (isFemale
-            ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white' 
-            : 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white'); 
+            ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white'
+            : 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white');
 
     return (
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3`}>
