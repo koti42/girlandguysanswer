@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaTrash } from 'react-icons/fa';
 import ChatWindow from '../components/ChatWindow';
+import ConfirmationModal from '../components/ConfirmationModal';
 import BottomNav from '../components/BottomNav';
 import MainLayout from '../layouts/MainLayout';
 import { messagesAPI, usersAPI } from '../services/api';
@@ -20,6 +21,8 @@ const MessagesPage = () => {
     const [loadingNewConversation, setLoadingNewConversation] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showMobileChat, setShowMobileChat] = useState(false);
+    const [conversationToDelete, setConversationToDelete] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const ensureHttps = (url) => {
         if (!url) return url;
@@ -248,7 +251,7 @@ const MessagesPage = () => {
                                     <div
                                         key={conversation.id}
                                         onClick={() => handleConversationClick(conversation)}
-                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors ${activeConversation?.id === conversation.id ? 'bg-gray-50' : ''
+                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors group ${activeConversation?.id === conversation.id ? 'bg-gray-50' : ''
                                             }`}
                                     >
                                         <div className="relative">
@@ -286,6 +289,18 @@ const MessagesPage = () => {
                                                 {renderMessagePreview(conversation.latest_message)}
                                             </p>
                                         </div>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setConversationToDelete(conversation);
+                                                setShowDeleteModal(true);
+                                            }}
+                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                                            title="Sohbeti Sil"
+                                        >
+                                            <FaTrash className="text-sm" />
+                                        </button>
                                     </div>
                                 ))
                             )}
@@ -306,6 +321,35 @@ const MessagesPage = () => {
                 <div className="flex-shrink-0 w-full">
                     <BottomNav />
                 </div>
+
+                <ConfirmationModal
+                    isOpen={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setConversationToDelete(null);
+                    }}
+                    onConfirm={async () => {
+                        if (!conversationToDelete) return;
+                        try {
+                            await messagesAPI.deleteConversation(conversationToDelete.id);
+                            // Remove from local list
+                            setConversations(prev => prev.filter(c => c.id !== conversationToDelete.id));
+                            // If deleted conversation was active, clear it
+                            if (activeConversation?.id === conversationToDelete.id) {
+                                setActiveConversation(null);
+                                setShowMobileChat(false);
+                            }
+                        } catch (error) {
+                            console.error('Error deleting conversation:', error);
+                            alert('Sohbet silinirken bir hata oluştu.');
+                        }
+                    }}
+                    title="Sohbeti Sil"
+                    message={`@${conversationToDelete?.other_user?.username} ile olan tüm mesajlaşma geçmişinizi silmek istediğinize emin misiniz?`}
+                    confirmText="Evet, Sil"
+                    cancelText="Vazgeç"
+                    isDangerous={true}
+                />
             </div>
         </MainLayout>
     );
