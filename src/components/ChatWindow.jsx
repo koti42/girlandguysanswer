@@ -10,6 +10,7 @@ import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/push
 const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [replyingTo, setReplyingTo] = useState(null); // State for the message being replied to
     const { user } = useAuth();
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
@@ -36,8 +37,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         }
     }, [conversation?.id]);
 
-    // Pusher real-time with duplicate check
-    // Pusher real-time with duplicate check
     useEffect(() => {
         if (!user) return;
 
@@ -50,9 +49,19 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         return [...prev, data.message];
                     });
 
-                    if (conversation.id) {
+                    if (conversation.id && data.message.sender_id !== user.id) {
                         markAsRead();
                     }
+                }
+            },
+            onMessagesRead: (data) => {
+                if (conversation && data.conversation_id === conversation.id) {
+                    setMessages(prev => prev.map(msg => {
+                        if (msg.sender_id === user.id && !msg.read_at) {
+                            return { ...msg, read_at: data.read_at };
+                        }
+                        return msg;
+                    }));
                 }
             }
         });
@@ -111,7 +120,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const handleSendMessage = async ({ content, file, type }) => {
         if (!conversation) return;
 
-        // Optimistic UI: Create temp message
         const tempMessage = {
             id: `temp-${Date.now()}`,
             content: content || '',
@@ -122,7 +130,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             is_temp: true
         };
 
-        // Immediately add to UI
         setMessages(prev => [...prev, tempMessage]);
         setTimeout(() => scrollToBottom(true), 50);
 
@@ -133,7 +140,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 response = await messagesAPI.sendMessage({
                     receiver_id: conversationRef.current.other_user.id,
                     content,
-                    type: 'text'
+                    type: 'text',
+                    reply_to_message_id: replyingTo?.id // Include reply ID if exists
                 });
             } else {
                 const formData = new FormData();
@@ -141,12 +149,19 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 formData.append('type', type);
                 formData.append('file', file);
                 if (content) formData.append('content', content);
+                if (replyingTo?.id) formData.append('reply_to_message_id', replyingTo.id); // Include reply ID
 
                 response = await messagesAPI.sendFile(formData);
             }
 
+            // Clear reply state after sending
+            setReplyingTo(null);
+
             const newMessage = response.data.data.message;
             const conversationData = response.data.data.conversation;
+
+            console.log('Backend response - newMessage:', newMessage);
+            console.log('read_at value:', newMessage.read_at);
 
             // Replace temp message with real message
             setMessages(prev => prev.map(m =>
@@ -164,7 +179,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             setTimeout(() => scrollToBottom(true), 100);
         } catch (error) {
             console.error('Error sending message:', error);
-            // Remove temp message on error
             setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
             alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
         }
@@ -245,6 +259,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                 message={message}
                                 isMine={message.sender_id === user.id}
                                 senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
+                                onReply={(msg) => setReplyingTo(msg)}
                             />
                         ))}
                         <div ref={messagesEndRef} />
@@ -257,6 +272,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 <MessageInput
                     onSendMessage={handleSendMessage}
                     disabled={false}
+                    replyingTo={replyingTo}
+                    onCancelReply={() => setReplyingTo(null)}
                 />
             </div>
         </div>

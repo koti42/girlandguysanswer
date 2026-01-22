@@ -20,6 +20,10 @@ export const subscribeToUserChannel = (userId, callbacks) => {
         channel.bind('new-message', callbacks.onNewMessage);
     }
 
+    if (callbacks.onMessagesRead) {
+        channel.bind('messages-read', callbacks.onMessagesRead);
+    }
+
     return channel;
 };
 

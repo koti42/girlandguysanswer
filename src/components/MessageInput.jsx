@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaImage, FaMicrophone, FaTimes, FaStop, FaPaperPlane } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
-const MessageInput = ({ onSendMessage, disabled = false }) => {
+const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelReply }) => {
     const { user } = useAuth();
     const [message, setMessage] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
@@ -14,8 +14,16 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
     const recordingIntervalRef = useRef(null);
+    const inputRef = useRef(null);
 
     const MAX_CHARS = 1000;
+
+    // Focus input when replying starts
+    useEffect(() => {
+        if (replyingTo && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [replyingTo]);
 
     useEffect(() => {
         return () => {
@@ -35,6 +43,7 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
     };
 
     const handleFileSelect = (e, type) => {
+        // ... (rest of the function)
         const file = e.target.files[0];
         if (!file) return;
 
@@ -54,6 +63,20 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
             reader.readAsDataURL(file);
         }
     };
+
+    // ... (rest of functions)
+
+    // NOTE: Since I am replacing the top part, I need to be careful with preserving the rest of the functions if I were using replace_file_content on a large block, but let's use a smaller targeted replacement.
+
+    // Wait, the instruction says "Add replyingTo logic and UI". To do this cleanly, I should probably do two replacements. 
+    // 1. Update component signature and add useEffect for focus. 
+    // 2. Add the UI rendering part.
+
+    // Let's restart the tool call strategy to be safer.
+    // First, update signature and add hooks.
+
+
+
 
     const startRecording = async () => {
         try {
@@ -158,6 +181,24 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
 
     return (
         <div className="bg-white border-t border-gray-200 p-2">
+            {replyingTo && (
+                <div className="mb-2 p-2 bg-gray-100 rounded-lg border-l-4 border-pink-500 flex justify-between items-center">
+                    <div className="flex flex-col overflow-hidden">
+                        <span className="text-xs font-bold text-pink-600">
+                            {replyingTo.sender_id === user.id ? 'Kendine yanıt veriyorsun' : `${replyingTo.sender?.username || 'Kullanıcı'} kullanıcısına yanıt veriyorsun`}
+                        </span>
+                        <span className="text-xs text-gray-600 truncate">
+                            {replyingTo.type === 'image' ? '📷 Fotoğraf' : replyingTo.type === 'audio' ? '🎤 Sesli Mesaj' : replyingTo.content}
+                        </span>
+                    </div>
+                    <button
+                        onClick={onCancelReply}
+                        className="p-1 text-gray-500 hover:text-red-500"
+                    >
+                        <FaTimes />
+                    </button>
+                </div>
+            )}
             {isRecording && (
                 <div className="mb-2 p-2 bg-red-50 rounded-lg border border-red-200 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -235,6 +276,7 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
 
                 {/* Input Field */}
                 <input
+                    ref={inputRef}
                     value={message}
                     onChange={(e) => {
                         if (e.target.value.length <= MAX_CHARS) {
@@ -242,7 +284,7 @@ const MessageInput = ({ onSendMessage, disabled = false }) => {
                         }
                     }}
                     onKeyPress={handleKeyPress}
-                    placeholder="Mesaj yaz..."
+                    placeholder={replyingTo ? "Yanıtın..." : "Mesaj yaz..."}
                     disabled={disabled || isRecording}
                     className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50"
                 />

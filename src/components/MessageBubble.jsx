@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { FaEllipsisV, FaCheck, FaCheckDouble } from 'react-icons/fa';
 
-const MessageBubble = ({ message, isMine, senderGender }) => {
+const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -52,8 +52,20 @@ const MessageBubble = ({ message, isMine, senderGender }) => {
     return (
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3`}>
             <div
-                className={`max-w-[75%] px-4 py-3 rounded-lg shadow-sm ${bubbleClass}`}
+                className={`max-w-[75%] px-4 py-3 rounded-lg shadow-sm ${bubbleClass} relative group`}
             >
+                {/* Quoted Message */}
+                {message.reply_to && (
+                    <div className="mb-2 p-2 bg-black/10 rounded-lg border-l-4 border-white/50 text-xs">
+                        <p className="font-bold opacity-90 mb-0.5">{message.reply_to.sender?.username}</p>
+                        <p className="opacity-75 truncate">
+                            {message.reply_to.type === 'image' ? '📷 Fotoğraf' :
+                                message.reply_to.type === 'audio' ? '🎤 Sesli Mesaj' :
+                                    message.reply_to.content}
+                        </p>
+                    </div>
+                )}
+
                 {/* Time + Menu */}
                 <div className="flex justify-between items-start mb-1.5 opacity-80 gap-2">
                     <div className="flex items-center gap-1">
@@ -70,8 +82,13 @@ const MessageBubble = ({ message, isMine, senderGender }) => {
                             </span>
                         )}
                     </div>
-                    <button className="text-white hover:text-white/80 transition-colors">
-                        <FaEllipsisV className="text-xs" />
+                    {/* Reply Button (visible on hover or always on mobile) */}
+                    <button
+                        onClick={() => onReply && onReply(message)}
+                        className="text-white opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                        title="Yanıtla"
+                    >
+                        <FaEllipsisV className="text-xs transform rotate-90" /> {/* Rotating to look different or just use Reply icon if available, but staying consistent with requested menu idea, simplifying to direct action for now */}
                     </button>
                 </div>
 
