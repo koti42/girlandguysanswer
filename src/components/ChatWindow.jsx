@@ -55,8 +55,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 }
             },
             onMessagesRead: (data) => {
-                if (conversation && data.conversation_id === conversation.id) {
+                // Sadece okuyan kişi karşı taraf ise (yani benim mesajlarımı okuduysa) ve conversation ID eşleşiyorsa güncelle
+                // data.reader_id: mesajları okuyan kişinin ID'si
+                if (conversation &&
+                    data.conversation_id === conversation.id &&
+                    data.reader_id === conversation.other_user.id) {
+
                     setMessages(prev => prev.map(msg => {
+                        // Eğer mesaj bana aitse ve henüz okunmadıysa, okundu olarak işaretle
                         if (msg.sender_id === user.id && !msg.read_at) {
                             return { ...msg, read_at: data.read_at };
                         }
@@ -127,6 +133,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             type: type,
             sender_id: user.id,
             created_at: new Date().toISOString(),
+            read_at: null, // Explicitly null for single checkmark
             is_temp: true
         };
 
