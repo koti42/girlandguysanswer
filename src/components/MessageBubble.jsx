@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { FaEllipsisV } from 'react-icons/fa';
 
-const MessageBubble = ({ message, isMine }) => {
+const MessageBubble = ({ message, isMine, senderGender }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -33,20 +33,27 @@ const MessageBubble = ({ message, isMine }) => {
         }
     };
 
+    const isFemale = senderGender === 'female' || senderGender === 'kiz' || senderGender === 'woman';
+
+    const bubbleClass = isMine
+        ? (isFemale
+            ? 'bg-gradient-to-br from-pink-400 to-rose-400 text-white'  
+            : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white') 
+        : (isFemale
+            ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white' 
+            : 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white'); 
+
     return (
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3`}>
             <div
-                className={`max-w-[75%] px-4 py-3 rounded-lg ${isMine
-                        ? 'bg-gradient-to-br from-coral to-pink-400 text-white'
-                        : 'bg-blue-700 text-white'
-                    }`}
+                className={`max-w-[75%] px-4 py-3 rounded-lg shadow-sm ${bubbleClass}`}
             >
                 {/* Time + Menu */}
-                <div className="flex justify-between items-start mb-1.5">
-                    <span className="text-[10px] opacity-70">
+                <div className="flex justify-between items-start mb-1.5 opacity-80">
+                    <span className="text-[10px]">
                         {format(new Date(message.created_at), 'HH:mm', { locale: tr })}
                     </span>
-                    <button className="text-white/70 hover:text-white transition-colors">
+                    <button className="text-white hover:text-white/80 transition-colors">
                         <FaEllipsisV className="text-xs" />
                     </button>
                 </div>

@@ -84,7 +84,8 @@ const MessagesPage = () => {
                 other_user: {
                     id: userData.id,
                     username: userData.username,
-                    avatar: userData.avatar
+                    avatar: userData.avatar,
+                    gender: userData.gender
                 },
                 latest_message: null,
                 unread_count: 0

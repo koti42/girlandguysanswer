@@ -244,6 +244,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                 key={message.id}
                                 message={message}
                                 isMine={message.sender_id === user.id}
+                                senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
                             />
                         ))}
                         <div ref={messagesEndRef} />
