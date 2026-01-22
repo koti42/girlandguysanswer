@@ -89,7 +89,8 @@ export const messagesAPI = {
     sendFile: (formData) => api.post('/messages/send', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
-    markAsRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`)
+    markAsRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`),
+    deleteConversation: (conversationId) => api.delete(`/messages/conversations/${conversationId}`)
 };
 
 export const notificationsAPI = {

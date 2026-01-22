@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
+import ConfirmationModal from './ConfirmationModal';
 import { messagesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
@@ -11,6 +12,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [replyingTo, setReplyingTo] = useState(null); // State for the message being replied to
+    const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete confirmation modal
     const { user } = useAuth();
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
@@ -230,8 +232,35 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             Aktif
                         </p>
                     </div>
+                    {/* Delete History Button */}
+                    <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                        title="Sohbeti Temizle"
+                    >
+                        <FaTrash className="text-lg" />
+                    </button>
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={async () => {
+                    try {
+                        await messagesAPI.deleteConversation(conversation.id);
+                        setMessages([]); // Clear local messages
+                    } catch (error) {
+                        console.error('Error clearing history:', error);
+                        alert('Geçmiş silinirken bir hata oluştu.');
+                    }
+                }}
+                title="Sohbeti Temizle"
+                message="Bu konuşma geçmişini silmek istediğinize emin misiniz? Bu işlem geri alınamaz ancak karşı taraf mesajları görmeye devam eder."
+                confirmText="Evet, Sil"
+                cancelText="Vazgeç"
+                isDangerous={true}
+            />
 
             {/* Messages Area - Scrollable (Flex-1) */}
             <div
