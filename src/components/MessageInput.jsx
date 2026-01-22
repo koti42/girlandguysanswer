@@ -286,7 +286,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                     onKeyPress={handleKeyPress}
                     placeholder={replyingTo ? "Yanıtın..." : "Mesaj yaz..."}
                     disabled={disabled || isRecording}
-                    className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50"
+                    className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 rounded-lg text-base md:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50"
                 />
 
                 {/* Send Button - Icon on mobile, Text on desktop */}

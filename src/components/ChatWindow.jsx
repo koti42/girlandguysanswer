@@ -208,7 +208,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     }
 
     return (
-        <div className="flex flex-col h-full bg-white relative w-full overflow-x-hidden">
+        <div className="flex flex-col h-full bg-white relative w-full max-w-[100vw] overflow-x-hidden">
             {/* Header - Pink Bar (Sticky Top) */}
             <div className="flex-shrink-0 bg-pink-500 p-4 w-full z-10 sticky top-0">
                 <div className="flex items-center gap-3">
