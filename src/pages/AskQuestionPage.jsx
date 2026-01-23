@@ -304,7 +304,7 @@ const AskQuestionPage = () => {
                                     }`}
                             >
                                 <FaUserSecret className="text-xl" />
-                                <span>{isAnonymous ? 'Anonim soru' : 'Anonim olarak sor'}</span>
+                                <span>{isAnonymous ? 'Gizli soru' : 'Gizli Üye olarak sor'}</span>
                             </button>
                             <p className="text-sm text-purple-700 dark:text-purple-300">
                                 {isAnonymous ? '🎭 Kimliğiniz gizli kalacak' : '👤 Herkese açık olarak sorulacak'}

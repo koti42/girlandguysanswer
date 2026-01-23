@@ -54,33 +54,61 @@ const QuestionCard = ({ question }) => {
         }
     };
 
+    // Determine card style based on gender
+    const getCardStyle = () => {
+        const gender = question.user?.gender;
+        if (gender === 'female') {
+            return {
+                container: 'bg-gradient-to-br from-rose-50 via-white to-pink-50 border-pink-100 hover:border-pink-200 shadow-sm hover:shadow-pink-100/50',
+                badge: 'bg-pink-100 text-pink-600',
+                icon: 'text-pink-500',
+                button: 'from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-pink-200'
+            };
+        } else if (gender === 'male') {
+            return {
+                container: 'bg-gradient-to-br from-blue-50 via-white to-sky-50 border-blue-100 hover:border-blue-200 shadow-sm hover:shadow-blue-100/50',
+                badge: 'bg-blue-100 text-blue-600',
+                icon: 'text-blue-500',
+                button: 'from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-blue-200'
+            };
+        } else {
+            return {
+                container: 'bg-gradient-to-br from-gray-50 via-white to-gray-50 border-gray-100 hover:border-gray-200 shadow-sm',
+                badge: 'bg-gray-100 text-gray-600',
+                icon: 'text-gray-500',
+                button: 'from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black shadow-gray-200'
+            };
+        }
+    };
+
+    const styles = getCardStyle();
+    const isOwnerAnonymous = !question.user?.username || question.user?.username === 'anonim';
+    const displayName = isOwnerAnonymous ? 'Gizli Üye' : question.user.username;
+
     return (
-        <div className={`rounded-2xl p-6 shadow-soft hover:shadow-soft-hover transition-all duration-300 border flex flex-col gap-4 ${question.user?.gender === 'female'
-            ? 'bg-gradient-to-br from-pink-100 via-pink-200 to-rose-200 dark:from-pink-800/40 dark:via-pink-700/30 dark:to-rose-700/30 border-pink-200 dark:border-pink-700/50'
-            : 'bg-gradient-to-br from-blue-100 via-sky-200 to-cyan-200 dark:from-blue-800/40 dark:via-blue-700/30 dark:to-cyan-700/30 border-blue-200 dark:border-blue-700/50'
-            }`}>
+        <div className={`rounded-3xl p-6 transition-all duration-300 border flex flex-col gap-4 ${styles.container}`}>
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                    <Link to={`/profile/${question.user?.username}`}>
+                    <Link to={isOwnerAnonymous ? '#' : `/profile/${question.user?.username}`} className={isOwnerAnonymous ? 'cursor-default' : ''}>
                         <UserAvatar
                             user={question.user}
                             size="lg"
-                            className="hover:border-coral transition-colors cursor-pointer"
+                            className="shadow-sm border-2 border-white"
                         />
                     </Link>
                     <div>
-                        <div className="flex items-center gap-1">
-                            <Link to={`/profile/${question.user?.username}`} className="font-bold text-gray-800 dark:text-gray-100 hover:underline">
-                                {question.user?.username || 'Anonim'}
-                            </Link>
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-gray-900 text-lg">
+                                {displayName}
+                            </span>
                             {question.user?.gender === 'female' ? (
-                                <FaVenus className="text-pink-500" />
+                                <FaVenus className={`text-lg ${styles.icon}`} />
                             ) : (
-                                <FaMars className="text-blue-500" />
+                                <FaMars className={`text-lg ${styles.icon}`} />
                             )}
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{question.category}</span>
+                        <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{question.category}</span>
                     </div>
                 </div>
                 <QuestionActionsMenu />
@@ -89,52 +117,60 @@ const QuestionCard = ({ question }) => {
             {/* Content */}
             <div>
                 <Link to={`/question/${question.slug || question.id}`}>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 leading-snug hover:text-coral transition-colors cursor-pointer">
+                    <h3 className="text-xl font-bold text-gray-800 mb-3 leading-snug hover:text-coral transition-colors cursor-pointer">
                         {question.title}
                     </h3>
                 </Link>
 
                 <div className="flex flex-wrap gap-2 mb-4">
                     {question.tags.map((tag, idx) => (
-                        <span key={idx} className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                            {tag}
+                        <span key={idx} className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${styles.badge}`}>
+                            #{tag}
                         </span>
                     ))}
                 </div>
 
                 {question.image && (
                     <Link to={`/question/${question.slug || question.id}`}>
-                        <div className="rounded-xl overflow-hidden mb-4 shadow-sm cursor-pointer">
-                            <img src={question.image} alt="Question" className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500" />
+                        <div className="rounded-2xl overflow-hidden mb-4 shadow-sm cursor-pointer group">
+                            <img src={question.image} alt="Question" className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
                         </div>
                     </Link>
                 )}
             </div>
 
             {/* Footer / Stats */}
-            <div className="pt-4 border-t border-gray-50 dark:border-gray-700">
-                <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 text-sm mb-3">
+            <div className="pt-4 border-t border-gray-100/50">
+                <div className="flex items-center justify-between text-gray-500 text-sm mb-4">
                     <div className="flex gap-6">
-                        <button className="flex items-center gap-2 hover:text-coral transition-colors">
-                            <FaHeart /> <span>{question.stats?.likes || question.likes || 0}</span>
+                        <button className="flex items-center gap-2 hover:text-red-500 transition-colors group">
+                            <div className="p-2 rounded-full bg-red-50 group-hover:bg-red-100 text-red-400 group-hover:text-red-500 transition-colors">
+                                <FaHeart />
+                            </div>
+                            <span className="font-semibold">{question.stats?.likes || question.likes || 0}</span>
                         </button>
-                        <Link to={`/question/${question.slug || question.id}`} className="flex items-center gap-2 hover:text-blue-500 transition-colors">
-                            <FaComment /> <span>{question.stats?.comments || question.commentsCount || 0}</span>
+                        <Link to={`/question/${question.slug || question.id}`} className="flex items-center gap-2 hover:text-blue-500 transition-colors group">
+                            <div className="p-2 rounded-full bg-blue-50 group-hover:bg-blue-100 text-blue-400 group-hover:text-blue-500 transition-colors">
+                                <FaComment />
+                            </div>
+                            <span className="font-semibold">{question.stats?.comments || question.commentsCount || 0}</span>
                         </Link>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-gray-400">
                         <FaEye /> <span>{question.stats?.views || question.views || 0}</span>
                     </div>
                 </div>
 
-                {/* Reply Button */}
-                <button
-                    onClick={() => setShowReplyBox(!showReplyBox)}
-                    className="w-full py-2 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                >
-                    <FaComment />
-                    {showReplyBox ? 'İptal Et' : 'Cevapla'}
-                </button>
+                {/* Reply Button - Only if not owner */}
+                {currentUser?.id !== question.user?.id && (
+                    <button
+                        onClick={() => setShowReplyBox(!showReplyBox)}
+                        className={`w-full py-3 px-4 rounded-xl bg-gradient-to-r text-white font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2 ${styles.button}`}
+                    >
+                        <FaComment />
+                        {showReplyBox ? 'Vazgeç' : 'Cevapla'}
+                    </button>
+                )}
             </div>
 
             {/* Toast Notification */}
@@ -178,7 +214,7 @@ const QuestionCard = ({ question }) => {
                                 }`}
                         >
                             <FaUserSecret className="text-lg" />
-                            <span className="text-sm">{isAnonymous ? 'Anonim cevap' : 'Anonim olarak cevapla'}</span>
+                            <span className="text-sm">{isAnonymous ? 'Gizli cevap' : 'Gizli Üye olarak cevapla'}</span>
                         </button>
                         <p className="text-xs text-gray-500">Detaylı cevap için soruya tıklayın</p>
                     </div>

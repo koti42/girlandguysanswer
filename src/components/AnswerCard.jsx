@@ -18,7 +18,7 @@ const AnswerCard = ({ answer }) => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft hover:shadow-md transition-all border border-gray-100 dark:border-gray-700">
             {/* Question Link */}
             <Link
-                to={`/questions/${answer.question.slug}`}
+                to={`/question/${answer.question.slug}`}
                 className="block mb-4 group"
             >
                 <div className="flex items-start gap-2">

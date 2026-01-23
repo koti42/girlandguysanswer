@@ -60,7 +60,7 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         return (
             <div
                 className={`${currentSizeClass} rounded-full flex items-center justify-center text-white font-bold shadow-sm border bg-gradient-to-br ${gradientClass} ${className}`}
-                title="Anonim Kullanıcı"
+                title="Gizli Üye"
             >
                 <FaUserSecret className="text-white" />
             </div>

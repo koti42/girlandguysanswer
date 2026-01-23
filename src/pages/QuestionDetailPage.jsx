@@ -106,12 +106,11 @@ const QuestionDetailPage = () => {
 
             let newAnswer = response.data.data.answer;
 
-            // If posting anonymously, immediately mask user data
             if (isAnswerAnonymous) {
                 newAnswer = {
                     ...newAnswer,
                     user: {
-                        name: 'Anonim Kullanıcı',
+                        name: 'Gizli Üye',
                         username: 'anonim',
                         avatar: null,
                         gender: newAnswer.user?.gender // Preserve gender for UI coloring
@@ -154,7 +153,7 @@ const QuestionDetailPage = () => {
                 newComment = {
                     ...newComment,
                     user: {
-                        name: 'Anonim Kullanıcı',
+                        name: 'Gizli Üye',
                         username: 'anonim',
                         avatar: null,
                         gender: newComment.user?.gender // Preserve gender for UI coloring
@@ -214,7 +213,7 @@ const QuestionDetailPage = () => {
                 newReply = {
                     ...newReply,
                     user: {
-                        name: 'Anonim Kullanıcı',
+                        name: 'Gizli Üye',
                         username: 'anonim',
                         avatar: null,
                         gender: newReply.user?.gender // Preserve gender for UI coloring
@@ -288,18 +287,34 @@ const QuestionDetailPage = () => {
             <div key={comment.id} className="space-y-3">
                 <div id={`comment-${comment.id}`} className={`${commentGradientClass} rounded-xl p-4 ${marginLeft} border-l-4 shadow-sm hover:shadow-md transition-all scroll-mt-20`}>
                     <div className="flex gap-3">
-                        <Link to={`/profile/${comment.user?.username}`}>
-                            <UserAvatar
-                                user={comment.user}
-                                size="sm"
-                                className="w-10 h-10 border-2 border-white dark:border-gray-600 shadow-sm hover:border-coral transition-colors"
-                            />
-                        </Link>
+                        {comment.user?.username === 'anonim' ? (
+                            <div className="cursor-default">
+                                <UserAvatar
+                                    user={comment.user}
+                                    size="sm"
+                                    className="w-10 h-10 border-2 border-white dark:border-gray-600 shadow-sm"
+                                />
+                            </div>
+                        ) : (
+                            <Link to={`/profile/${comment.user?.username}`}>
+                                <UserAvatar
+                                    user={comment.user}
+                                    size="sm"
+                                    className="w-10 h-10 border-2 border-white dark:border-gray-600 shadow-sm hover:border-coral transition-colors"
+                                />
+                            </Link>
+                        )}
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                                <Link to={`/profile/${comment.user?.username}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">
-                                    {comment.user?.username || 'Anonim'}
-                                </Link>
+                                {comment.user?.username === 'anonim' ? (
+                                    <span className="font-bold text-sm text-gray-800 dark:text-white cursor-default">
+                                        Gizli Üye
+                                    </span>
+                                ) : (
+                                    <Link to={`/profile/${comment.user?.username}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">
+                                        {comment.user?.username}
+                                    </Link>
+                                )}
                                 {comment.user?.gender === 'female' ? (
                                     <FaVenus className="text-pink-600 dark:text-pink-400 text-xs" />
                                 ) : (
@@ -333,7 +348,7 @@ const QuestionDetailPage = () => {
                                 <textarea
                                     value={replyTexts[comment.id] || ''}
                                     onChange={(e) => setReplyTexts(prev => ({ ...prev, [comment.id]: e.target.value }))}
-                                    placeholder={`@${comment.user?.username} kullanıcısına cevap yazın...`}
+                                    placeholder={`@${comment.user?.username === 'anonim' ? 'Gizli Üye' : comment.user?.username} kullanıcısına cevap yazın...`}
                                     rows={3}
                                     className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-2 text-sm"
                                     autoFocus
@@ -348,7 +363,7 @@ const QuestionDetailPage = () => {
                                             }`}
                                     >
                                         <FaUserSecret />
-                                        <span>{replyAnonymous[comment.id] ? 'Anonim yanıt' : 'Anonim olarak yanıtla'}</span>
+                                        <span>{replyAnonymous[comment.id] ? 'Gizli yanıt' : 'Gizli Üye olarak yanıtla'}</span>
                                     </button>
                                 </div>
                                 <div className="flex gap-2 justify-end">
@@ -454,18 +469,34 @@ const QuestionDetailPage = () => {
                     {/* Question Card */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                         <div className="flex items-center gap-3 mb-4">
-                            <Link to={`/profile/${question.user.username}`}>
-                                <UserAvatar
-                                    user={question.user}
-                                    size="lg"
-                                    className="hover:border-coral transition-colors"
-                                />
-                            </Link>
+                            {question.user.username === 'anonim' ? (
+                                <div className="cursor-default">
+                                    <UserAvatar
+                                        user={question.user}
+                                        size="lg"
+                                        className="border-2 border-white"
+                                    />
+                                </div>
+                            ) : (
+                                <Link to={`/profile/${question.user.username}`}>
+                                    <UserAvatar
+                                        user={question.user}
+                                        size="lg"
+                                        className="hover:border-coral transition-colors"
+                                    />
+                                </Link>
+                            )}
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                    <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">
-                                        {question.user.username}
-                                    </Link>
+                                    {question.user.username === 'anonim' ? (
+                                        <span className="font-bold text-gray-800 dark:text-white cursor-default">
+                                            Gizli Üye
+                                        </span>
+                                    ) : (
+                                        <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">
+                                            {question.user.username}
+                                        </Link>
+                                    )}
                                     {question.user.gender === 'female' ? (
                                         <FaVenus className="text-pink-500" />
                                     ) : (
@@ -555,7 +586,7 @@ const QuestionDetailPage = () => {
                                                 }`}
                                         >
                                             <FaUserSecret />
-                                            <span>{commentAnonymous[commentKey] ? 'Anonim yorum' : 'Anonim olarak yorum yap'}</span>
+                                            <span>{commentAnonymous[commentKey] ? 'Gizli yorum' : 'Gizli Üye olarak yorum yap'}</span>
                                         </button>
                                         <div className="flex gap-2">
                                             <button
@@ -584,39 +615,41 @@ const QuestionDetailPage = () => {
                         </div>
                     )}
 
-                    {/* Answer Form */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Cevap Yaz</h3>
-                        <form onSubmit={handleSubmitAnswer}>
-                            <textarea
-                                value={answerText}
-                                onChange={(e) => setAnswerText(e.target.value)}
-                                placeholder="Cevabınızı buraya yazın..."
-                                rows={4}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-4"
-                            />
-                            <div className="flex items-center justify-between">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAnswerAnonymous(!isAnswerAnonymous)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnswerAnonymous
-                                        ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
-                                        : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
-                                        }`}
-                                >
-                                    <FaUserSecret className="text-lg" />
-                                    <span className="text-sm">{isAnswerAnonymous ? 'Anonim cevap' : 'Anonim olarak cevapla'}</span>
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={!answerText.trim()}
-                                    className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-2xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Cevap Gönder
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                    {/* Answer Form - Only if not owner */}
+                    {currentUser?.id !== question.user?.id && (
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Cevap Yaz</h3>
+                            <form onSubmit={handleSubmitAnswer}>
+                                <textarea
+                                    value={answerText}
+                                    onChange={(e) => setAnswerText(e.target.value)}
+                                    placeholder="Cevabınızı buraya yazın..."
+                                    rows={4}
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-4"
+                                />
+                                <div className="flex items-center justify-between">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAnswerAnonymous(!isAnswerAnonymous)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnswerAnonymous
+                                            ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                                            : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
+                                            }`}
+                                    >
+                                        <FaUserSecret className="text-lg" />
+                                        <span className="text-sm">{isAnswerAnonymous ? 'Gizli cevap' : 'Gizli Üye olarak cevapla'}</span>
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={!answerText.trim()}
+                                        className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-2xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Cevap Gönder
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
 
                     {/* Answers Section */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 shadow-soft">
@@ -685,17 +718,35 @@ const QuestionDetailPage = () => {
                                                 }`}
                                         >
                                             <div className="flex justify-between items-start mb-4">
-                                                <Link to={`/profile/${answer.user?.username}`} className="flex items-center gap-3 group">
-                                                    <UserAvatar
-                                                        user={answer.user}
-                                                        size="md"
-                                                        className="group-hover:border-coral transition-colors"
-                                                    />
+                                                <div className="flex items-center gap-3 group">
+                                                    {answer.user?.username === 'anonim' ? (
+                                                        <div className="cursor-default">
+                                                            <UserAvatar
+                                                                user={answer.user}
+                                                                size="md"
+                                                                className="transition-colors"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <Link to={`/profile/${answer.user?.username}`}>
+                                                            <UserAvatar
+                                                                user={answer.user}
+                                                                size="md"
+                                                                className="group-hover:border-coral transition-colors"
+                                                            />
+                                                        </Link>
+                                                    )}
                                                     <div>
                                                         <div className="flex items-center gap-1">
-                                                            <span className="font-bold text-gray-800 dark:text-gray-200 group-hover:text-coral transition-colors">
-                                                                {answer.user?.username || 'Anonim'}
-                                                            </span>
+                                                            {answer.user?.username === 'anonim' ? (
+                                                                <span className="font-bold text-gray-800 dark:text-gray-200 cursor-default">
+                                                                    Gizli Üye
+                                                                </span>
+                                                            ) : (
+                                                                <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-gray-200 group-hover:text-coral transition-colors">
+                                                                    {answer.user?.username}
+                                                                </Link>
+                                                            )}
                                                             {answer.user?.gender === 'female' ? (
                                                                 <FaVenus className="text-pink-500 text-sm" />
                                                             ) : (
@@ -711,7 +762,7 @@ const QuestionDetailPage = () => {
                                                             {formatDate(answer.created_at)}
                                                         </span>
                                                     </div>
-                                                </Link>
+                                                </div>
                                             </div>
 
                                             <div className="prose prose-sm dark:prose-invert max-w-none mb-4 text-gray-700 dark:text-gray-300">
@@ -754,7 +805,7 @@ const QuestionDetailPage = () => {
                                                                     }`}
                                                             >
                                                                 <FaUserSecret />
-                                                                <span>{commentAnonymous[answerCommentKey] ? 'Anonim yorum' : 'Anonim olarak yorum yap'}</span>
+                                                                <span>{commentAnonymous[answerCommentKey] ? 'Gizli yorum' : 'Gizli Üye olarak yorum yap'}</span>
                                                             </button>
                                                             <div className="flex gap-2">
                                                                 <button
