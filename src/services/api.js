@@ -45,6 +45,8 @@ export const questionsAPI = {
     create: (data) => api.post('/questions', data),
     createAnswer: (questionId, data) => api.post(`/questions/${questionId}/answers`, data),
     getMyQuestions: () => api.get('/user/me/questions'),
+    getQuestionComments: (questionId, params) => api.get(`/questions/${questionId}/comments`, { params }),
+    getAnswerComments: (answerId, params) => api.get(`/answers/${answerId}/comments`, { params })
 };
 
 export const usersAPI = {
@@ -80,6 +82,7 @@ export const uploadAPI = {
 
 export const commentsAPI = {
     create: (data) => api.post('/comments', data),
+    getCommentReplies: (commentId, params) => api.get(`/comments/${commentId}/replies`, { params })
 };
 
 export const messagesAPI = {
