@@ -13,6 +13,7 @@ import { TrendsWidget, TopUsersWidget } from '../components/Widgets';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI, questionsAPI } from '../services/api';
 import Toast from '../components/Toast';
+import ErrorPage from './ErrorPage';
 
 const ProfilePage = () => {
     const { username } = useParams();
@@ -187,7 +188,15 @@ const ProfilePage = () => {
 
     if (loading) return <MainLayout><div className="flex justify-center p-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div></div></MainLayout>;
 
-    if (!profileData) return <MainLayout><div className="text-center p-10">Kullanıcı bulunamadı</div></MainLayout>;
+
+
+    if (!profileData) return (
+        <ErrorPage
+            code={404}
+            title="Kullanıcı Bulunamadı"
+            message="Böyle bir profil yok veya silinmiş olabilir. Kullanıcı adını kontrol edip tekrar deneyebilirsin."
+        />
+    );
 
 
     const handleAvatarUpload = async (file) => {

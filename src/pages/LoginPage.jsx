@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaEnvelope, FaLock, FaCheckCircle } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaGoogle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
@@ -56,6 +56,10 @@ const LoginPage = () => {
             // API hatasını göster
             setErrors(prev => ({ ...prev, submit: result.error }));
         }
+    };
+
+    const handleGoogleLogin = () => {
+        window.location.href = "https://herkeslersoruyor.panalix.com.tr/api/auth/google";
     };
 
     return (
@@ -157,6 +161,16 @@ const LoginPage = () => {
                             <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">veya</span>
                         </div>
                     </div>
+
+                    {/* Google Login Button */}
+                    <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        className="w-full mb-6 py-3 px-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-semibold hover:shadow-md transition-all flex items-center justify-center gap-3"
+                    >
+                        <FaGoogle className="text-red-500 text-lg" />
+                        <span>Google ile Giriş Yap</span>
+                    </button>
 
                     {/* Signup Link */}
                     <div className="text-center">
