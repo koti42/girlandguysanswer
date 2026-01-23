@@ -8,19 +8,19 @@ const HeroSection = () => {
             <div className="max-w-6xl mx-auto text-center">
                 {/* Main Heading */}
                 <div className="mb-8">
-                    <div className="flex items-center justify-center gap-3 mb-6">
-                        <span className="font-script text-6xl md:text-8xl text-coral font-bold">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-6">
+                        <span className="font-script text-4xl sm:text-6xl md:text-8xl text-coral font-bold break-words px-2">
                             Kızilinkalarsoruyor
                         </span>
                         <div className="relative">
-                            <FaHeart className="text-gold text-5xl md:text-7xl" />
-                            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-2xl md:text-3xl">?</span>
+                            <FaHeart className="text-gold text-4xl sm:text-5xl md:text-7xl" />
+                            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-xl sm:text-2xl md:text-3xl">?</span>
                         </div>
                     </div>
-                    <h2 className="text-3xl md:text-5xl font-bold text-gray-800 dark:text-white mb-4">
+                    <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-800 dark:text-white mb-3 md:mb-4 px-4">
                         Kadınlar ve Erkekler Bir Arada!
                     </h2>
-                    <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                    <p className="text-base sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-4">
                         Sorularını sor, farklı bakış açılarından cevaplar al. Kadın ve erkek perspektiflerini keşfet!
                     </p>
                 </div>

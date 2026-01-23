@@ -86,29 +86,29 @@ const QuestionCard = ({ question }) => {
     const displayName = isOwnerAnonymous ? 'Gizli Üye' : question.user.username;
 
     return (
-        <div className={`rounded-3xl p-6 transition-all duration-300 border flex flex-col gap-4 ${styles.container}`}>
+        <div className={`rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 ${styles.container}`}>
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                     <Link to={isOwnerAnonymous ? '#' : `/profile/${question.user?.username}`} className={isOwnerAnonymous ? 'cursor-default' : ''}>
                         <UserAvatar
                             user={question.user}
-                            size="lg"
-                            className="shadow-sm border-2 border-white"
+                            size="md" // Mobilde küçülttük
+                            className="shadow-sm border-2 border-white md:w-12 md:h-12 w-10 h-10"
                         />
                     </Link>
                     <div>
-                        <div className="flex items-center gap-2">
-                            <span className="font-bold text-gray-900 text-lg">
+                        <div className="flex items-center gap-1.5 md:gap-2">
+                            <span className="font-bold text-gray-900 text-base md:text-lg line-clamp-1">
                                 {displayName}
                             </span>
                             {question.user?.gender === 'female' ? (
-                                <FaVenus className={`text-lg ${styles.icon}`} />
+                                <FaVenus className={`text-base md:text-lg ${styles.icon}`} />
                             ) : (
-                                <FaMars className={`text-lg ${styles.icon}`} />
+                                <FaMars className={`text-base md:text-lg ${styles.icon}`} />
                             )}
                         </div>
-                        <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{question.category}</span>
+                        <span className="text-[10px] md:text-xs font-medium text-gray-400 uppercase tracking-wider">{question.category}</span>
                     </div>
                 </div>
                 <QuestionActionsMenu />
@@ -117,14 +117,14 @@ const QuestionCard = ({ question }) => {
             {/* Content */}
             <div>
                 <Link to={`/question/${question.slug || question.id}`}>
-                    <h3 className="text-xl font-bold text-gray-800 mb-3 leading-snug hover:text-coral transition-colors cursor-pointer">
+                    <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2 md:mb-3 leading-snug hover:text-coral transition-colors cursor-pointer line-clamp-2 md:line-clamp-none">
                         {question.title}
                     </h3>
                 </Link>
 
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
                     {question.tags.map((tag, idx) => (
-                        <span key={idx} className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${styles.badge}`}>
+                        <span key={idx} className={`px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold transition-colors ${styles.badge}`}>
                             #{tag}
                         </span>
                     ))}
@@ -132,31 +132,31 @@ const QuestionCard = ({ question }) => {
 
                 {question.image && (
                     <Link to={`/question/${question.slug || question.id}`}>
-                        <div className="rounded-2xl overflow-hidden mb-4 shadow-sm cursor-pointer group">
-                            <img src={question.image} alt="Question" className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
+                        <div className="rounded-xl md:rounded-2xl overflow-hidden mb-3 md:mb-4 shadow-sm cursor-pointer group">
+                            <img src={question.image} alt="Question" className="w-full h-56 md:h-72 object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
                         </div>
                     </Link>
                 )}
             </div>
 
             {/* Footer / Stats */}
-            <div className="pt-4 border-t border-gray-100/50">
-                <div className="flex items-center justify-between text-gray-500 text-sm mb-4">
-                    <div className="flex gap-6">
-                        <button className="flex items-center gap-2 hover:text-red-500 transition-colors group">
-                            <div className="p-2 rounded-full bg-red-50 group-hover:bg-red-100 text-red-400 group-hover:text-red-500 transition-colors">
+            <div className="pt-3 md:pt-4 border-t border-gray-100/50">
+                <div className="flex items-center justify-between text-gray-500 text-xs md:text-sm mb-3 md:mb-4">
+                    <div className="flex gap-4 md:gap-6">
+                        <button className="flex items-center gap-1.5 md:gap-2 hover:text-red-500 transition-colors group">
+                            <div className="p-1.5 md:p-2 rounded-full bg-red-50 group-hover:bg-red-100 text-red-400 group-hover:text-red-500 transition-colors">
                                 <FaHeart />
                             </div>
                             <span className="font-semibold">{question.stats?.likes || question.likes || 0}</span>
                         </button>
-                        <Link to={`/question/${question.slug || question.id}`} className="flex items-center gap-2 hover:text-blue-500 transition-colors group">
-                            <div className="p-2 rounded-full bg-blue-50 group-hover:bg-blue-100 text-blue-400 group-hover:text-blue-500 transition-colors">
+                        <Link to={`/question/${question.slug || question.id}`} className="flex items-center gap-1.5 md:gap-2 hover:text-blue-500 transition-colors group">
+                            <div className="p-1.5 md:p-2 rounded-full bg-blue-50 group-hover:bg-blue-100 text-blue-400 group-hover:text-blue-500 transition-colors">
                                 <FaComment />
                             </div>
                             <span className="font-semibold">{question.stats?.comments || question.commentsCount || 0}</span>
                         </Link>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-1.5 md:gap-2 text-gray-400">
                         <FaEye /> <span>{question.stats?.views || question.views || 0}</span>
                     </div>
                 </div>
@@ -165,7 +165,7 @@ const QuestionCard = ({ question }) => {
                 {!question.isOwner && (
                     <button
                         onClick={() => setShowReplyBox(!showReplyBox)}
-                        className={`w-full py-3 px-4 rounded-xl bg-gradient-to-r text-white font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2 ${styles.button}`}
+                        className={`w-full py-2.5 md:py-3 px-4 rounded-xl bg-gradient-to-r text-white font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2 text-sm md:text-base ${styles.button}`}
                     >
                         <FaComment />
                         {showReplyBox ? 'Vazgeç' : 'Cevapla'}
@@ -184,39 +184,39 @@ const QuestionCard = ({ question }) => {
 
             {/* Quick Reply Box */}
             {showReplyBox && (
-                <form onSubmit={handleSubmitReply} className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <form onSubmit={handleSubmitReply} className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex gap-2">
                         <input
                             type="text"
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
                             placeholder="Hızlı cevap yaz..."
-                            className="flex-1 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all text-sm"
+                            className="flex-1 px-3 md:px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all text-sm"
                             autoFocus
                             disabled={loading}
                         />
                         <button
                             type="submit"
                             disabled={!replyText.trim() || loading}
-                            className="bg-gradient-to-r from-coral to-orange-400 text-white p-2.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[44px]"
+                            className="bg-gradient-to-r from-coral to-orange-400 text-white p-2 md:p-2.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[40px] md:min-w-[44px]"
                         >
                             {loading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-b-transparent"></div> : <FaPaperPlane />}
                         </button>
                     </div>
-                    <div className="flex items-center justify-between mt-3">
+                    <div className="flex items-center justify-between mt-2 md:mt-3">
                         <button
                             type="button"
                             onClick={() => setIsAnonymous(!isAnonymous)}
                             disabled={loading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnonymous
+                            className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-medium transition-all ${isAnonymous
                                 ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
                                 : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
                                 }`}
                         >
-                            <FaUserSecret className="text-lg" />
-                            <span className="text-sm">{isAnonymous ? 'Gizli cevap' : 'Gizli Üye olarak cevapla'}</span>
+                            <FaUserSecret className="text-base md:text-lg" />
+                            <span className="text-xs md:text-sm">{isAnonymous ? 'Gizli' : 'Gizli Üye ol'}</span>
                         </button>
-                        <p className="text-xs text-gray-500">Detaylı cevap için soruya tıklayın</p>
+                        <p className="text-[10px] md:text-xs text-gray-500 hidden md:block">Detaylı cevap için soruya tıklayın</p>
                     </div>
                 </form>
             )}
