@@ -616,7 +616,7 @@ const QuestionDetailPage = () => {
                     )}
 
                     {/* Answer Form - Only if not owner */}
-                    {currentUser?.id !== question.user?.id && (
+                    {!question.isOwner && (
                         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Cevap Yaz</h3>
                             <form onSubmit={handleSubmitAnswer}>

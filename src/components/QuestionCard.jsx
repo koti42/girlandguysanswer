@@ -162,7 +162,7 @@ const QuestionCard = ({ question }) => {
                 </div>
 
                 {/* Reply Button - Only if not owner */}
-                {currentUser?.id !== question.user?.id && (
+                {!question.isOwner && (
                     <button
                         onClick={() => setShowReplyBox(!showReplyBox)}
                         className={`w-full py-3 px-4 rounded-xl bg-gradient-to-r text-white font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2 ${styles.button}`}
