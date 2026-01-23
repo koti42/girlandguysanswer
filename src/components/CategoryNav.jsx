@@ -8,8 +8,8 @@ const CategoryNav = ({ selectedCategory, onSelectCategory }) => {
             <div
                 onClick={() => onSelectCategory({ id: 0, title: 'Tümü' })}
                 className={`flex-shrink-0 w-32 h-24 rounded-2xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform shadow-md ${selectedCategory?.id === 0
-                        ? 'bg-gradient-to-br from-gray-700 to-gray-900 text-white ring-2 ring-offset-2 ring-gray-600'
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    ? 'bg-gradient-to-br from-gray-700 to-gray-900 text-white ring-2 ring-offset-2 ring-gray-600 dark:ring-offset-gray-900'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                     }`}
             >
                 <span className="font-bold text-lg">Tümü</span>

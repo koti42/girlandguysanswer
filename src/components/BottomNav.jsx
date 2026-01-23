@@ -17,7 +17,7 @@ const BottomNav = () => {
     ];
 
     return (
-        <nav className="bg-white border-t border-gray-200">
+        <nav className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
             <div className="flex justify-around items-center py-2">
                 {navItems.map((item, index) => {
                     const Icon = item.icon;
@@ -29,8 +29,8 @@ const BottomNav = () => {
                             key={index}
                             onClick={() => navigate(item.path)}
                             className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${isActive
-                                    ? 'text-coral'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'text-coral'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                 }`}
                         >
                             <Icon className="text-xl" />

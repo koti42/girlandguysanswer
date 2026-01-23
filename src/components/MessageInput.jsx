@@ -180,14 +180,14 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
     };
 
     return (
-        <div className="bg-white border-t border-gray-200 p-2">
+        <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2">
             {replyingTo && (
-                <div className="mb-2 p-2 bg-gray-100 rounded-lg border-l-4 border-pink-500 flex justify-between items-center">
+                <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-pink-500 flex justify-between items-center text-gray-100">
                     <div className="flex flex-col overflow-hidden">
-                        <span className="text-xs font-bold text-pink-600">
+                        <span className="text-xs font-bold text-pink-600 dark:text-pink-400">
                             {replyingTo.sender_id === user.id ? 'Kendine yanıt veriyorsun' : `${replyingTo.sender?.username || 'Kullanıcı'} kullanıcısına yanıt veriyorsun`}
                         </span>
-                        <span className="text-xs text-gray-600 truncate">
+                        <span className="text-xs text-gray-600 dark:text-gray-300 truncate">
                             {replyingTo.type === 'image' ? '📷 Fotoğraf' : replyingTo.type === 'audio' ? '🎤 Sesli Mesaj' : replyingTo.content}
                         </span>
                     </div>
@@ -226,7 +226,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
             )}
 
             {selectedFile && (
-                <div className="mb-2 p-2 bg-gray-50 rounded-lg flex items-center justify-between">
+                <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-between">
                     {fileType === 'image' && (
                         <img src={previewUrl} alt="Preview" className="w-12 h-12 rounded-lg object-cover" />
                     )}
@@ -286,7 +286,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                     onKeyPress={handleKeyPress}
                     placeholder={replyingTo ? "Yanıt..." : "Mesaj..."}
                     disabled={disabled || isRecording}
-                    className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 rounded-lg text-base md:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50"
+                    className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-base md:text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50"
                 />
 
                 {/* Send Button - Icon on mobile, Text on desktop */}

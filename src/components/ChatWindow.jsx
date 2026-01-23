@@ -191,17 +191,17 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
     if (!conversation) {
         return (
-            <div className="flex flex-col items-center justify-center h-[100dvh] bg-gray-50">
+            <div className="flex flex-col items-center justify-center h-[100dvh] bg-gray-50 dark:bg-gray-900">
                 <div className="text-center">
-                    <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
                         Mesajlarınız
                     </h3>
-                    <p className="text-gray-500">
+                    <p className="text-gray-500 dark:text-gray-400">
                         Bir soh bet seçin veya yeni bir konuşma başlatın
                     </p>
                 </div>
@@ -210,7 +210,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     }
 
     return (
-        <div className="flex flex-col h-full bg-white relative w-full overflow-hidden">
+        <div className="flex flex-col h-full bg-white dark:bg-gray-900 relative w-full overflow-hidden">
             {/* Header - Pink Bar (Sticky Top) */}
             <div className="flex-shrink-0 bg-pink-500 p-4 w-full z-10 sticky top-0">
                 <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             {/* Messages Area - Scrollable (Flex-1) */}
             <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto bg-white w-full"
+                className="flex-1 overflow-y-auto bg-white dark:bg-gray-900 w-full"
                 style={{ WebkitOverflowScrolling: 'touch' }}
             >
                 {loading ? (
@@ -275,10 +275,10 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 ) : messages.length === 0 ? (
                     <div className="flex justify-center items-center h-full px-4">
                         <div className="text-center">
-                            <p className="text-lg font-semibold text-gray-700 mb-2">
+                            <p className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">
                                 Henüz mesaj yok
                             </p>
-                            <p className="text-gray-500">
+                            <p className="text-gray-500 dark:text-gray-400">
                                 İlk mesajı sen gönder! 👋
                             </p>
                         </div>
@@ -300,7 +300,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             </div>
 
             {/* Interaction Zone (Sticky Bottom) - Input Only */}
-            <div className="flex-shrink-0 w-full z-20 sticky bottom-0 bg-white">
+            <div className="flex-shrink-0 w-full z-20 sticky bottom-0 bg-white dark:bg-gray-900">
                 <MessageInput
                     onSendMessage={handleSendMessage}
                     disabled={false}

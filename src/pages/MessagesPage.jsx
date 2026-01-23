@@ -215,13 +215,13 @@ const MessagesPage = () => {
 
     return (
         <MainLayout noMobilePadding={true}>
-            <div className="flex flex-col h-[calc(100vh-80px)] bg-white w-full">
+            <div className="flex flex-col h-[calc(100vh-80px)] bg-white dark:bg-gray-900 w-full">
                 {/* Main Content Area */}
                 <div className="flex-1 flex overflow-hidden">
                     {/* Conversations List Sidebar */}
-                    <div className={`${showMobileChat ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-96 h-full bg-white border-r border-gray-200`}>
-                        <div className="flex-shrink-0 p-4 border-b border-gray-200">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                    <div className={`${showMobileChat ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-96 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800`}>
+                        <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-800">
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                                 Mesajlar
                             </h2>
 
@@ -232,7 +232,7 @@ const MessagesPage = () => {
                                     placeholder="Ara..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-coral"
+                                    className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral"
                                 />
                             </div>
                         </div>
@@ -251,7 +251,7 @@ const MessagesPage = () => {
                                     <div
                                         key={conversation.id}
                                         onClick={() => handleConversationClick(conversation)}
-                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors group ${activeConversation?.id === conversation.id ? 'bg-gray-50' : ''
+                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer border-b border-gray-100 dark:border-gray-800 transition-colors group ${activeConversation?.id === conversation.id ? 'bg-gray-50 dark:bg-gray-800' : ''
                                             }`}
                                     >
                                         <div className="relative">
@@ -271,7 +271,7 @@ const MessagesPage = () => {
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-baseline mb-1">
-                                                <h3 className="font-semibold text-gray-800 truncate">
+                                                <h3 className="font-semibold text-gray-800 dark:text-gray-100 truncate">
                                                     {conversation.other_user.username}
                                                 </h3>
                                                 {conversation.last_message_at && (
@@ -283,7 +283,7 @@ const MessagesPage = () => {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className={`text-sm truncate ${conversation.unread_count > 0 ? 'text-gray-800 font-medium' : 'text-gray-500'
+                                            <p className={`text-sm truncate ${conversation.unread_count > 0 ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-500 dark:text-gray-400'
                                                 }`}>
                                                 {conversation.latest_message?.is_mine && 'Siz: '}
                                                 {renderMessagePreview(conversation.latest_message)}
@@ -308,7 +308,7 @@ const MessagesPage = () => {
                     </div>
 
                     {/* Chat Window Area */}
-                    <div className={`${showMobileChat ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full bg-white`}>
+                    <div className={`${showMobileChat ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full bg-white dark:bg-gray-900`}>
                         <ChatWindow
                             conversation={activeConversation}
                             onBack={handleBack}
