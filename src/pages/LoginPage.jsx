@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaGoogle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { authAPI } from '../services/api';
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -58,8 +59,19 @@ const LoginPage = () => {
         }
     };
 
-    const handleGoogleLogin = () => {
-        window.location.href = "https://herkeslersoruyor.panalix.com.tr/api/auth/google";
+    const handleGoogleLogin = async () => {
+        try {
+            const response = await authAPI.getGoogleAuthUrl();
+            const redirectUrl = response.data.data?.url || response.data.url;
+            if (redirectUrl) {
+                window.location.href = redirectUrl;
+            } else {
+                setErrors(prev => ({ ...prev, submit: 'Google giriş bağlantısı alınamadı.' }));
+            }
+        } catch (error) {
+            console.error('Google Auth Error:', error);
+            setErrors(prev => ({ ...prev, submit: 'Google ile giriş yapılırken bir hata oluştu.' }));
+        }
     };
 
     return (

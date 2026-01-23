@@ -37,6 +37,7 @@ export const authAPI = {
     register: (userData) => api.post('/auth/register', userData),
     logout: () => api.post('/auth/logout'),
     getCurrentUser: () => api.get('/user/me'),
+    getGoogleAuthUrl: () => api.get('/auth/google'),
 };
 
 export const questionsAPI = {
