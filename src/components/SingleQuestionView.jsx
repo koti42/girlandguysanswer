@@ -277,8 +277,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const renderComment = (comment, type, targetId, level = 0, mainCommentId = null) => {
         const currentMainCommentId = mainCommentId || comment.id;
         const commentGradientClass = comment.user?.gender === 'female'
-            ? 'bg-gradient-to-br from-pink-100 to-pink-50 dark:from-pink-900/25 dark:to-pink-800/20 border-pink-400 dark:border-pink-600'
-            : 'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-900/25 dark:to-cyan-800/20 border-cyan-400 dark:border-cyan-600';
+            ? 'bg-gradient-to-br from-pink-100 to-pink-50 dark:from-pink-900/30 dark:to-pink-900/20 border-pink-400 dark:border-pink-600'
+            : 'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-900/30 dark:to-cyan-900/20 border-cyan-400 dark:border-cyan-600';
         const marginClasses = ['ml-0', 'ml-6', 'ml-12', 'ml-16'];
         const marginLeft = marginClasses[Math.min(level, 3)];
         const isReplyingToThis = replyingTo?.commentId === comment.id;
@@ -410,7 +410,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 {question.user.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
                             </div>
                             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                <span className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">{question.category}</span>
+                                <span className="bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">{question.category}</span>
                                 <span>•</span>
                                 <span>{formatDate(question.created_at)}</span>
                             </div>
@@ -422,7 +422,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
                     <div className="flex flex-wrap gap-2 mb-4">
                         {question.tags?.map((tag, idx) => (
-                            <span key={idx} className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium hover:bg-gray-200 transition-colors cursor-pointer">{tag}</span>
+                            <span key={idx} className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">{tag}</span>
                         ))}
                     </div>
 
@@ -468,7 +468,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         <FaUserSecret /><span>{commentAnonymous[commentKey] ? 'Gizli yorum' : 'Gizli Üye olarak yorum yap'}</span>
                                     </button>
                                     <div className="flex gap-2">
-                                        <button type="button" onClick={() => setCommentingOn(null)} className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-all text-sm">İptal</button>
+                                        <button type="button" onClick={() => setCommentingOn(null)} className="px-4 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm">İptal</button>
                                         <button type="submit" disabled={!commentTexts[commentKey]?.trim()} className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm">Gönder</button>
                                     </div>
                                 </div>
@@ -523,7 +523,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 <button
                                     type="button"
                                     onClick={() => setIsAnswerAnonymous(!isAnswerAnonymous)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnswerAnonymous ? 'bg-purple-100 text-purple-700 border-2 border-purple-300' : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'}`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnswerAnonymous ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
                                 >
                                     <FaUserSecret className="text-lg" /><span className="text-sm">{isAnswerAnonymous ? 'Gizli cevap' : 'Gizli Üye olarak cevapla'}</span>
                                 </button>
@@ -550,7 +550,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                             filteredAnswers.map((answer) => {
                                 const answerCommentKey = `answer_${answer.id}`;
                                 return (
-                                    <div key={answer.id} id={`answer-${answer.id}`} className="p-4 md:p-6 rounded-2xl bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700 scroll-mt-24">
+                                    <div key={answer.id} id={`answer-${answer.id}`} className="p-4 md:p-6 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700 scroll-mt-24 shadow-sm hover:shadow-md transition-shadow">
                                         <div className="flex gap-4">
                                             {answer.user?.username === 'anonim' ? (
                                                 <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
@@ -596,12 +596,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setCommentAnonymous(prev => ({ ...prev, [answerCommentKey]: !prev[answerCommentKey] }))}
-                                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-xs ${commentAnonymous[answerCommentKey] ? 'bg-purple-100 text-purple-700 border-2 border-purple-300' : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'}`}
+                                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-xs ${commentAnonymous[answerCommentKey] ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
                                                             >
                                                                 <FaUserSecret /><span>{commentAnonymous[answerCommentKey] ? 'Gizli yorum' : 'Gizli Üye olarak yorum yap'}</span>
                                                             </button>
                                                             <div className="flex gap-2">
-                                                                <button type="button" onClick={() => setCommentingOn(null)} className="py-2 px-4 rounded-xl text-gray-600 hover:bg-gray-100 transition-all text-sm">İptal</button>
+                                                                <button type="button" onClick={() => setCommentingOn(null)} className="py-2 px-4 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm">İptal</button>
                                                                 <button type="submit" disabled={!commentTexts[answerCommentKey]?.trim()} className="bg-coral text-white font-semibold py-1.5 px-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm">Gönder</button>
                                                             </div>
                                                         </div>
@@ -617,8 +617,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         {/* Infinite Scroll Sentinel for Answer Comments */}
                                                         {answerCommentsPagination[answer.id]?.hasMore && (
                                                             <div className="mt-4 text-center">
-                                                                <button onClick={() => loadMoreAnswerComments(answer.id)} disabled={answerCommentsPagination[answer.id]?.loading} className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all disabled:opacity-50">
-                                                                    {answerCommentsPagination[answer.id]?.loading ? <span className="flex items-center gap-2"><div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-transparent"></div> Yükleniyor...</span> : 'Daha fazla göster'}
+                                                                <button onClick={() => loadMoreAnswerComments(answer.id)} disabled={answerCommentsPagination[answer.id]?.loading} className="px-6 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all disabled:opacity-50">
+                                                                    {answerCommentsPagination[answer.id]?.loading ? <span className="flex items-center gap-2"><div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 dark:border-gray-400 border-t-transparent"></div> Yükleniyor...</span> : 'Daha fazla göster'}
                                                                 </button>
                                                             </div>
                                                         )}

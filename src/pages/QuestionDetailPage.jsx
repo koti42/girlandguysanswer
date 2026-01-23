@@ -164,15 +164,15 @@ const QuestionDetailPage = () => {
                 <div ref={observerTarget} className="py-8 text-center scroll-mt-20">
                     {/* Ad Placeholder before loading next question */}
                     {!loading && !error && (
-                        <div className="mx-auto w-full max-w-2xl min-h-[120px] bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center mb-8 p-6 text-gray-400">
+                        <div className="mx-auto w-full max-w-2xl min-h-[120px] bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-dashed border-gray-200 dark:border-gray-700/50 flex flex-col items-center justify-center mb-8 p-6 text-gray-400 dark:text-gray-500">
                             <span className="text-xs uppercase tracking-widest font-semibold mb-2">Sponsorlu İçerik</span>
-                            <div className="w-1/2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-2"></div>
-                            <div className="w-1/3 h-2 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                            <div className="w-1/2 h-2 bg-gray-200 dark:bg-gray-700/50 rounded-full mb-2"></div>
+                            <div className="w-1/3 h-2 bg-gray-200 dark:bg-gray-700/50 rounded-full"></div>
                         </div>
                     )}
 
                     {loadingMore && (
-                        <div className="flex flex-col items-center gap-2 text-gray-500 animate-pulse">
+                        <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400 animate-pulse">
                             <div className="h-8 w-8 border-2 border-coral border-t-transparent rounded-full animate-spin"></div>
                             <span className="font-medium">Sıradaki soruya geçiliyor...</span>
                         </div>

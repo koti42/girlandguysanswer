@@ -59,24 +59,24 @@ const QuestionCard = ({ question }) => {
         const gender = question.user?.gender;
         if (gender === 'female') {
             return {
-                container: 'bg-gradient-to-br from-rose-50 via-white to-pink-50 border-pink-100 hover:border-pink-200 shadow-sm hover:shadow-pink-100/50',
-                badge: 'bg-pink-100 text-pink-600',
+                container: 'bg-gradient-to-br from-rose-50 via-white to-pink-50 border-pink-100 hover:border-pink-200 shadow-sm hover:shadow-pink-100/50 dark:from-pink-900/10 dark:via-gray-800 dark:to-rose-900/10 dark:border-pink-900/30',
+                badge: 'bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300',
                 icon: 'text-pink-500',
                 button: 'from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-pink-200'
             };
         } else if (gender === 'male') {
             return {
-                container: 'bg-gradient-to-br from-blue-50 via-white to-sky-50 border-blue-100 hover:border-blue-200 shadow-sm hover:shadow-blue-100/50',
-                badge: 'bg-blue-100 text-blue-600',
+                container: 'bg-gradient-to-br from-blue-50 via-white to-sky-50 border-blue-100 hover:border-blue-200 shadow-sm hover:shadow-blue-100/50 dark:from-blue-900/10 dark:via-gray-800 dark:to-indigo-900/10 dark:border-blue-900/30',
+                badge: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300',
                 icon: 'text-blue-500',
                 button: 'from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-blue-200'
             };
         } else {
             return {
-                container: 'bg-gradient-to-br from-gray-50 via-white to-gray-50 border-gray-100 hover:border-gray-200 shadow-sm',
-                badge: 'bg-gray-100 text-gray-600',
+                container: 'bg-gradient-to-br from-gray-50 via-white to-gray-50 border-gray-100 hover:border-gray-200 shadow-sm dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:border-gray-700',
+                badge: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
                 icon: 'text-gray-500',
-                button: 'from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black shadow-gray-200'
+                button: 'from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black shadow-gray-200 dark:from-gray-700 dark:to-gray-600'
             };
         }
     };
@@ -99,7 +99,7 @@ const QuestionCard = ({ question }) => {
                     </Link>
                     <div>
                         <div className="flex items-center gap-1.5 md:gap-2">
-                            <span className="font-bold text-gray-900 text-base md:text-lg line-clamp-1">
+                            <span className="font-bold text-gray-900 dark:text-white text-base md:text-lg line-clamp-1">
                                 {displayName}
                             </span>
                             {question.user?.gender === 'female' ? (
@@ -108,7 +108,7 @@ const QuestionCard = ({ question }) => {
                                 <FaMars className={`text-base md:text-lg ${styles.icon}`} />
                             )}
                         </div>
-                        <span className="text-[10px] md:text-xs font-medium text-gray-400 uppercase tracking-wider">{question.category}</span>
+                        <span className="text-[10px] md:text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{question.category}</span>
                     </div>
                 </div>
                 <QuestionActionsMenu />
@@ -117,7 +117,7 @@ const QuestionCard = ({ question }) => {
             {/* Content */}
             <div>
                 <Link to={`/question/${question.slug || question.id}`}>
-                    <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2 md:mb-3 leading-snug hover:text-coral transition-colors cursor-pointer line-clamp-2 md:line-clamp-none">
+                    <h3 className="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 md:mb-3 leading-snug hover:text-coral transition-colors cursor-pointer line-clamp-2 md:line-clamp-none">
                         {question.title}
                     </h3>
                 </Link>
@@ -140,7 +140,7 @@ const QuestionCard = ({ question }) => {
             </div>
 
             {/* Footer / Stats */}
-            <div className="pt-3 md:pt-4 border-t border-gray-100/50">
+            <div className="pt-3 md:pt-4 border-t border-gray-100/50 dark:border-gray-700/50">
                 <div className="flex items-center justify-between text-gray-500 text-xs md:text-sm mb-3 md:mb-4">
                     <div className="flex gap-4 md:gap-6">
                         <button className="flex items-center gap-1.5 md:gap-2 hover:text-red-500 transition-colors group">
@@ -150,7 +150,7 @@ const QuestionCard = ({ question }) => {
                             <span className="font-semibold">{question.stats?.likes || question.likes || 0}</span>
                         </button>
                         <Link to={`/question/${question.slug || question.id}`} className="flex items-center gap-1.5 md:gap-2 hover:text-blue-500 transition-colors group">
-                            <div className="p-1.5 md:p-2 rounded-full bg-blue-50 group-hover:bg-blue-100 text-blue-400 group-hover:text-blue-500 transition-colors">
+                            <div className="p-1.5 md:p-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-400 dark:text-blue-300 group-hover:bg-blue-100 transition-colors">
                                 <FaComment />
                             </div>
                             <span className="font-semibold">{question.stats?.comments || question.commentsCount || 0}</span>
@@ -209,8 +209,8 @@ const QuestionCard = ({ question }) => {
                             onClick={() => setIsAnonymous(!isAnonymous)}
                             disabled={loading}
                             className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-medium transition-all ${isAnonymous
-                                ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
-                                : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'
+                                ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
                                 }`}
                         >
                             <FaUserSecret className="text-base md:text-lg" />

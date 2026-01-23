@@ -6,7 +6,7 @@ import { usersAPI } from '../services/api';
 const GoogleCallback = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { updateUser } = useAuth(); 
+    const { updateUser } = useAuth();
 
     useEffect(() => {
         const token = searchParams.get('token');
@@ -15,23 +15,30 @@ const GoogleCallback = () => {
         if (token) {
             localStorage.setItem('token', token);
 
-            
+
 
             const fetchUserAndRedirect = async () => {
                 try {
                     const response = await usersAPI.getMe();
                     const userData = response.data.data?.user || response.data.user || response.data.data;
 
-                    localStorage.setItem('user', JSON.stringify(userData));
+                    if (userData) {
+                        localStorage.setItem('user', JSON.stringify(userData));
+                        updateUser(userData);
 
-                    if (genderRequired === 'true' || !userData.gender) {
-                        window.location.href = '/complete-profile';
+                        if (genderRequired === 'true' || !userData.gender) {
+                            navigate('/complete-profile', { replace: true });
+                        } else {
+                            navigate('/', { replace: true });
+                        }
                     } else {
-                        window.location.href = '/';
+                        throw new Error('User data not found');
                     }
                 } catch (error) {
                     console.error('Google Login Error:', error);
-                    navigate('/login');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    navigate('/login', { replace: true });
                 }
             };
 
