@@ -7,6 +7,7 @@ import { questionsAPI, commentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
 import Toast from '../components/Toast';
+import LikersModal from '../components/LikersModal';
 
 const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
@@ -24,32 +25,26 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const [loading, setLoading] = useState(!initialQuestion);
     const [error, setError] = useState(null);
 
-    // Answer state
     const [answerText, setAnswerText] = useState('');
     const [isAnswerAnonymous, setIsAnswerAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
 
-    // Comment state
     const [commentingOn, setCommentingOn] = useState(null);
     const [commentTexts, setCommentTexts] = useState({});
     const [commentAnonymous, setCommentAnonymous] = useState({});
 
-    // Reply state
     const [replyingTo, setReplyingTo] = useState(null);
     const [replyTexts, setReplyTexts] = useState({});
     const [replyAnonymous, setReplyAnonymous] = useState({});
 
-    // Filter & Sort
     const [genderFilter, setGenderFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
 
-    // Comment Pagination
     const [questionCommentsPage, setQuestionCommentsPage] = useState(1);
     const [questionCommentsHasMore, setQuestionCommentsHasMore] = useState(false);
     const [loadingQuestionComments, setLoadingQuestionComments] = useState(false);
     const [answerCommentsPagination, setAnswerCommentsPagination] = useState({});
     const [repliesPagination, setRepliesPagination] = useState({});
 
-    // Toast
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('success');
@@ -58,6 +53,20 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         setToastMessage(message);
         setToastType(type);
         setShowToast(true);
+    };
+
+    const [likersModal, setLikersModal] = useState({ isOpen: false, type: null, id: null });
+
+    const openLikersModal = (type, id) => {
+        if (!currentUser) {
+            displayToast('Beğenenleri görmek için giriş yapmalısınız.', 'error');
+            return;
+        }
+        setLikersModal({ isOpen: true, type, id });
+    };
+
+    const closeLikersModal = () => {
+        setLikersModal({ ...likersModal, isOpen: false });
     };
 
     useEffect(() => {
@@ -92,14 +101,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     }, [slug, initialQuestion]);
 
     const checkInitialPagination = (data) => {
-        // Question comments
         const questionTotalComments = data.stats?.comments || data.comments_count || 0;
         const questionLoadedComments = data.comments?.length || 0;
         if (questionLoadedComments > 0 && (questionLoadedComments < questionTotalComments || questionLoadedComments >= 8)) {
             setQuestionCommentsHasMore(true);
         }
 
-        // Answer comments
         const answersPagination = {};
         (data.answers || []).forEach(answer => {
             const answerTotalComments = answer.comments_count || 0;
@@ -113,7 +120,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         setAnswerCommentsPagination(answersPagination);
     };
 
-    // Like Handler with Detailed Logging
     const handleLike = async (e, type, id) => {
         e.preventDefault();
         e.stopPropagation();
@@ -123,7 +129,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             return;
         }
 
-        // Optimistic Update Function
         const toggleLikeInState = (state, setState) => {
             if (type === 'question') {
                 setState(prev => {
@@ -151,7 +156,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     return item;
                 }));
             } else if (type === 'comment') {
-                // Recursive update for comments and replies
                 const updateCommentTree = (comments) => {
                     return comments.map(comment => {
                         if (comment.id === id) {
@@ -169,12 +173,10 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     });
                 };
 
-                // Update in question comments
                 if (question?.comments) {
                     setQuestion(prev => ({ ...prev, comments: updateCommentTree(prev.comments || []) }));
                 }
 
-                // Update in answer comments
                 setAnswers(prevAnswers => prevAnswers.map(ans => ({
                     ...ans,
                     comments: updateCommentTree(ans.comments || [])
@@ -182,7 +184,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             }
         };
 
-        // Apply Optimistic Update
         if (type === 'question') toggleLikeInState(question, setQuestion);
         else if (type === 'answer') toggleLikeInState(answers, setAnswers);
         else if (type === 'comment') toggleLikeInState(null, null); // Comment updates handle both states internally
@@ -190,13 +191,10 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         try {
             const response = await questionsAPI.toggleLike({ type, id });
 
-            // Sync with server response if needed (optional since optimistic matches logic)
-            // But if server returns new count, we could update it.
-            // For now, we trust the optimistic update unless error.
+    
 
         } catch (error) {
             console.error('Like toggle error:', error);
-            // Rollback (simply toggle again)
             if (type === 'question') toggleLikeInState(question, setQuestion);
             else if (type === 'answer') toggleLikeInState(answers, setAnswers);
             else if (type === 'comment') toggleLikeInState(null, null);
@@ -205,13 +203,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         }
     };
 
-    // ... (Diğer tüm event handler'lar aynı olacak: handleSubmitAnswer, handleSubmitComment, vb.)
-    // Kod tekrarını önlemek için burayı kısa tutuyorum, aslında QuestionDetailPage.jsx'teki tüm handler'lar buraya gelmeli.
-    // Ancak step limitine takılmamak için referans olarak yazıyorum.
-
-    // COPY-PASTE FROM EXISTING QuestionDetailPage.jsx
-
-    // Submit Answer
     const handleSubmitAnswer = async (e) => {
         e.preventDefault();
         if (!answerText.trim()) return;
@@ -233,7 +224,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         }
     };
 
-    // Submit Comment
     const handleSubmitComment = async (e) => {
         e.preventDefault();
         if (!commentingOn) return;
@@ -400,12 +390,20 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                             </div>
                             <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2">{comment.content}</p>
                             <div className="flex items-center gap-4 mt-2">
-                                <button
-                                    onClick={(e) => handleLike(e, 'comment', comment.id)}
-                                    className={`text-xs flex items-center gap-1 transition-colors ${comment.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
-                                >
-                                    <FaHeart /> <span>{comment.likes_count || 0}</span>
-                                </button>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={(e) => handleLike(e, 'comment', comment.id)}
+                                        className={`text-xs flex items-center gap-1 transition-colors ${comment.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                                    >
+                                        <FaHeart />
+                                    </button>
+                                    <button
+                                        onClick={() => openLikersModal('comment', comment.id)}
+                                        className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline cursor-pointer"
+                                    >
+                                        {comment.likes_count || 0}
+                                    </button>
+                                </div>
                                 <button
                                     onClick={() => setReplyingTo(isReplyingToThis ? null : { commentId: comment.id, mainCommentId: currentMainCommentId, type, targetId })}
                                     className="text-xs text-gray-600 dark:text-gray-400 hover:text-coral transition-colors flex items-center gap-1"
@@ -534,12 +532,20 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
                         <div className="flex gap-6">
-                            <button
-                                onClick={(e) => handleLike(e, 'question', question.id)}
-                                className={`flex items-center gap-2 transition-colors ${question.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
-                            >
-                                <FaHeart className="text-lg" /><span className="font-semibold">{question.likes_count || 0}</span>
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={(e) => handleLike(e, 'question', question.id)}
+                                    className={`flex items-center gap-1 transition-colors ${question.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                                >
+                                    <FaHeart className="text-lg" />
+                                </button>
+                                <button
+                                    onClick={() => openLikersModal('question', question.id)}
+                                    className="font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline cursor-pointer"
+                                >
+                                    {question.likes_count || 0}
+                                </button>
+                            </div>
                             <button onClick={() => setCommentingOn(isCommentingOnQuestion ? null : { type: 'question', id: question.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                 <FaComment className="text-lg" /><span className="font-semibold">{question.comments?.length || 0}</span>
                             </button>
@@ -677,12 +683,20 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                 <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{answer.content}</div>
 
                                                 <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                                    <button
-                                                        onClick={(e) => handleLike(e, 'answer', answer.id)}
-                                                        className={`flex items-center gap-2 transition-colors ${answer.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
-                                                    >
-                                                        <FaHeart /><span className="font-semibold">{answer.likes_count || 0}</span>
-                                                    </button>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={(e) => handleLike(e, 'answer', answer.id)}
+                                                            className={`flex items-center gap-1 transition-colors ${answer.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                                                        >
+                                                            <FaHeart />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openLikersModal('answer', answer.id)}
+                                                            className="font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline cursor-pointer"
+                                                        >
+                                                            {answer.likes_count || 0}
+                                                        </button>
+                                                    </div>
                                                     <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                                         <FaComment /><span>{answer.comments?.length || 0} Yorum</span>
                                                     </button>
@@ -741,6 +755,13 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     </div>
                 </div>
             </div>
+
+            <LikersModal
+                isOpen={likersModal.isOpen}
+                onClose={closeLikersModal}
+                type={likersModal.type}
+                id={likersModal.id}
+            />
         </div>
     );
 };

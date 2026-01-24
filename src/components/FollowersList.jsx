@@ -57,12 +57,14 @@ const FollowersList = ({ followers: initialFollowers, type = 'followers', isOwnP
                     <FaUserFriends className="text-5xl text-coral dark:text-coral-light" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
-                    {type === 'followers' ? 'Henüz takipçi yok' : 'Henüz kimseyi takip etmiyor'}
+                    {type === 'followers' ? 'Henüz takipçi yok' : type === 'likers' ? 'Henüz beğeni yok' : 'Henüz kimseyi takip etmiyor'}
                 </h3>
                 <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                     {type === 'followers'
                         ? 'Bu kullanıcının henüz takipçisi bulunmuyor.'
-                        : 'Bu kullanıcı henüz kimseyi takip etmiyor.'}
+                        : type === 'likers'
+                            ? 'Bu içeriği henüz kimse beğenmedi.'
+                            : 'Bu kullanıcı henüz kimseyi takip etmiyor.'}
                 </p>
             </div>
         );
@@ -109,7 +111,7 @@ const FollowersList = ({ followers: initialFollowers, type = 'followers', isOwnP
                                     </p>
                                 )}
 
-                                {isOwnProfile && currentUser?.id !== user.id && (
+                                {isOwnProfile && currentUser?.id !== user.id && type !== 'likers' && (
                                     <div className="mt-3">
                                         {type === 'followers' ? (
                                             user.isFollowing ? (
