@@ -113,6 +113,98 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         setAnswerCommentsPagination(answersPagination);
     };
 
+    // Like Handler with Detailed Logging
+    const handleLike = async (e, type, id) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!currentUser) {
+            displayToast('Beğenmek için giriş yapmalısınız.', 'error');
+            return;
+        }
+
+        // Optimistic Update Function
+        const toggleLikeInState = (state, setState) => {
+            if (type === 'question') {
+                setState(prev => {
+                    const isLiked = prev.is_liked;
+                    return {
+                        ...prev,
+                        is_liked: !isLiked,
+                        likes_count: isLiked ? (prev.likes_count - 1) : (prev.likes_count + 1),
+                        stats: {
+                            ...prev.stats,
+                            likes: isLiked ? (prev.stats?.likes - 1) : (prev.stats?.likes + 1)
+                        }
+                    };
+                });
+            } else if (type === 'answer') {
+                setState(prev => prev.map(item => {
+                    if (item.id === id) {
+                        const isLiked = item.is_liked;
+                        return {
+                            ...item,
+                            is_liked: !isLiked,
+                            likes_count: isLiked ? (item.likes_count - 1) : (item.likes_count + 1)
+                        };
+                    }
+                    return item;
+                }));
+            } else if (type === 'comment') {
+                // Recursive update for comments and replies
+                const updateCommentTree = (comments) => {
+                    return comments.map(comment => {
+                        if (comment.id === id) {
+                            const isLiked = comment.is_liked;
+                            return {
+                                ...comment,
+                                is_liked: !isLiked,
+                                likes_count: isLiked ? (comment.likes_count - 1) : (comment.likes_count + 1)
+                            };
+                        }
+                        if (comment.replies) {
+                            return { ...comment, replies: updateCommentTree(comment.replies) };
+                        }
+                        return comment;
+                    });
+                };
+
+                // Update in question comments
+                if (question?.comments) {
+                    setQuestion(prev => ({ ...prev, comments: updateCommentTree(prev.comments || []) }));
+                }
+
+                // Update in answer comments
+                setAnswers(prevAnswers => prevAnswers.map(ans => ({
+                    ...ans,
+                    comments: updateCommentTree(ans.comments || [])
+                })));
+            }
+        };
+
+        // Apply Optimistic Update
+        if (type === 'question') toggleLikeInState(question, setQuestion);
+        else if (type === 'answer') toggleLikeInState(answers, setAnswers);
+        else if (type === 'comment') toggleLikeInState(null, null); // Comment updates handle both states internally
+
+        try {
+            const response = await questionsAPI.toggleLike({ type, id });
+
+            // Sync with server response if needed (optional since optimistic matches logic)
+            // But if server returns new count, we could update it.
+            // For now, we trust the optimistic update unless error.
+
+        } catch (error) {
+            console.error('Like toggle error:', error);
+            // Rollback (simply toggle again)
+            if (type === 'question') toggleLikeInState(question, setQuestion);
+            else if (type === 'answer') toggleLikeInState(answers, setAnswers);
+            else if (type === 'comment') toggleLikeInState(null, null);
+
+            displayToast('Beğeni işlemi başarısız.', 'error');
+        }
+    };
+
     // ... (Diğer tüm event handler'lar aynı olacak: handleSubmitAnswer, handleSubmitComment, vb.)
     // Kod tekrarını önlemek için burayı kısa tutuyorum, aslında QuestionDetailPage.jsx'teki tüm handler'lar buraya gelmeli.
     // Ancak step limitine takılmamak için referans olarak yazıyorum.
@@ -307,12 +399,20 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 <span className="text-gray-500 text-xs">• {formatDate(comment.created_at)}</span>
                             </div>
                             <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2">{comment.content}</p>
-                            <button
-                                onClick={() => setReplyingTo(isReplyingToThis ? null : { commentId: comment.id, mainCommentId: currentMainCommentId, type, targetId })}
-                                className="text-xs text-gray-600 dark:text-gray-400 hover:text-coral transition-colors flex items-center gap-1"
-                            >
-                                <FaReply className="text-xs" /> <span>{isReplyingToThis ? 'İptal' : 'Cevapla'}</span>
-                            </button>
+                            <div className="flex items-center gap-4 mt-2">
+                                <button
+                                    onClick={(e) => handleLike(e, 'comment', comment.id)}
+                                    className={`text-xs flex items-center gap-1 transition-colors ${comment.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                                >
+                                    <FaHeart /> <span>{comment.likes_count || 0}</span>
+                                </button>
+                                <button
+                                    onClick={() => setReplyingTo(isReplyingToThis ? null : { commentId: comment.id, mainCommentId: currentMainCommentId, type, targetId })}
+                                    className="text-xs text-gray-600 dark:text-gray-400 hover:text-coral transition-colors flex items-center gap-1"
+                                >
+                                    <FaReply className="text-xs" /> <span>{isReplyingToThis ? 'İptal' : 'Cevapla'}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     {isReplyingToThis && (
@@ -434,8 +534,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
                         <div className="flex gap-6">
-                            <button className="flex items-center gap-2 text-gray-500 hover:text-coral transition-colors">
-                                <FaHeart className="text-lg" /><span className="font-semibold">{question.stats?.likes || 0}</span>
+                            <button
+                                onClick={(e) => handleLike(e, 'question', question.id)}
+                                className={`flex items-center gap-2 transition-colors ${question.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                            >
+                                <FaHeart className="text-lg" /><span className="font-semibold">{question.likes_count || 0}</span>
                             </button>
                             <button onClick={() => setCommentingOn(isCommentingOnQuestion ? null : { type: 'question', id: question.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                 <FaComment className="text-lg" /><span className="font-semibold">{question.comments?.length || 0}</span>
@@ -574,7 +677,10 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                 <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{answer.content}</div>
 
                                                 <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                                    <button className="flex items-center gap-2 text-gray-500 hover:text-coral transition-colors">
+                                                    <button
+                                                        onClick={(e) => handleLike(e, 'answer', answer.id)}
+                                                        className={`flex items-center gap-2 transition-colors ${answer.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                                                    >
                                                         <FaHeart /><span className="font-semibold">{answer.likes_count || 0}</span>
                                                     </button>
                                                     <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">

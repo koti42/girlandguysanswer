@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { FaHeart, FaCheckCircle } from 'react-icons/fa';
+import { questionsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import Toast from './Toast';
 
 const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
@@ -14,8 +17,68 @@ const formatDate = (dateString) => {
 };
 
 const AnswerCard = ({ answer }) => {
+    const { user: currentUser } = useAuth();
+    const [isLiked, setIsLiked] = useState(answer.is_liked || false);
+    const [likesCount, setLikesCount] = useState(answer.likes_count || 0);
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setIsLiked(answer.is_liked || false);
+        setLikesCount(answer.likes_count || 0);
+    }, [answer.is_liked, answer.likes_count]);
+
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+    };
+
+    const handleLike = async (e) => {
+        e.preventDefault();
+
+        if (!currentUser) {
+            showToast('Beğenmek için giriş yapmalısınız.', 'error');
+            return;
+        }
+
+        if (loading) return;
+
+        const oldIsLiked = isLiked;
+        const oldLikesCount = likesCount;
+
+        setIsLiked(!oldIsLiked);
+        setLikesCount(prev => oldIsLiked ? prev - 1 : prev + 1);
+
+        try {
+            const response = await questionsAPI.toggleLike({
+                type: 'answer',
+                id: answer.id
+            });
+
+            if (response.data?.data) {
+                setLikesCount(response.data.data.likes_count);
+                setIsLiked(response.data.data.is_liked);
+            }
+        } catch (error) {
+            setIsLiked(oldIsLiked);
+            setLikesCount(oldLikesCount);
+            console.error('Like error:', error);
+            if (error.response?.status === 401) {
+                showToast('Oturumunuz sonlanmış olabilir.', 'error');
+            } else {
+                showToast('Bir hata oluştu.', 'error');
+            }
+        }
+    };
+
     return (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft hover:shadow-md transition-all border border-gray-100 dark:border-gray-700">
+            {toast.show && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
+            )}
             {/* Question Link */}
             <Link
                 to={`/question/${answer.question.slug}`}
@@ -40,10 +103,13 @@ const AnswerCard = ({ answer }) => {
             <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-4">
                     {/* Likes */}
-                    <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
-                        <FaHeart className="text-coral" />
-                        <span className="font-medium">{answer.likes_count || 0}</span>
-                    </div>
+                    <button
+                        onClick={handleLike}
+                        className={`flex items-center gap-1.5 transition-colors group ${isLiked ? 'text-coral' : 'text-gray-500 dark:text-gray-400 hover:text-coral'}`}
+                    >
+                        <FaHeart className={isLiked ? 'text-coral' : ''} />
+                        <span className="font-medium">{likesCount}</span>
+                    </button>
 
                     {/* Accepted Badge */}
                     {answer.is_accepted && (

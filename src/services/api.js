@@ -47,7 +47,8 @@ export const questionsAPI = {
     createAnswer: (questionId, data) => api.post(`/questions/${questionId}/answers`, data),
     getMyQuestions: () => api.get('/user/me/questions'),
     getQuestionComments: (questionId, params) => api.get(`/questions/${questionId}/comments`, { params }),
-    getAnswerComments: (answerId, params) => api.get(`/answers/${answerId}/comments`, { params })
+    getAnswerComments: (answerId, params) => api.get(`/answers/${answerId}/comments`, { params }),
+    toggleLike: (data) => api.post('/likes', data)
 };
 
 export const usersAPI = {

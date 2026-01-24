@@ -17,11 +17,57 @@ const QuestionCard = ({ question }) => {
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
     // Update isAnonymous when user preference changes
+    const [isLiked, setIsLiked] = useState(question.is_liked || false);
+    const [likesCount, setLikesCount] = useState(question.likes_count || question.stats?.likes || question.likes || 0);
+
+    useEffect(() => {
+        setIsLiked(question.is_liked || false);
+        setLikesCount(question.likes_count || question.stats?.likes || question.likes || 0);
+    }, [question.is_liked, question.likes_count, question.stats?.likes, question.likes]);
+
     useEffect(() => {
         if (currentUser?.last_action_is_anonymous !== undefined) {
             setIsAnonymous(currentUser.last_action_is_anonymous);
         }
     }, [currentUser?.last_action_is_anonymous]);
+
+    const handleLike = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!currentUser) {
+            showToast('Beğenmek için giriş yapmalısınız.', 'error');
+            return;
+        }
+
+        const oldIsLiked = isLiked;
+        const oldLikesCount = likesCount;
+
+        setIsLiked(!oldIsLiked);
+        setLikesCount(prev => oldIsLiked ? prev - 1 : prev + 1);
+
+        try {
+            const response = await questionsAPI.toggleLike({
+                type: 'question',
+                id: question.id
+            });
+
+            if (response.data?.data) {
+                setLikesCount(response.data.data.likes_count);
+                setIsLiked(response.data.data.is_liked);
+            }
+        } catch (error) {
+            setIsLiked(oldIsLiked);
+            setLikesCount(oldLikesCount);
+            console.error('Like error:', error);
+
+            if (error.response?.status === 401) {
+                showToast('Oturumunuz sonlanmış olabilir.', 'error');
+            } else {
+                showToast('Bir hata oluştu.', 'error');
+            }
+        }
+    };
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -54,7 +100,6 @@ const QuestionCard = ({ question }) => {
         }
     };
 
-    // Determine card style based on gender
     const getCardStyle = () => {
         const gender = question.user?.gender;
         if (gender === 'female') {
@@ -93,7 +138,7 @@ const QuestionCard = ({ question }) => {
                     <Link to={isOwnerAnonymous ? '#' : `/profile/${question.user?.username}`} className={isOwnerAnonymous ? 'cursor-default' : ''}>
                         <UserAvatar
                             user={question.user}
-                            size="md" // Mobilde küçülttük
+                            size="md"
                             className="shadow-sm border-2 border-white md:w-12 md:h-12 w-10 h-10"
                         />
                     </Link>
@@ -143,11 +188,15 @@ const QuestionCard = ({ question }) => {
             <div className="pt-3 md:pt-4 border-t border-gray-100/50 dark:border-gray-700/50">
                 <div className="flex items-center justify-between text-gray-500 text-xs md:text-sm mb-3 md:mb-4">
                     <div className="flex gap-4 md:gap-6">
-                        <button className="flex items-center gap-1.5 md:gap-2 hover:text-red-500 transition-colors group">
-                            <div className="p-1.5 md:p-2 rounded-full bg-red-50 group-hover:bg-red-100 text-red-400 group-hover:text-red-500 transition-colors">
+                        <button
+                            onClick={handleLike}
+                            className={`flex items-center gap-1.5 md:gap-2 transition-colors group ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
+                            disabled={loading}
+                        >
+                            <div className={`p-1.5 md:p-2 rounded-full transition-colors ${isLiked ? 'bg-red-100 text-red-500' : 'bg-red-50 text-red-400 group-hover:bg-red-100 group-hover:text-red-500'}`}>
                                 <FaHeart />
                             </div>
-                            <span className="font-semibold">{question.likes_count !== undefined ? question.likes_count : (question.stats?.likes || question.likes || 0)}</span>
+                            <span className="font-semibold">{likesCount}</span>
                         </button>
                         <Link to={`/question/${question.slug || question.id}`} className="flex items-center gap-1.5 md:gap-2 hover:text-blue-500 transition-colors group">
                             <div className="p-1.5 md:p-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-400 dark:text-blue-300 group-hover:bg-blue-100 transition-colors">
