@@ -804,8 +804,8 @@ const ProfilePage = () => {
                                         ))}
                                     </div>
                                 )}
-                                {!tabLoading && activeTab === 'followers' && <FollowersList followers={followers} type="followers" />}
-                                {!tabLoading && activeTab === 'following' && <FollowersList followers={following} type="following" />}
+                                {!tabLoading && activeTab === 'followers' && <FollowersList followers={followers} type="followers" isOwnProfile={isOwnProfile} />}
+                                {!tabLoading && activeTab === 'following' && <FollowersList followers={following} type="following" isOwnProfile={isOwnProfile} />}
                                 {activeTab === 'liked' && (
                                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center text-gray-400">Beğenilenler yakında</div>
                                 )}

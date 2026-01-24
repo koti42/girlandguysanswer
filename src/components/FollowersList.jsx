@@ -4,8 +4,10 @@ import UserAvatar from './UserAvatar';
 import { FaUserPlus, FaCheck, FaUserFriends } from 'react-icons/fa';
 import { usersAPI } from '../services/api';
 import Toast from './Toast';
+import { useAuth } from '../context/AuthContext';
 
-const FollowersList = ({ followers: initialFollowers, type = 'followers' }) => {
+const FollowersList = ({ followers: initialFollowers, type = 'followers', isOwnProfile }) => {
+    const { user: currentUser } = useAuth();
     const [followers, setFollowers] = useState(initialFollowers);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
@@ -34,10 +36,8 @@ const FollowersList = ({ followers: initialFollowers, type = 'followers' }) => {
             await usersAPI.unfollow(user.username);
 
             if (type === 'following') {
-                // Remove from following list
                 setFollowers(prev => prev.filter(u => u.id !== user.id));
             } else {
-                // Update isFollowing status in followers list
                 setFollowers(prev => prev.map(u =>
                     u.id === user.id ? { ...u, isFollowing: false } : u
                 ));
@@ -109,32 +109,34 @@ const FollowersList = ({ followers: initialFollowers, type = 'followers' }) => {
                                     </p>
                                 )}
 
-                                <div className="mt-3">
-                                    {type === 'followers' ? (
-                                        user.isFollowing ? (
-                                            <button
-                                                onClick={() => handleUnfollow(user)}
-                                                className="flex items-center gap-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2.5 px-5 rounded-xl hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all shadow-sm hover:shadow-md"
-                                            >
-                                                <FaCheck className="text-green-600 dark:text-green-400" /> Takiptesin
-                                            </button>
+                                {isOwnProfile && currentUser?.id !== user.id && (
+                                    <div className="mt-3">
+                                        {type === 'followers' ? (
+                                            user.isFollowing ? (
+                                                <button
+                                                    onClick={() => handleUnfollow(user)}
+                                                    className="flex items-center gap-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2.5 px-5 rounded-xl hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all shadow-sm hover:shadow-md"
+                                                >
+                                                    <FaCheck className="text-green-600 dark:text-green-400" /> Takiptesin
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleFollow(user)}
+                                                    className="flex items-center gap-2 bg-gradient-to-r from-coral to-pink-500 text-white font-semibold py-2.5 px-5 rounded-xl hover:from-coral-dark hover:to-pink-600 transition-all shadow-md hover:shadow-lg hover:scale-105"
+                                                >
+                                                    <FaUserPlus /> Takip Et
+                                                </button>
+                                            )
                                         ) : (
                                             <button
-                                                onClick={() => handleFollow(user)}
-                                                className="flex items-center gap-2 bg-gradient-to-r from-coral to-pink-500 text-white font-semibold py-2.5 px-5 rounded-xl hover:from-coral-dark hover:to-pink-600 transition-all shadow-md hover:shadow-lg hover:scale-105"
+                                                onClick={() => handleUnfollow(user)}
+                                                className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 text-red-600 dark:text-red-400 font-semibold py-2.5 px-5 rounded-xl hover:from-red-100 hover:to-red-200 dark:hover:from-red-900/30 dark:hover:to-red-800/30 transition-all shadow-sm hover:shadow-md"
                                             >
-                                                <FaUserPlus /> Takip Et
+                                                Takipten Çıkar
                                             </button>
-                                        )
-                                    ) : (
-                                        <button
-                                            onClick={() => handleUnfollow(user)}
-                                            className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 text-red-600 dark:text-red-400 font-semibold py-2.5 px-5 rounded-xl hover:from-red-100 hover:to-red-200 dark:hover:from-red-900/30 dark:hover:to-red-800/30 transition-all shadow-sm hover:shadow-md"
-                                        >
-                                            Takibi Bırak
-                                        </button>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

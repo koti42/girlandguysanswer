@@ -147,17 +147,17 @@ const QuestionCard = ({ question }) => {
                             <div className="p-1.5 md:p-2 rounded-full bg-red-50 group-hover:bg-red-100 text-red-400 group-hover:text-red-500 transition-colors">
                                 <FaHeart />
                             </div>
-                            <span className="font-semibold">{question.stats?.likes || question.likes || 0}</span>
+                            <span className="font-semibold">{question.likes_count !== undefined ? question.likes_count : (question.stats?.likes || question.likes || 0)}</span>
                         </button>
                         <Link to={`/question/${question.slug || question.id}`} className="flex items-center gap-1.5 md:gap-2 hover:text-blue-500 transition-colors group">
                             <div className="p-1.5 md:p-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-400 dark:text-blue-300 group-hover:bg-blue-100 transition-colors">
                                 <FaComment />
                             </div>
-                            <span className="font-semibold">{question.stats?.comments || question.commentsCount || 0}</span>
+                            <span className="font-semibold">{question.answers_count !== undefined ? question.answers_count : (question.stats?.comments || question.commentsCount || 0)}</span>
                         </Link>
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-2 text-gray-400">
-                        <FaEye /> <span>{question.stats?.views || question.views || 0}</span>
+                        <FaEye /> <span>{question.views_count !== undefined ? question.views_count : (question.stats?.views || question.views || 0)}</span>
                     </div>
                 </div>
 
