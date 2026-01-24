@@ -191,7 +191,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         try {
             const response = await questionsAPI.toggleLike({ type, id });
 
-    
+
 
         } catch (error) {
             console.error('Like toggle error:', error);
@@ -547,9 +547,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 </button>
                             </div>
                             <button onClick={() => setCommentingOn(isCommentingOnQuestion ? null : { type: 'question', id: question.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
-                                <FaComment className="text-lg" /><span className="font-semibold">{question.comments?.length || 0}</span>
+                                <FaComment className="text-lg" /><span className="font-semibold">{question.answers_count || question.comments?.length || 0}</span>
                             </button>
-                            <div className="flex items-center gap-2 text-gray-500"><FaEye /><span>{question.stats?.views || 0}</span></div>
+                            <div className="flex items-center gap-2 text-gray-500"><FaEye /><span>{question.views_count !== undefined ? question.views_count : (question.stats?.views || 0)}</span></div>
                         </div>
                         <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 transition-colors"><FaShare /> Paylaş</button>
                     </div>
@@ -698,7 +698,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         </button>
                                                     </div>
                                                     <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
-                                                        <FaComment /><span>{answer.comments?.length || 0} Yorum</span>
+                                                        <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
                                                     </button>
                                                 </div>
 
