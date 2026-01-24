@@ -1,14 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt } from 'react-icons/fa';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
 
+import { questionsAPI } from '../services/api';
+
 const Header = ({ onSearch }) => {
     const navigate = useNavigate();
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchParams] = useSearchParams();
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const searchRef = useRef(null);
+
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -17,10 +25,9 @@ const Header = ({ onSearch }) => {
 
     const handleLogout = async () => {
         try {
-            await logout(); // AuthContext uses api.logout internally
+            await logout();
             navigate('/');
         } catch (error) {
-            // Force local cleanup anyway
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             navigate('/');
@@ -29,12 +36,63 @@ const Header = ({ onSearch }) => {
 
 
 
-    const handleSearchChange = (e) => {
-        const query = e.target.value;
-        setSearchQuery(query);
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Instant Search with Debounce
+    useEffect(() => {
+        const timeoutId = setTimeout(async () => {
+            if (searchQuery.trim().length >= 2) {
+                setIsSearching(true);
+                setShowDropdown(true);
+                try {
+                    const response = await questionsAPI.getAll({
+                        search: searchQuery,
+                        limit: 5 // Get top 5 results
+                    });
+                    setSearchResults(response.data.data.questions || []);
+                } catch (error) {
+                    console.error('Search error:', error);
+                    setSearchResults([]);
+                } finally {
+                    setIsSearching(false);
+                }
+            } else {
+                setSearchResults([]);
+                setShowDropdown(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
+
+    // Navigate to full results
+    const handleFullSearch = () => {
+        setShowDropdown(false);
         if (onSearch) {
-            onSearch(query);
+            onSearch(searchQuery);
+        } else {
+            navigate(`/questions?search=${encodeURIComponent(searchQuery)}`);
         }
+    };
+
+    // Navigate to single result
+    const handleResultClick = (slug) => {
+        setShowDropdown(false);
+        setSearchQuery(''); // Optional: clear search after selection
+        navigate(`/question/${slug}`);
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
     };
 
     const closeMobileMenu = () => {
@@ -66,17 +124,84 @@ const Header = ({ onSearch }) => {
                     </Link>
 
                     {/* Desktop Search Bar */}
-                    <div className="hidden md:flex flex-1 max-w-xl relative">
-                        <input
-                            type="text"
-                            placeholder="Binlerce soru arasında ara..."
-                            value={searchQuery}
-                            onChange={handleSearchChange}
-                            className="w-full bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm"
-                        />
-                        <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-coral transition-colors">
-                            <FaSearch />
-                        </button>
+                    <div className="hidden md:flex flex-1 max-w-xl relative" ref={searchRef}>
+                        <div className="relative w-full">
+                            <input
+                                type="text"
+                                placeholder="Binlerce soru arasında ara..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => searchQuery.length >= 2 && setShowDropdown(true)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleFullSearch()}
+                                className="w-full bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm relative z-10"
+                            />
+                            <button
+                                onClick={handleFullSearch}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-coral transition-colors z-20"
+                            >
+                                <FaSearch />
+                            </button>
+                        </div>
+
+                        {/* Instant Search Dropdown */}
+                        {showDropdown && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-0 animate-in fade-in slide-in-from-top-2 duration-200">
+                                {isSearching ? (
+                                    <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-coral border-t-transparent mx-auto mb-2"></div>
+                                        Aranıyor...
+                                    </div>
+                                ) : searchResults.length > 0 ? (
+                                    <>
+                                        <div className="py-2">
+                                            {searchResults.map((result) => (
+                                                <div
+                                                    key={result.id}
+                                                    onClick={() => handleResultClick(result.slug)}
+                                                    className="group px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer flex items-center gap-4 transition-all border-b border-gray-50 dark:border-gray-700/50 last:border-0"
+                                                >
+                                                    <div className="shrink-0">
+                                                        {result.user ? (
+                                                            <UserAvatar user={result.user} size="md" className="w-10 h-10 border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-coral/50 transition-colors" />
+                                                        ) : (
+                                                            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400">
+                                                                <FaSearch />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate group-hover:text-coral transition-colors">
+                                                            {result.title}
+                                                        </p>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                                                {result.category}
+                                                            </span>
+                                                            <span className="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1">
+                                                                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                                                @{result.user?.username || 'anonim'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-gray-300 group-hover:text-coral transition-colors">
+                                                        <FaChevronRight className="text-xs" />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div onClick={handleFullSearch} className="bg-gray-50 dark:bg-gray-700/30 p-3 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-100 dark:border-gray-700">
+                                            <span className="text-sm font-bold text-coral flex items-center justify-center gap-2">
+                                                Tüm {searchQuery} sonuçlarını gör
+                                            </span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+                                        <p className="text-sm">"{searchQuery}" ile ilgili sonuç bulunamadı.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Actions */}

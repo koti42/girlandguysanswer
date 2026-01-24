@@ -8,12 +8,15 @@ import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components
 import { FaMars, FaVenus, FaGlobe } from 'react-icons/fa';
 import { questionsAPI } from '../services/api';
 
-const QuestionsPage = () => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState({ id: 0, title: 'Tümü' });
-    const [genderFilter, setGenderFilter] = useState('all'); // 'all', 'female', 'male'
-    const [sortBy, setSortBy] = useState('popular'); // 'popular', 'newest', 'forYou'
+import { useSearchParams } from 'react-router-dom';
 
+const QuestionsPage = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const initialQuery = searchParams.get('search') || '';
+    const [searchQuery, setSearchQuery] = useState(initialQuery);
+    const [selectedCategory, setSelectedCategory] = useState({ id: 0, title: 'Tümü' });
+    const [genderFilter, setGenderFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('popular');
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -33,7 +36,6 @@ const QuestionsPage = () => {
         }
 
         try {
-            // API'ye gönderilecek parametreler
             const params = {
                 search: searchQuery || undefined,
                 category: selectedCategory.id !== 0 ? selectedCategory.title : undefined,
@@ -64,13 +66,23 @@ const QuestionsPage = () => {
         }
     }, [searchQuery, selectedCategory, genderFilter, sortBy]);
 
+
+
+    useEffect(() => {
+        if (searchQuery) {
+            setSearchParams({ search: searchQuery });
+        } else {
+            searchParams.delete('search');
+            setSearchParams(searchParams);
+        }
+    }, [searchQuery, setSearchParams]);
+
     useEffect(() => {
         setCurrentPage(1);
         setQuestions([]);
         fetchQuestions(1, false);
     }, [searchQuery, selectedCategory, genderFilter, sortBy]);
 
-    // Intersection Obsrver for infinite scroll
     useEffect(() => {
         const observer = new IntersectionObserver(
             entries => {

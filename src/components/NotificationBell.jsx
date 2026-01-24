@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaBell } from 'react-icons/fa';
+import { FaBell, FaCheckDouble } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import useNotifications from '../hooks/useNotifications';
 import NotificationItem from './NotificationItem';
@@ -8,9 +8,20 @@ const NotificationBell = () => {
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
-    const { notifications, unreadCount, markAsRead } = useNotifications(true, 10000);
+    const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(true, 10000);
 
-    // Close dropdown when clicking outside
+    const handleMarkAllRead = async () => {
+        try {
+            await markAllAsRead();
+            setIsOpen(false);
+        } catch (error) {
+            console.error('Failed to mark all as read', error);
+        }
+    };
+
+
+
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -30,7 +41,6 @@ const NotificationBell = () => {
     const handleNotificationClick = async (notification) => {
         setIsOpen(false);
 
-        // Mark as read
         if (!notification.is_read) {
             try {
                 await markAsRead(notification.id);
@@ -38,9 +48,8 @@ const NotificationBell = () => {
             }
         }
 
-        // Navigate
         const questionSlug = notification.data?.question_slug || notification.data?.slug;
-        
+
         switch (notification.type) {
             case 'answer_created':
                 if (questionSlug) {
@@ -94,8 +103,8 @@ const NotificationBell = () => {
             {isOpen && (
                 <>
                     {/* Backdrop */}
-                    <div 
-                        className="fixed inset-0 z-40" 
+                    <div
+                        className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     ></div>
 
@@ -152,13 +161,11 @@ const NotificationBell = () => {
                         {recentNotifications.length > 0 && (
                             <div className="p-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
                                 <button
-                                    onClick={() => {
-                                        setIsOpen(false);
-                                        navigate('/notifications');
-                                    }}
-                                    className="w-full py-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                    onClick={handleMarkAllRead}
+                                    className="w-full py-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center gap-2"
                                 >
-                                    Tüm Bildirimleri Görüntüle
+                                    <FaCheckDouble className="text-xs" />
+                                    Tümünü Okundu Olarak İşaretle
                                 </button>
                             </div>
                         )}

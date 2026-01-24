@@ -18,10 +18,14 @@ const QuestionDetailPage = () => {
     useEffect(() => {
         const fetchInitialQuestion = async () => {
             setLoading(true);
+            setQuestions([]); // Reset questions on slug change
+            setPage(1); // Reset page
             try {
                 const response = await questionsAPI.getById(slug);
                 const initialQuestion = response.data.data.question;
 
+                // Important: We set the state with the NEW question only.
+                // Infinite scroll will add more later.
                 setQuestions([initialQuestion]);
 
             } catch (err) {
@@ -31,7 +35,7 @@ const QuestionDetailPage = () => {
             }
         };
 
-        if (slug && questions.length === 0) {
+        if (slug) {
             fetchInitialQuestion();
         }
     }, [slug]);
