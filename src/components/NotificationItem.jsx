@@ -1,7 +1,7 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaComment, FaReply, FaUserPlus, FaCheckCircle, FaTimes } from 'react-icons/fa';
+import { FaComment, FaReply, FaUserPlus, FaCheckCircle, FaTimes, FaEnvelope } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 
 const formatDate = (dateString) => {
@@ -25,6 +25,8 @@ const getNotificationIcon = (type) => {
             return <FaUserPlus className="text-purple-500" />;
         case 'follow_request_accepted':
             return <FaCheckCircle className="text-green-500" />;
+        case 'new_message':
+            return <FaEnvelope className="text-blue-500" />;
         default:
             return <FaComment className="text-gray-500" />;
     }
@@ -45,10 +47,10 @@ const NotificationItem = ({ notification, onClick, onDelete, compact = false }) 
         return (
             <div
                 onClick={handleClick}
-                className={`group relative flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all ${!notification.is_read 
-                    ? 'bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20' 
+                className={`group relative flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all ${!notification.is_read
+                    ? 'bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                }`}
+                    }`}
             >
                 {!notification.is_read && (
                     <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500 rounded-l-lg" />
@@ -96,8 +98,8 @@ const NotificationItem = ({ notification, onClick, onDelete, compact = false }) 
         <div
             onClick={handleClick}
             className={`group relative flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer ${!notification.is_read
-                    ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border-blue-200 dark:border-blue-800 hover:shadow-lg hover:scale-[1.01]'
-                    : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600'
+                ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border-blue-200 dark:border-blue-800 hover:shadow-lg hover:scale-[1.01]'
+                : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600'
                 }`}
         >
             {/* Left colored accent */}

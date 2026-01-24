@@ -77,6 +77,12 @@ const NotificationBell = () => {
                     navigate(`/profile/${username}`);
                 }
                 break;
+            case 'new_message':
+                const senderUsername = notification.data?.sender_username || notification.data?.user?.username || notification.data?.sender?.username;
+                if (senderUsername) {
+                    navigate(`/messages/${senderUsername}`);
+                }
+                break;
             default:
                 break;
         }
