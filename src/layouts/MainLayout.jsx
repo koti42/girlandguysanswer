@@ -58,7 +58,7 @@ const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false }) =>
                         </div>
                     </div>
                     <div className="border-t border-gray-700 pt-6 text-center text-sm">
-                        <p>© 2026 Kızilinkalarsoruyor. Tüm hakları saklıdır.</p>
+                        <p>© 2026 Herkesler Soruyor. Tüm hakları saklıdır.</p>
                     </div>
                 </div>
             </footer>

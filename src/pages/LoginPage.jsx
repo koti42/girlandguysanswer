@@ -80,7 +80,7 @@ const LoginPage = () => {
                 {/* Logo/Header */}
                 <div className="text-center mb-8">
                     <Link to="/" className="inline-flex items-center gap-2 mb-4">
-                        <span className="font-script text-5xl text-coral font-bold">Kızilinkalarsoruyor</span>
+                        <span className="font-script text-5xl text-coral font-bold">Herkesler Soruyor</span>
                     </Link>
                     <p className="text-gray-600 dark:text-gray-400">Topluluğa hoş geldin!</p>
                 </div>

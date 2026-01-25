@@ -112,15 +112,12 @@ const Header = ({ onSearch }) => {
                     </button>
 
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-1 shrink-0 hover:opacity-80 transition-opacity min-w-0">
+                    <Link to="/" className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity min-w-0">
+                        <img src="/logo.png" alt="Herkesler Soruyor Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
                         <span className="font-script text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl text-coral font-bold leading-none select-none truncate">
-                            <span className="hidden sm:inline">Kızılınkalarsoruyor</span>
-                            <span className="sm:hidden">K.Q</span>
+                            <span className="hidden sm:inline">Herkesler Soruyor</span>
+                            <span className="sm:hidden">HS</span>
                         </span>
-                        <div className="relative hidden sm:block">
-                            <FaHeart className="text-gold text-xl md:text-2xl" />
-                            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-xs">?</span>
-                        </div>
                     </Link>
 
                     {/* Desktop Search Bar */}
@@ -482,7 +479,7 @@ const Header = ({ onSearch }) => {
                     {/* Mobile Menu Footer */}
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                            © 2026 Kızilinkalarsoruyor
+                            © 2026 Herkesler Soruyor
                         </p>
                     </div>
                 </div>
