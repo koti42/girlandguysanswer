@@ -37,7 +37,7 @@ export const authAPI = {
     register: (userData) => api.post('/auth/register', userData),
     logout: () => api.post('/auth/logout'),
     getCurrentUser: () => api.get('/user/me'),
-    getGoogleAuthUrl: () => api.get('/auth/google'),
+    getGoogleAuthUrl: (redirect_uri) => api.get('/auth/google', { params: { redirect_uri } }),
 };
 
 export const questionsAPI = {

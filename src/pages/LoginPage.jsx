@@ -61,7 +61,8 @@ const LoginPage = () => {
 
     const handleGoogleLogin = async () => {
         try {
-            const response = await authAPI.getGoogleAuthUrl();
+            const redirectUri = `${window.location.origin}/auth/google/callback`;
+            const response = await authAPI.getGoogleAuthUrl(redirectUri);
             const redirectUrl = response.data.data?.url || response.data.url;
             if (redirectUrl) {
                 window.location.href = redirectUrl;
