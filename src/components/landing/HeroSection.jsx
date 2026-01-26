@@ -8,13 +8,10 @@ const HeroSection = () => {
             <div className="max-w-6xl mx-auto text-center">
                 {/* Main Heading */}
                 <div className="mb-8">
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-6">
-                        <span className="font-script text-4xl sm:text-6xl md:text-8xl text-coral font-bold break-words px-2">
+                    <div className="mb-6">
+                        <span className="font-script text-4xl sm:text-6xl md:text-8xl text-coral font-bold break-words px-2 text-center block">
                             Herkesler Soruyor
                         </span>
-                        <div className="relative">
-                            <img src="/logo.png" alt="Herkesler Soruyor Logo" className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 object-contain drop-shadow-xl hover:scale-110 transition-transform duration-300" />
-                        </div>
                     </div>
                     <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-800 dark:text-white mb-3 md:mb-4 px-4">
                         Kadınlar ve Erkekler Bir Arada!
