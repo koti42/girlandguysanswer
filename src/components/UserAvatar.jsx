@@ -2,7 +2,6 @@ import React from 'react';
 import { FaUserSecret } from 'react-icons/fa';
 
 const UserAvatar = ({ user, size = "md", className = "" }) => {
-    // Determine size classes
     const sizeClasses = {
         xs: "w-6 h-6 text-xs",
         sm: "w-8 h-8 text-xs",
@@ -17,7 +16,6 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
 
     const isAnonymous = user?.username === 'anonim' || user?.name === 'Anonim Kullanıcı';
 
-    // Helper to get initials
     const getInitials = (name) => {
         if (!name) return '?';
         return name
@@ -30,7 +28,6 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
             .toUpperCase();
     };
 
-    // Helper to generate consistent color from string
     const getColor = (name) => {
         if (!name) return 'bg-gray-400';
         const colors = [
@@ -47,7 +44,6 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         return colors[Math.abs(hash) % colors.length];
     };
 
-    // If user is anonymous, show special anonymous avatar
     if (isAnonymous) {
         let gradientClass = 'from-purple-500 to-purple-700 border-purple-300 dark:border-purple-600';
 
@@ -67,12 +63,10 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         );
     }
 
-    // Check if avatar exists and is not default/broken
     const hasAvatar = user?.avatar &&
         user.avatar !== 'null' &&
         user.avatar !== 'undefined' &&
-        !user.avatar.includes('default'); // Assuming 'default' check is loose, adjust if needed
-
+        !user.avatar.includes('default'); 
     const displayName = user?.name || user?.username || '?';
 
     const normalizeAvatarUrl = (rawUrl) => {
@@ -81,7 +75,6 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         let url = String(rawUrl).trim();
         if (!url) return url;
 
-        // Çift domain bug'ını düzelt
         url = url.replace(
             /^https?:\/\/herkeslersoruyor\.com\.tr\/herkeslersoruyor\.panalix\.com\.tr\//i,
             'https://herkeslersoruyor.panalix.com.tr/'
