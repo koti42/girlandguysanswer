@@ -103,7 +103,7 @@ const ProfilePage = () => {
                             gender: data.gender
                         }
                     }));
-                    questionsCount = data.stats?.questions ?? (data.questions?.length ?? null);
+                    questionsCount = data.questions_count ?? data.stats?.questions ?? (data.questions?.length ?? null);
                 }
 
                 setIsVIP(data.username === 'theerriss');
