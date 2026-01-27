@@ -15,6 +15,7 @@ import MessagesPage from './pages/MessagesPage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import FollowRequestsPage from './pages/FollowRequestsPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 import PusherTestPage from './pages/PusherTestPage';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -61,6 +62,7 @@ function App() {
                 <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
                 <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
                 <Route path="/search" element={<ProtectedRoute><QuestionsPage /></ProtectedRoute>} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                 <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />

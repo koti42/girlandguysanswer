@@ -10,8 +10,8 @@ const ProfileStats = ({ stats, isVIP = false }) => {
 
     return (
         <div className={`rounded-2xl shadow-soft p-6 ${isVIP
-                ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-purple-50 dark:from-amber-900/20 dark:via-yellow-900/20 dark:to-purple-900/20 border-2 border-amber-300 dark:border-amber-600'
-                : 'bg-white dark:bg-gray-800'
+            ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-purple-50 dark:from-amber-900/20 dark:via-yellow-900/20 dark:to-purple-900/20 border-2 border-amber-300 dark:border-amber-600'
+            : 'bg-white dark:bg-gray-800'
             }`}>
             <div className="grid grid-cols-3 gap-6">
                 {statItems.map((item, idx) => {
@@ -26,8 +26,8 @@ const ProfileStats = ({ stats, isVIP = false }) => {
                                 </div>
                             </div>
                             <div className={`text-2xl font-bold ${isVIP
-                                    ? 'bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent'
-                                    : 'text-gray-800 dark:text-white'
+                                ? 'bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent'
+                                : 'text-gray-800 dark:text-white'
                                 }`}>
                                 {item.value.toLocaleString()}
                             </div>
@@ -42,23 +42,23 @@ const ProfileStats = ({ stats, isVIP = false }) => {
                 <div className="text-center">
                     <div className={`text-xl font-bold ${isVIP ? 'text-amber-600 dark:text-amber-400' : 'text-gray-800 dark:text-white'
                         }`}>
-                        {stats.xperPoints?.toLocaleString() || '133.525'}
+                        {stats.xperPoints?.toLocaleString()}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">Xper Puanı</div>
                 </div>
                 <div className="text-center">
                     <div className={`text-xl font-bold ${isVIP ? 'text-purple-600 dark:text-purple-400' : 'text-gray-800 dark:text-white'
                         }`}>
-                        #{stats.generalRank || '162'}
+                        #{stats.generalRank}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">Genel Xper sıralaması</div>
                 </div>
                 <div className="text-center">
                     <div className={`text-xl font-bold ${isVIP ? 'text-pink-600 dark:text-pink-400' : 'text-gray-800 dark:text-white'
                         }`}>
-                        #{stats.categoryRank || '114'}
+                        #{stats.categoryRank}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Etiketler Xper sıralaması</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Cinsiyet sıralaması</div>
                 </div>
             </div>
         </div>

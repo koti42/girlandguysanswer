@@ -25,36 +25,86 @@ export const TrendsWidget = () => (
     </div>
 );
 
-export const TopUsersWidget = () => (
-    <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
-        <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-            <span className="w-1 h-6 bg-gold rounded-full"></span>
-            Topluluk Liderleri
-        </h3>
-        <div className="flex justify-around items-end">
-            {/* 2nd Place */}
-            <div className="flex flex-col items-center gap-2 relative">
-                <UserAvatar user={topUsers[1]} size="xl" className="w-14 h-14 border-2 border-gray-300" />
-                <span className="text-xs font-bold text-gray-600 dark:text-gray-400 text-center">{topUsers[1].name}</span>
-                <FaMedal className="text-gray-400 text-xl absolute -top-3 right-0" />
-            </div>
+import { gamificationAPI } from '../services/api';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
-            {/* 1st Place */}
-            <div className="flex flex-col items-center gap-2 relative -mt-4">
-                <UserAvatar user={topUsers[0]} size="2xl" className="w-20 h-20 border-4 border-gold shadow-md" />
-                <span className="text-sm font-bold text-gray-800 dark:text-white text-center">{topUsers[0].name}</span>
-                <FaMedal className="text-gold text-3xl absolute -top-4 right-0" />
-            </div>
+export const TopUsersWidget = () => {
+    const [topUsers, setTopUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-            {/* 3rd Place */}
-            <div className="flex flex-col items-center gap-2 relative">
-                <UserAvatar user={topUsers[2]} size="xl" className="w-14 h-14 border-2 border-orange-300" />
-                <span className="text-xs font-bold text-gray-600 dark:text-gray-400 text-center">{topUsers[2].name}</span>
-                <FaMedal className="text-orange-400 text-xl absolute -top-3 right-0" />
+    useEffect(() => {
+        const fetchTopUsers = async () => {
+            try {
+                const response = await gamificationAPI.getLeaderboard({ limit: 3, type: 'general' });
+                // API returns: { success: true, data: { leaderboard: [...], pagination: {...} } }
+                if (response.data.success) {
+                    setTopUsers(response.data.data.leaderboard || []);
+                }
+            } catch (error) {
+                console.error("Top users loading error:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTopUsers();
+    }, []);
+
+    if (loading) return (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft h-[200px] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold"></div>
+        </div>
+    );
+
+    if (topUsers.length === 0) return null;
+
+    // Helper to render user block
+    const renderUser = (entry, index, sizeClasses, borderColors) => {
+        if (!entry) return null; // Handle if fewer than 3 users
+        const user = entry.user;
+        return (
+            <div className={`flex flex-col items-center gap-2 relative ${index === 0 ? '-mt-4' : ''}`}>
+                <Link to={`/profile/${user.username}`}>
+                    <UserAvatar user={user} size="xl" className={`${sizeClasses} ${borderColors}`} />
+                </Link>
+                <div className="text-center">
+                    <Link to={`/profile/${user.username}`} className="block text-sm font-bold text-gray-800 dark:text-white hover:underline truncate max-w-[80px]">
+                        {user.username}
+                    </Link>
+                    <span className="text-[10px] text-gray-500">{Math.floor(entry.xp || 0)} XP</span>
+                </div>
+                {index === 0 && <FaMedal className="text-gold text-3xl absolute -top-4 right-0" />}
+                {index === 1 && <FaMedal className="text-gray-400 text-xl absolute -top-3 right-0" />}
+                {index === 2 && <FaMedal className="text-orange-400 text-xl absolute -top-3 right-0" />}
+            </div>
+        );
+    };
+
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
+            <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
+                <span className="w-1 h-6 bg-gold rounded-full"></span>
+                Topluluk Liderleri
+            </h3>
+            <div className="flex justify-around items-end">
+                {/* 2nd Place */}
+                {renderUser(topUsers[1], 1, "w-14 h-14", "border-2 border-gray-300")}
+
+                {/* 1st Place */}
+                {renderUser(topUsers[0], 0, "w-20 h-20", "border-4 border-gold shadow-md")}
+
+                {/* 3rd Place */}
+                {renderUser(topUsers[2], 2, "w-14 h-14", "border-2 border-orange-300")}
+            </div>
+            <div className="mt-6 text-center">
+                <Link to="/leaderboard" className="text-sm font-semibold text-coral hover:underline">
+                    Tüm Sıralamayı Gör
+                </Link>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 export const AnnouncementsWidget = () => (
     <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl p-6 shadow-none border border-gray-200">

@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes } from 'react-icons/fa';
-import { questionsAPI, commentsAPI } from '../services/api';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck } from 'react-icons/fa';
+import { questionsAPI, commentsAPI, answersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
 import Toast from '../components/Toast';
 import LikersModal from '../components/LikersModal';
 import GifPickerModal from '../components/GifPickerModal';
+import XPToast from '../components/Gamification/XPToast';
+import LevelUpModal from '../components/Gamification/LevelUpModal';
 
 const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
@@ -43,6 +45,10 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gifPickerContext, setGifPickerContext] = useState(null);
+
+    // Gamification States
+    const [xpNotification, setXpNotification] = useState(null);
+    const [levelNotification, setLevelNotification] = useState(null);
 
     const [genderFilter, setGenderFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
@@ -264,6 +270,27 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             setAnswerText('');
             setIsAnswerAnonymous(false);
             setAnswerGifUrl(null);
+
+            // Handle Gamification
+            const gamification = response.data.data.gamification;
+            if (gamification) {
+                if (gamification.points_added > 0) {
+                    setXpNotification({
+                        points: gamification.points_added,
+                        reason: 'Cevap Yazma'
+                    });
+                    // Clear XP toast after 3 seconds
+                    setTimeout(() => setXpNotification(null), 3000);
+                }
+
+                if (gamification.leveled_up) {
+                    setLevelNotification({
+                        level: gamification.new_level,
+                        isLevelUp: true
+                    });
+                }
+            }
+
             displayToast('Cevabınız başarıyla gönderildi! 🎉', 'success');
         } catch (err) {
             displayToast(err.response?.data?.message || "Cevap gönderilemedi.", 'error');
@@ -341,6 +368,33 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             displayToast('Yanıtınız başarıyla gönderildi! 🎉', 'success');
         } catch (err) {
             displayToast(err.response?.data?.message || "Yanıt gönderilemedi.", 'error');
+        }
+    };
+
+    const handleBestAnswer = async (answerId) => {
+        try {
+            const response = await answersAPI.selectBestAnswer(answerId);
+
+            // Update local state
+            setAnswers(prev => prev.map(a =>
+                a.id === answerId ? { ...a, is_accepted: true } : { ...a, is_accepted: false }
+            ));
+
+            // Handle Gamification Feedback for Selector (Question Owner)
+            const gamification = response.data.data?.gamification;
+            if (gamification) {
+                if (gamification.points_added > 0) {
+                    setXpNotification({
+                        points: gamification.points_added,
+                        reason: 'En İyi Görüş Seçimi'
+                    });
+                    setTimeout(() => setXpNotification(null), 3000);
+                }
+            }
+
+            displayToast('En iyi görüş seçildi! 🌟', 'success');
+        } catch (err) {
+            displayToast(err.response?.data?.message || "İşlem başarısız.", 'error');
         }
     };
 
@@ -573,6 +627,15 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         <div className="pb-10 border-b-8 border-gray-100 dark:border-gray-800 last:border-0 last:pb-0">
             {showToast && <Toast message={toastMessage} type={toastType} onClose={() => setShowToast(false)} />}
 
+            {/* Gamification Feedback */}
+            {xpNotification && <XPToast points={xpNotification.points} reason={xpNotification.reason} />}
+            {levelNotification && (
+                <LevelUpModal
+                    newLevel={levelNotification.level}
+                    onClose={() => setLevelNotification(null)}
+                />
+            )}
+
             <div className="flex flex-col gap-6">
                 {/* Question Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
@@ -796,8 +859,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                         {filteredAnswers.length > 0 ? (
                             filteredAnswers.map((answer) => {
                                 const answerCommentKey = `answer_${answer.id}`;
+                                const isBestAnswer = answer.is_accepted;
+                                const hasBestAnswer = answers.some(a => a.is_accepted);
+                                const isOwner = question.isOwner;
+                                const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
+                                const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
+
                                 return (
-                                    <div key={answer.id} id={`answer-${answer.id}`} className="p-4 md:p-6 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700 scroll-mt-24 shadow-sm hover:shadow-md transition-shadow">
+                                    <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${isBestAnswer
+                                        ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800 ring-1 ring-green-100 dark:ring-green-900'
+                                        : 'bg-gray-50 dark:bg-gray-800/60 border-gray-100 dark:border-gray-700'
+                                        }`}>
                                         <div className="flex gap-4">
                                             {answer.user?.username === 'anonim' ? (
                                                 <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
@@ -816,7 +888,28 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             {answer.user?.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
                                                         </div>
                                                         <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
+
+                                                        {/* Select Best Answer Button - Mobile */}
+                                                        {canSelectBestAnswer && (
+                                                            <button
+                                                                onClick={() => handleBestAnswer(answer.id)}
+                                                                className="lg:hidden mt-2 text-xs font-semibold text-green-600 hover:bg-green-50 px-2 py-1 rounded-lg border border-green-200 transition-colors flex items-center gap-1"
+                                                            >
+                                                                <FaCheckCircle /> EİG Seç
+                                                            </button>
+                                                        )}
                                                     </div>
+
+                                                    {/* Select Best Answer Button - Desktop */}
+                                                    {canSelectBestAnswer && (
+                                                        <button
+                                                            onClick={() => handleBestAnswer(answer.id)}
+                                                            className="hidden lg:flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-green-600 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-xl hover:border-green-300 transition-all shadow-sm"
+                                                            title="En İyi Görüş Seç"
+                                                        >
+                                                            <FaCheck /> Seç
+                                                        </button>
+                                                    )}
                                                 </div>
                                                 {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{answer.content}</div>}
                                                 {answer.gif_url && (

@@ -52,6 +52,10 @@ export const questionsAPI = {
     getLikers: (params) => api.get('/likes', { params })
 };
 
+export const answersAPI = {
+    selectBestAnswer: (answerId) => api.post(`/answers/${answerId}/best`)
+};
+
 export const usersAPI = {
     getMe: () => api.get('/user/me'),
     getProfile: (username) => api.get(`/users/${username}`),
@@ -82,6 +86,10 @@ export const usersAPI = {
 
 export const gifsAPI = {
     list: (params) => api.get('/gifs', { params }),
+};
+
+export const gamificationAPI = {
+    getLeaderboard: (params) => api.get('/leaderboard', { params }),
 };
 
 export const uploadAPI = {

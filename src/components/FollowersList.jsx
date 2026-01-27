@@ -8,8 +8,12 @@ import { useAuth } from '../context/AuthContext';
 
 const FollowersList = ({ followers: initialFollowers, type = 'followers', isOwnProfile }) => {
     const { user: currentUser } = useAuth();
-    const [followers, setFollowers] = useState(initialFollowers);
+    const [followers, setFollowers] = useState(initialFollowers || []);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+    React.useEffect(() => {
+        setFollowers(initialFollowers || []);
+    }, [initialFollowers]);
 
     const showToast = (message, toastType = 'success') => {
         setToast({ show: true, message, type: toastType });
@@ -50,7 +54,7 @@ const FollowersList = ({ followers: initialFollowers, type = 'followers', isOwnP
         }
     };
 
-    if (followers.length === 0) {
+    if (!followers || followers.length === 0) {
         return (
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-16 text-center">
                 <div className="w-24 h-24 bg-gradient-to-br from-coral/20 to-pink-100 dark:from-coral/10 dark:to-pink-900/20 rounded-full flex items-center justify-center mx-auto mb-6">

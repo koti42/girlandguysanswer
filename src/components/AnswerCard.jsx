@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaCheckCircle } from 'react-icons/fa';
+import { FaHeart, FaCheckCircle, FaMedal } from 'react-icons/fa';
 import { questionsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Toast from './Toast';
@@ -71,7 +71,10 @@ const AnswerCard = ({ answer }) => {
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft hover:shadow-md transition-all border border-gray-100 dark:border-gray-700">
+        <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft hover:shadow-md transition-all border ${answer.is_accepted
+            ? 'border-green-200 dark:border-green-800 ring-1 ring-green-100 dark:ring-green-900'
+            : 'border-gray-100 dark:border-gray-700'
+            }`}>
             {toast.show && (
                 <Toast
                     message={toast.message}
@@ -113,9 +116,9 @@ const AnswerCard = ({ answer }) => {
 
                     {/* Accepted Badge */}
                     {answer.is_accepted && (
-                        <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
-                            <FaCheckCircle />
-                            <span className="font-medium">Kabul Edildi</span>
+                        <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full">
+                            <FaMedal />
+                            <span className="font-bold text-xs">En İyi Görüş</span>
                         </div>
                     )}
 

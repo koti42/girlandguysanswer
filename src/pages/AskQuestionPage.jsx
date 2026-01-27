@@ -8,6 +8,8 @@ import GifPickerModal from '../components/GifPickerModal';
 import { categories } from '../data/mockData';
 import { questionsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import XPToast from '../components/Gamification/XPToast';
+import LevelUpModal from '../components/Gamification/LevelUpModal';
 
 const AskQuestionPage = () => {
     const navigate = useNavigate();
@@ -25,6 +27,8 @@ const AskQuestionPage = () => {
     const [isAnonymous, setIsAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
     const [gifUrl, setGifUrl] = useState(null);
     const [showGifPicker, setShowGifPicker] = useState(false);
+    const [gamificationFeedback, setGamificationFeedback] = useState(null);
+    const [showLevelUp, setShowLevelUp] = useState(null);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -63,7 +67,6 @@ const AskQuestionPage = () => {
             showToast('warning', 'Taslağı kaydetmek için en azından bir başlık girin');
             return;
         }
-        // Taslağı localStorage'a kaydet
         localStorage.setItem('questionDraft', JSON.stringify(formData));
         showToast('success', 'Taslak başarıyla kaydedildi!');
     };
@@ -103,14 +106,33 @@ const AskQuestionPage = () => {
 
 
 
-            await questionsAPI.create(payload);
+            const response = await questionsAPI.create(payload);
+
+            // Gamification Feedback
+            const gamification = response.data.data?.gamification;
+            let delay = 1000;
+
+            if (gamification) {
+                if (gamification.points_added > 0) {
+                    setGamificationFeedback({
+                        points: gamification.points_added,
+                        reason: 'Soru Sorma'
+                    });
+                    delay = 2500; // Wait longer to show toast
+                }
+
+                if (gamification.leveled_up) {
+                    setShowLevelUp(gamification.new_level);
+                    delay = 3000; // Wait longer for modal
+                }
+            }
 
             showToast('success', 'Sorunuz başarıyla yayınlandı!');
             localStorage.removeItem('questionDraft');
 
             setTimeout(() => {
                 navigate('/questions');
-            }, 1000);
+            }, delay);
         } catch (error) {
             showToast('error', error.response?.data?.message || 'Soru yayınlanırken bir hata oluştu');
         } finally {
@@ -395,6 +417,21 @@ const AskQuestionPage = () => {
                     }}
                     title="Soru için GIF seç"
                 />
+
+                {/* Gamification Feedback */}
+                {gamificationFeedback && (
+                    <XPToast points={gamificationFeedback.points} reason={gamificationFeedback.reason} />
+                )}
+
+                {showLevelUp && (
+                    <LevelUpModal
+                        newLevel={showLevelUp}
+                        onClose={() => {
+                            setShowLevelUp(null);
+                            navigate('/questions');
+                        }}
+                    />
+                )}
             </div>
         </MainLayout>
     );
