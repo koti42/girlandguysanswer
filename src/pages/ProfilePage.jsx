@@ -21,10 +21,10 @@ const ProfilePage = () => {
     const { user: currentUser, updateUser } = useAuth();
     const isOwnProfile = !username || (currentUser && currentUser.username === username);
 
-    const [isVIP, setIsVIP] = useState(false);
-
     const DEFAULT_COVER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop';
     const DEFAULT_AVATAR = 'https://i.pravatar.cc/200?u=default';
+
+    const [isVIP, setIsVIP] = useState(false);
 
     const ensureHttps = (url) => {
         if (!url) return url;
@@ -65,21 +65,20 @@ const ProfilePage = () => {
 
     useEffect(() => {
         const fetchProfileData = async () => {
-            // Only set loading if we don't have profile data yet or if the username has changed
             if (!profileData || (profileData.username !== (username || currentUser?.username))) {
                 setLoading(true);
             }
             try {
-                // ... (existing profile fetch logic)
                 let data;
                 let questionsData = [];
+                let questionsCount = null;
+                let answersCount = null;
 
                 if (isOwnProfile) {
                     const response = await usersAPI.getProfile(username || currentUser.username);
                     data = response.data.data;
                     const qResponse = await questionsAPI.getMyQuestions();
-
-                    // Inject user object into questions
+                    questionsCount = qResponse.data?.data?.count ?? qResponse.data?.data?.questions?.length ?? null;
                     questionsData = qResponse.data.data.questions.map(q => ({
                         ...q,
                         user: q.user || {
@@ -94,7 +93,6 @@ const ProfilePage = () => {
                     const response = await usersAPI.getProfile(username);
                     data = response.data.data;
 
-                    // Inject user object into questions
                     questionsData = (data.questions || []).map(q => ({
                         ...q,
                         user: q.user || {
@@ -105,9 +103,21 @@ const ProfilePage = () => {
                             gender: data.gender
                         }
                     }));
+                    questionsCount = data.stats?.questions ?? (data.questions?.length ?? null);
                 }
 
                 setIsVIP(data.username === 'theerriss');
+
+                // Answers count: fetch once on profile load so tab counter is correct before clicking.
+                const canViewAnswers = isOwnProfile || !data.isPrivate || data.isFollowing;
+                if (canViewAnswers) {
+                    try {
+                        const aRes = await usersAPI.getUserAnswers(data.username);
+                        answersCount = aRes.data?.data?.count ?? aRes.data?.data?.answers?.length ?? null;
+                    } catch (e) {
+                        answersCount = null;
+                    }
+                }
 
                 setProfileData({
                     ...data,
@@ -124,13 +134,13 @@ const ProfilePage = () => {
                     allow_following: data.allow_following !== undefined ? data.allow_following : true,
                     allow_messaging: data.allow_messaging !== undefined ? data.allow_messaging : true,
                     messaging_mode: data.messaging_mode || 'everyone',
-                    hasBlocked: data.hasBlocked || false,  // Ben bu kullanıcıyı engelledim mi?
-                    isBlocked: data.isBlocked || false,    // Bu kullanıcı beni engelledi mi?
+                    hasBlocked: data.hasBlocked || false,  
+                    isBlocked: data.isBlocked || false,    
                     stats: {
-                        questions: data.stats?.questions || 0,
+                        questions: (questionsCount ?? data.stats?.questions ?? 0),
                         followers: data.stats?.followers || 0,
                         following: data.stats?.following || 0,
-                        answers: data.stats?.answers || 0,
+                        answers: (answersCount ?? data.stats?.answers ?? 0),
                         likes: data.stats?.likes || 0
                     }
                 });
@@ -422,6 +432,16 @@ const ProfilePage = () => {
         setIsEditing(false);
     };
 
+    const gender = profileData.gender;
+    const isFemale = gender === 'female' || gender === 'kiz' || gender === 'kadın' || gender === 'woman';
+    const isMale = gender === 'male' || gender === 'erkek' || gender === 'man';
+
+    const headerShellClasses = isFemale
+        ? 'bg-gradient-to-br from-pink-50 via-rose-50 to-fuchsia-50 dark:from-pink-900/20 dark:via-rose-900/10 dark:to-fuchsia-900/20 border border-pink-100 dark:border-pink-800'
+        : isMale
+            ? 'bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 dark:from-sky-900/20 dark:via-blue-900/10 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800'
+            : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700';
+
     return (
         <>
             {toast.show && (
@@ -484,7 +504,7 @@ const ProfilePage = () => {
                         /* Normal Profile */
                         <>
                             {/* Profile Header */}
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden">
+                            <div className={`${headerShellClasses} rounded-2xl shadow-soft overflow-hidden`}>
                                 <ProfileCover
                                     coverPhoto={profileData.coverPhoto}
                                     onCoverUpload={isOwnProfile ? handleCoverUpload : null}
@@ -536,11 +556,24 @@ const ProfilePage = () => {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex flex-wrap items-center gap-2 mt-1">
                                                         <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>
+                                                        {gender && (
+                                                            <span
+                                                                className={`px-3 py-1 text-[11px] font-semibold rounded-full shadow-sm border ${
+                                                                    isFemale
+                                                                        ? 'bg-pink-50 text-pink-600 border-pink-200 dark:bg-pink-900/40 dark:text-pink-200 dark:border-pink-700'
+                                                                        : isMale
+                                                                            ? 'bg-sky-50 text-sky-600 border-sky-200 dark:bg-sky-900/40 dark:text-sky-200 dark:border-sky-700'
+                                                                            : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
+                                                                }`}
+                                                            >
+                                                                {isFemale ? 'Kadın Profil' : isMale ? 'Erkek Profil' : 'Profil'}
+                                                            </span>
+                                                        )}
                                                         {isVIP && (
                                                             <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-white rounded-full shadow-lg animate-pulse-slow">
-                                                                👑 Kraliçe
+                                                                {isFemale ? '👑 Kraliçe' : '👑 Kral'}
                                                             </span>
                                                         )}
                                                     </div>
