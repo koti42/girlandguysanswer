@@ -7,7 +7,6 @@ import FollowersList from '../FollowersList';
 
 const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, followers, following, loading, isOwnProfile, isVIP }) => {
 
-    // Privacy Check for Content
     if (profileData.isPrivate && !profileData.isFollowing && !isOwnProfile) {
         return (
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center shadow-soft border border-gray-100 dark:border-gray-700">
@@ -22,7 +21,6 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
         );
     }
 
-    // Questions Tab
     if (activeTab === 'questions') {
         return (
             <>
@@ -51,7 +49,6 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
         );
     }
 
-    // Answers Tab
     if (activeTab === 'answers') {
         return (
             <>
@@ -71,17 +68,14 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
         );
     }
 
-    // Followers Tab
     if (activeTab === 'followers') {
         return <FollowersList followers={followers} type="followers" isOwnProfile={isOwnProfile} />;
     }
 
-    // Following Tab
     if (activeTab === 'following') {
         return <FollowersList followers={following} type="following" isOwnProfile={isOwnProfile} />;
     }
 
-    // Badges Tab
     if (activeTab === 'badges') {
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -112,7 +106,6 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
         );
     }
 
-    // Liked Tab (Placeholder as per previous implementation logic)
     if (activeTab === 'liked') {
         return (
             <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl shadow-soft">

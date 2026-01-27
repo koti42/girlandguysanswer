@@ -103,12 +103,11 @@ const ProfilePage = () => {
                             gender: data.gender
                         }
                     }));
-                    questionsCount = data.questions_count ?? data.stats?.questions ?? (data.questions?.length ?? null);
+                    questionsCount = data.questions_count ?? data.question_count ?? data.stats?.questions ?? (data.questions?.length ?? null);
                 }
 
                 setIsVIP(data.username === 'theerriss');
 
-                // Answers count: fetch once on profile load so tab counter is correct before clicking.
                 const canViewAnswers = isOwnProfile || !data.isPrivate || data.isFollowing;
                 if (canViewAnswers) {
                     try {
