@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaUserSecret, FaInbox } from 'react-icons/fa';
+import { FaUserSecret, FaInbox, FaTrophy } from 'react-icons/fa';
 import ProfileStats from '../ProfileStats';
 import QuestionCard from '../QuestionCard';
 import AnswerCard from '../AnswerCard';
