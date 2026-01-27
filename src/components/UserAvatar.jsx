@@ -81,10 +81,15 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         let url = String(rawUrl).trim();
         if (!url) return url;
 
+        // Çift domain bug'ını düzelt
         url = url.replace(
             /^https?:\/\/herkeslersoruyor\.com\.tr\/herkeslersoruyor\.panalix\.com\.tr\//i,
             'https://herkeslersoruyor.panalix.com.tr/'
         );
+
+        if (/^herkeslersoruyor\.panalix\.com\.tr\//i.test(url)) {
+            return `https://${url}`;
+        }
 
         // If relative path, prefix with API host (without /api)
         if (url.startsWith('/')) {
