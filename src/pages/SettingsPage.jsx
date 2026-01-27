@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaToggleOn, FaToggleOff } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI } from '../services/api';
 import { TopUsersWidget } from '../components/Widgets';
 import Toast from '../components/Toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const Toggle = ({ enabled, onChange, label, description }) => (
     <div className="flex items-center justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-0">
@@ -26,7 +28,8 @@ const Toggle = ({ enabled, onChange, label, description }) => (
 );
 
 const SettingsPage = () => {
-    const { user, updateUser } = useAuth();
+    const navigate = useNavigate();
+    const { user, updateUser, logout } = useAuth();
     const [loading, setLoading] = useState(true);
     const [settings, setSettings] = useState({
         is_private: false,
@@ -34,11 +37,41 @@ const SettingsPage = () => {
         messaging_mode: 'everyone', // everyone, followers
         allow_following: true
     });
+    const [deletePassword, setDeletePassword] = useState('');
+    const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
+    };
+
+    const requestAccountDeletion = async () => {
+        if (!deletePassword.trim()) {
+            showToast('Şifre zorunlu.', 'error');
+            return;
+        }
+
+        setIsDeletingAccount(true);
+        try {
+            const res = await usersAPI.requestAccountDeletion(deletePassword);
+            const msg = res.data?.message || 'Hesabınız silinmek üzere işaretlendi. 14 gün içinde tekrar giriş yaparak işlemi iptal edebilirsiniz.';
+
+    
+            try {
+                sessionStorage.setItem('auth_notice', msg);
+            } catch (_) { }
+            logout();
+            setShowDeleteAccountModal(false);
+            setDeletePassword('');
+            navigate('/login', { replace: true, state: { notice: msg } });
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Hesap silme isteği oluşturulamadı.';
+            showToast(msg, 'error');
+        } finally {
+            setIsDeletingAccount(false);
+        }
     };
 
     useEffect(() => {
@@ -58,7 +91,6 @@ const SettingsPage = () => {
                     allow_following: detail.allow_following !== undefined ? detail.allow_following : true
                 });
             } catch (error) {
-                // Ayarlar yüklenemedi
             } finally {
                 setLoading(false);
             }
@@ -77,7 +109,6 @@ const SettingsPage = () => {
             setSettings(prev => ({ ...prev, is_private: newValue }));
             const response = await usersAPI.updatePrivacy(newValue);
 
-            // Update from backend response
             if (response.data.data?.settings) {
                 const backendSettings = response.data.data.settings;
                 setSettings({
@@ -88,7 +119,6 @@ const SettingsPage = () => {
                 });
             }
 
-            // Update user context
             if (user) {
                 updateUser({ is_private: newValue });
             }
@@ -110,7 +140,6 @@ const SettingsPage = () => {
                 messaging_mode: settings.messaging_mode
             });
 
-            // Update from backend response
             if (response.data.data?.settings) {
                 const backendSettings = response.data.data.settings;
                 setSettings({
@@ -121,7 +150,6 @@ const SettingsPage = () => {
                 });
             }
 
-            // Update user context
             if (user) {
                 updateUser({ allow_messaging: newValue });
             }
@@ -156,7 +184,6 @@ const SettingsPage = () => {
             setSettings(prev => ({ ...prev, allow_following: newValue }));
             const response = await usersAPI.updateFollowing(newValue);
 
-            // Update from backend response
             if (response.data.data?.settings) {
                 const backendSettings = response.data.data.settings;
                 setSettings({
@@ -167,7 +194,6 @@ const SettingsPage = () => {
                 });
             }
 
-            // Update user context
             if (user) {
                 updateUser({ allow_following: newValue });
             }
@@ -299,8 +325,56 @@ const SettingsPage = () => {
                         />
                     </div>
 
+                    {/* Delete Account */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mt-6 border border-red-100 dark:border-red-900/30">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
+                                <FaTrash className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Hesabı Sil</h2>
+                                <p className="text-xs text-gray-500">Hesabın 14 gün sonra kalıcı olarak silinir (geri alınabilir süre)</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Şifren
+                                </label>
+                                <input
+                                    type="password"
+                                    value={deletePassword}
+                                    onChange={(e) => setDeletePassword(e.target.value)}
+                                    placeholder="Şifreni gir"
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400/20 transition-all"
+                                />
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowDeleteAccountModal(true)}
+                                disabled={!deletePassword.trim()}
+                                className="w-full py-3 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Hesabı Silmeyi Başlat
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </MainLayout>
+
+            <ConfirmationModal
+                isOpen={showDeleteAccountModal}
+                onClose={() => setShowDeleteAccountModal(false)}
+                onConfirm={requestAccountDeletion}
+                title="Hesabı Silmek İstiyor Musun?"
+                message="Bu işlem hesabını silinmek üzere işaretler. 14 gün içinde tekrar giriş yaparsan silme iptal edilir. Devam etmek için onayla."
+                confirmText={isDeletingAccount ? 'İşleniyor...' : 'Evet, Silmeyi Başlat'}
+                cancelText="Vazgeç"
+                isDangerous={true}
+            />
         </>
     );
 };

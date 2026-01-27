@@ -1,37 +1,52 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { FaCamera, FaTimes } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 
 const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
-    const [selectedFile, setSelectedFile] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const fileInputRef = useRef(null);
 
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setSelectedFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreviewImage(reader.result);
             };
             reader.readAsDataURL(file);
-        }
-    };
 
-    const handleSave = () => {
-        if (selectedFile) {
-            onAvatarUpload(selectedFile);
+            (async () => {
+                try {
+                    setIsProcessing(true);
+                    await onAvatarUpload?.(file);
+                    setIsModalOpen(false);
+                } finally {
+                    setIsProcessing(false);
+                    setPreviewImage(null);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                }
+            })();
         }
-        setPreviewImage(null);
-        setSelectedFile(null);
-        setIsModalOpen(false);
     };
 
     const handleCancel = () => {
         setPreviewImage(null);
-        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         setIsModalOpen(false);
+    };
+
+    const handleRemove = async () => {
+        try {
+            setIsProcessing(true);
+            await onAvatarRemove?.();
+            setIsModalOpen(false);
+        } finally {
+            setIsProcessing(false);
+            setPreviewImage(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     return (
@@ -87,24 +102,31 @@ const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => 
                                     Profilinde kullanılacak avatar resmini eklemen seni özel ve ilgi çekici kılar.
                                 </p>
 
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileSelect}
+                                    className="hidden"
+                                />
+
                                 {/* Buttons */}
                                 <div className="flex gap-3">
-                                    <label className="flex-1">
-                                        <div className="w-full py-3 px-4 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold text-center cursor-pointer hover:bg-gray-50 transition-colors">
-                                            YENİ RESİM
-                                        </div>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleFileSelect}
-                                            className="hidden"
-                                        />
-                                    </label>
                                     <button
-                                        onClick={handleSave}
-                                        className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg"
+                                        type="button"
+                                        onClick={handleRemove}
+                                        disabled={isProcessing || !onAvatarRemove}
+                                        className="flex-1 py-3 px-4 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        KAYDET
+                                        Resmi Kaldır
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isProcessing}
+                                        className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Yeni Resim Yükle
                                     </button>
                                 </div>
                             </div>

@@ -23,6 +23,9 @@ const ProfilePage = () => {
 
     const [isVIP, setIsVIP] = useState(false);
 
+    const DEFAULT_COVER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop';
+    const DEFAULT_AVATAR = 'https://i.pravatar.cc/200?u=default';
+
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -110,8 +113,8 @@ const ProfilePage = () => {
                     ...data,
                     ...data,
                     name: data.username,
-                    coverPhoto: ensureHttps(data.coverImage) || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop',
-                    avatar: ensureHttps(data.avatar) || 'https://i.pravatar.cc/200?u=default',
+                    coverPhoto: ensureHttps(data.coverImage) || DEFAULT_COVER,
+                    avatar: ensureHttps(data.avatar) || DEFAULT_AVATAR,
                     location: data.location || 'Konum belirtilmedi',
                     joinedDate: new Date(data.created_at || Date.now()).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
                     badges: [],
@@ -231,8 +234,18 @@ const ProfilePage = () => {
         }
     };
 
-    const handleAvatarRemove = () => {
-        setProfileData(prev => ({ ...prev, avatar: defaultAvatar }));
+    const handleAvatarRemove = async () => {
+        try {
+            await usersAPI.deleteAvatar();
+            setProfileData(prev => ({ ...prev, avatar: DEFAULT_AVATAR }));
+            if (currentUser && (currentUser.username === profileData.username || isOwnProfile)) {
+                updateUser({ avatar: DEFAULT_AVATAR });
+            }
+            showToast('Profil fotoğrafı kaldırıldı.', 'success');
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Profil fotoğrafı kaldırılamadı.';
+            showToast(msg, 'error');
+        }
     };
 
     const handleCoverUpload = async (file) => {
@@ -266,8 +279,18 @@ const ProfilePage = () => {
         }
     };
 
-    const handleCoverRemove = () => {
-        setProfileData(prev => ({ ...prev, coverPhoto: defaultCover }));
+    const handleCoverRemove = async () => {
+        try {
+            await usersAPI.deleteCoverImage();
+            setProfileData(prev => ({ ...prev, coverPhoto: DEFAULT_COVER }));
+            if (currentUser && (currentUser.username === profileData.username || isOwnProfile)) {
+                updateUser({ cover_image: DEFAULT_COVER });
+            }
+            showToast('Kapak fotoğrafı kaldırıldı.', 'success');
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Kapak fotoğrafı kaldırılamadı.';
+            showToast(msg, 'error');
+        }
     };
 
     const handleFollowToggle = async () => {

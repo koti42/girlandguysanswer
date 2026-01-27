@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes } from 'react-icons/fa';
 import { questionsAPI, commentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
 import Toast from '../components/Toast';
 import LikersModal from '../components/LikersModal';
+import GifPickerModal from '../components/GifPickerModal';
 
 const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
@@ -31,10 +32,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const [commentingOn, setCommentingOn] = useState(null);
     const [commentTexts, setCommentTexts] = useState({});
     const [commentAnonymous, setCommentAnonymous] = useState({});
+    const [commentGifUrls, setCommentGifUrls] = useState({});
 
     const [replyingTo, setReplyingTo] = useState(null);
     const [replyTexts, setReplyTexts] = useState({});
     const [replyAnonymous, setReplyAnonymous] = useState({});
+    const [replyGifUrls, setReplyGifUrls] = useState({});
+
+    const [answerGifUrl, setAnswerGifUrl] = useState(null);
+
+    const [showGifPicker, setShowGifPicker] = useState(false);
+    const [gifPickerContext, setGifPickerContext] = useState(null);
 
     const [genderFilter, setGenderFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
@@ -67,6 +75,42 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
     const closeLikersModal = () => {
         setLikersModal({ ...likersModal, isOpen: false });
+    };
+
+    const openGifPicker = (context, key) => {
+        setGifPickerContext({ context, key });
+        setShowGifPicker(true);
+    };
+
+    const handleGifSelect = (url) => {
+        if (!gifPickerContext) return;
+
+        if (gifPickerContext.context === 'answer') {
+            setAnswerGifUrl(url);
+        } else if (gifPickerContext.context === 'comment') {
+            setCommentGifUrls(prev => ({ ...prev, [gifPickerContext.key]: url }));
+        } else if (gifPickerContext.context === 'reply') {
+            setReplyGifUrls(prev => ({ ...prev, [gifPickerContext.key]: url }));
+        }
+
+        setShowGifPicker(false);
+        setGifPickerContext(null);
+    };
+
+    const clearCommentGif = (key) => {
+        setCommentGifUrls(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+    };
+
+    const clearReplyGif = (key) => {
+        setReplyGifUrls(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
     };
 
     useEffect(() => {
@@ -205,11 +249,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
     const handleSubmitAnswer = async (e) => {
         e.preventDefault();
-        if (!answerText.trim()) return;
+        if (!answerText.trim() && !answerGifUrl) return;
         try {
             const response = await questionsAPI.createAnswer(question.id, {
-                content: answerText,
-                is_anonymous: isAnswerAnonymous
+                content: answerText || '',
+                is_anonymous: isAnswerAnonymous,
+                gif_url: answerGifUrl || null
             });
             let newAnswer = response.data.data.answer;
             if (isAnswerAnonymous) {
@@ -218,6 +263,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             setAnswers(prev => [newAnswer, ...prev]);
             setAnswerText('');
             setIsAnswerAnonymous(false);
+            setAnswerGifUrl(null);
             displayToast('Cevabınız başarıyla gönderildi! 🎉', 'success');
         } catch (err) {
             displayToast(err.response?.data?.message || "Cevap gönderilemedi.", 'error');
@@ -229,15 +275,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         if (!commentingOn) return;
         const commentKey = `${commentingOn.type}_${commentingOn.id}`;
         const commentText = commentTexts[commentKey];
-        if (!commentText?.trim()) return;
+        const gifUrl = commentGifUrls[commentKey];
+        if (!commentText?.trim() && !gifUrl) return;
 
         try {
             const response = await commentsAPI.create({
-                content: commentText,
+                content: commentText || '',
                 commentable_type: commentingOn.type,
                 commentable_id: commentingOn.id,
                 parent_id: null,
-                is_anonymous: commentAnonymous[commentKey] || false
+                is_anonymous: commentAnonymous[commentKey] || false,
+                gif_url: gifUrl || null
             });
             let newComment = response.data.data.comment;
             if (commentAnonymous[commentKey]) {
@@ -251,6 +299,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             }
             setCommentTexts(prev => ({ ...prev, [commentKey]: '' }));
             setCommentAnonymous(prev => ({ ...prev, [commentKey]: false }));
+            clearCommentGif(commentKey);
             setCommentingOn(null);
             displayToast('Yorumunuz başarıyla gönderildi! 🎉', 'success');
         } catch (err) {
@@ -263,15 +312,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         e.preventDefault();
         if (!replyingTo) return;
         const replyText = replyTexts[replyingTo.commentId];
-        if (!replyText?.trim()) return;
+        const gifUrl = replyGifUrls[replyingTo.commentId];
+        if (!replyText?.trim() && !gifUrl) return;
 
         try {
             const response = await commentsAPI.create({
-                content: replyText,
+                content: replyText || '',
                 commentable_type: replyingTo.type,
                 commentable_id: replyingTo.targetId,
                 parent_id: replyingTo.mainCommentId,
-                is_anonymous: replyAnonymous[replyingTo.commentId] || false
+                is_anonymous: replyAnonymous[replyingTo.commentId] || false,
+                gif_url: gifUrl || null
             });
             let newReply = response.data.data.comment;
             if (replyAnonymous[replyingTo.commentId]) {
@@ -285,6 +336,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             }
             setReplyTexts(prev => ({ ...prev, [replyingTo.commentId]: '' }));
             setReplyAnonymous(prev => ({ ...prev, [replyingTo.commentId]: false }));
+            clearReplyGif(replyingTo.commentId);
             setReplyingTo(null);
             displayToast('Yanıtınız başarıyla gönderildi! 🎉', 'success');
         } catch (err) {
@@ -388,7 +440,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 {comment.user?.gender === 'female' ? <FaVenus className="text-pink-600 text-xs" /> : <FaMars className="text-cyan-600 text-xs" />}
                                 <span className="text-gray-500 text-xs">• {formatDate(comment.created_at)}</span>
                             </div>
-                            <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2">{comment.content}</p>
+                            {comment.content && <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2">{comment.content}</p>}
+                            {comment.gif_url && (
+                                <div className="mb-2 rounded-lg overflow-hidden">
+                                    <img
+                                        src={comment.gif_url}
+                                        alt="GIF"
+                                        className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                        onClick={() => window.open(comment.gif_url, '_blank')}
+                                    />
+                                </div>
+                            )}
                             <div className="flex items-center gap-4 mt-2">
                                 <div className="flex items-center gap-1">
                                     <button
@@ -416,6 +478,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     {isReplyingToThis && (
                         <div className="mt-3 pl-12 border-l-2 border-coral dark:border-coral/50">
                             <form onSubmit={handleSubmitReply}>
+                                {replyGifUrls[comment.id] && (
+                                    <div className="mb-2 relative inline-block">
+                                        <img src={replyGifUrls[comment.id]} alt="GIF" className="max-w-xs h-auto rounded-lg" />
+                                        <button
+                                            type="button"
+                                            onClick={() => clearReplyGif(comment.id)}
+                                            className="absolute top-1 right-1 bg-black/60 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
+                                        >
+                                            <FaTimes className="text-xs" />
+                                        </button>
+                                    </div>
+                                )}
                                 <textarea
                                     value={replyTexts[comment.id] || ''}
                                     onChange={(e) => setReplyTexts(prev => ({ ...prev, [comment.id]: e.target.value }))}
@@ -425,14 +499,24 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     autoFocus
                                 />
                                 <div className="flex justify-between items-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => setReplyAnonymous(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-xs ${replyAnonymous[comment.id] ? 'bg-purple-100 text-purple-700 border-2 border-purple-300' : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'}`}
-                                    >
-                                        <FaUserSecret /> <span>{replyAnonymous[comment.id] ? 'Gizli yanıt' : 'Gizli Üye olarak yanıtla'}</span>
-                                    </button>
-                                    <button type="submit" disabled={!replyTexts[comment.id]?.trim()} className="bg-coral text-white font-semibold py-1.5 px-3 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs">Yanıtla</button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => openGifPicker('reply', comment.id)}
+                                            className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:text-coral hover:bg-gray-200 transition-colors"
+                                            title="GIF Ekle"
+                                        >
+                                            <FaImage className="text-xs" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setReplyAnonymous(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-xs ${replyAnonymous[comment.id] ? 'bg-purple-100 text-purple-700 border-2 border-purple-300' : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'}`}
+                                        >
+                                            <FaUserSecret /> <span>{replyAnonymous[comment.id] ? 'Gizli yanıt' : 'Gizli Üye olarak yanıtla'}</span>
+                                        </button>
+                                    </div>
+                                    <button type="submit" disabled={!replyTexts[comment.id]?.trim() && !replyGifUrls[comment.id]} className="bg-coral text-white font-semibold py-1.5 px-3 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs">Yanıtla</button>
                                 </div>
                             </form>
                         </div>
@@ -529,6 +613,16 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                             <img src={question.image} alt="Question" className="w-full h-auto object-cover" />
                         </div>
                     )}
+                    {question.gif_url && (
+                        <div className="rounded-xl overflow-hidden mb-6 shadow-sm">
+                            <img
+                                src={question.gif_url}
+                                alt="GIF"
+                                className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => window.open(question.gif_url, '_blank')}
+                            />
+                        </div>
+                    )}
 
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
                         <div className="flex gap-6">
@@ -561,6 +655,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Yorumlar ({question.comments?.length || 0})</h3>
                         {isCommentingOnQuestion && (
                             <form onSubmit={handleSubmitComment} className="mb-6">
+                                {commentGifUrls[commentKey] && (
+                                    <div className="mb-3 relative inline-block">
+                                        <img src={commentGifUrls[commentKey]} alt="GIF" className="max-w-xs rounded-xl shadow-sm" />
+                                        <button
+                                            type="button"
+                                            onClick={() => clearCommentGif(commentKey)}
+                                            className="absolute top-2 right-2 bg-black/60 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                                        >
+                                            <FaTimes className="text-xs" />
+                                        </button>
+                                    </div>
+                                )}
                                 <textarea
                                     value={commentTexts[commentKey] || ''}
                                     onChange={(e) => setCommentTexts(prev => ({ ...prev, [commentKey]: e.target.value }))}
@@ -569,16 +675,26 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-3"
                                 />
                                 <div className="flex items-center justify-between">
-                                    <button
-                                        type="button"
-                                        onClick={() => setCommentAnonymous(prev => ({ ...prev, [commentKey]: !prev[commentKey] }))}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all text-sm ${commentAnonymous[commentKey] ? 'bg-purple-100 text-purple-700 border-2 border-purple-300' : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'}`}
-                                    >
-                                        <FaUserSecret /><span>{commentAnonymous[commentKey] ? 'Gizli yorum' : 'Gizli Üye olarak yorum yap'}</span>
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => openGifPicker('comment', commentKey)}
+                                            className="p-2 rounded-xl bg-gray-100 text-gray-600 hover:text-coral hover:bg-gray-200 transition-colors"
+                                            title="GIF Ekle"
+                                        >
+                                            <FaImage />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCommentAnonymous(prev => ({ ...prev, [commentKey]: !prev[commentKey] }))}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all text-sm ${commentAnonymous[commentKey] ? 'bg-purple-100 text-purple-700 border-2 border-purple-300' : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'}`}
+                                        >
+                                            <FaUserSecret /><span>{commentAnonymous[commentKey] ? 'Gizli yorum' : 'Gizli Üye olarak yorum yap'}</span>
+                                        </button>
+                                    </div>
                                     <div className="flex gap-2">
                                         <button type="button" onClick={() => setCommentingOn(null)} className="px-4 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm">İptal</button>
-                                        <button type="submit" disabled={!commentTexts[commentKey]?.trim()} className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm">Gönder</button>
+                                        <button type="submit" disabled={!commentTexts[commentKey]?.trim() && !commentGifUrls[commentKey]} className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm">Gönder</button>
                                     </div>
                                 </div>
                             </form>
@@ -621,6 +737,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Cevap Yaz</h3>
                         <form onSubmit={handleSubmitAnswer}>
+                            {answerGifUrl && (
+                                <div className="mb-4 relative inline-block">
+                                    <img src={answerGifUrl} alt="GIF" className="max-w-xs rounded-xl shadow-sm" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setAnswerGifUrl(null)}
+                                        className="absolute top-2 right-2 bg-black/60 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                                    >
+                                        <FaTimes className="text-xs" />
+                                    </button>
+                                </div>
+                            )}
                             <textarea
                                 value={answerText}
                                 onChange={(e) => setAnswerText(e.target.value)}
@@ -629,14 +757,24 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-4"
                             />
                             <div className="flex items-center justify-between">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAnswerAnonymous(!isAnswerAnonymous)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnswerAnonymous ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
-                                >
-                                    <FaUserSecret className="text-lg" /><span className="text-sm">{isAnswerAnonymous ? 'Gizli cevap' : 'Gizli Üye olarak cevapla'}</span>
-                                </button>
-                                <button type="submit" disabled={!answerText.trim()} className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-2xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">Cevap Gönder</button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => openGifPicker('answer', 'answer')}
+                                        className="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-coral transition-colors"
+                                        title="GIF Ekle"
+                                    >
+                                        <FaImage />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAnswerAnonymous(!isAnswerAnonymous)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnswerAnonymous ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                    >
+                                        <FaUserSecret className="text-lg" /><span className="text-sm">{isAnswerAnonymous ? 'Gizli cevap' : 'Gizli Üye olarak cevapla'}</span>
+                                    </button>
+                                </div>
+                                <button type="submit" disabled={!answerText.trim() && !answerGifUrl} className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-2xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">Cevap Gönder</button>
                             </div>
                         </form>
                     </div>
@@ -680,7 +818,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
                                                     </div>
                                                 </div>
-                                                <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{answer.content}</div>
+                                                {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{answer.content}</div>}
+                                                {answer.gif_url && (
+                                                    <div className="mt-3 rounded-lg overflow-hidden">
+                                                        <img
+                                                            src={answer.gif_url}
+                                                            alt="GIF"
+                                                            className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                                            onClick={() => window.open(answer.gif_url, '_blank')}
+                                                        />
+                                                    </div>
+                                                )}
 
                                                 <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                                                     <div className="flex items-center gap-2">
@@ -704,6 +852,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
                                                 {commentingOn?.type === 'answer' && commentingOn?.id === answer.id && (
                                                     <form onSubmit={handleSubmitComment} className="mt-4">
+                                                        {commentGifUrls[answerCommentKey] && (
+                                                            <div className="mb-3 relative inline-block">
+                                                                <img src={commentGifUrls[answerCommentKey]} alt="GIF" className="max-w-xs rounded-xl shadow-sm" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => clearCommentGif(answerCommentKey)}
+                                                                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                                                                >
+                                                                    <FaTimes className="text-xs" />
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                         <textarea
                                                             value={commentTexts[answerCommentKey] || ''}
                                                             onChange={(e) => setCommentTexts(prev => ({ ...prev, [answerCommentKey]: e.target.value }))}
@@ -713,16 +873,26 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             autoFocus
                                                         />
                                                         <div className="flex items-center justify-between">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setCommentAnonymous(prev => ({ ...prev, [answerCommentKey]: !prev[answerCommentKey] }))}
-                                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-xs ${commentAnonymous[answerCommentKey] ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
-                                                            >
-                                                                <FaUserSecret /><span>{commentAnonymous[answerCommentKey] ? 'Gizli yorum' : 'Gizli Üye olarak yorum yap'}</span>
-                                                            </button>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => openGifPicker('comment', answerCommentKey)}
+                                                                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-coral transition-colors"
+                                                                    title="GIF Ekle"
+                                                                >
+                                                                    <FaImage className="text-sm" />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setCommentAnonymous(prev => ({ ...prev, [answerCommentKey]: !prev[answerCommentKey] }))}
+                                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-xs ${commentAnonymous[answerCommentKey] ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                                                >
+                                                                    <FaUserSecret /><span>{commentAnonymous[answerCommentKey] ? 'Gizli yorum' : 'Gizli Üye olarak yorum yap'}</span>
+                                                                </button>
+                                                            </div>
                                                             <div className="flex gap-2">
                                                                 <button type="button" onClick={() => setCommentingOn(null)} className="py-2 px-4 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm">İptal</button>
-                                                                <button type="submit" disabled={!commentTexts[answerCommentKey]?.trim()} className="bg-coral text-white font-semibold py-1.5 px-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm">Gönder</button>
+                                                                <button type="submit" disabled={!commentTexts[answerCommentKey]?.trim() && !commentGifUrls[answerCommentKey]} className="bg-coral text-white font-semibold py-1.5 px-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm">Gönder</button>
                                                             </div>
                                                         </div>
                                                     </form>
@@ -761,6 +931,16 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                 onClose={closeLikersModal}
                 type={likersModal.type}
                 id={likersModal.id}
+            />
+
+            <GifPickerModal
+                isOpen={showGifPicker}
+                onClose={() => {
+                    setShowGifPicker(false);
+                    setGifPickerContext(null);
+                }}
+                onSelect={handleGifSelect}
+                title="GIF seç"
             />
         </div>
     );

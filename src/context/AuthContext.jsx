@@ -81,10 +81,19 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
+    const logout = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            if (token) {
+                await authAPI.logout();
+            }
+        } catch (e) {
+            // Token zaten düşmüş/expire olmuş olabilir; local temizliği yine de yapacağız.
+        } finally {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setUser(null);
+        }
     };
 
     const updateUser = (updatedUserData) => {

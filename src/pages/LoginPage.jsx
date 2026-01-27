@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaGoogle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 
 const LoginPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { login, loading, isAuthenticated } = useAuth();
     const [formData, setFormData] = useState({
         email: '',
@@ -13,12 +14,29 @@ const LoginPage = () => {
         remember: false
     });
     const [errors, setErrors] = useState({});
+    const [notice, setNotice] = useState('');
 
     useEffect(() => {
         if (isAuthenticated) {
             navigate('/');
         }
     }, [isAuthenticated, navigate]);
+
+    useEffect(() => {
+        const stateNotice = location.state?.notice;
+        if (stateNotice) {
+            setNotice(stateNotice);
+            try { sessionStorage.removeItem('auth_notice'); } catch (_) { }
+            return;
+        }
+        try {
+            const stored = sessionStorage.getItem('auth_notice');
+            if (stored) {
+                setNotice(stored);
+                sessionStorage.removeItem('auth_notice');
+            }
+        } catch (_) { }
+    }, [location.state]);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -89,6 +107,12 @@ const LoginPage = () => {
                 {/* Login Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-8">
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Giriş Yap</h2>
+
+                    {notice && (
+                        <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg text-center mb-4">
+                            {notice}
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Email */}

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
+import GifPickerModal from '../components/GifPickerModal';
 import { categories } from '../data/mockData';
 import { questionsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +23,8 @@ const AskQuestionPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
     const [isAnonymous, setIsAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
+    const [gifUrl, setGifUrl] = useState(null);
+    const [showGifPicker, setShowGifPicker] = useState(false);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -94,7 +97,8 @@ const AskQuestionPage = () => {
                 category: formData.category,
                 description: formData.description || null,
                 tags: formData.tags,
-                is_anonymous: isAnonymous
+                is_anonymous: isAnonymous,
+                gif_url: gifUrl || null
             };
 
 
@@ -292,6 +296,33 @@ const AskQuestionPage = () => {
                             <span className="text-gray-400 dark:text-gray-500 text-sm block mt-2">Metin editörü ile zengin içerik oluşturabilirsiniz</span>
                         </div>
 
+                        {/* GIF */}
+                        <div className="mb-6">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">GIF (isteğe bağlı)</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowGifPicker(true)}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all text-sm font-medium"
+                                >
+                                    <FaImage /> GIF Seç
+                                </button>
+                            </div>
+
+                            {gifUrl && (
+                                <div className="relative inline-block">
+                                    <img src={gifUrl} alt="GIF" className="max-w-xs rounded-xl shadow-sm" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setGifUrl(null)}
+                                        className="absolute top-2 right-2 bg-black/60 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                                    >
+                                        <FaTimes className="text-xs" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
                         {/* Anonymous Toggle */}
                         <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-700/30">
                             <button
@@ -354,6 +385,16 @@ const AskQuestionPage = () => {
                         onClose={() => setToast(null)}
                     />
                 )}
+
+                <GifPickerModal
+                    isOpen={showGifPicker}
+                    onClose={() => setShowGifPicker(false)}
+                    onSelect={(url) => {
+                        setGifUrl(url);
+                        setShowGifPicker(false);
+                    }}
+                    title="Soru için GIF seç"
+                />
             </div>
         </MainLayout>
     );

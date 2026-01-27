@@ -75,6 +75,13 @@ export const usersAPI = {
     uploadCoverImage: (formData) => api.post('/user/me/cover-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
+    deleteAvatar: () => api.delete('/user/me/avatar'),
+    deleteCoverImage: () => api.delete('/user/me/cover-image'),
+    requestAccountDeletion: (password) => api.post('/user/me/delete', { password }),
+};
+
+export const gifsAPI = {
+    list: (params) => api.get('/gifs', { params }),
 };
 
 export const uploadAPI = {
