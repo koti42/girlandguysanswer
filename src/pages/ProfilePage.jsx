@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FaMapMarkerAlt, FaCalendarAlt, FaEdit, FaTrophy, FaMedal, FaStar, FaCrown, FaUserSecret, FaLock, FaEllipsisH, FaBan, FaFlag, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCalendarAlt, FaEdit, FaTrophy, FaMedal, FaStar, FaCrown, FaUserSecret, FaLock, FaEllipsisH, FaBan, FaFlag, FaExclamationTriangle, FaCheckCircle, FaUserSlash } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import ProfileCover from '../components/ProfileCover';
 import ProfileAvatar from '../components/ProfileAvatar';
@@ -195,6 +195,7 @@ const ProfilePage = () => {
             code={404}
             title="Kullanıcı Bulunamadı"
             message="Böyle bir profil yok veya silinmiş olabilir. Kullanıcı adını kontrol edip tekrar deneyebilirsin."
+            icon={FaUserSlash}
         />
     );
 

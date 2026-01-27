@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaGhost, FaHome, FaSearch, FaServer, FaRedo } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 
-const ErrorPage = ({ code = 404, title, message }) => {
+const ErrorPage = ({ code = 404, title, message, icon: CustomIcon }) => {
     const navigate = useNavigate();
 
     const config = {
@@ -24,7 +24,7 @@ const ErrorPage = ({ code = 404, title, message }) => {
     };
 
     const currentConfig = config[code] || config[404];
-    const Icon = currentConfig.icon;
+    const Icon = CustomIcon || currentConfig.icon;
 
     return (
         <MainLayout>
