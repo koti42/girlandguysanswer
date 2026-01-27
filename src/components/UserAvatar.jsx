@@ -75,10 +75,31 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
 
     const displayName = user?.name || user?.username || '?';
 
+    const normalizeAvatarUrl = (rawUrl) => {
+        if (!rawUrl) return rawUrl;
+
+        let url = String(rawUrl).trim();
+        if (!url) return url;
+
+        url = url.replace(
+            /^https?:\/\/herkeslersoruyor\.com\.tr\/herkeslersoruyor\.panalix\.com\.tr\//i,
+            'https://herkeslersoruyor.panalix.com.tr/'
+        );
+
+        // If relative path, prefix with API host (without /api)
+        if (url.startsWith('/')) {
+            const apiBase = import.meta.env.VITE_API_URL || '';
+            const host = apiBase.replace(/\/api\/?$/i, '');
+            if (host) return `${host}${url}`;
+        }
+
+        return url;
+    };
+
     if (hasAvatar) {
         return (
             <img
-                src={user.avatar}
+                src={normalizeAvatarUrl(user.avatar)}
                 alt={displayName}
                 className={`${currentSizeClass} rounded-full object-cover border border-gray-100 dark:border-gray-700 ${className}`}
             />
