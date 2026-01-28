@@ -40,39 +40,43 @@ const GenderCheck = ({ children }) => {
   return children;
 };
 
+import { NotificationProvider } from './context/NotificationContext';
+
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <GenderCheck>
-            <div className="overflow-x-hidden">
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/questions" element={<QuestionsPage />} />
-                <Route path="/question/:slug" element={<QuestionDetailPage />} />
-                <Route path="/profile/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-                <Route path="/profile/:username/followers" element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
-                <Route path="/profile/:username/following" element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
-                <Route path="/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/auth/google/callback" element={<GoogleCallback />} />
-                <Route path="/complete-profile" element={<CompleteProfilePage />} />
-                <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-                <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-                <Route path="/search" element={<ProtectedRoute><QuestionsPage /></ProtectedRoute>} />
-                <Route path="/leaderboard" element={<LeaderboardPage />} />
-                <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-                <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-                <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
-                <Route path="/pusher-test" element={<PusherTestPage />} />
-                <Route path="/500" element={<ErrorPage code={500} />} />
-                <Route path="*" element={<ErrorPage code={404} />} />
-              </Routes>
-            </div>
-          </GenderCheck>
-        </Router>
+        <NotificationProvider>
+          <Router>
+            <GenderCheck>
+              <div className="overflow-x-hidden">
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/questions" element={<QuestionsPage />} />
+                  <Route path="/question/:slug" element={<QuestionDetailPage />} />
+                  <Route path="/profile/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                  <Route path="/profile/:username/followers" element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
+                  <Route path="/profile/:username/following" element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
+                  <Route path="/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                  <Route path="/auth/google/callback" element={<GoogleCallback />} />
+                  <Route path="/complete-profile" element={<CompleteProfilePage />} />
+                  <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+                  <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+                  <Route path="/search" element={<ProtectedRoute><QuestionsPage /></ProtectedRoute>} />
+                  <Route path="/leaderboard" element={<LeaderboardPage />} />
+                  <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+                  <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+                  <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
+                  <Route path="/pusher-test" element={<PusherTestPage />} />
+                  <Route path="/500" element={<ErrorPage code={500} />} />
+                  <Route path="*" element={<ErrorPage code={404} />} />
+                </Routes>
+              </div>
+            </GenderCheck>
+          </Router>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

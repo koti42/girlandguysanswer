@@ -8,7 +8,7 @@ const NotificationBell = () => {
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
-    const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(true, 10000);
+    const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(false);
 
     const handleMarkAllRead = async () => {
         try {

@@ -13,15 +13,14 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
 
     const playNotificationSound = useCallback(() => {
         if (!enableSound) return;
-        
+
         try {
             if (!audioRef.current) {
                 audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjtS4+/XiSUFIHHH8N2UQAoUXbPo7aJYFAg+m9vvwHAiAytT3u3YjCYEHG/D7d6XQAkSW6/l6qRcFAg6ltjuxnQiAytT3+/ZiCQEGm7C7N+XQAkRWrHm6aJeEgg7ldbuvnQjAitS3+/Xhi==');
             }
             audioRef.current.volume = 0.3;
-            audioRef.current.play().catch(() => {});
+            audioRef.current.play().catch(() => { });
         } catch (err) {
-            // Sound error ignored
         }
     }, [enableSound]);
 
@@ -44,14 +43,13 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
 
                 setTimeout(() => notif.close(), 5000);
             } catch (err) {
-                // Browser notification error ignored
             }
         }
     }, []);
 
     const fetchNotifications = useCallback(async (unreadOnly = false, silent = false) => {
         if (isFetchingRef.current) return;
-        
+
         isFetchingRef.current = true;
         if (!silent) setLoading(true);
         setError(null);
@@ -66,7 +64,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
             const newNotifications = data.notifications || [];
             const newUnreadCount = data.unread_count || 0;
 
-            // Check for new notifications
             if (previousUnreadCount.current > 0 && newUnreadCount > previousUnreadCount.current) {
                 const latestNotification = newNotifications.find(n => !n.is_read);
                 if (latestNotification) {
@@ -91,7 +88,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         try {
             await notificationsAPI.markAsRead(notificationId);
 
-            // Optimistic update
             setNotifications(prev =>
                 prev.map(n =>
                     n.id === notificationId
@@ -101,7 +97,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
 
-            // Trigger cross-tab sync
             localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
             throw err;
@@ -112,13 +107,11 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         try {
             await notificationsAPI.markAllAsRead();
 
-            // Optimistic update
             setNotifications(prev =>
                 prev.map(n => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
             );
             setUnreadCount(0);
 
-            // Trigger cross-tab sync
             localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
             throw err;
@@ -129,7 +122,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         try {
             await notificationsAPI.delete(notificationId);
 
-            // Optimistic update
             const notification = notifications.find(n => n.id === notificationId);
             setNotifications(prev => prev.filter(n => n.id !== notificationId));
 
@@ -137,7 +129,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
                 setUnreadCount(prev => Math.max(0, prev - 1));
             }
 
-            // Trigger cross-tab sync
             localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
             throw err;
@@ -148,11 +139,9 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         try {
             await notificationsAPI.deleteAll();
 
-            // Clear all
             setNotifications([]);
             setUnreadCount(0);
 
-            // Trigger cross-tab sync
             localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
             throw err;
@@ -175,7 +164,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         return Notification.permission === 'granted';
     }, []);
 
-    // Initial fetch
     useEffect(() => {
         fetchNotifications();
     }, [fetchNotifications]);
@@ -204,7 +192,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, [fetchNotifications]);
 
-    // Window focus - fetch when window gets focus
     useEffect(() => {
         const handleFocus = () => {
             const timeSinceLastFetch = Date.now() - lastFetchTime.current;
@@ -217,7 +204,6 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         return () => window.removeEventListener('focus', handleFocus);
     }, [fetchNotifications]);
 
-    // Cross-tab synchronization using localStorage
     useEffect(() => {
         const handleStorageChange = (e) => {
             if (e.key === 'notifications_update') {
@@ -227,6 +213,16 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
 
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
+    }, [fetchNotifications]);
+
+    // Listen for Pusher/Global refresh events
+    useEffect(() => {
+        const handleRefresh = () => {
+            fetchNotifications(false, true); // Silent fetch
+        };
+
+        window.addEventListener('notification:refresh', handleRefresh);
+        return () => window.removeEventListener('notification:refresh', handleRefresh);
     }, [fetchNotifications]);
 
     return {

@@ -3,7 +3,7 @@ import Pusher from 'pusher-js';
 export const pusher = new Pusher('5e3395e614923bc06ebe', {
     cluster: 'eu',
     forceTLS: true,
-    authEndpoint: `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8003/api'}/broadcasting/auth`,
+    authEndpoint: `${import.meta.env.VITE_API_URL || 'https://herkeslersoruyor.panalix.com.tr/api'}/broadcasting/auth`,
     auth: {
         headers: {
             'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,

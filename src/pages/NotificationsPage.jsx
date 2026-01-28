@@ -8,7 +8,7 @@ import useNotifications from '../hooks/useNotifications';
 
 const NotificationsPage = () => {
     const navigate = useNavigate();
-    const [filter, setFilter] = useState('all'); 
+    const [filter, setFilter] = useState('all');
     const {
         notifications,
         unreadCount,
@@ -17,7 +17,7 @@ const NotificationsPage = () => {
         markAllAsRead,
         deleteNotification,
         deleteAllNotifications,
-    } = useNotifications();
+    } = useNotifications(false);
 
     const handleNotificationClick = async (notification) => {
         if (!notification.is_read) {
@@ -29,7 +29,7 @@ const NotificationsPage = () => {
         }
 
         const questionSlug = notification.data?.question_slug || notification.data?.slug;
-        
+
         switch (notification.type) {
             case 'answer_created':
                 if (questionSlug) {
@@ -145,8 +145,8 @@ const NotificationsPage = () => {
                         <button
                             onClick={() => setFilter('all')}
                             className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${filter === 'all'
-                                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
-                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                         >
                             Tümü <span className="text-xs opacity-75">({notifications.length})</span>
@@ -154,8 +154,8 @@ const NotificationsPage = () => {
                         <button
                             onClick={() => setFilter('unread')}
                             className={`relative flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${filter === 'unread'
-                                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
-                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                         >
                             Okunmamış <span className="text-xs opacity-75">({unreadCount})</span>
