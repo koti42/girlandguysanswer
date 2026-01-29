@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaUserSlash } from 'react-icons/fa';
+import { FaUserSlash, FaExclamationTriangle } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import ProfileCover from '../components/ProfileCover';
 import ProfileAvatar from '../components/ProfileAvatar';
@@ -14,11 +14,13 @@ import ProfileHeaderInfo from '../components/Profile/ProfileHeaderInfo';
 import ProfileActions from '../components/Profile/ProfileActions';
 import ProfileTabs from '../components/Profile/ProfileTabs';
 import ProfileTabContent from '../components/Profile/ProfileTabContent';
+import ModerationActionsPanel from '../components/Moderation/ModerationActionsPanel';
+import AccountStatusBanner from '../components/AccountStatusBanner';
 
 const ProfilePage = () => {
     const { username } = useParams();
     const navigate = useNavigate();
-    const { user: currentUser, updateUser } = useAuth();
+    const { user: currentUser, updateUser, canModerate } = useAuth();
     const isOwnProfile = !username || (currentUser && currentUser.username === username);
 
     const DEFAULT_COVER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop';
@@ -91,7 +93,9 @@ const ProfilePage = () => {
                     }));
                 } else {
                     const response = await usersAPI.getProfile(username);
-                    data = response.data.data;
+                    // Backend'den gelen response yapısı: { success: true, data: { user: {...}, ... } } veya { success: true, data: {...} }
+                    const responseData = response.data.data;
+                    data = responseData.user || responseData; // user objesi varsa onu kullan, yoksa direkt data'yı kullan
 
                     questionsData = (data.questions || []).map(q => ({
                         ...q,
@@ -124,7 +128,7 @@ const ProfilePage = () => {
                     coverPhoto: ensureHttps(data.coverImage) || DEFAULT_COVER,
                     avatar: ensureHttps(data.avatar) || DEFAULT_AVATAR,
                     location: data.location || 'Konum belirtilmedi',
-                    joinedDate: new Date(data.created_at || Date.now()).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
+                    joinedDate: new Date((data.created_at || Date.now())).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
                     badges: data.badges || [],
                     level: data.level || { name: 'Yeni Üye', color: '#999' },
                     xp: data.xp || 0,
@@ -137,16 +141,24 @@ const ProfilePage = () => {
                     messaging_mode: data.messaging_mode || 'everyone',
                     hasBlocked: data.hasBlocked || false,
                     isBlocked: data.isBlocked || false,
+                    accountStatus: data.accountStatus || null,
+                    // Ban/Freeze durumları için backend'den gelen field'ları ekle
+                    banned_at: data.banned_at || null,
+                    banned_until: data.banned_until || null,
+                    banned_reason: data.banned_reason || null,
+                    frozen_at: data.frozen_at || null,
+                    frozen_until: data.frozen_until || null,
+                    frozen_reason: data.frozen_reason || null,
                     stats: {
                         questions: (questionsCount ?? data.stats?.questions ?? 0),
                         followers: data.stats?.followers || 0,
                         following: data.stats?.following || 0,
                         answers: (answersCount ?? data.stats?.answers ?? 0),
                         likes: data.stats?.likes || 0,
-                        badges: data.badges?.length || 0,
+                        badges: (data.badges || [])?.length || 0,
                         xperPoints: data.xp || 0,
-                        generalRank: data.ranks?.general || '-',
-                        categoryRank: data.ranks?.gender || '-'
+                        generalRank: (data.ranks || {})?.general || '-',
+                        categoryRank: (data.ranks || {})?.gender || '-'
                     }
                 });
                 setUserQuestions(questionsData);
@@ -491,6 +503,88 @@ const ProfilePage = () => {
 
                             {/* Main Content */}
                             <div className="flex flex-col gap-6">
+                                {/* Account Status Banner - Only for own profile */}
+                                {isOwnProfile && profileData?.accountStatus && (
+                                    <AccountStatusBanner accountStatus={profileData.accountStatus} />
+                                )}
+
+                                {/* Account Status Info for Other Users (if frozen/banned) */}
+                                {!isOwnProfile && (
+                                    (profileData?.accountStatus?.status === 'frozen' || profileData?.accountStatus?.status === 'banned' || 
+                                     profileData?.frozen_at || profileData?.banned_at) && (
+                                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 rounded-lg p-4">
+                                            <div className="flex items-center gap-2">
+                                                <FaExclamationTriangle className="text-yellow-500" />
+                                                <div>
+                                                    {(profileData?.accountStatus?.status === 'frozen' || profileData?.frozen_at) && (
+                                                        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                                                            <strong>Bu kullanıcının hesabı dondurulmuş.</strong>
+                                                            {(profileData?.accountStatus?.until || profileData?.frozen_until) && (
+                                                                <span className="ml-2">
+                                                                    (Bitiş: {new Date(profileData?.accountStatus?.until || profileData?.frozen_until).toLocaleString('tr-TR')})
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                    )}
+                                                    {(profileData?.accountStatus?.status === 'banned' || profileData?.banned_at) && (
+                                                        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                                                            <strong>Bu kullanıcının hesabı banlanmış.</strong>
+                                                            {(profileData?.accountStatus?.until || profileData?.banned_until) && (
+                                                                <span className="ml-2">
+                                                                    (Bitiş: {new Date(profileData?.accountStatus?.until || profileData?.banned_until).toLocaleString('tr-TR')})
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+
+                                {/* Moderation Panel for Moderators */}
+                                {(canModerate || profileData?.canModerate) && !isOwnProfile && (
+                                    <ModerationActionsPanel
+                                        targetUser={profileData}
+                                        onActionComplete={async (action, message) => {
+                                            showToast(message, 'success');
+                                            try {
+                                                const res = await usersAPI.getProfile(profileData.username);
+                                                const responseData = res.data.data;
+                                                // Backend'den gelen response yapısı: { success: true, data: { user: {...}, ... } } veya { success: true, data: {...} }
+                                                const userData = responseData.user || responseData;
+                                                
+                                                setProfileData(prev => ({ 
+                                                    ...prev, 
+                                                    ...userData,
+                                                    accountStatus: responseData.accountStatus || userData.accountStatus || null,
+                                                    // Fallback için eski alanları da güncelle
+                                                    banned_at: userData.banned_at || null,
+                                                    banned_until: userData.banned_until || (responseData.accountStatus?.status === 'banned' ? responseData.accountStatus?.until : null) || null,
+                                                    banned_reason: userData.banned_reason || (responseData.accountStatus?.status === 'banned' ? responseData.accountStatus?.reason : null) || null,
+                                                    frozen_at: userData.frozen_at || null,
+                                                    frozen_until: userData.frozen_until || (responseData.accountStatus?.status === 'frozen' ? responseData.accountStatus?.until : null) || null,
+                                                    frozen_reason: userData.frozen_reason || (responseData.accountStatus?.status === 'frozen' ? responseData.accountStatus?.reason : null) || null,
+                                                    // Stats objesini koru veya güncelle
+                                                    stats: {
+                                                        questions: userData.stats?.questions ?? prev.stats?.questions ?? 0,
+                                                        followers: userData.stats?.followers ?? prev.stats?.followers ?? 0,
+                                                        following: userData.stats?.following ?? prev.stats?.following ?? 0,
+                                                        answers: userData.stats?.answers ?? prev.stats?.answers ?? 0,
+                                                        likes: userData.stats?.likes ?? prev.stats?.likes ?? 0,
+                                                        badges: userData.badges?.length ?? prev.badges?.length ?? 0,
+                                                        xperPoints: userData.xp ?? prev.xp ?? 0,
+                                                        generalRank: userData.ranks?.general ?? prev.ranks?.general ?? '-',
+                                                        categoryRank: userData.ranks?.gender ?? prev.ranks?.gender ?? '-'
+                                                    }
+                                                }));
+                                            } catch (err) {
+                                                console.error('Profile refresh error:', err);
+                                            }
+                                        }}
+                                    />
+                                )}
+
                                 <ProfileTabContent
                                     activeTab={activeTab}
                                     profileData={profileData}

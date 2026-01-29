@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { FaQuestionCircle, FaHome, FaArrowLeft } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { questionsAPI } from '../services/api';
@@ -29,7 +30,11 @@ const QuestionDetailPage = () => {
                 setQuestions([initialQuestion]);
 
             } catch (err) {
-                setError("Soru bulunamadı veya yüklenirken bir hata oluştu.");
+                if (err.response?.status === 404) {
+                    setError("not_found");
+                } else {
+                    setError("Soru yüklenirken bir hata oluştu.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -144,10 +149,77 @@ const QuestionDetailPage = () => {
         );
     }
 
+    if (error === "not_found") {
+        return (
+            <MainLayout sidebar={SidebarContent}>
+                <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+                    <div className="max-w-md w-full text-center">
+                        <div className="mb-6 flex justify-center">
+                            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                                <FaQuestionCircle className="text-5xl text-gray-400 dark:text-gray-600" />
+                            </div>
+                        </div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+                            Soru Bulunamadı
+                        </h1>
+                        <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                            Bu soru kaldırılmış, gizlenmiş veya mevcut değil olabilir.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <Link
+                                to="/"
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-coral to-orange-400 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                            >
+                                <FaHome />
+                                Ana Sayfaya Dön
+                            </Link>
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                <FaArrowLeft />
+                                Geri Git
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </MainLayout>
+        );
+    }
+
     if (error) {
         return (
-            <MainLayout>
-                <div className="p-8 text-center text-red-500">{error}</div>
+            <MainLayout sidebar={SidebarContent}>
+                <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+                    <div className="max-w-md w-full text-center">
+                        <div className="mb-6 flex justify-center">
+                            <div className="w-24 h-24 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                                <FaQuestionCircle className="text-5xl text-red-500 dark:text-red-400" />
+                            </div>
+                        </div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+                            Bir Hata Oluştu
+                        </h1>
+                        <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                            {error}
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-coral to-orange-400 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                            >
+                                Sayfayı Yenile
+                            </button>
+                            <Link
+                                to="/"
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                <FaHome />
+                                Ana Sayfa
+                            </Link>
+                        </div>
+                    </div>
+                </div>
             </MainLayout>
         );
     }

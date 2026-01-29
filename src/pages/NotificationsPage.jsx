@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBell, FaCheckDouble, FaTrash, FaFilter } from 'react-icons/fa';
+import { FaBell, FaCheckDouble, FaTrash, FaFilter, FaExclamationTriangle } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import { TrendsWidget, TopUsersWidget } from '../components/Widgets';
 import NotificationItem from '../components/NotificationItem';
 import useNotifications from '../hooks/useNotifications';
+import Toast from '../components/Toast';
 
 const NotificationsPage = () => {
     const navigate = useNavigate();
     const [filter, setFilter] = useState('all');
+    const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
     const {
         notifications,
         unreadCount,
@@ -19,12 +21,27 @@ const NotificationsPage = () => {
         deleteAllNotifications,
     } = useNotifications(false);
 
+    const showToast = (message, type = 'error') => {
+        setToast({ show: true, message, type });
+    };
+
     const handleNotificationClick = async (notification) => {
         if (!notification.is_read) {
             try {
                 await markAsRead(notification.id);
             } catch (error) {
-                // Failed to mark as read
+                if (error.response?.status === 403) {
+                    const errorData = error.response?.data;
+                    if (errorData?.type === 'frozen') {
+                        showToast('Hesabınız donduruldu. Bildirimleri okumak için hesabınızın aktif olması gerekiyor.', 'error');
+                    } else if (errorData?.type === 'banned') {
+                        showToast('Hesabınız banlandı. Bildirimleri okumak için hesabınızın aktif olması gerekiyor.', 'error');
+                    } else {
+                        showToast('Bildirimi okundu olarak işaretleyemediniz. Hesabınızın durumunu kontrol edin.', 'error');
+                    }
+                } else {
+                    showToast('Bildirimi okundu olarak işaretleyemediniz.', 'error');
+                }
             }
         }
 
@@ -66,7 +83,18 @@ const NotificationsPage = () => {
         try {
             await markAllAsRead();
         } catch (error) {
-            // Failed to mark all as read
+            if (error.response?.status === 403) {
+                const errorData = error.response?.data;
+                if (errorData?.type === 'frozen') {
+                    showToast('Hesabınız donduruldu. Bildirimleri okumak için hesabınızın aktif olması gerekiyor.', 'error');
+                } else if (errorData?.type === 'banned') {
+                    showToast('Hesabınız banlandı. Bildirimleri okumak için hesabınızın aktif olması gerekiyor.', 'error');
+                } else {
+                    showToast('Bildirimleri okundu olarak işaretleyemediniz. Hesabınızın durumunu kontrol edin.', 'error');
+                }
+            } else {
+                showToast('Bildirimleri okundu olarak işaretleyemediniz.', 'error');
+            }
         }
     };
 
@@ -86,6 +114,13 @@ const NotificationsPage = () => {
 
     return (
         <MainLayout sidebar={<><TrendsWidget /><TopUsersWidget /></>}>
+            {toast.show && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
+            )}
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/50 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 mb-6 backdrop-blur-sm">

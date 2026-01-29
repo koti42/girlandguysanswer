@@ -7,23 +7,98 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [permissions, setPermissions] = useState({
+        can_moderate: false,
+        is_admin: false,
+        is_super_admin: false,
+        is_moderator: false,
+        is_fenomen: false,
+        roles: []
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
-
-        if (storedUser && storedToken) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (e) {
-                localStorage.removeItem('user');
-                localStorage.removeItem('token');
-            }
+    const getCurrentUser = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setLoading(false);
+            return;
         }
-        setLoading(false);
+
+        try {
+            const response = await authAPI.getCurrentUser();
+            const userData = response.data.data?.user || response.data.user || response.data.data;
+            const perms = extractPermissions(response.data.data || response.data);
+            const accountStatus = response.data.data?.accountStatus || response.data.accountStatus || null;
+
+            if (userData) {
+                if (!userData.username && userData.name) userData.username = userData.name;
+                userData.accountStatus = accountStatus;
+                localStorage.setItem('user', JSON.stringify(userData));
+                localStorage.setItem('permissions', JSON.stringify(perms));
+                setUser(userData);
+                setPermissions(perms);
+            }
+        } catch (err) {
+            console.error('getCurrentUser error:', err);
+            if (err.response?.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('permissions');
+                setUser(null);
+                setPermissions({
+                    can_moderate: false,
+                    is_admin: false,
+                    is_super_admin: false,
+                    is_moderator: false,
+                    is_fenomen: false,
+                    roles: []
+                });
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const initAuth = async () => {
+            const storedUser = localStorage.getItem('user');
+            const storedToken = localStorage.getItem('token');
+            const storedPermissions = localStorage.getItem('permissions');
+
+            if (storedUser && storedToken) {
+                try {
+                    setUser(JSON.parse(storedUser));
+                    if (storedPermissions) {
+                        setPermissions(JSON.parse(storedPermissions));
+                    }
+                    // Güncel permissions'ı almak için API'yi çağır
+                    await getCurrentUser();
+                } catch (e) {
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('permissions');
+                    setLoading(false);
+                }
+            } else {
+                setLoading(false);
+            }
+        };
+
+        initAuth();
     }, []);
+
+    const extractPermissions = (responseData) => {
+        const perms = responseData.permissions || {};
+        return {
+            can_moderate: perms.can_moderate || false,
+            is_admin: perms.is_admin || false,
+            is_super_admin: perms.is_super_admin || false,
+            is_moderator: perms.is_moderator || false,
+            is_fenomen: perms.is_fenomen || false,
+            roles: perms.roles || []
+        };
+    };
 
     const login = async (email, password) => {
         setLoading(true);
@@ -31,16 +106,17 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await authAPI.login({ email, password });
 
-            // Handle potential variations in API response structure
             const token = response.data.data?.token || response.data.token || response.data.access_token;
-            const user = response.data.data?.user || response.data.user || response.data.data;
+            const userData = response.data.data?.user || response.data.user || response.data.data;
+            const perms = extractPermissions(response.data.data || response.data);
 
-            if (token && user) {
+            if (token && userData) {
                 localStorage.setItem('token', token);
-                // Ensure user has a username, fallback if needed
-                if (!user.username && user.name) user.username = user.name;
-                localStorage.setItem('user', JSON.stringify(user));
-                setUser(user);
+                if (!userData.username && userData.name) userData.username = userData.name;
+                localStorage.setItem('user', JSON.stringify(userData));
+                localStorage.setItem('permissions', JSON.stringify(perms));
+                setUser(userData);
+                setPermissions(perms);
                 return { success: true };
             } else {
                 throw new Error("Giriş verileri alınamadı");
@@ -62,12 +138,15 @@ export const AuthProvider = ({ children }) => {
 
             const token = response.data.data?.token || response.data.token || response.data.access_token;
             const user = response.data.data?.user || response.data.user || response.data.data;
+            const perms = extractPermissions(response.data.data || response.data);
 
             if (token && user) {
                 localStorage.setItem('token', token);
                 if (!user.username && user.name) user.username = user.name;
                 localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('permissions', JSON.stringify(perms));
                 setUser(user);
+                setPermissions(perms);
                 return { success: true };
             } else {
                 throw new Error("Kayıt verileri alınamadı");
@@ -88,11 +167,20 @@ export const AuthProvider = ({ children }) => {
                 await authAPI.logout();
             }
         } catch (e) {
-            // Token zaten düşmüş/expire olmuş olabilir; local temizliği yine de yapacağız.
+            // Token zaten düşmüş/expire olmuş olabilir
         } finally {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
+            localStorage.removeItem('permissions');
             setUser(null);
+            setPermissions({
+                can_moderate: false,
+                is_admin: false,
+                is_super_admin: false,
+                is_moderator: false,
+                is_fenomen: false,
+                roles: []
+            });
         }
     };
 
@@ -102,15 +190,25 @@ export const AuthProvider = ({ children }) => {
         setUser(newUser);
     };
 
+    const updatePermissions = (newPermissions) => {
+        const updated = { ...permissions, ...newPermissions };
+        localStorage.setItem('permissions', JSON.stringify(updated));
+        setPermissions(updated);
+    };
+
     const value = {
         user,
+        permissions,
         loading,
         error,
         login,
         register,
         logout,
         updateUser,
-        isAuthenticated: !!user
+        updatePermissions,
+        getCurrentUser,
+        isAuthenticated: !!user,
+        canModerate: permissions.can_moderate
     };
 
     return (

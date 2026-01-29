@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret, FaEyeSlash } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 import QuestionActionsMenu from './QuestionActionsMenu';
+import ReportModal from './ReportModal';
+import QuestionModerationMenu from './Moderation/QuestionModerationMenu';
 
 import { questionsAPI, commentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Toast from './Toast';
 
-const QuestionCard = ({ question }) => {
-    const { user: currentUser } = useAuth();
+const QuestionCard = ({ question, onModerationAction }) => {
+    const { user: currentUser, canModerate } = useAuth();
     const [showReplyBox, setShowReplyBox] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [showReportModal, setShowReportModal] = useState(false);
 
-    // Update isAnonymous when user preference changes
     const [isLiked, setIsLiked] = useState(question.is_liked || false);
     const [likesCount, setLikesCount] = useState(question.likes_count || question.stats?.likes || question.likes || 0);
 
@@ -156,11 +158,30 @@ const QuestionCard = ({ question }) => {
                         <span className="text-[10px] md:text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{question.category}</span>
                     </div>
                 </div>
-                <QuestionActionsMenu />
+                <div className="flex items-center gap-2">
+                    {(canModerate || question.canModerate) && (
+                        <QuestionModerationMenu
+                            question={question}
+                            onActionComplete={(action, message) => {
+                                showToast(message, 'success');
+                                onModerationAction?.(action, question.id);
+                            }}
+                        />
+                    )}
+                    <QuestionActionsMenu questionId={question.id} onReport={() => setShowReportModal(true)} />
+                </div>
             </div>
 
             {/* Content */}
             <div>
+                <div className="flex items-center gap-2 mb-2">
+                    {(question.moderation?.is_hidden || question.is_hidden) && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-semibold">
+                            <FaEyeSlash />
+                            Gizlendi
+                        </span>
+                    )}
+                </div>
                 <Link to={`/question/${question.slug || question.id}`}>
                     <h3 className="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 md:mb-3 leading-snug hover:text-coral transition-colors cursor-pointer line-clamp-2 md:line-clamp-none">
                         {question.title}
@@ -230,6 +251,15 @@ const QuestionCard = ({ question }) => {
                     onClose={() => setToast({ ...toast, show: false })}
                 />
             )}
+
+            {/* Report Modal */}
+            <ReportModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                reportableType="question"
+                reportableId={question.id}
+                onSuccess={() => showToast('Şikayetiniz başarıyla gönderildi.', 'success')}
+            />
 
             {/* Quick Reply Box */}
             {showReplyBox && (

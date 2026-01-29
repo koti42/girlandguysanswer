@@ -29,7 +29,7 @@ const ProfileStats = ({ stats, isVIP = false }) => {
                                 ? 'bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent'
                                 : 'text-gray-800 dark:text-white'
                                 }`}>
-                                {item.value.toLocaleString()}
+                                {(item.value ?? 0).toLocaleString()}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.label}</div>
                         </div>

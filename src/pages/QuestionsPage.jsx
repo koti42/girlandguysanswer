@@ -180,7 +180,19 @@ const QuestionsPage = () => {
                             ) : questions.length > 0 ? (
                                 <>
                                     {questions.map((q) => (
-                                        <QuestionCard key={q.id} question={q} />
+                                        <QuestionCard 
+                                            key={q.id} 
+                                            question={q}
+                                            onModerationAction={(action, questionId) => {
+                                                // Moderasyon işleminden sonra soruyu listeden kaldır veya güncelle
+                                                if (action === 'remove') {
+                                                    setQuestions(prev => prev.filter(q => q.id !== questionId));
+                                                } else {
+                                                    // Hide/unhide durumunda soruyu yeniden yükle
+                                                    fetchQuestions(currentPage, false);
+                                                }
+                                            }}
+                                        />
                                     ))}
 
                                     {/* Intersection Observer Target */}

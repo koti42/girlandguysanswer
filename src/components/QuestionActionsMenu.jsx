@@ -1,54 +1,66 @@
-import React, { useState } from 'react';
-import { FaEllipsisV, FaFlag, FaShare, FaEyeSlash, FaBan } from 'react-icons/fa';
+import React, { useState, useRef, useEffect } from 'react';
+import { FaEllipsisV, FaFlag, FaShare } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
-const QuestionActionsMenu = () => {
+const QuestionActionsMenu = ({ questionId, onReport }) => {
+    const { isAuthenticated } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef(null);
 
-    const actions = [
-        { id: 'report', label: 'Şikayet Et', icon: FaFlag, color: 'text-red-600' },
-        { id: 'share', label: 'Paylaş', icon: FaShare, color: 'text-blue-600' },
-        { id: 'hide', label: 'Gizle', icon: FaEyeSlash, color: 'text-gray-600' },
-        { id: 'block', label: 'Kullanıcıyı Engelle', icon: FaBan, color: 'text-gray-700' }
-    ];
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
-    const handleAction = (actionId) => {
+    const handleReport = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         setIsOpen(false);
+        if (onReport) {
+            onReport();
+        }
+    };
+
+    const handleShare = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(false);
+        // TODO: Share functionality
     };
 
     return (
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
             <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsOpen(!isOpen); }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
                 <FaEllipsisV />
             </button>
 
             {isOpen && (
-                <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsOpen(false)}
-                    ></div>
-
-                    {/* Dropdown Menu */}
-                    <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
-                        {actions.map((action) => {
-                            const Icon = action.icon;
-                            return (
-                                <button
-                                    key={action.id}
-                                    onClick={() => handleAction(action.id)}
-                                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-                                >
-                                    <Icon className={`${action.color} text-sm`} />
-                                    <span className="text-gray-700 text-sm">{action.label}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </>
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden animate-in slide-in-from-top-2">
+                    {isAuthenticated && (
+                        <button
+                            onClick={handleReport}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+                        >
+                            <FaFlag className="text-red-500 text-sm" />
+                            <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Şikayet Et</span>
+                        </button>
+                    )}
+                    <button
+                        onClick={handleShare}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left border-t border-gray-100 dark:border-gray-700"
+                    >
+                        <FaShare className="text-blue-500 text-sm" />
+                        <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Paylaş</span>
+                    </button>
+                </div>
             )}
         </div>
     );

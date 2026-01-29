@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft } from 'react-icons/fa';
 import { questionsAPI, commentsAPI, answersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
@@ -11,6 +11,8 @@ import LikersModal from '../components/LikersModal';
 import GifPickerModal from '../components/GifPickerModal';
 import XPToast from '../components/Gamification/XPToast';
 import LevelUpModal from '../components/Gamification/LevelUpModal';
+import ReportModal from '../components/ReportModal';
+import QuestionModerationMenu from '../components/Moderation/QuestionModerationMenu';
 
 const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
@@ -22,7 +24,8 @@ const formatDate = (dateString) => {
 };
 
 const SingleQuestionView = ({ initialQuestion, slug }) => {
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, canModerate } = useAuth();
+    const navigate = useNavigate();
     const [question, setQuestion] = useState(initialQuestion || null);
     const [answers, setAnswers] = useState(initialQuestion?.answers || []);
     const [loading, setLoading] = useState(!initialQuestion);
@@ -70,6 +73,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     };
 
     const [likersModal, setLikersModal] = useState({ isOpen: false, type: null, id: null });
+    const [showReportModal, setShowReportModal] = useState(false);
 
     const openLikersModal = (type, id) => {
         if (!currentUser) {
@@ -139,7 +143,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                 setAnswers(questionData.answers || []);
                 checkInitialPagination(questionData);
             } catch (err) {
-                setError("Soru bulunamadı veya yüklenirken bir hata oluştu.");
+                if (err.response?.status === 404) {
+                    setError("not_found");
+                } else {
+                    setError("Soru yüklenirken bir hata oluştu.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -271,7 +279,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             setIsAnswerAnonymous(false);
             setAnswerGifUrl(null);
 
-            // Handle Gamification
             const gamification = response.data.data.gamification;
             if (gamification) {
                 if (gamification.points_added > 0) {
@@ -279,7 +286,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                         points: gamification.points_added,
                         reason: 'Cevap Yazma'
                     });
-                    // Clear XP toast after 3 seconds
                     setTimeout(() => setXpNotification(null), 3000);
                 }
 
@@ -334,7 +340,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         }
     };
 
-    // Submit Reply
     const handleSubmitReply = async (e) => {
         e.preventDefault();
         if (!replyingTo) return;
@@ -375,12 +380,10 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         try {
             const response = await answersAPI.selectBestAnswer(answerId);
 
-            // Update local state
             setAnswers(prev => prev.map(a =>
                 a.id === answerId ? { ...a, is_accepted: true } : { ...a, is_accepted: false }
             ));
 
-            // Handle Gamification Feedback for Selector (Question Owner)
             const gamification = response.data.data?.gamification;
             if (gamification) {
                 if (gamification.points_added > 0) {
@@ -406,7 +409,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         });
     };
 
-    // Load More Functions
     const loadMoreQuestionComments = async () => {
         if (!question?.id || loadingQuestionComments) return;
         setLoadingQuestionComments(true);
@@ -461,7 +463,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         }
     };
 
-    // Render Helpers
     const renderComment = (comment, type, targetId, level = 0, mainCommentId = null) => {
         const currentMainCommentId = mainCommentId || comment.id;
         const commentGradientClass = comment.user?.gender === 'female'
@@ -612,13 +613,44 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const filteredAnswers = getFilteredAndSortedAnswers();
 
     if (loading) return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div></div>;
-    if (error || !question) return (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Soru Bulunamadı</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">{error || "Aradığınız soru mevcut değil veya silinmiş olabilir."}</p>
-            <Link to="/" className="text-coral hover:underline font-semibold">Ana Sayfaya Dön</Link>
-        </div>
-    );
+    
+    if (error === "not_found" || (!question && error)) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-12">
+                <div className="max-w-md w-full text-center bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-soft">
+                    <div className="mb-6 flex justify-center">
+                        <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                            <FaQuestionCircle className="text-5xl text-gray-400 dark:text-gray-500" />
+                        </div>
+                    </div>
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+                        Soru Bulunamadı
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                        Bu soru kaldırılmış, gizlenmiş veya mevcut değil olabilir.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <Link
+                            to="/"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-coral to-orange-400 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                        >
+                            <FaHome />
+                            Ana Sayfaya Dön
+                        </Link>
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            <FaArrowLeft />
+                            Geri Git
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    if (!question) return null;
 
     const commentKey = commentingOn ? `${commentingOn.type}_${commentingOn.id}` : '';
     const isCommentingOnQuestion = commentingOn?.type === 'question';
@@ -660,6 +692,23 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 <span>{formatDate(question.created_at)}</span>
                             </div>
                         </div>
+
+                        {/* Moderation Menu for Moderators */}
+                        {(canModerate || question.canModerate) && (
+                            <QuestionModerationMenu
+                                question={question}
+                                onActionComplete={(action, message) => {
+                                    displayToast(message, 'success');
+                                    if (action === 'remove') {
+                                        setTimeout(() => {
+                                            window.location.reload();
+                                        }, 1000);
+                                    } else {
+                                        fetchQuestionDetail();
+                                    }
+                                }}
+                            />
+                        )}
                     </div>
 
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 leading-snug">{question.title}</h1>
@@ -708,7 +757,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                             </button>
                             <div className="flex items-center gap-2 text-gray-500"><FaEye /><span>{question.views_count !== undefined ? question.views_count : (question.stats?.views || 0)}</span></div>
                         </div>
-                        <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 transition-colors"><FaShare /> Paylaş</button>
+                        <div className="flex items-center gap-2">
+                            <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 transition-colors"><FaShare /> Paylaş</button>
+                            {currentUser && (
+                                <button
+                                    onClick={() => setShowReportModal(true)}
+                                    className="flex items-center gap-2 text-gray-500 hover:text-red-500 transition-colors"
+                                    title="Şikayet Et"
+                                >
+                                    <FaFlag />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -1034,6 +1094,14 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                 }}
                 onSelect={handleGifSelect}
                 title="GIF seç"
+            />
+
+            <ReportModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                reportableType="question"
+                reportableId={question?.id}
+                onSuccess={() => displayToast('Şikayetiniz başarıyla gönderildi.', 'success')}
             />
         </div>
     );

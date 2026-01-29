@@ -26,8 +26,24 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-
+            localStorage.removeItem('permissions');
         }
+        
+        // 403 hatası ve frozen/banned durumu kontrolü
+        if (error.response?.status === 403) {
+            const errorData = error.response?.data;
+            if (errorData?.type === 'frozen' || errorData?.type === 'banned') {
+                // Kullanıcı profil sayfasında değilse yönlendir
+                const currentPath = window.location.pathname;
+                if (!currentPath.includes('/profile/')) {
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (user?.username) {
+                        window.location.href = `/profile/${user.username}`;
+                    }
+                }
+            }
+        }
+        
         return Promise.reject(error);
     }
 );
@@ -120,6 +136,22 @@ export const notificationsAPI = {
     markAllAsRead: () => api.post('/notifications/read-all'),
     delete: (id) => api.delete(`/notifications/${id}`),
     deleteAll: () => api.delete('/notifications'),
+};
+
+export const reportsAPI = {
+    create: (data) => api.post('/reports', data),
+};
+
+export const moderationAPI = {
+    // User moderation
+    banUser: (userId, data) => api.post(`/users/${userId}/ban`, data),
+    unbanUser: (userId) => api.post(`/users/${userId}/unban`),
+    freezeUser: (userId, data) => api.post(`/users/${userId}/freeze`, data),
+    unfreezeUser: (userId) => api.post(`/users/${userId}/unfreeze`),
+    // Question moderation
+    hideQuestion: (questionId, data) => api.post(`/questions/${questionId}/hide`, data),
+    unhideQuestion: (questionId) => api.post(`/questions/${questionId}/unhide`),
+    removeQuestion: (questionId, data) => api.post(`/questions/${questionId}/remove`, data),
 };
 
 export default api;
