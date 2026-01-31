@@ -28,7 +28,7 @@ api.interceptors.response.use(
             localStorage.removeItem('user');
             localStorage.removeItem('permissions');
         }
-        
+
         // 403 hatası ve frozen/banned durumu kontrolü
         if (error.response?.status === 403) {
             const errorData = error.response?.data;
@@ -43,7 +43,7 @@ api.interceptors.response.use(
                 }
             }
         }
-        
+
         return Promise.reject(error);
     }
 );
@@ -152,6 +152,23 @@ export const moderationAPI = {
     hideQuestion: (questionId, data) => api.post(`/questions/${questionId}/hide`, data),
     unhideQuestion: (questionId) => api.post(`/questions/${questionId}/unhide`),
     removeQuestion: (questionId, data) => api.post(`/questions/${questionId}/remove`, data),
+};
+
+export const communityAPI = {
+    getAll: (page = 1) => api.get('/communities', { params: { page } }),
+    getById: (id) => api.get(`/communities/${id}`), // Keeping for reference, but likely 404
+    getMyStatus: (id) => api.get(`/communities/${id}/my-status`),
+    create: (data) => api.post('/communities', data),
+    join: (id) => api.post(`/communities/${id}/join`),
+    leave: (id) => api.post(`/communities/${id}/leave`),
+    getMessages: (id, page = 1) => api.get(`/communities/${id}/messages`, { params: { page } }),
+    sendMessage: (id, data) => api.post(`/communities/${id}/messages`, data),
+    raiseHand: (id) => api.post(`/communities/${id}/hand-raise`),
+    updateRole: (id, userId, role) => api.post(`/communities/${id}/participants/${userId}/role`, { role }),
+    kickUser: (id, userId) => api.delete(`/communities/${id}/participants/${userId}`),
+    inviteUser: (id, userId) => api.post(`/communities/${id}/invite`, { user_id: userId }),
+    getInvitations: () => api.get('/communities/invitations'),
+    respondToInvitation: (invitationId, status) => api.post(`/communities/invitations/${invitationId}/respond`, { status }),
 };
 
 export default api;

@@ -27,6 +27,8 @@ const getNotificationIcon = (type) => {
             return <FaCheckCircle className="text-green-500" />;
         case 'new_message':
             return <FaEnvelope className="text-blue-500" />;
+        case 'community_invitation':
+            return <FaUserPlus className="text-green-500" />;
         default:
             return <FaComment className="text-gray-500" />;
     }

@@ -74,6 +74,17 @@ const NotificationsPage = () => {
                     navigate(`/profile/${username}`);
                 }
                 break;
+            case 'community_invitation':
+                const invitationId = notification.data?.invitation_id;
+                const communityUuid = notification.data?.community_uuid || notification.data?.community_id;
+                if (invitationId) {
+                    navigate('/community-invitations');
+                } else if (communityUuid) {
+                    navigate(`/community/${communityUuid}`);
+                } else {
+                    navigate('/community-invitations');
+                }
+                break;
             default:
                 break;
         }

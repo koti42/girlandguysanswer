@@ -15,7 +15,6 @@ const NotificationBell = () => {
             await markAllAsRead();
             setIsOpen(false);
         } catch (error) {
-            console.error('Failed to mark all as read', error);
         }
     };
 
@@ -81,6 +80,17 @@ const NotificationBell = () => {
                 const senderUsername = notification.data?.sender_username || notification.data?.user?.username || notification.data?.sender?.username;
                 if (senderUsername) {
                     navigate(`/messages/${senderUsername}`);
+                }
+                break;
+            case 'community_invitation':
+                const invitationId = notification.data?.invitation_id;
+                const communityUuid = notification.data?.community_uuid || notification.data?.community_id;
+                if (invitationId) {
+                    navigate('/community-invitations');
+                } else if (communityUuid) {
+                    navigate(`/community/${communityUuid}`);
+                } else {
+                    navigate('/community-invitations');
                 }
                 break;
             default:

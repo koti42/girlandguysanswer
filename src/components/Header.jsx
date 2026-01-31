@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal } from 'react-icons/fa';
+import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -227,6 +227,13 @@ const Header = ({ onSearch }) => {
                             </button>
                         </Link>
 
+                        {/* Communities Button */}
+                        <Link to="/communities" className="hidden sm:block">
+                            <button className="text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm">
+                                Topluluk
+                            </button>
+                        </Link>
+
                         {/* Ask Question Button */}
                         <Link
                             to="/ask"
@@ -397,6 +404,15 @@ const Header = ({ onSearch }) => {
                         >
                             <FaHome className="text-xl text-coral" />
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Sorular</span>
+                        </Link>
+
+                        <Link
+                            to="/communities"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                        >
+                            <FaUsers className="text-xl text-coral" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Topluluk</span>
                         </Link>
 
                         {isAuthenticated ? (

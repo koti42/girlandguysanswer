@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaQuestionCircle, FaPlus, FaSearch, FaUser } from 'react-icons/fa';
+import { FaHome, FaQuestionCircle, FaPlus, FaSearch, FaUser, FaUsers } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 const BottomNav = () => {
@@ -12,6 +12,7 @@ const BottomNav = () => {
         { icon: FaHome, label: 'Ana Sayfa', path: '/' },
         { icon: FaQuestionCircle, label: 'Sorular', path: '/questions' },
         { icon: FaPlus, label: 'Sor', path: '/ask' },
+        { icon: FaUsers, label: 'Topluluk', path: '/communities' },
         { icon: FaSearch, label: 'Ara', path: '/search' },
         { icon: FaUser, label: 'Profil', path: user ? `/profile/${user.username}` : '/login' }
     ];

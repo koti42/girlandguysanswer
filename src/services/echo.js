@@ -8,13 +8,16 @@ const getAuthToken = () => {
 };
 
 const createEcho = () => {
+    const API_URL = import.meta.env.VITE_API_URL || 'https://herkeslersoruyor.panalix.com.tr/api';
+    
     return new Echo({
         broadcaster: 'pusher',
         key: '5e3395e614923bc06ebe', 
         cluster: 'eu',
         forceTLS: true,
         encrypted: true,
-        authEndpoint: `${import.meta.env.VITE_API_URL || 'https://herkeslersoruyor.panalix.com.tr/api'}/broadcasting/auth`,
+        authEndpoint: `${API_URL}/broadcasting/auth`,
+        enabledTransports: ['ws', 'wss'],
         auth: {
             headers: {
                 Authorization: `Bearer ${getAuthToken()}`,
@@ -24,11 +27,18 @@ const createEcho = () => {
         authorizer: (channel, options) => {
             return {
                 authorize: (socketId, callback) => {
-                    fetch(`${import.meta.env.VITE_API_URL || 'https://herkeslersoruyor.panalix.com.tr/api'}/broadcasting/auth`, {
+                    const token = localStorage.getItem('token');
+                    
+                    if (!token) {
+                        callback(true, { message: 'No authentication token' });
+                        return;
+                    }
+
+                    fetch(`${API_URL}/broadcasting/auth`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${getAuthToken()}`,
+                            'Authorization': `Bearer ${token}`,
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
@@ -36,7 +46,14 @@ const createEcho = () => {
                             channel_name: channel.name
                         })
                     })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => {
+                                    throw new Error(err.message || `Auth failed: ${response.status}`);
+                                });
+                            }
+                            return response.json();
+                        })
                         .then(data => {
                             callback(false, data);
                         })

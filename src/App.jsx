@@ -17,12 +17,16 @@ import NotificationsPage from './pages/NotificationsPage';
 import FollowRequestsPage from './pages/FollowRequestsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PusherTestPage from './pages/PusherTestPage';
+import CommunityPage from './pages/CommunityPage';
+import RoomPage from './pages/RoomPage';
+import CommunityInvitationsPage from './pages/CommunityInvitationsPage';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import GoogleCallback from './pages/GoogleCallback';
 import CompleteProfilePage from './pages/CompleteProfilePage';
 import ErrorPage from './pages/ErrorPage';
 import { useAuth } from './context/AuthContext';
+import { Toaster } from 'react-hot-toast';
 
 const GenderCheck = ({ children }) => {
   const { user, loading } = useAuth();
@@ -66,6 +70,9 @@ function App() {
                   <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
                   <Route path="/search" element={<ProtectedRoute><QuestionsPage /></ProtectedRoute>} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
+                  <Route path="/communities" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+                  <Route path="/community/:uuid" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
+                  <Route path="/community-invitations" element={<ProtectedRoute><CommunityInvitationsPage /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                   <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                   <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
@@ -78,6 +85,7 @@ function App() {
           </Router>
         </NotificationProvider>
       </AuthProvider>
+      <Toaster position="top-center" reverseOrder={false} />
     </ThemeProvider>
   );
 }
