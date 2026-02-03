@@ -15,6 +15,7 @@ import ReportModal from '../components/ReportModal';
 import QuestionModerationMenu from '../components/Moderation/QuestionModerationMenu';
 import PollWidget from '../components/PollWidget';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
+import DOMPurify from 'dompurify';
 
 const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
@@ -728,7 +729,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     </div>
 
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 leading-snug">{question.title}</h1>
-                    {question.description && <p className="text-gray-700 dark:text-gray-300 mb-4">{question.description}</p>}
+                    {question.description && (
+                        <div
+                            className="text-gray-700 dark:text-gray-300 mb-4 break-words [&>div]:mb-2 [&>div:last-child]:mb-0 [&_b]:font-semibold [&_strong]:font-semibold"
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.description, { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span'] }) }}
+                        />
+                    )}
 
                     <div className="flex flex-wrap gap-2 mb-4">
                         {question.tags?.map((tag, idx) => (

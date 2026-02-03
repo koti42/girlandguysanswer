@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FaQuestionCircle, FaHome, FaArrowLeft } from 'react-icons/fa';
+import DOMPurify from 'dompurify';
 import MainLayout from '../layouts/MainLayout';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { questionsAPI } from '../services/api';
 import SingleQuestionView from '../components/SingleQuestionView';
 import SEO from '../components/SEO';
+
+const stripHtml = (html) => (html ? DOMPurify.sanitize(html, { ALLOWED_TAGS: [] }) : '');
 
 const QuestionDetailPage = () => {
     const { slug } = useParams();
@@ -232,7 +235,7 @@ const QuestionDetailPage = () => {
             {currentQuestion && (
                 <SEO
                     title={`${currentQuestion.title} - Herkesler Soruyor`}
-                    description={currentQuestion.description || currentQuestion.title}
+                    description={stripHtml(currentQuestion.description) || currentQuestion.title}
                     jsonLd={[
                         {
                             "@context": "https://schema.org",
@@ -240,7 +243,7 @@ const QuestionDetailPage = () => {
                             "mainEntity": {
                                 "@type": "Question",
                                 "name": currentQuestion.title,
-                                "text": currentQuestion.description || currentQuestion.title,
+                                "text": stripHtml(currentQuestion.description) || currentQuestion.title,
                                 "answerCount": currentQuestion.answer_count || 0,
                                 "upvoteCount": currentQuestion.likes_count || 0,
                                 "author": {
