@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaMars, FaVenus } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaMars, FaVenus, FaTimes, FaFileContract, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 const SignupPage = () => {
@@ -15,6 +15,8 @@ const SignupPage = () => {
         agreeTerms: false
     });
     const [errors, setErrors] = useState({});
+    const [showTermsModal, setShowTermsModal] = useState(false);
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -250,8 +252,28 @@ const SignupPage = () => {
                                         }`}
                                 />
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    <Link to="/terms" className="text-coral hover:underline">Kullanım Şartları</Link> ve{' '}
-                                    <Link to="/privacy" className="text-coral hover:underline">Gizlilik Politikası</Link>'nı okudum ve kabul ediyorum
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setShowTermsModal(true);
+                                        }}
+                                        className="text-coral hover:underline"
+                                    >
+                                        Kullanım Şartları
+                                    </button>
+                                    {' '}ve{' '}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setShowPrivacyModal(true);
+                                        }}
+                                        className="text-coral hover:underline"
+                                    >
+                                        Gizlilik Politikası
+                                    </button>
+                                    'nı okudum ve kabul ediyorum
                                 </span>
                             </label>
                             {errors.agreeTerms && <span className="text-red-500 text-sm mt-1 block">{errors.agreeTerms}</span>}
@@ -295,8 +317,224 @@ const SignupPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Terms Modal */}
+            {showTermsModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg">
+                                    <FaFileContract className="text-purple-600 dark:text-purple-400 text-xl" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Site Sözleşmesi</h2>
+                            </div>
+                            <button
+                                onClick={() => setShowTermsModal(false)}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                <FaTimes className="text-gray-600 dark:text-gray-400" />
+                            </button>
+                        </div>
+                        <div className="overflow-y-auto flex-1 px-6 py-6">
+                            <TermsModalContent />
+                        </div>
+                        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800">
+                            <button
+                                onClick={() => setShowTermsModal(false)}
+                                className="w-full bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-3 rounded-lg hover:shadow-lg transition-all"
+                            >
+                                Anladım
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Privacy Modal */}
+            {showPrivacyModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg">
+                                    <FaShieldAlt className="text-indigo-600 dark:text-indigo-400 text-xl" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">KVKK Aydınlatma Metni</h2>
+                            </div>
+                            <button
+                                onClick={() => setShowPrivacyModal(false)}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                <FaTimes className="text-gray-600 dark:text-gray-400" />
+                            </button>
+                        </div>
+                        <div className="overflow-y-auto flex-1 px-6 py-6">
+                            <PrivacyModalContent />
+                        </div>
+                        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800">
+                            <button
+                                onClick={() => setShowPrivacyModal(false)}
+                                className="w-full bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-3 rounded-lg hover:shadow-lg transition-all"
+                            >
+                                Anladım
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Terms Modal Content Component
+const TermsModalContent = () => {
+    const sections = [
+        {
+            title: '1. Kullanım Şartları',
+            content: 'Bu platforma erişim ve kullanım, aşağıdaki şartları kabul ettiğiniz anlamına gelir. Platformu kullanmaya devam ederek bu şartları kabul etmiş sayılırsınız.',
+            icon: FaFileContract
+        },
+        {
+            title: '2. Hesap Sorumluluğu',
+            content: 'Hesabınızın güvenliğinden siz sorumlusunuz. Şifrenizi kimseyle paylaşmayın ve güçlü bir şifre kullanın. Hesabınız üzerinden yapılan tüm işlemlerden siz sorumlusunuz.',
+            icon: FaShieldAlt
+        },
+        {
+            title: '3. İçerik Politikası',
+            content: 'Paylaştığınız içeriklerin telif hakkına sahip olduğunuzdan veya paylaşım izni aldığınızdan emin olun. Yasadışı, zararlı veya uygunsuz içerik paylaşımı yasaktır.',
+            icon: FaShieldAlt
+        },
+        {
+            title: '4. Gizlilik',
+            content: 'Kişisel bilgileriniz gizlilik politikamız kapsamında korunmaktadır. Detaylı bilgi için KVKK Aydınlatma Metni\'ni inceleyebilirsiniz.',
+            icon: FaShieldAlt
+        },
+        {
+            title: '5. Hizmet Değişiklikleri',
+            content: 'Platform özelliklerini, hizmetlerini veya şartlarını önceden haber vermeksizin değiştirme hakkını saklı tutar. Değişiklikler platform üzerinden duyurulur.',
+            icon: FaFileContract
+        },
+        {
+            title: '6. Hesap Askıya Alma',
+            content: 'Kurallara uymayan kullanıcıların hesapları geçici veya kalıcı olarak askıya alınabilir. Bu durumda platforma erişim hakkınız kaybolur.',
+            icon: FaShieldAlt
+        },
+        {
+            title: '7. Fikri Mülkiyet',
+            content: 'Platform üzerindeki tüm içerikler, tasarımlar ve yazılımlar telif hakkı ile korunmaktadır. İzinsiz kullanım yasal işlem gerektirir.',
+            icon: FaShieldAlt
+        },
+        {
+            title: '8. Sorumluluk Reddi',
+            content: 'Platform, kullanıcıların paylaştığı içeriklerden sorumlu değildir. Kullanıcılar kendi içeriklerinden sorumludur ve platform bu içeriklerden kaynaklanan zararlardan sorumlu tutulamaz.',
+            icon: FaShieldAlt
+        }
+    ];
+
+    return (
+        <div className="space-y-4">
+            {sections.map((section, index) => {
+                const Icon = section.icon;
+                return (
+                    <div
+                        key={index}
+                        className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600"
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg">
+                                <Icon className="text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                                    {section.title}
+                                </h3>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                    {section.content}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+// Privacy Modal Content Component
+const PrivacyModalContent = () => {
+    const sections = [
+        {
+            title: 'Kişisel Verilerin İşlenmesi',
+            content: 'Kişisel verileriniz, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında işlenmektedir. Verileriniz, hizmetlerimizi sunmak, geliştirmek ve yasal yükümlülüklerimizi yerine getirmek amacıyla işlenir.',
+            icon: FaShieldAlt
+        },
+        {
+            title: 'Toplanan Veriler',
+            content: 'Platformumuzda toplanan kişisel veriler şunlardır: Ad-soyad, e-posta adresi, kullanıcı adı, profil fotoğrafı, paylaştığınız içerikler, IP adresi, çerez bilgileri ve kullanım verileri.',
+            icon: FaShieldAlt
+        },
+        {
+            title: 'Verilerin Kullanım Amacı',
+            content: 'Kişisel verileriniz; hesap yönetimi, içerik paylaşımı, platform güvenliği, kullanıcı deneyimini iyileştirme, yasal yükümlülüklerin yerine getirilmesi ve iletişim amaçlarıyla kullanılmaktadır.',
+            icon: FaShieldAlt
+        },
+        {
+            title: 'Verilerin Paylaşımı',
+            content: 'Kişisel verileriniz, yasal yükümlülükler dışında üçüncü taraflarla paylaşılmaz. Sadece hizmet sağlayıcılarımız (hosting, analitik vb.) ile güvenli bir şekilde paylaşılır.',
+            icon: FaShieldAlt
+        },
+        {
+            title: 'Veri Güvenliği',
+            content: 'Kişisel verilerinizin güvenliği için teknik ve idari tedbirler alınmaktadır. Verileriniz şifrelenmiş bağlantılar üzerinden iletilir ve güvenli sunucularda saklanır.',
+            icon: FaShieldAlt
+        },
+        {
+            title: 'Haklarınız',
+            content: 'KVKK kapsamında, kişisel verilerinizin işlenip işlenmediğini öğrenme, işlenmişse bilgi talep etme, işlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme, yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme, eksik veya yanlış işlenmişse düzeltilmesini isteme, silinmesini veya yok edilmesini isteme haklarına sahipsiniz.',
+            icon: FaShieldAlt
+        }
+    ];
+
+    return (
+        <div className="space-y-4">
+            {sections.map((section, index) => {
+                const Icon = section.icon;
+                return (
+                    <div
+                        key={index}
+                        className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600"
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg">
+                                <Icon className="text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                                    {section.title}
+                                </h3>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                    {section.content}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })}
+            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2 text-sm">
+                    Veri Sorumlusu
+                </h3>
+                <p className="text-xs text-gray-700 dark:text-gray-300 mb-1">
+                    <strong>Veri Sorumlusu:</strong> Herkesler Soruyor Platformu
+                </p>
+                <p className="text-xs text-gray-700 dark:text-gray-300">
+                    <strong>E-posta:</strong> kvkk@herkeslersoruyor.com
+                </p>
+            </div>
         </div>
     );
 };
 
 export default SignupPage;
+

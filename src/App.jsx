@@ -25,6 +25,12 @@ import ProtectedRoute from './components/ProtectedRoute';
 import GoogleCallback from './pages/GoogleCallback';
 import CompleteProfilePage from './pages/CompleteProfilePage';
 import ErrorPage from './pages/ErrorPage';
+import CategoryPage from './pages/CategoryPage';
+import ContactPage from './pages/ContactPage';
+import PublicationGuidelinesPage from './pages/PublicationGuidelinesPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import KVKKPage from './pages/KVKKPage';
+import TagsPage from './pages/TagsPage';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
@@ -57,6 +63,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/questions" element={<QuestionsPage />} />
+                  <Route path="/questions/:slug" element={<CategoryPage />} />
                   <Route path="/question/:slug" element={<QuestionDetailPage />} />
                   <Route path="/profile/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                   <Route path="/profile/:username/followers" element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
@@ -76,6 +83,11 @@ function App() {
                   <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                   <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                   <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
+                  <Route path="/iletisim" element={<ContactPage />} />
+                  <Route path="/yayin-ilkeleri" element={<PublicationGuidelinesPage />} />
+                  <Route path="/site-sozlesmesi" element={<TermsOfServicePage />} />
+                  <Route path="/kvkk-aydinlatma" element={<KVKKPage />} />
+                  <Route path="/etiketler" element={<TagsPage />} />
                   <Route path="/pusher-test" element={<PusherTestPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
