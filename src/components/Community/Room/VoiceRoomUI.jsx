@@ -17,9 +17,9 @@ import { useAuth } from '../../../context/AuthContext';
 const SpeakerAvatar = ({ participant, onClick, isHost }) => {
     const isSpeaking = useIsSpeaking(participant, { threshold: -60 });
     const metadata = JSON.parse(participant.metadata || '{}');
-    
+
     const [showSpeaking, setShowSpeaking] = React.useState(false);
-    
+
     React.useEffect(() => {
         if (isSpeaking) {
             setShowSpeaking(true);
@@ -30,7 +30,7 @@ const SpeakerAvatar = ({ participant, onClick, isHost }) => {
             return () => clearTimeout(timer);
         }
     }, [isSpeaking]);
-    
+
     const isMicActive = participant.isMicrophoneEnabled && !participant.isMicrophoneMuted;
     const shouldShowSpeaking = isMicActive && (isSpeaking || showSpeaking);
 
@@ -86,20 +86,19 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
 
         const handlePermissionChange = (prevPermissions) => {
             const canPublishNow = localParticipant.permissions?.canPublish ?? false;
-            
+
             setCanPublish(canPublishNow);
-            
+
             if (user?.id) {
                 if (canPublishNow) {
-                    const currentRole = userRoles.get(user.id);
-                    const newRole = currentRole === 'host' ? 'host' : 'speaker';
-                    
                     setUserRoles(prev => {
+                        const currentRole = prev.get(user.id);
+                        const newRole = currentRole === 'host' ? 'host' : 'speaker';
                         const newMap = new Map(prev);
                         newMap.set(user.id, newRole);
                         return newMap;
                     });
-                    
+
                     toast.success('Mikrofon yetkisi aktif! Sahneye alındınız.');
                 } else {
                     setUserRoles(prev => {
@@ -115,12 +114,11 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
 
         const initialCanPublish = localParticipant.permissions?.canPublish ?? false;
         setCanPublish(initialCanPublish);
-        
+
         if (user?.id && initialCanPublish) {
-            const currentRole = userRoles.get(user.id);
-            const newRole = currentRole === 'host' ? 'host' : 'speaker';
-            
             setUserRoles(prev => {
+                const currentRole = prev.get(user.id);
+                const newRole = currentRole === 'host' ? 'host' : 'speaker';
                 const newMap = new Map(prev);
                 newMap.set(user.id, newRole);
                 return newMap;
@@ -130,13 +128,18 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
         return () => {
             room.off(RoomEvent.ParticipantPermissionsChanged, handlePermissionChange);
         };
-    }, [room, localParticipant, user, userRoles]);
+    }, [room, localParticipant, user]);
 
     useEffect(() => {
         if (!room) return;
 
         const handleParticipantConnected = (participant) => {
             if (participant.identity === room.localParticipant?.identity) return;
+
+            const userId = getUserIdFromParticipant(participant);
+            if (userId && kickedUsers.has(userId)) {
+                return; 
+            }
 
             try {
                 const metadata = JSON.parse(participant.metadata || '{}');
@@ -166,23 +169,23 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
             room.off(RoomEvent.ParticipantConnected, handleParticipantConnected);
             room.off(RoomEvent.ParticipantDisconnected, handleParticipantDisconnected);
         };
-    }, [room]);
+    }, [room, kickedUsers]); 
 
     const currentRole = useMemo(() => {
         if (!room?.localParticipant || !user) return initialRole;
-        
+
         const localParticipant = room.localParticipant;
         const userId = user.id;
-        
+
         if (userRoles.has(userId)) {
             return userRoles.get(userId);
         }
-        
+
         try {
             const metadata = JSON.parse(localParticipant.metadata || '{}');
             if (metadata.role) return metadata.role;
         } catch { }
-        
+
         return initialRole;
     }, [room?.localParticipant, user, userRoles, initialRole]);
     useEffect(() => {
@@ -266,6 +269,12 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
         channel.listen('.participant.kicked', (data) => {
             const { user_id } = data;
             if (!user_id) return;
+
+            if (user?.id && String(user.id) === String(user_id)) {
+                toast.error('Odadan atıldınız!');
+                onLeave?.();
+                return;
+            }
 
             setKickedUsers(prev => {
                 const newSet = new Set(prev);
@@ -489,7 +498,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
     })();
 
     return (
-            <div className="flex flex-col h-full bg-gray-900 text-white rounded-2xl overflow-hidden relative">
+        <div className="flex flex-col h-full bg-gray-900 text-white rounded-2xl overflow-hidden relative">
             <RoomAudioRenderer />
 
             {showInviteModal && currentRole === 'host' && (

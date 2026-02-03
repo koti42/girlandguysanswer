@@ -66,7 +66,7 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
     const hasAvatar = user?.avatar &&
         user.avatar !== 'null' &&
         user.avatar !== 'undefined' &&
-        !user.avatar.includes('default'); 
+        !user.avatar.includes('default');
     const displayName = user?.name || user?.username || '?';
 
     const normalizeAvatarUrl = (rawUrl) => {
@@ -75,23 +75,14 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         let url = String(rawUrl).trim();
         if (!url) return url;
 
+        url = url.replace(/^(https?:\/\/)+/i, '');
+
         url = url.replace(
-            /^https?:\/\/herkeslersoruyor\.com\.tr\/herkeslersoruyor\.panalix\.com\.tr\//i,
-            'https://herkeslersoruyor.panalix.com.tr/'
+            /^herkeslersoruyor\.com\.tr\/herkeslersoruyor\.panalix\.com\.tr\//i,
+            'herkeslersoruyor.panalix.com.tr/'
         );
 
-        if (/^herkeslersoruyor\.panalix\.com\.tr\//i.test(url)) {
-            return `https://${url}`;
-        }
-
-        // If relative path, prefix with API host (without /api)
-        if (url.startsWith('/')) {
-            const apiBase = import.meta.env.VITE_API_URL || '';
-            const host = apiBase.replace(/\/api\/?$/i, '');
-            if (host) return `${host}${url}`;
-        }
-
-        return url;
+        return `https://${url}`;
     };
 
     if (hasAvatar) {
