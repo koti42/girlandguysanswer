@@ -5,6 +5,7 @@ import MainLayout from '../layouts/MainLayout';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { questionsAPI } from '../services/api';
 import SingleQuestionView from '../components/SingleQuestionView';
+import SEO from '../components/SEO';
 
 const QuestionDetailPage = () => {
     const { slug } = useParams();
@@ -224,8 +225,31 @@ const QuestionDetailPage = () => {
         );
     }
 
+    const currentQuestion = questions.find(q => q.slug === slug) || questions[0];
+
     return (
         <MainLayout sidebar={SidebarContent}>
+            {currentQuestion && (
+                <SEO
+                    title={`${currentQuestion.title} - Herkesler Soruyor`}
+                    description={currentQuestion.description || currentQuestion.title}
+                    jsonLd={{
+                        "@context": "https://schema.org",
+                        "@type": "QAPage",
+                        "mainEntity": {
+                            "@type": "Question",
+                            "name": currentQuestion.title,
+                            "text": currentQuestion.description || currentQuestion.title,
+                            "answerCount": currentQuestion.answer_count || 0,
+                            "upvoteCount": currentQuestion.likes_count || 0,
+                            "author": {
+                                "@type": "Person",
+                                "name": currentQuestion.is_anonymous ? "Gizli Kullanıcı" : (currentQuestion.user?.username || "Kullanıcı")
+                            }
+                        }
+                    }}
+                />
+            )}
             <div className="flex flex-col gap-8">
                 {questions.map((q, index) => (
                     <div key={q.id} data-question-slug={q.slug}>

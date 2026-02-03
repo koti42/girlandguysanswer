@@ -16,6 +16,7 @@ import ProfileTabs from '../components/Profile/ProfileTabs';
 import ProfileTabContent from '../components/Profile/ProfileTabContent';
 import ModerationActionsPanel from '../components/Moderation/ModerationActionsPanel';
 import AccountStatusBanner from '../components/AccountStatusBanner';
+import SEO from '../components/SEO';
 
 const ProfilePage = () => {
     const { username } = useParams();
@@ -403,6 +404,10 @@ const ProfilePage = () => {
 
     return (
         <>
+            <SEO
+                title={`${profileData?.name || username} - Herkesler Soruyor`}
+                noindex={true}
+            />
             {toast.show && (
                 <Toast
                     message={toast.message}
@@ -510,8 +515,8 @@ const ProfilePage = () => {
 
                                 {/* Account Status Info for Other Users (if frozen/banned) */}
                                 {!isOwnProfile && (
-                                    (profileData?.accountStatus?.status === 'frozen' || profileData?.accountStatus?.status === 'banned' || 
-                                     profileData?.frozen_at || profileData?.banned_at) && (
+                                    (profileData?.accountStatus?.status === 'frozen' || profileData?.accountStatus?.status === 'banned' ||
+                                        profileData?.frozen_at || profileData?.banned_at) && (
                                         <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 rounded-lg p-4">
                                             <div className="flex items-center gap-2">
                                                 <FaExclamationTriangle className="text-yellow-500" />
@@ -553,9 +558,9 @@ const ProfilePage = () => {
                                                 const responseData = res.data.data;
                                                 // Backend'den gelen response yapısı: { success: true, data: { user: {...}, ... } } veya { success: true, data: {...} }
                                                 const userData = responseData.user || responseData;
-                                                
-                                                setProfileData(prev => ({ 
-                                                    ...prev, 
+
+                                                setProfileData(prev => ({
+                                                    ...prev,
                                                     ...userData,
                                                     accountStatus: responseData.accountStatus || userData.accountStatus || null,
                                                     // Fallback için eski alanları da güncelle

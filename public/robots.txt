@@ -1,0 +1,20 @@
+User-agent: *
+Disallow: /admin
+Disallow: /settings
+Disallow: /profile/*
+Allow: /profile/
+
+# Allow specific AI bots
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+Sitemap: https://herkeslersoruyor.panalix.com.tr/api/sitemap.xml

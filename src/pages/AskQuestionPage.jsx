@@ -10,6 +10,7 @@ import { questionsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import XPToast from '../components/Gamification/XPToast';
 import LevelUpModal from '../components/Gamification/LevelUpModal';
+import SEO from '../components/SEO';
 
 const AskQuestionPage = () => {
     const navigate = useNavigate();
@@ -209,6 +210,10 @@ const AskQuestionPage = () => {
 
     return (
         <MainLayout sidebar={SidebarContent}>
+            <SEO
+                title="Soru Sor - Herkesler Soruyor"
+                description="Topluluğa yeni bir soru sor, fikir al ve tartışma başlat."
+            />
             <div className="flex flex-col gap-6">
                 {/* Header with animated gradient */}
                 <div className="relative bg-gradient-to-r from-coral via-orange-400 to-pink-400 rounded-3xl p-8 md:p-10 text-white shadow-2xl overflow-hidden">

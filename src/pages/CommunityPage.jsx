@@ -6,6 +6,7 @@ import { FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import CreateRoomModal from '../components/Community/CreateRoomModal';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import SEO from '../components/SEO';
 
 const CommunityPage = () => {
     const [communities, setCommunities] = useState([]);
@@ -49,6 +50,16 @@ const CommunityPage = () => {
 
     return (
         <MainLayout sidebar={SidebarContent}>
+            <SEO
+                title="Topluluk Odaları - Herkesler Soruyor"
+                description="Sesli sohbet odalarına katıl, yeni insanlarla tanış ve konular hakkında tartış."
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "CollectionPage",
+                    "name": "Topluluk Odaları",
+                    "description": "Sesli sohbet odaları ve tartışma grupları"
+                }}
+            />
             <div className="flex flex-col gap-6 min-h-[calc(100vh-100px)]">
                 <div className="flex justify-between items-center mb-2">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Topluluk Odaları</h1>
