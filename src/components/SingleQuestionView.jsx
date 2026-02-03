@@ -6,6 +6,7 @@ import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSec
 import { questionsAPI, commentsAPI, answersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
+import UserHoverCard from '../components/UserHoverCard';
 import Toast from '../components/Toast';
 import LikersModal from '../components/LikersModal';
 import GifPickerModal from '../components/GifPickerModal';
@@ -52,7 +53,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gifPickerContext, setGifPickerContext] = useState(null);
 
-    // Gamification States
     const [xpNotification, setXpNotification] = useState(null);
     const [levelNotification, setLevelNotification] = useState(null);
 
@@ -676,39 +676,65 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                     <div className="flex items-center gap-3 mb-4">
                         {question.user.username === 'anonim' ? (
-                            <div className="cursor-default"><UserAvatar user={question.user} size="lg" className="border-2 border-white" /></div>
+                            <>
+                                <div className="cursor-default"><UserAvatar user={question.user} size="lg" className="border-2 border-white" /></div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
+                                        {question.user.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                        {question.category?.name && (() => {
+                                            const categoryName = question.category.name;
+                                            const categoryColor = question.category.color;
+                                            const IconComponent = getCategoryIcon(categoryName);
+                                            const hexColor = getCategoryColor(categoryColor);
+                                            return (
+                                                <span style={{ backgroundColor: hexColor }} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-white text-[10px] font-bold">
+                                                    <IconComponent className="text-sm" />{categoryName}
+                                                </span>
+                                            );
+                                        })()}
+                                        <span>•</span>
+                                        <span>{formatDate(question.created_at)}</span>
+                                    </div>
+                                </div>
+                            </>
                         ) : (
-                            <Link to={`/profile/${question.user.username}`}><UserAvatar user={question.user} size="lg" className="hover:border-coral transition-colors" /></Link>
+                            <div className="flex-1 min-w-0">
+                                <UserHoverCard
+                                    username={question.user.username}
+                                    categoryName={question.category?.name}
+                                    categoryColor={question.category?.color}
+                                    user={question.user}
+                                >
+                                    <div className="flex items-center gap-3">
+                                    <Link to={`/profile/${question.user.username}`}><UserAvatar user={question.user} size="lg" className="hover:border-coral transition-colors" /></Link>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{question.user.username}</Link>
+                                            {question.user.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                            {question.category?.name && (() => {
+                                                const categoryName = question.category.name;
+                                                const categoryColor = question.category.color;
+                                                const IconComponent = getCategoryIcon(categoryName);
+                                                const hexColor = getCategoryColor(categoryColor);
+                                                return (
+                                                    <span style={{ backgroundColor: hexColor }} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-white text-[10px] font-bold">
+                                                        <IconComponent className="text-sm" />{categoryName}
+                                                    </span>
+                                                );
+                                            })()}
+                                            <span>•</span>
+                                            <span>{formatDate(question.created_at)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                </UserHoverCard>
+                            </div>
                         )}
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                                {question.user.username === 'anonim' ? (
-                                    <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
-                                ) : (
-                                    <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{question.user.username}</Link>
-                                )}
-                                {question.user.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                {question.category?.name && (() => {
-                                    const categoryName = question.category.name;
-                                    const categoryColor = question.category.color;
-                                    const IconComponent = getCategoryIcon(categoryName);
-                                    const hexColor = getCategoryColor(categoryColor);
-                                    return (
-                                        <span 
-                                            style={{ backgroundColor: hexColor }}
-                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-white text-[10px] font-bold"
-                                        >
-                                            <IconComponent className="text-sm" />
-                                            {categoryName}
-                                        </span>
-                                    );
-                                })()}
-                                <span>•</span>
-                                <span>{formatDate(question.created_at)}</span>
-                            </div>
-                        </div>
 
                         {/* Moderation Menu for Moderators */}
                         {(canModerate || question.canModerate) && (

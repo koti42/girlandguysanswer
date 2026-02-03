@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret, FaEyeSlash, FaPoll } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
+import UserHoverCard from './UserHoverCard';
 import QuestionActionsMenu from './QuestionActionsMenu';
 import ReportModal from './ReportModal';
 import QuestionModerationMenu from './Moderation/QuestionModerationMenu';
@@ -148,50 +149,57 @@ const QuestionCard = ({ question, onModerationAction }) => {
         <div className={`rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 ${styles.container}`}>
             {/* Header */}
             <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                    <Link to={isOwnerAnonymous ? '#' : `/profile/${question.user?.username}`} className={isOwnerAnonymous ? 'cursor-default' : ''}>
-                        <UserAvatar
-                            user={question.user}
-                            size="md"
-                            className="shadow-sm border-2 border-white md:w-12 md:h-12 w-10 h-10"
-                        />
-                    </Link>
-                    <div>
-                        <div className="flex items-center gap-1.5 md:gap-2">
-                            <span className="font-bold text-gray-900 dark:text-white text-base md:text-lg line-clamp-1">
-                                {displayName}
-                            </span>
-                            {question.user?.gender === 'female' ? (
-                                <FaVenus className={`text-base md:text-lg ${styles.icon}`} />
-                            ) : (
-                                <FaMars className={`text-base md:text-lg ${styles.icon}`} />
-                            )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500 dark:text-gray-400 text-[10px] md:text-xs">
-                            {question.category?.name && (() => {
-                                const categoryName = question.category.name;
-                                const categoryColor = question.category.color;
-                                const IconComponent = getCategoryIcon(categoryName);
-                                const hexColor = getCategoryColor(categoryColor);
-                                return (
-                                    <span 
-                                        style={{ backgroundColor: hexColor }}
-                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white font-bold"
-                                    >
-                                        <IconComponent className="text-sm" />
-                                        {categoryName}
-                                    </span>
-                                );
-                            })()}
-                            {formatQuestionDate(question.created_at) && (
-                                <>
-                                    {question.category?.name && <span>•</span>}
-                                    <span>Sorulma: {formatQuestionDate(question.created_at)}</span>
-                                </>
-                            )}
+                <UserHoverCard
+                    username={question.user?.username}
+                    categoryName={question.category?.name}
+                    categoryColor={question.category?.color}
+                    user={question.user}
+                >
+                    <div className="flex items-center gap-3">
+                        <Link to={isOwnerAnonymous ? '#' : `/profile/${question.user?.username}`} className={isOwnerAnonymous ? 'cursor-default' : ''}>
+                            <UserAvatar
+                                user={question.user}
+                                size="md"
+                                className="shadow-sm border-2 border-white md:w-12 md:h-12 w-10 h-10"
+                            />
+                        </Link>
+                        <div>
+                            <div className="flex items-center gap-1.5 md:gap-2">
+                                <span className="font-bold text-gray-900 dark:text-white text-base md:text-lg line-clamp-1">
+                                    {displayName}
+                                </span>
+                                {question.user?.gender === 'female' ? (
+                                    <FaVenus className={`text-base md:text-lg ${styles.icon}`} />
+                                ) : (
+                                    <FaMars className={`text-base md:text-lg ${styles.icon}`} />
+                                )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500 dark:text-gray-400 text-[10px] md:text-xs">
+                                {question.category?.name && (() => {
+                                    const categoryName = question.category.name;
+                                    const categoryColor = question.category.color;
+                                    const IconComponent = getCategoryIcon(categoryName);
+                                    const hexColor = getCategoryColor(categoryColor);
+                                    return (
+                                        <span 
+                                            style={{ backgroundColor: hexColor }}
+                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white font-bold"
+                                        >
+                                            <IconComponent className="text-sm" />
+                                            {categoryName}
+                                        </span>
+                                    );
+                                })()}
+                                {formatQuestionDate(question.created_at) && (
+                                    <>
+                                        {question.category?.name && <span>•</span>}
+                                        <span>Sorulma: {formatQuestionDate(question.created_at)}</span>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
+                </UserHoverCard>
                 <div className="flex items-center gap-2">
                     {(canModerate || question.canModerate) && (
                         <QuestionModerationMenu
