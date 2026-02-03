@@ -1,14 +1,15 @@
 import React from 'react';
 import { FaSignOutAlt } from 'react-icons/fa';
 
-const TextRoomUI = ({ community, onLeave }) => {
+const TextRoomUI = ({ community, onLeave, participantsCount }) => {
     return (
         <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl border border-gray-100 dark:border-gray-700">
-            {/* Header */}
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
                 <div>
-                    <h2 className="font-bold text-lg text-gray-900 dark:text-white">{community.title}</h2>
-                    <p className="text-xs text-gray-500">Yazılı Sohbet Odası</p>
+                    <h2 className="font-bold text-lg text-gray-900 dark:text-white">{community.title || community.name}</h2>
+                    <p className="text-xs text-gray-500">
+                        {typeof participantsCount === 'number' ? `${participantsCount} kişi bu odada · Yazılı Sohbet` : 'Yazılı Sohbet Odası'}
+                    </p>
                 </div>
                 <button
                     onClick={onLeave}

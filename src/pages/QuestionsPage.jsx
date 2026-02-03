@@ -5,7 +5,7 @@ import CategoryNav from '../components/CategoryNav';
 import FeedTabs from '../components/FeedTabs';
 import QuestionCard from '../components/QuestionCard';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
-import { FaMars, FaVenus, FaGlobe, FaCommentSlash } from 'react-icons/fa';
+import { FaMars, FaVenus, FaGlobe, FaCommentSlash, FaPoll } from 'react-icons/fa';
 import { questionsAPI, categoriesAPI } from '../services/api';
 
 import { useSearchParams } from 'react-router-dom';
@@ -13,6 +13,7 @@ import { useSearchParams } from 'react-router-dom';
 const QuestionsPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const initialQuery = searchParams.get('search') || '';
+    const initialHasPoll = searchParams.get('has_poll') === '1' || searchParams.get('has_poll') === 'true';
     const [searchQuery, setSearchQuery] = useState(initialQuery);
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(true);
@@ -20,6 +21,7 @@ const QuestionsPage = () => {
     const [genderFilter, setGenderFilter] = useState('all');
     const [sortBy, setSortBy] = useState('popular');
     const [noCommentsFilter, setNoCommentsFilter] = useState(false);
+    const [hasPollFilter, setHasPollFilter] = useState(initialHasPoll);
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -63,7 +65,8 @@ const QuestionsPage = () => {
                 sort: sortBy,
                 page: page,
                 limit: 10,
-                ...(noCommentsFilter ? { no_comments: 1 } : {})
+                ...(noCommentsFilter ? { no_comments: 1 } : {}),
+                ...(hasPollFilter ? { has_poll: 1 } : {})
             };
 
             const response = await questionsAPI.getAll(params);
@@ -85,24 +88,24 @@ const QuestionsPage = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [searchQuery, selectedCategory, genderFilter, sortBy, noCommentsFilter]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy, noCommentsFilter, hasPollFilter]);
 
 
 
     useEffect(() => {
-        if (searchQuery) {
-            setSearchParams({ search: searchQuery });
-        } else {
-            searchParams.delete('search');
-            setSearchParams(searchParams);
-        }
-    }, [searchQuery, setSearchParams]);
+        const next = new URLSearchParams(searchParams);
+        if (searchQuery) next.set('search', searchQuery);
+        else next.delete('search');
+        if (hasPollFilter) next.set('has_poll', '1');
+        else next.delete('has_poll');
+        setSearchParams(next);
+    }, [searchQuery, hasPollFilter]);
 
     useEffect(() => {
         setCurrentPage(1);
         setQuestions([]);
         fetchQuestions(1, false);
-    }, [searchQuery, selectedCategory, genderFilter, sortBy, noCommentsFilter]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy, noCommentsFilter, hasPollFilter]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -187,6 +190,16 @@ const QuestionsPage = () => {
                             >
                                 <FaCommentSlash />
                                 <span>Hiç yorum almamış</span>
+                            </button>
+                            <button
+                                onClick={() => setHasPollFilter(prev => !prev)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${hasPollFilter
+                                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg'
+                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                    }`}
+                            >
+                                <FaPoll />
+                                <span>Sadece anketli sorular</span>
                             </button>
                         </div>
 

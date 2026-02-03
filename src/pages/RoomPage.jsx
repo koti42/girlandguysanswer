@@ -25,6 +25,7 @@ const RoomPage = () => {
     const [error, setError] = useState(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [hasJoinedAudio, setHasJoinedAudio] = useState(false);
+    const [participantsCount, setParticipantsCount] = useState(null);
     const channelRef = useRef(null);
     const isHostRef = useRef(false);
     const communityUuidRef = useRef(null);
@@ -57,6 +58,7 @@ const RoomPage = () => {
                 setCommunity(communityData);
                 setToken(livekit_token);
                 setServerUrl(livekit_url);
+                setParticipantsCount(communityData.participants_count ?? null);
 
                 const currentUser = communityData.current_user || {};
                 const isOwner = currentUser.is_owner === true;
@@ -68,6 +70,12 @@ const RoomPage = () => {
 
                 const channelName = `community.${communityData.uuid || uuid}`;
                 const channel = echo.private(channelName);
+
+                channel.listen('.participant_count.updated', (data) => {
+                    if (data && typeof data.participants_count === 'number') {
+                        setParticipantsCount(data.participants_count);
+                    }
+                });
 
                 channel.listen('.community.ended', (data) => {
                     if (channelRef.current) {
@@ -223,6 +231,7 @@ const RoomPage = () => {
                             <VoiceRoomUI
                                 community={community}
                                 role={role}
+                                participantsCount={participantsCount}
                                 onLeave={handleDisconnect}
                                 onRaiseHand={handleRaiseHand}
                                 onToggleChat={() => setIsChatOpen(!isChatOpen)}
@@ -230,6 +239,7 @@ const RoomPage = () => {
                         ) : (
                             <TextRoomUI
                                 community={community}
+                                participantsCount={participantsCount}
                                 onLeave={handleDisconnect}
                             />
                         )}

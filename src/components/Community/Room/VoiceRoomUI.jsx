@@ -63,7 +63,7 @@ const SpeakerAvatar = ({ participant, onClick, isHost }) => {
     );
 };
 
-const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: initialRole }) => {
+const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: initialRole, participantsCount }) => {
     const room = useRoomContext();
     const participants = useParticipants();
     const { localParticipant } = useLocalParticipant();
@@ -659,6 +659,14 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
             )}
 
             <div className="flex-1 p-6 relative bg-gradient-to-b from-gray-800 to-gray-900">
+                {typeof participantsCount === 'number' && (
+                    <p className="text-gray-400 text-xs mb-2">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-700/80 text-gray-300">
+                            <FaUserPlus className="text-[10px]" />
+                            {participantsCount} kişi bu odada
+                        </span>
+                    </p>
+                )}
                 <h2 className="text-gray-400 text-sm font-bold mb-4 tracking-wider uppercase">Sahne ({speakers.length})</h2>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 justify-items-center">
                     {speakers.map(participant => (

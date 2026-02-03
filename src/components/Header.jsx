@@ -652,7 +652,13 @@ const Header = ({ onSearch }) => {
                                     </div>
 
                                     {/* Anketler */}
-                                    <div className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 transition-all">
+                                    <div
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions?has_poll=1');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                    >
                                         <div className="flex gap-3">
                                             <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
                                                 <FaPoll />

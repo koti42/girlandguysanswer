@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret, FaEyeSlash } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret, FaEyeSlash, FaPoll } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 import QuestionActionsMenu from './QuestionActionsMenu';
 import ReportModal from './ReportModal';
@@ -193,11 +193,17 @@ const QuestionCard = ({ question, onModerationAction }) => {
 
             {/* Content */}
             <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                     {(question.moderation?.is_hidden || question.is_hidden) && (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-semibold">
                             <FaEyeSlash />
                             Gizlendi
+                        </span>
+                    )}
+                    {(question.has_poll || question.poll) && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
+                            <FaPoll />
+                            Anket
                         </span>
                     )}
                 </div>

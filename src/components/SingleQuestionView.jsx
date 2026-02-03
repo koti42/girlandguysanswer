@@ -13,6 +13,7 @@ import XPToast from '../components/Gamification/XPToast';
 import LevelUpModal from '../components/Gamification/LevelUpModal';
 import ReportModal from '../components/ReportModal';
 import QuestionModerationMenu from '../components/Moderation/QuestionModerationMenu';
+import PollWidget from '../components/PollWidget';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 
 const formatDate = (dateString) => {
@@ -739,6 +740,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                         <div className="rounded-xl overflow-hidden mb-6 shadow-sm">
                             <img src={question.image} alt="Question" className="w-full h-auto object-cover" />
                         </div>
+                    )}
+                    {(question.has_poll || question.poll) && question.poll && (
+                        <PollWidget
+                            poll={question.poll}
+                            onPollUpdate={(updatedPoll) => setQuestion(prev => prev ? { ...prev, poll: updatedPoll } : null)}
+                        />
                     )}
                     {question.gif_url && (
                         <div className="rounded-xl overflow-hidden mb-6 shadow-sm">

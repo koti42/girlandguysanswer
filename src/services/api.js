@@ -77,6 +77,13 @@ export const answersAPI = {
     selectBestAnswer: (answerId) => api.post(`/answers/${answerId}/best`)
 };
 
+export const pollsAPI = {
+    create: (questionSlugOrId, data) => api.post(`/questions/${questionSlugOrId}/poll`, data),
+    get: (pollId) => api.get(`/polls/${pollId}`),
+    vote: (pollId, data) => api.post(`/polls/${pollId}/vote`, data),
+    removeVote: (pollId) => api.delete(`/polls/${pollId}/vote`)
+};
+
 export const usersAPI = {
     getMe: () => api.get('/user/me'),
     getProfile: (username) => api.get(`/users/${username}`),

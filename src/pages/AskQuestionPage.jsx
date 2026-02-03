@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
@@ -32,6 +32,12 @@ const AskQuestionPage = () => {
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gamificationFeedback, setGamificationFeedback] = useState(null);
     const [showLevelUp, setShowLevelUp] = useState(null);
+
+    const [addPoll, setAddPoll] = useState(false);
+    const [pollTitle, setPollTitle] = useState('');
+    const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
+    const [pollEndsAt, setPollEndsAt] = useState('');
+    const [pollOptions, setPollOptions] = useState([{ text: '', sort_order: 0 }, { text: '', sort_order: 1 }]);
 
     // Kategorileri API'den çek
     useEffect(() => {
@@ -102,8 +108,28 @@ const AskQuestionPage = () => {
         if (!formData.category) {
             newErrors.category = 'Kategori seçimi zorunludur';
         }
+        if (addPoll) {
+            const filledOptions = pollOptions.filter(o => o.text.trim());
+            if (filledOptions.length < 2) {
+                newErrors.poll = 'Anket için en az 2 seçenek girin';
+            }
+        }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
+    };
+
+    const addPollOption = () => {
+        if (pollOptions.length >= 10) return;
+        setPollOptions(prev => [...prev, { text: '', sort_order: prev.length }]);
+    };
+
+    const removePollOption = (index) => {
+        if (pollOptions.length <= 2) return;
+        setPollOptions(prev => prev.filter((_, i) => i !== index).map((o, i) => ({ ...o, sort_order: i })));
+    };
+
+    const updatePollOption = (index, text) => {
+        setPollOptions(prev => prev.map((o, i) => i === index ? { ...o, text } : o));
     };
 
     const handleSubmit = async (e) => {
@@ -125,7 +151,20 @@ const AskQuestionPage = () => {
                 gif_url: gifUrl || null
             };
 
-
+            if (addPoll) {
+                const filledOptions = pollOptions.filter(o => o.text.trim()).map((o, i) => ({ text: o.text.trim(), sort_order: i }));
+                if (filledOptions.length >= 2) {
+                    payload.poll = {
+                        title: pollTitle.trim() || null,
+                        allow_multiple: pollAllowMultiple,
+                        options: filledOptions
+                    };
+                    if (pollEndsAt.trim()) {
+                        const endDate = new Date(pollEndsAt);
+                        if (!isNaN(endDate.getTime())) payload.poll.ends_at = endDate.toISOString();
+                    }
+                }
+            }
 
             const response = await questionsAPI.create(payload);
 
@@ -367,6 +406,71 @@ const AskQuestionPage = () => {
                                     >
                                         <FaTimes className="text-xs" />
                                     </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Anket (Poll) - Opsiyonel */}
+                        <div className="mb-6">
+                            <button
+                                type="button"
+                                onClick={() => setAddPoll(!addPoll)}
+                                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all ${addPoll ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-2 border-indigo-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                            >
+                                <FaPoll />
+                                {addPoll ? 'Anketi kaldır' : 'Anket ekle'}
+                            </button>
+                            {addPoll && (
+                                <div className="mt-4 p-5 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 space-y-4">
+                                    <input
+                                        type="text"
+                                        value={pollTitle}
+                                        onChange={(e) => setPollTitle(e.target.value)}
+                                        placeholder="Anket başlığı (opsiyonel)"
+                                        maxLength={255}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={pollAllowMultiple}
+                                            onChange={(e) => setPollAllowMultiple(e.target.checked)}
+                                            className="rounded text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Çoklu seçim izni ver</span>
+                                    </label>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bitiş tarihi (opsiyonel)</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={pollEndsAt}
+                                            onChange={(e) => setPollEndsAt(e.target.value)}
+                                            min={new Date().toISOString().slice(0, 16)}
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Seçenekler (en az 2, en fazla 10)</span>
+                                            <button type="button" onClick={addPollOption} disabled={pollOptions.length >= 10} className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:underline disabled:opacity-50">+ Ekle</button>
+                                        </div>
+                                        {pollOptions.map((opt, index) => (
+                                            <div key={index} className="flex gap-2 mb-2">
+                                                <input
+                                                    type="text"
+                                                    value={opt.text}
+                                                    onChange={(e) => updatePollOption(index, e.target.value)}
+                                                    placeholder={`Seçenek ${index + 1}`}
+                                                    maxLength={255}
+                                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                />
+                                                <button type="button" onClick={() => removePollOption(index)} disabled={pollOptions.length <= 2} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg disabled:opacity-50">
+                                                    <FaTimes />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {errors.poll && <span className="text-red-500 text-sm">{errors.poll}</span>}
+                                    </div>
                                 </div>
                             )}
                         </div>
