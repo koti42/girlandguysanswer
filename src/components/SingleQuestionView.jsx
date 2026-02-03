@@ -767,9 +767,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     {question.likes_count || 0}
                                 </button>
                             </div>
-                            <button onClick={() => setCommentingOn(isCommentingOnQuestion ? null : { type: 'question', id: question.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+                            {false && <button onClick={() => setCommentingOn(isCommentingOnQuestion ? null : { type: 'question', id: question.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                 <FaComment className="text-lg" /><span className="font-semibold">{question.answers_count || question.comments?.length || 0}</span>
-                            </button>
+                            </button>}
                             <div className="flex items-center gap-2 text-gray-500"><FaEye /><span>{question.views_count !== undefined ? question.views_count : (question.stats?.views || 0)}</span></div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -787,8 +787,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     </div>
                 </div>
 
-                {/* Question Comments Section */}
-                {((question.comments && question.comments.length > 0) || isCommentingOnQuestion) && (
+                {/* Question Comments Section - DISABLED */}
+                {false && ((question.comments && question.comments.length > 0) || isCommentingOnQuestion) && (
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Yorumlar ({question.comments?.length || 0})</h3>
                         {isCommentingOnQuestion && (
@@ -1013,9 +1013,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             {answer.likes_count || 0}
                                                         </button>
                                                     </div>
-                                                    <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+                                                    {false && <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                                         <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
-                                                    </button>
+                                                    </button>}
                                                 </div>
 
                                                 {commentingOn?.type === 'answer' && commentingOn?.id === answer.id && (
@@ -1066,7 +1066,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                     </form>
                                                 )}
 
-                                                {answer.comments && answer.comments.length > 0 && (
+                                                {false && answer.comments && answer.comments.length > 0 && (
                                                     <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                                                         <div className="flex items-center gap-2 mb-4">
                                                             <FaComment className="text-coral text-sm" /><span className="text-sm font-semibold text-gray-600 dark:text-gray-400">{answer.comments.length} Yorum</span>
