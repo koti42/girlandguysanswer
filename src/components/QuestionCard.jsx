@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { tr } from 'date-fns/locale';
 import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret, FaEyeSlash, FaPoll } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 import QuestionActionsMenu from './QuestionActionsMenu';
@@ -8,6 +10,15 @@ import QuestionModerationMenu from './Moderation/QuestionModerationMenu';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 
 import { questionsAPI, commentsAPI } from '../services/api';
+
+const formatQuestionDate = (dateString) => {
+    if (!dateString) return null;
+    try {
+        return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: tr });
+    } catch (e) {
+        return null;
+    }
+};
 import { useAuth } from '../context/AuthContext';
 import Toast from './Toast';
 
@@ -156,24 +167,28 @@ const QuestionCard = ({ question, onModerationAction }) => {
                                 <FaMars className={`text-base md:text-lg ${styles.icon}`} />
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500 dark:text-gray-400 text-[10px] md:text-xs">
                             {question.category?.name && (() => {
                                 const categoryName = question.category.name;
-                                const categoryColor = question.category.color; // API'den gelen hex renk
+                                const categoryColor = question.category.color;
                                 const IconComponent = getCategoryIcon(categoryName);
                                 const hexColor = getCategoryColor(categoryColor);
                                 return (
                                     <span 
-                                        style={{
-                                            backgroundColor: hexColor
-                                        }}
-                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-[10px] md:text-xs font-bold"
+                                        style={{ backgroundColor: hexColor }}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white font-bold"
                                     >
                                         <IconComponent className="text-sm" />
                                         {categoryName}
                                     </span>
                                 );
                             })()}
+                            {formatQuestionDate(question.created_at) && (
+                                <>
+                                    {question.category?.name && <span>•</span>}
+                                    <span>Sorulma: {formatQuestionDate(question.created_at)}</span>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
