@@ -145,7 +145,7 @@ const CategoryPage = () => {
                     {/* Menü Butonları - Google Play, Sosyal Medya */}
                     <div className="flex flex-wrap gap-3 items-center">
                         <a
-                            href="https://play.google.com/store/apps/details?id=com.kizlarsoruyor.app"
+                            href="https://play.google.com/store/apps/details?id=com.herkeslersoruyor.app"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 bg-white text-gray-900 font-semibold px-6 py-3 rounded-xl hover:shadow-xl transition-all transform hover:scale-105"
@@ -154,13 +154,13 @@ const CategoryPage = () => {
                         </a>
 
                         <div className="flex gap-2">
-                            <a href="https://instagram.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
+                            <a href="https://instagram.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
                                 <FaInstagram className="text-2xl" />
                             </a>
-                            <a href="https://facebook.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
+                            <a href="https://facebook.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
                                 <FaFacebook className="text-2xl" />
                             </a>
-                            <a href="https://twitter.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
+                            <a href="https://twitter.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
                                 <FaTwitter className="text-2xl" />
                             </a>
                         </div>
