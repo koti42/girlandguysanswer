@@ -97,7 +97,30 @@ function App() {
           </Router>
         </NotificationProvider>
       </AuthProvider>
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        gutter={12}
+        containerStyle={{ top: 24 }}
+        toastOptions={{
+            duration: 4000,
+            style: {
+                borderRadius: '1rem',
+                padding: '1rem 1.25rem',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+                maxWidth: '420px',
+                background: 'var(--toast-bg, #fff)',
+                color: 'var(--toast-fg, #1f2937)',
+                border: '1px solid var(--toast-border, #e5e7eb)',
+            },
+            success: {
+                iconTheme: { primary: '#10b981', secondary: '#fff' },
+            },
+            error: {
+                iconTheme: { primary: '#ef4444', secondary: '#fff' },
+            },
+        }}
+    />
     </ThemeProvider>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaArrowLeft, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import ConfirmationModal from './ConfirmationModal';
@@ -161,6 +162,13 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 response = await messagesAPI.sendFile(formData);
             }
 
+            if (response.data?.success === false) {
+                setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+                notificationToast.error(response.data?.message || 'Mesaj gönderilemedi.');
+                setReplyingTo(null);
+                return;
+            }
+
             setReplyingTo(null);
 
             const newMessage = response.data.data.message;
@@ -185,7 +193,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         } catch (error) {
             console.error('Error sending message:', error);
             setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
-            alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
+            const errorMsg = error.response?.data?.message || 'Mesaj gönderilemedi. Lütfen tekrar deneyin.';
+            notificationToast.error(errorMsg);
         }
     };
 
