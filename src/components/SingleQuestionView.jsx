@@ -13,6 +13,7 @@ import XPToast from '../components/Gamification/XPToast';
 import LevelUpModal from '../components/Gamification/LevelUpModal';
 import ReportModal from '../components/ReportModal';
 import QuestionModerationMenu from '../components/Moderation/QuestionModerationMenu';
+import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 
 const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
@@ -687,7 +688,21 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 {question.user.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
                             </div>
                             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                <span className="bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">{question.category}</span>
+                                {question.category?.name && (() => {
+                                    const categoryName = question.category.name;
+                                    const categoryColor = question.category.color;
+                                    const IconComponent = getCategoryIcon(categoryName);
+                                    const hexColor = getCategoryColor(categoryColor);
+                                    return (
+                                        <span 
+                                            style={{ backgroundColor: hexColor }}
+                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-white text-[10px] font-bold"
+                                        >
+                                            <IconComponent className="text-sm" />
+                                            {categoryName}
+                                        </span>
+                                    );
+                                })()}
                                 <span>•</span>
                                 <span>{formatDate(question.created_at)}</span>
                             </div>

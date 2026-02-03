@@ -6,7 +6,7 @@ import FeedTabs from '../components/FeedTabs';
 import QuestionCard from '../components/QuestionCard';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { FaMars, FaVenus, FaGlobe } from 'react-icons/fa';
-import { questionsAPI } from '../services/api';
+import { questionsAPI, categoriesAPI } from '../services/api';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -14,6 +14,8 @@ const QuestionsPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const initialQuery = searchParams.get('search') || '';
     const [searchQuery, setSearchQuery] = useState(initialQuery);
+    const [categories, setCategories] = useState([]);
+    const [loadingCategories, setLoadingCategories] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState({ id: 0, title: 'Tümü' });
     const [genderFilter, setGenderFilter] = useState('all');
     const [sortBy, setSortBy] = useState('popular');
@@ -28,6 +30,23 @@ const QuestionsPage = () => {
 
     const observerTarget = useRef(null);
 
+    // Kategorileri API'den çek
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                setLoadingCategories(true);
+                const response = await categoriesAPI.getAll();
+                setCategories(response.data.data.categories || []);
+            } catch (error) {
+                console.error('Kategoriler yüklenirken hata:', error);
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
     const fetchQuestions = useCallback(async (page = 1, append = false) => {
         if (append) {
             setLoadingMore(true);
@@ -38,7 +57,7 @@ const QuestionsPage = () => {
         try {
             const params = {
                 search: searchQuery || undefined,
-                category: selectedCategory.id !== 0 ? selectedCategory.title : undefined,
+                category: selectedCategory.id !== 0 ? selectedCategory.name : undefined,
                 gender: genderFilter !== 'all' ? genderFilter : undefined,
                 sort: sortBy,
                 page: page,
@@ -119,8 +138,8 @@ const QuestionsPage = () => {
                 <HeroSection />
 
                 <div className="flex flex-col gap-6">
-                    {/* CategoryNav - selectedCategory ve onSelectCategory prop'larını almalı (CategoryNav güncellemesi gerekebilir) */}
-                    <CategoryNav selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+                    {/* CategoryNav - API'den gelen kategorileri göster */}
+                    <CategoryNav categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
 
                     <div className="flex flex-col gap-4">
                         <FeedTabs activeTab={sortBy} onTabChange={setSortBy} />

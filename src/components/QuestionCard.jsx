@@ -5,6 +5,7 @@ import UserAvatar from './UserAvatar';
 import QuestionActionsMenu from './QuestionActionsMenu';
 import ReportModal from './ReportModal';
 import QuestionModerationMenu from './Moderation/QuestionModerationMenu';
+import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 
 import { questionsAPI, commentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -155,7 +156,25 @@ const QuestionCard = ({ question, onModerationAction }) => {
                                 <FaMars className={`text-base md:text-lg ${styles.icon}`} />
                             )}
                         </div>
-                        <span className="text-[10px] md:text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{question.category}</span>
+                        <div className="flex items-center gap-2">
+                            {question.category?.name && (() => {
+                                const categoryName = question.category.name;
+                                const categoryColor = question.category.color; // API'den gelen hex renk
+                                const IconComponent = getCategoryIcon(categoryName);
+                                const hexColor = getCategoryColor(categoryColor);
+                                return (
+                                    <span 
+                                        style={{
+                                            backgroundColor: hexColor
+                                        }}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-[10px] md:text-xs font-bold"
+                                    >
+                                        <IconComponent className="text-sm" />
+                                        {categoryName}
+                                    </span>
+                                );
+                            })()}
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">

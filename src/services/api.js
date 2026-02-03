@@ -56,6 +56,11 @@ export const authAPI = {
     getGoogleAuthUrl: (redirect_uri) => api.get('/auth/google', { params: { redirect_uri } }),
 };
 
+export const categoriesAPI = {
+    getAll: () => api.get('/categories'),
+    getBySlug: (slug) => api.get(`/categories/${slug}`)
+};
+
 export const questionsAPI = {
     getAll: (params) => api.get('/questions', { params }),
     getById: (id) => api.get(`/questions/${id}`),

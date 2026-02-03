@@ -283,6 +283,17 @@ const QuestionDetailPage = () => {
                             initialQuestion={q}
                             slug={q.slug}
                         />
+                        
+                        {/* Separator between questions */}
+                        {index < questions.length - 1 && (
+                            <div className="my-8 flex items-center gap-4">
+                                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent"></div>
+                                <div className="px-4 py-2 bg-gradient-to-r from-coral to-orange-400 text-white rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+                                    Sonraki Soru
+                                </div>
+                                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent"></div>
+                            </div>
+                        )}
                     </div>
                 ))}
 

@@ -1,20 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
 import GifPickerModal from '../components/GifPickerModal';
-import { categories } from '../data/mockData';
-import { questionsAPI } from '../services/api';
+import { questionsAPI, categoriesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import XPToast from '../components/Gamification/XPToast';
 import LevelUpModal from '../components/Gamification/LevelUpModal';
 import SEO from '../components/SEO';
+import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 
 const AskQuestionPage = () => {
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
+    const [categories, setCategories] = useState([]);
+    const [loadingCategories, setLoadingCategories] = useState(true);
     const [formData, setFormData] = useState({
         title: '',
         category: '',
@@ -30,6 +32,24 @@ const AskQuestionPage = () => {
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gamificationFeedback, setGamificationFeedback] = useState(null);
     const [showLevelUp, setShowLevelUp] = useState(null);
+
+    // Kategorileri API'den çek
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                setLoadingCategories(true);
+                const response = await categoriesAPI.getAll();
+                setCategories(response.data.data.categories || []);
+            } catch (error) {
+                console.error('Kategoriler yüklenirken hata:', error);
+                // Hata durumunda taslakları dene
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -259,12 +279,13 @@ const AskQuestionPage = () => {
                                 name="category"
                                 value={formData.category}
                                 onChange={handleInputChange}
+                                disabled={loadingCategories}
                                 className={`w-full px-4 py-3 rounded-xl border ${errors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                    } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
+                                    } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all disabled:opacity-50`}
                             >
-                                <option value="">Kategori seçin...</option>
+                                <option value="">{loadingCategories ? 'Kategoriler yükleniyor...' : 'Kategori seçin...'}</option>
                                 {categories.map(cat => (
-                                    <option key={cat.id} value={cat.title}>{cat.title}</option>
+                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
                                 ))}
                             </select>
                             {errors.category && <span className="text-red-500 text-sm mt-2 block">{errors.category}</span>}
