@@ -1066,7 +1066,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                     </form>
                                                 )}
 
-                                                {false && answer.comments && answer.comments.length > 0 && (
+                                                {answer.comments && answer.comments.length > 0 && (
                                                     <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                                                         <div className="flex items-center gap-2 mb-4">
                                                             <FaComment className="text-coral text-sm" /><span className="text-sm font-semibold text-gray-600 dark:text-gray-400">{answer.comments.length} Yorum</span>
