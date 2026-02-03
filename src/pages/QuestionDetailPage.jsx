@@ -233,21 +233,47 @@ const QuestionDetailPage = () => {
                 <SEO
                     title={`${currentQuestion.title} - Herkesler Soruyor`}
                     description={currentQuestion.description || currentQuestion.title}
-                    jsonLd={{
-                        "@context": "https://schema.org",
-                        "@type": "QAPage",
-                        "mainEntity": {
-                            "@type": "Question",
-                            "name": currentQuestion.title,
-                            "text": currentQuestion.description || currentQuestion.title,
-                            "answerCount": currentQuestion.answer_count || 0,
-                            "upvoteCount": currentQuestion.likes_count || 0,
-                            "author": {
-                                "@type": "Person",
-                                "name": currentQuestion.is_anonymous ? "Gizli Kullanıcı" : (currentQuestion.user?.username || "Kullanıcı")
+                    jsonLd={[
+                        {
+                            "@context": "https://schema.org",
+                            "@type": "QAPage",
+                            "mainEntity": {
+                                "@type": "Question",
+                                "name": currentQuestion.title,
+                                "text": currentQuestion.description || currentQuestion.title,
+                                "answerCount": currentQuestion.answer_count || 0,
+                                "upvoteCount": currentQuestion.likes_count || 0,
+                                "author": {
+                                    "@type": "Person",
+                                    "name": currentQuestion.is_anonymous ? "Gizli Kullanıcı" : (currentQuestion.user?.username || "Kullanıcı")
+                                }
                             }
+                        },
+                        {
+                            "@context": "https://schema.org",
+                            "@type": "BreadcrumbList",
+                            "itemListElement": [
+                                {
+                                    "@type": "ListItem",
+                                    "position": 1,
+                                    "name": "Ana Sayfa",
+                                    "item": window.location.origin
+                                },
+                                {
+                                    "@type": "ListItem",
+                                    "position": 2,
+                                    "name": "Sorular",
+                                    "item": `${window.location.origin}/questions`
+                                },
+                                {
+                                    "@type": "ListItem",
+                                    "position": 3,
+                                    "name": currentQuestion.title,
+                                    "item": window.location.href
+                                }
+                            ]
                         }
-                    }}
+                    ]}
                 />
             )}
             <div className="flex flex-col gap-8">

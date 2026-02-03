@@ -1,12 +1,17 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SEO = ({ title, description, name, type }) => {
+const SEO = ({ title, description, name, type, noindex, jsonLd, canonical }) => {
+    const canonicalUrl = canonical || (typeof window !== 'undefined' ? window.location.href.split('?')[0] : '');
+
     return (
         <Helmet>
             { /* Standard metadata tags */}
             <title>{title}</title>
             <meta name='description' content={description} />
+            {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+            {noindex && <meta name="robots" content="noindex, nofollow" />}
 
             { /* End standard metadata tags */}
 
@@ -22,6 +27,12 @@ const SEO = ({ title, description, name, type }) => {
             <meta name="twitter:title" content={title} />
             <meta name="twitter:description" content={description} />
             { /* End Twitter tags */}
+
+            {jsonLd && (
+                <script type="application/ld+json">
+                    {JSON.stringify(jsonLd)}
+                </script>
+            )}
         </Helmet>
     )
 }
