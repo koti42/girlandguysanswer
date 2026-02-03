@@ -1013,9 +1013,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             {answer.likes_count || 0}
                                                         </button>
                                                     </div>
-                                                    {false && <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+                                                    <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                                         <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
-                                                    </button>}
+                                                    </button>
                                                 </div>
 
                                                 {commentingOn?.type === 'answer' && commentingOn?.id === answer.id && (
