@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { FaCamera, FaTimes } from 'react-icons/fa';
+import ImageLightbox from './ImageLightbox';
 
 const ProfileCover = ({ coverPhoto, onCoverUpload, onCoverRemove }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const fileInputRef = useRef(null);
@@ -53,21 +55,29 @@ const ProfileCover = ({ coverPhoto, onCoverUpload, onCoverRemove }) => {
             <div className="relative h-48 bg-gradient-to-r from-coral to-orange-400 rounded-t-2xl overflow-hidden group">
                 <img
                     src={coverPhoto}
-                    alt="Cover"
-                    className="w-full h-full object-cover"
+                    alt="Kapak"
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={() => coverPhoto && setIsLightboxOpen(true)}
                 />
-                {/* Only show edit button if handler is provided (own profile) */}
                 {onCoverUpload && (
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
                         <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl hover:bg-white transition-all shadow-lg"
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
+                            className="pointer-events-auto bg-white/90 backdrop-blur-sm p-4 rounded-2xl hover:bg-white transition-all shadow-lg"
                         >
                             <FaCamera className="text-gray-700 text-xl" />
                         </button>
                     </div>
                 )}
             </div>
+            {isLightboxOpen && (
+                <ImageLightbox
+                    imageUrl={coverPhoto}
+                    alt="Kapak fotoğrafı"
+                    onClose={() => setIsLightboxOpen(false)}
+                />
+            )}
 
             {/* Modern Modal */}
             {isModalOpen && (

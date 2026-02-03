@@ -1,9 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { FaCamera, FaTimes } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
+import ImageLightbox from './ImageLightbox';
 
 const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const fileInputRef = useRef(null);
@@ -52,21 +54,36 @@ const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => 
     return (
         <>
             <div className="relative group">
-                <UserAvatar
-                    user={{ avatar, username }}
-                    size="3xl"
-                    className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
-                />
-                {/* Only show edit button if handler is provided (own profile) */}
+                <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => avatar && setIsLightboxOpen(true)}
+                    onKeyDown={(e) => e.key === 'Enter' && avatar && setIsLightboxOpen(true)}
+                    className="cursor-pointer w-32 h-32 rounded-full overflow-hidden flex shrink-0"
+                >
+                    <UserAvatar
+                        user={{ avatar, username }}
+                        size="3xl"
+                        className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
+                    />
+                </div>
                 {onAvatarUpload && (
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
                         className="absolute inset-0 w-32 h-32 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     >
                         <FaCamera className="text-white text-2xl" />
                     </button>
                 )}
             </div>
+            {isLightboxOpen && (
+                <ImageLightbox
+                    imageUrl={avatar}
+                    alt={`${username || 'Profil'} profil fotoğrafı`}
+                    onClose={() => setIsLightboxOpen(false)}
+                />
+            )}
 
             {/* Modern Modal - Inspired Design */}
             {isModalOpen && (
