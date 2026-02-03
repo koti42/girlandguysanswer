@@ -5,7 +5,7 @@ import QuestionCard from '../components/QuestionCard';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { questionsAPI, categoriesAPI } from '../services/api';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
-import { FaArrowLeft, FaGoogle, FaFacebook, FaInstagram, FaTwitter, FaDownload } from 'react-icons/fa';
+import { FaArrowLeft, FaGoogle, FaFacebook, FaInstagram, FaTwitter, FaDownload, FaCommentSlash } from 'react-icons/fa';
 import SEO from '../components/SEO';
 
 const CategoryPage = () => {
@@ -16,6 +16,7 @@ const CategoryPage = () => {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('popular'); // popular, newest, unanswered
+    const [noCommentsFilter, setNoCommentsFilter] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
@@ -48,14 +49,13 @@ const CategoryPage = () => {
                 category: slug,
                 limit: 10,
                 page: pageNum,
+                ...(noCommentsFilter ? { no_comments: 1 } : {}),
             };
 
             // Aktif tab'a göre sıralama
             if (activeTab === 'newest') {
                 params.sort = 'newest';
             } else if (activeTab === 'unanswered') {
-                // Cevapsız sorular - bunu backend'deki endpoint'ten kontrol etmen lazım
-                // Eğer answers_count parametresi yoksa, ekle
                 params.hasAnswers = false;
             } else {
                 params.sort = 'popular';
@@ -79,7 +79,7 @@ const CategoryPage = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [slug, activeTab]);
+    }, [slug, activeTab, noCommentsFilter]);
 
     useEffect(() => {
         setPage(1);
@@ -198,6 +198,17 @@ const CategoryPage = () => {
                         }`}
                     >
                         Cevapsız Sorular
+                    </button>
+                    <button
+                        onClick={() => setNoCommentsFilter(prev => !prev)}
+                        className={`flex items-center gap-2 px-4 py-3 font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                            noCommentsFilter
+                                ? 'border-coral text-coral'
+                                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                        }`}
+                    >
+                        <FaCommentSlash />
+                        Hiç yorum almamış
                     </button>
                 </div>
 

@@ -5,7 +5,7 @@ import CategoryNav from '../components/CategoryNav';
 import FeedTabs from '../components/FeedTabs';
 import QuestionCard from '../components/QuestionCard';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
-import { FaMars, FaVenus, FaGlobe } from 'react-icons/fa';
+import { FaMars, FaVenus, FaGlobe, FaCommentSlash } from 'react-icons/fa';
 import { questionsAPI, categoriesAPI } from '../services/api';
 
 import { useSearchParams } from 'react-router-dom';
@@ -19,6 +19,7 @@ const QuestionsPage = () => {
     const [selectedCategory, setSelectedCategory] = useState({ id: 0, title: 'Tümü' });
     const [genderFilter, setGenderFilter] = useState('all');
     const [sortBy, setSortBy] = useState('popular');
+    const [noCommentsFilter, setNoCommentsFilter] = useState(false);
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -61,7 +62,8 @@ const QuestionsPage = () => {
                 gender: genderFilter !== 'all' ? genderFilter : undefined,
                 sort: sortBy,
                 page: page,
-                limit: 10
+                limit: 10,
+                ...(noCommentsFilter ? { no_comments: 1 } : {})
             };
 
             const response = await questionsAPI.getAll(params);
@@ -83,7 +85,7 @@ const QuestionsPage = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [searchQuery, selectedCategory, genderFilter, sortBy]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy, noCommentsFilter]);
 
 
 
@@ -100,7 +102,7 @@ const QuestionsPage = () => {
         setCurrentPage(1);
         setQuestions([]);
         fetchQuestions(1, false);
-    }, [searchQuery, selectedCategory, genderFilter, sortBy]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy, noCommentsFilter]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -175,6 +177,16 @@ const QuestionsPage = () => {
                             >
                                 <FaMars className="text-blue-500" />
                                 <span>Erkekler Soruyor</span>
+                            </button>
+                            <button
+                                onClick={() => setNoCommentsFilter(prev => !prev)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${noCommentsFilter
+                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
+                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                    }`}
+                            >
+                                <FaCommentSlash />
+                                <span>Hiç yorum almamış</span>
                             </button>
                         </div>
 
