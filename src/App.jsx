@@ -34,6 +34,7 @@ import TagsPage from './pages/TagsPage';
 import OpinionsPage from './pages/OpinionsPage';
 import CreateOpinionPage from './pages/CreateOpinionPage';
 import OpinionDetailPage from './pages/OpinionDetailPage';
+import AdminApp from './admin/AdminApp';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
@@ -95,6 +96,7 @@ function App() {
                   <Route path="/opinions/yaz" element={<ProtectedRoute><CreateOpinionPage /></ProtectedRoute>} />
                   <Route path="/opinion/:slugOrId" element={<OpinionDetailPage />} />
                   <Route path="/pusher-test" element={<PusherTestPage />} />
+                  <Route path="/cpl-manage/*" element={<AdminApp />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
                 </Routes>
@@ -109,24 +111,24 @@ function App() {
         gutter={12}
         containerStyle={{ top: 24 }}
         toastOptions={{
-            duration: 4000,
-            style: {
-                borderRadius: '1rem',
-                padding: '1rem 1.25rem',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
-                maxWidth: '420px',
-                background: 'var(--toast-bg, #fff)',
-                color: 'var(--toast-fg, #1f2937)',
-                border: '1px solid var(--toast-border, #e5e7eb)',
-            },
-            success: {
-                iconTheme: { primary: '#10b981', secondary: '#fff' },
-            },
-            error: {
-                iconTheme: { primary: '#ef4444', secondary: '#fff' },
-            },
+          duration: 4000,
+          style: {
+            borderRadius: '1rem',
+            padding: '1rem 1.25rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+            maxWidth: '420px',
+            background: 'var(--toast-bg, #fff)',
+            color: 'var(--toast-fg, #1f2937)',
+            border: '1px solid var(--toast-border, #e5e7eb)',
+          },
+          success: {
+            iconTheme: { primary: '#10b981', secondary: '#fff' },
+          },
+          error: {
+            iconTheme: { primary: '#ef4444', secondary: '#fff' },
+          },
         }}
-    />
+      />
     </ThemeProvider>
   );
 }

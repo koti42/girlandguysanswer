@@ -1,5 +1,6 @@
 User-agent: *
 Disallow: /admin
+Disallow: /cpl-manage
 Disallow: /settings
 Disallow: /profile/*
 Allow: /profile/
