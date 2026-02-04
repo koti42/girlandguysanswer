@@ -29,11 +29,9 @@ api.interceptors.response.use(
             localStorage.removeItem('permissions');
         }
 
-        // 403 hatası ve frozen/banned durumu kontrolü
         if (error.response?.status === 403) {
             const errorData = error.response?.data;
             if (errorData?.type === 'frozen' || errorData?.type === 'banned') {
-                // Kullanıcı profil sayfasında değilse yönlendir
                 const currentPath = window.location.pathname;
                 if (!currentPath.includes('/profile/')) {
                     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -122,6 +120,18 @@ export const tagsAPI = {
             limit: Math.min(params.limit ?? 6, 20),
             period_days: Math.min(params.period_days ?? 14, 90),
         },
+    }),
+};
+
+export const opinionsAPI = {
+    getAll: (params) => api.get('/opinions', { params: { page: params?.page ?? 1, per_page: params?.per_page ?? 15, search: params?.search } }),
+    getById: (id) => api.get(`/opinions/${id}`),
+    create: (data) => api.post('/opinions', data),
+    update: (id, data) => api.put(`/opinions/${id}`, data),
+    delete: (id) => api.delete(`/opinions/${id}`),
+    getComments: (opinionId, params) => api.get(`/opinions/${opinionId}/comments`, { params }),
+    editorUpload: (formData) => api.post('/opinions/editor/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
     }),
 };
 

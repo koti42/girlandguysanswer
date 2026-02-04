@@ -31,6 +31,9 @@ import PublicationGuidelinesPage from './pages/PublicationGuidelinesPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import KVKKPage from './pages/KVKKPage';
 import TagsPage from './pages/TagsPage';
+import OpinionsPage from './pages/OpinionsPage';
+import CreateOpinionPage from './pages/CreateOpinionPage';
+import OpinionDetailPage from './pages/OpinionDetailPage';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
@@ -88,6 +91,9 @@ function App() {
                   <Route path="/site-sozlesmesi" element={<TermsOfServicePage />} />
                   <Route path="/kvkk-aydinlatma" element={<KVKKPage />} />
                   <Route path="/etiketler" element={<TagsPage />} />
+                  <Route path="/opinions" element={<OpinionsPage />} />
+                  <Route path="/opinions/yaz" element={<ProtectedRoute><CreateOpinionPage /></ProtectedRoute>} />
+                  <Route path="/opinion/:id" element={<OpinionDetailPage />} />
                   <Route path="/pusher-test" element={<PusherTestPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />

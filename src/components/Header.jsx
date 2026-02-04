@@ -638,15 +638,21 @@ const Header = ({ onSearch }) => {
                                         </div>
                                     </div>
 
-                                    {/* Benceler */}
-                                    <div className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 transition-all">
+                                    {/* Görüşler */}
+                                    <div
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/opinions');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                    >
                                         <div className="flex gap-3">
                                             <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
                                                 <FaComment />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Benceler</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">İlgini çekebilecek Bence'leri keşfet.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Görüşler</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Konular hakkında yazılar oku, kendi görüşünü paylaş.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -694,6 +700,10 @@ const Header = ({ onSearch }) => {
                                     <span className="text-xs text-gray-400">•</span>
                                     <Link to="/etiketler" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                                         Etiketler
+                                    </Link>
+                                    <span className="text-xs text-gray-400">•</span>
+                                    <Link to="/opinions" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                                        Görüşler
                                     </Link>
                                     <span className="text-xs text-gray-400">•</span>
                                     <Link to="/questions" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">

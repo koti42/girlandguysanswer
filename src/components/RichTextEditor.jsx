@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { FaBold, FaItalic, FaImage, FaPalette } from 'react-icons/fa';
 
-const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yazın...' }) => {
+const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yazın...', uploadImage }) => {
     const editorRef = useRef(null);
     const fileInputRef = useRef(null);
 
@@ -18,14 +18,28 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
         setTimeout(updateContent, 0);
     };
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
+        e?.preventDefault?.();
+        e?.stopPropagation?.();
         const file = e.target.files?.[0];
-        if (file) {
+        if (!file) return;
+
+        try {
+            if (typeof uploadImage === 'function') {
+                const url = await uploadImage(file);
+                if (url) execCommand('insertImage', url);
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = (event) => {
                 execCommand('insertImage', event.target?.result);
             };
             reader.readAsDataURL(file);
+        } catch (err) {
+            console.error('Image upload failed:', err);
+        } finally {
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -88,7 +102,16 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
 
                 <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    onMouseDown={(e) => {
+                        // Form submit / focus taşmasını engelle
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                    }}
                     className="p-2.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
                     title="Görsel Ekle"
                 >
@@ -110,7 +133,7 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
                 onInput={updateContent}
                 onPaste={handlePaste}
                 data-placeholder={placeholder}
-                className="min-h-[200px] max-h-[500px] overflow-y-auto p-4 outline-none dark:bg-gray-800 dark:text-white prose prose-sm max-w-none"
+                className="min-h-[200px] max-h-[600px] overflow-y-auto resize-y p-4 outline-none dark:bg-gray-800 dark:text-white prose prose-sm max-w-none"
                 suppressContentEditableWarning
                 style={{
                     whiteSpace: 'pre-wrap',
