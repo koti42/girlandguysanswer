@@ -1,33 +1,72 @@
-import React from 'react';
-import { trends, topUsers } from '../data/mockData';
-import UserAvatar from './UserAvatar';
-import { FaArrowUp, FaMedal, FaBullhorn } from 'react-icons/fa';
-
-export const TrendsWidget = () => (
-    <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
-        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-            <span className="w-1 h-6 bg-coral rounded-full"></span>
-            Trendler
-        </h3>
-        <div className="flex flex-col gap-4">
-            {trends.map(trend => (
-                <div key={trend.id} className="flex items-center justify-between group cursor-pointer">
-                    <span className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium group-hover:bg-coral/10 group-hover:text-coral transition-colors">
-                        {trend.tag}
-                    </span>
-                    <div className="flex items-center gap-1 text-gray-400 text-xs">
-                        <FaArrowUp className="text-green-500" />
-                        <span>{trend.count}</span>
-                    </div>
-                </div>
-            ))}
-        </div>
-    </div>
-);
-
-import { gamificationAPI } from '../services/api';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import UserAvatar from './UserAvatar';
+import { FaArrowUp, FaArrowDown, FaMinus, FaMedal, FaBullhorn } from 'react-icons/fa';
+import { tagsAPI, gamificationAPI } from '../services/api';
+
+export const TrendsWidget = () => {
+    const [tags, setTags] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPopular = async () => {
+            try {
+                const response = await tagsAPI.getPopular({ limit: 6, period_days: 14 });
+                const data = response.data?.data;
+                setTags(data?.tags || []);
+            } catch (err) {
+                console.error('Trend etiketler yüklenirken hata:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPopular();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-coral rounded-full"></span>
+                    Trendler
+                </h3>
+                <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-coral border-t-transparent"></div>
+                </div>
+            </div>
+        );
+    }
+
+    if (tags.length === 0) return null;
+
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <span className="w-1 h-6 bg-coral rounded-full"></span>
+                Trendler
+            </h3>
+            <div className="flex flex-col gap-3">
+                {tags.map((item, idx) => (
+                    <Link
+                        key={idx}
+                        to={`/questions?search=${encodeURIComponent(item.tag)}`}
+                        className="flex items-center justify-between group"
+                    >
+                        <span className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium group-hover:bg-coral/10 group-hover:text-coral transition-colors flex-1 truncate">
+                            #{item.tag}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-gray-400 text-xs flex-shrink-0 ml-2">
+                            {item.trend === 'up' && <FaArrowUp className="text-green-500" title="Yükseliş" />}
+                            {item.trend === 'down' && <FaArrowDown className="text-red-500" title="Düşüş" />}
+                            {item.trend === 'same' && <FaMinus className="text-gray-400" title="Değişmedi" />}
+                            <span>{item.count}</span>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 export const TopUsersWidget = () => {
     const [topUsers, setTopUsers] = useState([]);

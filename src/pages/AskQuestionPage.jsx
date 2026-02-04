@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
 import GifPickerModal from '../components/GifPickerModal';
-import { questionsAPI, categoriesAPI } from '../services/api';
+import { questionsAPI, categoriesAPI, tagsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import XPToast from '../components/Gamification/XPToast';
 import LevelUpModal from '../components/Gamification/LevelUpModal';
@@ -39,7 +39,9 @@ const AskQuestionPage = () => {
     const [pollEndsAt, setPollEndsAt] = useState('');
     const [pollOptions, setPollOptions] = useState([{ text: '', sort_order: 0 }, { text: '', sort_order: 1 }]);
 
-    // Kategorileri API'den çek
+    const [popularTags, setPopularTags] = useState([]);
+    const [loadingPopularTags, setLoadingPopularTags] = useState(false);
+
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -55,6 +57,22 @@ const AskQuestionPage = () => {
         };
 
         fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        const fetchPopularTags = async () => {
+            try {
+                setLoadingPopularTags(true);
+                const response = await tagsAPI.getPopular({ limit: 6, period_days: 14 });
+                const data = response.data?.data;
+                setPopularTags(data?.tags || []);
+            } catch (err) {
+                console.error('Popüler etiketler yüklenirken hata:', err);
+            } finally {
+                setLoadingPopularTags(false);
+            }
+        };
+        fetchPopularTags();
     }, []);
 
     const handleInputChange = (e) => {
@@ -83,6 +101,12 @@ const AskQuestionPage = () => {
             ...prev,
             tags: prev.tags.filter(tag => tag !== tagToRemove)
         }));
+    };
+
+    const handleAddPopularTag = (tagName) => {
+        const normalized = tagName.startsWith('#') ? tagName : `#${tagName}`;
+        if (formData.tags.length >= 5 || formData.tags.includes(normalized)) return;
+        setFormData(prev => ({ ...prev, tags: [...prev.tags, normalized] }));
     };
 
     const showToast = (type, message) => {
@@ -335,6 +359,36 @@ const AskQuestionPage = () => {
                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                 Etiketler <span className="text-gray-400 font-normal">(En fazla 5)</span>
                             </label>
+                            {popularTags.length > 0 && (
+                                <div className="mb-3">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Trendler — tıklayarak ekle</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {popularTags.map((item, idx) => {
+                                            const tagWithHash = item.tag.startsWith('#') ? item.tag : `#${item.tag}`;
+                                            const isAdded = formData.tags.includes(tagWithHash);
+                                            const canAdd = formData.tags.length < 5 && !isAdded;
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    onClick={() => canAdd && handleAddPopularTag(item.tag)}
+                                                    disabled={!canAdd}
+                                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${canAdd ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-coral/20 hover:text-coral dark:hover:bg-coral/20 dark:hover:text-coral' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-default'}`}
+                                                >
+                                                    <span>#{item.tag}</span>
+                                                    {item.trend === 'up' && <FaArrowUp className="text-green-500 text-xs" title="Yükseliş" />}
+                                                    {item.trend === 'down' && <FaArrowDown className="text-red-500 text-xs" title="Düşüş" />}
+                                                    {item.trend === 'same' && <FaMinus className="text-gray-400 text-xs" title="Değişmedi" />}
+                                                    <span className="text-gray-400 dark:text-gray-500 text-xs">({item.count})</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                            {loadingPopularTags && (
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">Trend etiketler yükleniyor...</p>
+                            )}
                             <div className="flex gap-2 mb-3">
                                 <input
                                     type="text"

@@ -116,6 +116,15 @@ export const gifsAPI = {
     list: (params) => api.get('/gifs', { params }),
 };
 
+export const tagsAPI = {
+    getPopular: (params = {}) => api.get('/tags/popular', {
+        params: {
+            limit: Math.min(params.limit ?? 6, 20),
+            period_days: Math.min(params.period_days ?? 14, 90),
+        },
+    }),
+};
+
 export const gamificationAPI = {
     getLeaderboard: (params) => api.get('/leaderboard', { params }),
 };
@@ -155,12 +164,10 @@ export const reportsAPI = {
 };
 
 export const moderationAPI = {
-    // User moderation
     banUser: (userId, data) => api.post(`/users/${userId}/ban`, data),
     unbanUser: (userId) => api.post(`/users/${userId}/unban`),
     freezeUser: (userId, data) => api.post(`/users/${userId}/freeze`, data),
     unfreezeUser: (userId) => api.post(`/users/${userId}/unfreeze`),
-    // Question moderation
     hideQuestion: (questionId, data) => api.post(`/questions/${questionId}/hide`, data),
     unhideQuestion: (questionId) => api.post(`/questions/${questionId}/unhide`),
     removeQuestion: (questionId, data) => api.post(`/questions/${questionId}/remove`, data),
