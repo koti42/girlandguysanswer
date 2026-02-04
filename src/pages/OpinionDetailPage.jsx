@@ -14,7 +14,19 @@ import SEO from '../components/SEO';
 
 const ensureHttps = (url) => {
     if (!url) return url;
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        try {
+            const parsed = new URL(url);
+            const host = parsed.host;
+            if (parsed.pathname.startsWith(`/${host}/`)) {
+                parsed.pathname = parsed.pathname.replace(`/${host}`, '');
+                return parsed.toString();
+            }
+        } catch {
+            // ignore
+        }
+        return url;
+    }
     if (url.startsWith('//')) return `https:${url}`;
     if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(url)) return `https://${url}`;
     const base = typeof window !== 'undefined' ? window.location.origin : '';

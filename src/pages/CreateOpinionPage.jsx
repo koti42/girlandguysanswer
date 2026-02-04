@@ -98,12 +98,27 @@ const CreateOpinionPage = () => {
 
         const normalizeUrl = (u) => {
             if (!u) return u;
-            if (u.startsWith('http://') || u.startsWith('https://')) return u;
-            if (u.startsWith('//')) return `https:${u}`;
-            if (u.startsWith('/')) return `${window.location.origin}${u}`;
+            const raw = String(u).trim().replace(/^['"]|['"]$/g, '');
+
+            if (raw.startsWith('http://') || raw.startsWith('https://')) {
+                try {
+                    const parsed = new URL(raw);
+                    const host = parsed.host;
+                    if (parsed.pathname.startsWith(`/${host}/`)) {
+                        parsed.pathname = parsed.pathname.replace(`/${host}`, '');
+                        return parsed.toString();
+                    }
+                } catch {
+                    // ignore
+                }
+                return raw;
+            }
+
+            if (raw.startsWith('//')) return `https:${raw}`;
+            if (raw.startsWith('/')) return `${window.location.origin}${raw}`;
             // domain/path (no protocol) -> https://domain/path
-            if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(u)) return `https://${u}`;
-            return `${window.location.origin}/${u}`;
+            if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(raw)) return `https://${raw}`;
+            return `${window.location.origin}/${raw}`;
         };
 
         try {
