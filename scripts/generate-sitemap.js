@@ -25,7 +25,6 @@ async function fetchAndSaveSitemap() {
     try {
         const xmlContent = await fetchSitemap(SITEMAP_URL);
 
-        // Basic validation
         if (!xmlContent.includes('<urlset') && !xmlContent.includes('<sitemapindex')) {
             console.warn('⚠️  Warning: Response does not look like a valid XML sitemap.');
         }

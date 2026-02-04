@@ -6,6 +6,7 @@ import { opinionsAPI } from '../services/api';
 import { FaArrowLeft, FaLightbulb, FaExclamationTriangle, FaCheckCircle, FaSave } from 'react-icons/fa';
 import { notificationToast } from '../utils/notificationToast';
 import SEO from '../components/SEO';
+import { buildOpinionPath } from '../utils/opinionUrl';
 
 const DRAFT_KEY = 'opinionDraft';
 
@@ -76,7 +77,7 @@ const CreateOpinionPage = () => {
             if (op?.id) {
                 notificationToast.success('Yazınız başarıyla yayınlandı!');
                 localStorage.removeItem(DRAFT_KEY);
-                navigate(`/opinion/${op.id}`);
+                navigate(buildOpinionPath(op));
             } else {
                 localStorage.removeItem(DRAFT_KEY);
                 navigate('/opinions');

@@ -93,7 +93,7 @@ function App() {
                   <Route path="/etiketler" element={<TagsPage />} />
                   <Route path="/opinions" element={<OpinionsPage />} />
                   <Route path="/opinions/yaz" element={<ProtectedRoute><CreateOpinionPage /></ProtectedRoute>} />
-                  <Route path="/opinion/:id" element={<OpinionDetailPage />} />
+                  <Route path="/opinion/:slugOrId" element={<OpinionDetailPage />} />
                   <Route path="/pusher-test" element={<PusherTestPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />

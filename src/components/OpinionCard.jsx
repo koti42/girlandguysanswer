@@ -5,6 +5,7 @@ import UserAvatar from './UserAvatar';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import DOMPurify from 'dompurify';
+import { buildOpinionPath } from '../utils/opinionUrl';
 
 const stripHtml = (html) => (html ? DOMPurify.sanitize(html, { ALLOWED_TAGS: [] }) : '');
 
@@ -34,7 +35,7 @@ const OpinionCard = ({ opinion }) => {
 
     return (
         <Link
-            to={`/opinion/${opinion.id}`}
+            to={buildOpinionPath(opinion)}
             className="block bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-soft hover:shadow-md transition-all"
         >
             <div className="p-5 md:p-6">

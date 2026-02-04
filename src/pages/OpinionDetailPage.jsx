@@ -11,6 +11,7 @@ import DOMPurify from 'dompurify';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { notificationToast } from '../utils/notificationToast';
 import SEO from '../components/SEO';
+import { extractOpinionId } from '../utils/opinionUrl';
 
 const ensureHttps = (url) => {
     if (!url) return url;
@@ -34,7 +35,7 @@ const ensureHttps = (url) => {
 };
 
 const OpinionDetailPage = () => {
-    const { id } = useParams();
+    const { slugOrId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
     const [opinion, setOpinion] = useState(null);
@@ -51,7 +52,8 @@ const OpinionDetailPage = () => {
         const fetchOpinion = async () => {
             try {
                 setLoading(true);
-                const res = await opinionsAPI.getById(id);
+                const opinionId = extractOpinionId(slugOrId);
+                const res = await opinionsAPI.getById(opinionId);
                 const op = res.data?.data?.opinion || res.data?.opinion;
                 setOpinion(op);
                 if (op) {
@@ -64,8 +66,8 @@ const OpinionDetailPage = () => {
                 setLoading(false);
             }
         };
-        if (id) fetchOpinion();
-    }, [id]);
+        if (slugOrId) fetchOpinion();
+    }, [slugOrId]);
 
     useEffect(() => {
         if (!opinion?.id || !opinion.allow_comments) return;
