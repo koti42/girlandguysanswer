@@ -96,6 +96,16 @@ const CreateOpinionPage = () => {
         const formData = new FormData();
         formData.append('file', file);
 
+        const normalizeUrl = (u) => {
+            if (!u) return u;
+            if (u.startsWith('http://') || u.startsWith('https://')) return u;
+            if (u.startsWith('//')) return `https:${u}`;
+            if (u.startsWith('/')) return `${window.location.origin}${u}`;
+            // domain/path (no protocol) -> https://domain/path
+            if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(u)) return `https://${u}`;
+            return `${window.location.origin}/${u}`;
+        };
+
         try {
             const res = await opinionsAPI.editorUpload(formData);
             if (res.data?.success === false) {
@@ -103,7 +113,7 @@ const CreateOpinionPage = () => {
             }
             const url = res.data?.data?.url;
             if (!url) throw new Error('Görsel URL alınamadı.');
-            return url;
+            return normalizeUrl(url);
         } catch (err) {
             const apiMessage =
                 err?.response?.data?.errors?.file?.[0] ||
