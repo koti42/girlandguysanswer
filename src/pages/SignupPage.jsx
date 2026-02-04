@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaMars, FaVenus, FaTimes, FaFileContract, FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || import.meta.env.VITE_RECAPTCHA_SITE_KEY_V3 || '';
+
 const SignupPage = () => {
     const navigate = useNavigate();
     const { register, loading, error: authError, isAuthenticated } = useAuth();
@@ -12,7 +14,8 @@ const SignupPage = () => {
         password: '',
         confirmPassword: '',
         gender: '', // 'male' or 'female'
-        agreeTerms: false
+        agreeTerms: false,
+        isHuman: false,
     });
     const [errors, setErrors] = useState({});
     const [showTermsModal, setShowTermsModal] = useState(false);
@@ -24,9 +27,20 @@ const SignupPage = () => {
         }
     }, [isAuthenticated, navigate]);
 
-    // Auth error'u form error'ları ile birleştirebiliriz veya ayrıca gösterebiliriz
-    // Simdilik submit'te authError gelirse alert veya toast ile gösterebiliriz
-    // Veya errors state'ine ekleyebiliriz
+    useEffect(() => {
+        if (!RECAPTCHA_SITE_KEY) return;
+
+        if (window.grecaptcha) {
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+        script.async = true;
+        document.head.appendChild(script);
+    }, []);
+
+
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -39,7 +53,6 @@ const SignupPage = () => {
         }
     };
 
-    // ... validateForm functions (unchanged) ...
 
     const validateForm = () => {
         const newErrors = {};
@@ -76,6 +89,10 @@ const SignupPage = () => {
             newErrors.agreeTerms = 'Kullanım şartlarını kabul etmelisiniz';
         }
 
+        if (!formData.isHuman) {
+            newErrors.isHuman = 'Lütfen robot olmadığınızı onaylayın';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -84,12 +101,31 @@ const SignupPage = () => {
         e.preventDefault();
         if (!validateForm()) return;
 
+        // reCAPTCHA v3 token al
+        let recaptchaToken = null;
+        if (RECAPTCHA_SITE_KEY && window.grecaptcha) {
+            try {
+                recaptchaToken = await new Promise((resolve, reject) => {
+                    window.grecaptcha.ready(() => {
+                        window.grecaptcha
+                            .execute(RECAPTCHA_SITE_KEY, { action: 'signup' })
+                            .then(resolve)
+                            .catch(reject);
+                    });
+                });
+            } catch (err) {
+                console.error('reCAPTCHA hatası:', err);
+            }
+        }
+
         // Register fonksiyonunu çağır
         const result = await register({
             username: formData.username,
             email: formData.email,
             password: formData.password,
-            gender: formData.gender
+            gender: formData.gender,
+            recaptcha_token: recaptchaToken,
+            recaptcha_action: 'signup',
         });
 
         if (result.success) {
@@ -241,42 +277,62 @@ const SignupPage = () => {
                         </div>
 
                         {/* Terms Agreement */}
-                        <div>
-                            <label className="flex items-start gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="agreeTerms"
-                                    checked={formData.agreeTerms}
-                                    onChange={handleInputChange}
-                                    className={`w-4 h-4 mt-1 text-coral border-gray-300 rounded focus:ring-coral ${errors.agreeTerms ? 'border-red-500' : ''
-                                        }`}
-                                />
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setShowTermsModal(true);
-                                        }}
-                                        className="text-coral hover:underline"
-                                    >
-                                        Kullanım Şartları
-                                    </button>
-                                    {' '}ve{' '}
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setShowPrivacyModal(true);
-                                        }}
-                                        className="text-coral hover:underline"
-                                    >
-                                        Gizlilik Politikası
-                                    </button>
-                                    'nı okudum ve kabul ediyorum
-                                </span>
-                            </label>
-                            {errors.agreeTerms && <span className="text-red-500 text-sm mt-1 block">{errors.agreeTerms}</span>}
+                        <div className="space-y-3">
+                            <div>
+                                <label className="flex items-start gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        name="agreeTerms"
+                                        checked={formData.agreeTerms}
+                                        onChange={handleInputChange}
+                                        className={`w-4 h-4 mt-1 text-coral border-gray-300 rounded focus:ring-coral ${errors.agreeTerms ? 'border-red-500' : ''
+                                            }`}
+                                    />
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setShowTermsModal(true);
+                                            }}
+                                            className="text-coral hover:underline"
+                                        >
+                                            Kullanım Şartları
+                                        </button>
+                                        {' '}ve{' '}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setShowPrivacyModal(true);
+                                            }}
+                                            className="text-coral hover:underline"
+                                        >
+                                            Gizlilik Politikası
+                                        </button>
+                                        'nı okudum ve kabul ediyorum
+                                    </span>
+                                </label>
+                                {errors.agreeTerms && <span className="text-red-500 text-sm mt-1 block">{errors.agreeTerms}</span>}
+                            </div>
+
+                            {/* Simple anti-bot check */}
+                            <div>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        name="isHuman"
+                                        checked={formData.isHuman}
+                                        onChange={handleInputChange}
+                                        className={`w-4 h-4 text-coral border-gray-300 rounded focus:ring-coral ${errors.isHuman ? 'border-red-500' : ''
+                                            }`}
+                                    />
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        Ben bir <span className="font-semibold">robot değilim</span>.
+                                    </span>
+                                </label>
+                                {errors.isHuman && <span className="text-red-500 text-sm mt-1 block">{errors.isHuman}</span>}
+                            </div>
                         </div>
 
                         {/* General Error Message */}
