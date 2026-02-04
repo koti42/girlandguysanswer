@@ -7,6 +7,7 @@ import QuestionCard from '../components/QuestionCard';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { FaMars, FaVenus, FaGlobe, FaCommentSlash, FaPoll } from 'react-icons/fa';
 import { questionsAPI, categoriesAPI } from '../services/api';
+import SEO from '../components/SEO';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -139,6 +140,10 @@ const QuestionsPage = () => {
 
     return (
         <MainLayout sidebar={SidebarContent} onSearch={setSearchQuery}>
+            <SEO
+                title="Sorular - Herkesler Soruyor"
+                description="Sorulara göz atın, cevap verin, anketli soruları keşfedin."
+            />
             <div className="flex flex-col gap-8">
                 <HeroSection />
 

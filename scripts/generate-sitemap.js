@@ -4,13 +4,11 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import https from 'https';
 
-// Backend Sitemap URL
 const SITEMAP_URL = 'https://herkeslersoruyor.panalix.com.tr/api/sitemap.xml';
 
 async function fetchAndSaveSitemap() {
     console.log(`⏳ Fetching sitemap from backend: ${SITEMAP_URL}...`);
 
-    // Using a promise wrapper for https.get since standard fetch might depend on node version/env
     const fetchSitemap = (url) => {
         return new Promise((resolve, reject) => {
             https.get(url, (res) => {
@@ -30,7 +28,6 @@ async function fetchAndSaveSitemap() {
         // Basic validation
         if (!xmlContent.includes('<urlset') && !xmlContent.includes('<sitemapindex')) {
             console.warn('⚠️  Warning: Response does not look like a valid XML sitemap.');
-            // Proceeding anyway but logging warning
         }
 
         const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -43,7 +40,6 @@ async function fetchAndSaveSitemap() {
     } catch (error) {
         console.error('❌ Error fetching backend sitemap:', error.message);
         console.error('➡️  Ideally, ensure the backend sitemap is deploy/accessible.');
-        // We do not exit(1) to avoid breaking builds if the backend currently returns 404
     }
 }
 
