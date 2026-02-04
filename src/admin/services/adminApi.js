@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://herkeslersoruyor.panalix.com.tr/api';
+//const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://herkeslersoruyor.panalix.com.tr/api';
+const API_BASE_URL = 'https://herkeslersoruyor.panalix.com.tr/api';
 
-// Separate axios instance for admin panel
 const adminApi = axios.create({
     baseURL: API_BASE_URL,
     headers: {
