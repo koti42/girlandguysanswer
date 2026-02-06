@@ -922,20 +922,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                         />
                     )}
 
-                    {question.description_images && question.description_images.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                            {question.description_images.map((imgUrl, index) => (
-                                <div key={index} className="rounded-xl overflow-hidden shadow-sm">
-                                    <img
-                                        src={imgUrl}
-                                        alt={`Resim ${index + 1}`}
-                                        className="w-full h-auto object-cover cursor-pointer hover:opacity-95 transition-opacity"
-                                        onClick={() => window.open(imgUrl, '_blank')}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    )}
+
 
                     <div className="flex flex-wrap gap-2 mb-4">
                         {question.tags?.map((tag, idx) => (
