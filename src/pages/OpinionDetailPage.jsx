@@ -4,7 +4,7 @@ import MainLayout from '../layouts/MainLayout';
 import UserAvatar from '../components/UserAvatar';
 import { opinionsAPI, questionsAPI, commentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { FaHeart, FaComment, FaArrowLeft } from 'react-icons/fa';
+import { FaHeart, FaComment, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import DOMPurify from 'dompurify';
@@ -37,7 +37,7 @@ const ensureHttps = (url) => {
 const OpinionDetailPage = () => {
     const { slugOrId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, canModerate } = useAuth();
     const [opinion, setOpinion] = useState(null);
     const [loading, setLoading] = useState(true);
     const [comments, setComments] = useState([]);
@@ -130,6 +130,38 @@ const OpinionDetailPage = () => {
             notificationToast.error(err.response?.data?.message || 'Yorum eklenemedi.');
         } finally {
             setSubmittingComment(false);
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        if (!user) {
+            notificationToast.warning('Yorum silmek için giriş yapın.');
+            return;
+        }
+        if (!window.confirm('Bu yorumu silmek istediğinize emin misiniz?')) {
+            return;
+        }
+        try {
+            await commentsAPI.delete(commentId);
+            setComments(prev => prev.filter(c => c.id !== commentId));
+            setOpinion(prev => prev ? { ...prev, comments_count: Math.max(0, (prev.comments_count ?? 0) - 1) } : null);
+            notificationToast.success('Yorum silindi.');
+        } catch (err) {
+            notificationToast.error(err.response?.data?.message || 'Yorum silinemedi.');
+        }
+    };
+
+    const handleHideComment = async (commentId) => {
+        if (!user) {
+            notificationToast.warning('Yorum gizlemek için giriş yapın.');
+            return;
+        }
+        try {
+            await commentsAPI.hide(commentId);
+            setComments(prev => prev.filter(c => c.id !== commentId));
+            notificationToast.success('Yorum gizlendi.');
+        } catch (err) {
+            notificationToast.error(err.response?.data?.message || 'Yorum gizlenemedi.');
         }
     };
 
@@ -241,16 +273,36 @@ const OpinionDetailPage = () => {
                             )}
                             <div className="space-y-4">
                                 {comments.map((c) => (
-                                    <div key={c.id} className="flex gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
+                                    <div className="flex gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
                                         <UserAvatar user={c.user} size="sm" className="w-10 h-10 rounded-full flex-shrink-0" />
-                                        <div>
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <Link to={`/profile/${c.user?.username}`} className="font-bold text-gray-900 dark:text-white hover:underline">
-                                                    {c.user?.username || 'Kullanıcı'}
-                                                </Link>
-                                                <span className="text-gray-500 text-xs">
-                                                    {c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: tr }) : ''}
-                                                </span>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <Link to={`/profile/${c.user?.username}`} className="font-bold text-gray-900 dark:text-white hover:underline">
+                                                        {c.user?.username || 'Kullanıcı'}
+                                                    </Link>
+                                                    <span className="text-gray-500 text-xs">
+                                                        {c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: tr }) : ''}
+                                                    </span>
+                                                </div>
+                                                {(user?.id === c.user_id || canModerate) && (
+                                                    <button
+                                                        onClick={() => handleDeleteComment(c.id)}
+                                                        className="text-gray-400 hover:text-red-500 transition-colors"
+                                                        title="Yorumu sil"
+                                                    >
+                                                        <FaTrash className="text-xs" />
+                                                    </button>
+                                                )}
+                                                {user && user.id !== c.user_id && (
+                                                    <button
+                                                        onClick={() => handleHideComment(c.id)}
+                                                        className="text-gray-400 hover:text-orange-500 transition-colors ml-2"
+                                                        title="Yorumu gizle (sadece sen görmezsin)"
+                                                    >
+                                                        <FaEyeSlash className="text-xs" />
+                                                    </button>
+                                                )}
                                             </div>
                                             <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">{c.content}</p>
                                         </div>

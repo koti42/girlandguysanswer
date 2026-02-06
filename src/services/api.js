@@ -72,7 +72,8 @@ export const questionsAPI = {
 };
 
 export const answersAPI = {
-    selectBestAnswer: (answerId) => api.post(`/answers/${answerId}/best`)
+    selectBestAnswer: (answerId) => api.post(`/answers/${answerId}/best`),
+    hide: (answerId) => api.post(`/answers/${answerId}/hide`),
 };
 
 export const pollsAPI = {
@@ -147,7 +148,10 @@ export const uploadAPI = {
 
 export const commentsAPI = {
     create: (data) => api.post('/comments', data),
-    getCommentReplies: (commentId, params) => api.get(`/comments/${commentId}/replies`, { params })
+    getCommentReplies: (commentId, params) => api.get(`/comments/${commentId}/replies`, { params }),
+    delete: (commentId) => api.delete(`/comments/${commentId}`),
+    hide: (commentId) => api.post(`/comments/${commentId}/hide`),
+    unhide: (commentId) => api.delete(`/comments/${commentId}/hide`),
 };
 
 export const messagesAPI = {

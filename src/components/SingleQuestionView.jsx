@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icons/fa';
 import { questionsAPI, commentsAPI, answersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
@@ -88,6 +88,86 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
     const closeLikersModal = () => {
         setLikersModal({ ...likersModal, isOpen: false });
+    };
+
+    const handleDeleteComment = async (commentId, type, targetId) => {
+        if (!currentUser) {
+            displayToast('Yorum silmek için giriş yapmalısınız.', 'error');
+            return;
+        }
+
+        if (!window.confirm('Bu yorumu silmek istediğinize emin misiniz?')) {
+            return;
+        }
+
+        try {
+            await commentsAPI.delete(commentId);
+
+            const removeCommentFromTree = (comments) => {
+                return comments.filter(c => {
+                    if (c.id === commentId) return false;
+                    if (c.replies) {
+                        c.replies = removeCommentFromTree(c.replies);
+                    }
+                    return true;
+                });
+            };
+
+            if (type === 'question') {
+                setQuestion(prev => ({
+                    ...prev,
+                    comments: removeCommentFromTree(prev.comments || [])
+                }));
+            } else if (type === 'answer') {
+                setAnswers(prev => prev.map(a =>
+                    a.id === targetId
+                        ? { ...a, comments: removeCommentFromTree(a.comments || []) }
+                        : a
+                ));
+            }
+
+            displayToast('Yorum başarıyla silindi.', 'success');
+        } catch (err) {
+            displayToast(err.response?.data?.message || 'Yorum silinemedi.', 'error');
+        }
+    };
+
+    const handleHideComment = async (commentId, type, targetId) => {
+        if (!currentUser) {
+            displayToast('Yorum gizlemek için giriş yapmalısınız.', 'error');
+            return;
+        }
+
+        try {
+            await commentsAPI.hide(commentId);
+
+            const removeCommentFromTree = (comments) => {
+                return comments.filter(c => {
+                    if (c.id === commentId) return false;
+                    if (c.replies) {
+                        c.replies = removeCommentFromTree(c.replies);
+                    }
+                    return true;
+                });
+            };
+
+            if (type === 'question') {
+                setQuestion(prev => ({
+                    ...prev,
+                    comments: removeCommentFromTree(prev.comments || [])
+                }));
+            } else if (type === 'answer') {
+                setAnswers(prev => prev.map(a =>
+                    a.id === targetId
+                        ? { ...a, comments: removeCommentFromTree(a.comments || []) }
+                        : a
+                ));
+            }
+
+            displayToast('Yorum gizlendi.', 'success');
+        } catch (err) {
+            displayToast(err.response?.data?.message || 'Yorum gizlenemedi.', 'error');
+        }
     };
 
     const openGifPicker = (context, key) => {
@@ -530,6 +610,24 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 >
                                     <FaReply className="text-xs" /> <span>{isReplyingToThis ? 'İptal' : 'Cevapla'}</span>
                                 </button>
+                                {(currentUser?.id === comment.user_id || canModerate) && (
+                                    <button
+                                        onClick={() => handleDeleteComment(comment.id, type, targetId)}
+                                        className="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1"
+                                        title="Yorumu sil"
+                                    >
+                                        <FaTrash className="text-xs" /> <span>Sil</span>
+                                    </button>
+                                )}
+                                {currentUser && currentUser.id !== comment.user_id && (
+                                    <button
+                                        onClick={() => handleHideComment(comment.id, type, targetId)}
+                                        className="text-xs text-gray-500 hover:text-orange-500 transition-colors flex items-center gap-1"
+                                        title="Yorumu gizle (sadece sen görmezsin)"
+                                    >
+                                        <FaEyeSlash className="text-xs" /> <span>Gizle</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -616,7 +714,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const filteredAnswers = getFilteredAndSortedAnswers();
 
     if (loading) return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div></div>;
-    
+
     if (error === "not_found" || (!question && error)) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-12">
@@ -652,7 +750,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             </div>
         );
     }
-    
+
     if (!question) return null;
 
     const commentKey = commentingOn ? `${commentingOn.type}_${commentingOn.id}` : '';
@@ -709,29 +807,29 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     user={question.user}
                                 >
                                     <div className="flex items-center gap-3">
-                                    <Link to={`/profile/${question.user.username}`}><UserAvatar user={question.user} size="lg" className="hover:border-coral transition-colors" /></Link>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{question.user.username}</Link>
-                                            {question.user.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                            {question.category?.name && (() => {
-                                                const categoryName = question.category.name;
-                                                const categoryColor = question.category.color;
-                                                const IconComponent = getCategoryIcon(categoryName);
-                                                const hexColor = getCategoryColor(categoryColor);
-                                                return (
-                                                    <span style={{ backgroundColor: hexColor }} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-white text-[10px] font-bold">
-                                                        <IconComponent className="text-sm" />{categoryName}
-                                                    </span>
-                                                );
-                                            })()}
-                                            <span>•</span>
-                                            <span>{formatDate(question.created_at)}</span>
+                                        <Link to={`/profile/${question.user.username}`}><UserAvatar user={question.user} size="lg" className="hover:border-coral transition-colors" /></Link>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{question.user.username}</Link>
+                                                {question.user.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                {question.category?.name && (() => {
+                                                    const categoryName = question.category.name;
+                                                    const categoryColor = question.category.color;
+                                                    const IconComponent = getCategoryIcon(categoryName);
+                                                    const hexColor = getCategoryColor(categoryColor);
+                                                    return (
+                                                        <span style={{ backgroundColor: hexColor }} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-white text-[10px] font-bold">
+                                                            <IconComponent className="text-sm" />{categoryName}
+                                                        </span>
+                                                    );
+                                                })()}
+                                                <span>•</span>
+                                                <span>{formatDate(question.created_at)}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
                                 </UserHoverCard>
                             </div>
                         )}
