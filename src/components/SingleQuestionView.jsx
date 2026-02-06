@@ -14,6 +14,7 @@ import XPToast from '../components/Gamification/XPToast';
 import LevelUpModal from '../components/Gamification/LevelUpModal';
 import ReportModal from '../components/ReportModal';
 import QuestionModerationMenu from '../components/Moderation/QuestionModerationMenu';
+import ConfirmationModal from '../components/ConfirmationModal';
 import PollWidget from '../components/PollWidget';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 import DOMPurify from 'dompurify';
@@ -77,6 +78,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
     const [likersModal, setLikersModal] = useState({ isOpen: false, type: null, id: null });
     const [showReportModal, setShowReportModal] = useState(false);
+    const [deleteCommentModal, setDeleteCommentModal] = useState({ isOpen: false, commentId: null, type: null, targetId: null });
+    const [hideCommentModal, setHideCommentModal] = useState({ isOpen: false, commentId: null, type: null, targetId: null });
 
     const openLikersModal = (type, id) => {
         if (!currentUser) {
@@ -90,15 +93,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         setLikersModal({ ...likersModal, isOpen: false });
     };
 
-    const handleDeleteComment = async (commentId, type, targetId) => {
+    const openDeleteCommentModal = (commentId, type, targetId) => {
         if (!currentUser) {
             displayToast('Yorum silmek için giriş yapmalısınız.', 'error');
             return;
         }
+        setDeleteCommentModal({ isOpen: true, commentId, type, targetId });
+    };
 
-        if (!window.confirm('Bu yorumu silmek istediğinize emin misiniz?')) {
-            return;
-        }
+    const handleDeleteComment = async () => {
+        const { commentId, type, targetId } = deleteCommentModal;
+        if (!commentId) return;
 
         try {
             await commentsAPI.delete(commentId);
@@ -132,11 +137,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         }
     };
 
-    const handleHideComment = async (commentId, type, targetId) => {
+    const openHideCommentModal = (commentId, type, targetId) => {
         if (!currentUser) {
             displayToast('Yorum gizlemek için giriş yapmalısınız.', 'error');
             return;
         }
+        setHideCommentModal({ isOpen: true, commentId, type, targetId });
+    };
+
+    const handleHideComment = async () => {
+        const { commentId, type, targetId } = hideCommentModal;
+        if (!commentId) return;
 
         try {
             await commentsAPI.hide(commentId);
@@ -612,7 +623,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 </button>
                                 {(currentUser?.id === comment.user_id || canModerate) && (
                                     <button
-                                        onClick={() => handleDeleteComment(comment.id, type, targetId)}
+                                        onClick={() => openDeleteCommentModal(comment.id, type, targetId)}
                                         className="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1"
                                         title="Yorumu sil"
                                     >
@@ -621,7 +632,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 )}
                                 {currentUser && currentUser.id !== comment.user_id && (
                                     <button
-                                        onClick={() => handleHideComment(comment.id, type, targetId)}
+                                        onClick={() => openHideCommentModal(comment.id, type, targetId)}
                                         className="text-xs text-gray-500 hover:text-orange-500 transition-colors flex items-center gap-1"
                                         title="Yorumu gizle (sadece sen görmezsin)"
                                     >
@@ -1254,6 +1265,28 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                 reportableType="question"
                 reportableId={question?.id}
                 onSuccess={() => displayToast('Şikayetiniz başarıyla gönderildi.', 'success')}
+            />
+
+            <ConfirmationModal
+                isOpen={deleteCommentModal.isOpen}
+                onClose={() => setDeleteCommentModal({ isOpen: false, commentId: null, type: null, targetId: null })}
+                onConfirm={handleDeleteComment}
+                title="Yorumu Sil"
+                message="Bu yorumu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                confirmText="Sil"
+                cancelText="Vazgeç"
+                isDangerous={true}
+            />
+
+            <ConfirmationModal
+                isOpen={hideCommentModal.isOpen}
+                onClose={() => setHideCommentModal({ isOpen: false, commentId: null, type: null, targetId: null })}
+                onConfirm={handleHideComment}
+                title="Yorumu Gizle"
+                message="Bu yorumu gizlemek istediğinize emin misiniz? Sadece siz görmezsiniz, diğer kullanıcılar etkilenmez."
+                confirmText="Gizle"
+                cancelText="Vazgeç"
+                isDangerous={false}
             />
         </div>
     );

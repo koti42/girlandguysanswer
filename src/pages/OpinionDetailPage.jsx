@@ -12,6 +12,7 @@ import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components
 import { notificationToast } from '../utils/notificationToast';
 import SEO from '../components/SEO';
 import { extractOpinionId } from '../utils/opinionUrl';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const ensureHttps = (url) => {
     if (!url) return url;
@@ -47,6 +48,8 @@ const OpinionDetailPage = () => {
     const [submittingComment, setSubmittingComment] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [likesCount, setLikesCount] = useState(0);
+    const [deleteCommentModal, setDeleteCommentModal] = useState({ isOpen: false, commentId: null });
+    const [hideCommentModal, setHideCommentModal] = useState({ isOpen: false, commentId: null });
 
     useEffect(() => {
         const fetchOpinion = async () => {
@@ -133,14 +136,18 @@ const OpinionDetailPage = () => {
         }
     };
 
-    const handleDeleteComment = async (commentId) => {
+    const openDeleteCommentModal = (commentId) => {
         if (!user) {
             notificationToast.warning('Yorum silmek için giriş yapın.');
             return;
         }
-        if (!window.confirm('Bu yorumu silmek istediğinize emin misiniz?')) {
-            return;
-        }
+        setDeleteCommentModal({ isOpen: true, commentId });
+    };
+
+    const handleDeleteComment = async () => {
+        const { commentId } = deleteCommentModal;
+        if (!commentId) return;
+
         try {
             await commentsAPI.delete(commentId);
             setComments(prev => prev.filter(c => c.id !== commentId));
@@ -151,11 +158,18 @@ const OpinionDetailPage = () => {
         }
     };
 
-    const handleHideComment = async (commentId) => {
+    const openHideCommentModal = (commentId) => {
         if (!user) {
             notificationToast.warning('Yorum gizlemek için giriş yapın.');
             return;
         }
+        setHideCommentModal({ isOpen: true, commentId });
+    };
+
+    const handleHideComment = async () => {
+        const { commentId } = hideCommentModal;
+        if (!commentId) return;
+
         try {
             await commentsAPI.hide(commentId);
             setComments(prev => prev.filter(c => c.id !== commentId));
@@ -195,132 +209,156 @@ const OpinionDetailPage = () => {
     }
 
     return (
-        <MainLayout sidebar={SidebarContent}>
-            <SEO title={`${opinion.title} - Görüşler | Herkesler Soruyor`} description={DOMPurify.sanitize(opinion.content, { ALLOWED_TAGS: [] }).slice(0, 160)} />
-            <div className="max-w-3xl mx-auto">
-                <Link to="/opinions" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-coral mb-6">
-                    <FaArrowLeft /> Görüşlere dön
-                </Link>
+        <>
+            <MainLayout sidebar={SidebarContent}>
+                <SEO title={`${opinion.title} - Görüşler | Herkesler Soruyor`} description={DOMPurify.sanitize(opinion.content, { ALLOWED_TAGS: [] }).slice(0, 160)} />
+                <div className="max-w-3xl mx-auto">
+                    <Link to="/opinions" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-coral mb-6">
+                        <FaArrowLeft /> Görüşlere dön
+                    </Link>
 
-                <article className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-soft">
-                    <div className="p-6 md:p-8">
-                        <div className="flex items-center gap-3 mb-4">
-                            <Link to={`/profile/${opinion.user?.username}`}>
-                                <UserAvatar user={opinion.user} size="md" className="w-12 h-12 rounded-full border-2 border-white dark:border-gray-700" />
-                            </Link>
-                            <div>
-                                <Link to={`/profile/${opinion.user?.username}`} className="font-bold text-gray-900 dark:text-white hover:underline">
-                                    {opinion.user?.username || 'Kullanıcı'}
+                    <article className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-soft">
+                        <div className="p-6 md:p-8">
+                            <div className="flex items-center gap-3 mb-4">
+                                <Link to={`/profile/${opinion.user?.username}`}>
+                                    <UserAvatar user={opinion.user} size="md" className="w-12 h-12 rounded-full border-2 border-white dark:border-gray-700" />
                                 </Link>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {opinion.created_at ? formatDistanceToNow(new Date(opinion.created_at), { addSuffix: true, locale: tr }) : ''}
-                                </p>
+                                <div>
+                                    <Link to={`/profile/${opinion.user?.username}`} className="font-bold text-gray-900 dark:text-white hover:underline">
+                                        {opinion.user?.username || 'Kullanıcı'}
+                                    </Link>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {opinion.created_at ? formatDistanceToNow(new Date(opinion.created_at), { addSuffix: true, locale: tr }) : ''}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">{opinion.title}</h1>
+
+                            <div
+                                className="prose prose-gray dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-6 break-words [&>div]:mb-2 [&_b]:font-semibold [&_strong]:font-semibold"
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(opinion.content || '', { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span', 'img'] }) }}
+                            />
+
+                            {opinion.images?.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                                    {opinion.images.map((src, idx) => (
+                                        <img key={idx} src={ensureHttps(src)} alt="" className="rounded-xl w-full h-48 object-cover" />
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="flex items-center gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <button
+                                    type="button"
+                                    onClick={handleLike}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${isLiked ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                >
+                                    <FaHeart /> <span>{likesCount}</span>
+                                </button>
+                                <span className="flex items-center gap-2 text-gray-500">
+                                    <FaComment /> {opinion.comments_count ?? 0} yorum
+                                </span>
                             </div>
                         </div>
 
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">{opinion.title}</h1>
-
-                        <div
-                            className="prose prose-gray dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-6 break-words [&>div]:mb-2 [&_b]:font-semibold [&_strong]:font-semibold"
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(opinion.content || '', { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span', 'img'] }) }}
-                        />
-
-                        {opinion.images?.length > 0 && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                                {opinion.images.map((src, idx) => (
-                                    <img key={idx} src={ensureHttps(src)} alt="" className="rounded-xl w-full h-48 object-cover" />
-                                ))}
+                        {opinion.allow_comments && (
+                            <div className="border-t border-gray-100 dark:border-gray-700 p-6 md:p-8">
+                                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Yorumlar</h3>
+                                {user && (
+                                    <form onSubmit={handleSubmitComment} className="mb-6">
+                                        <textarea
+                                            value={commentText}
+                                            onChange={(e) => setCommentText(e.target.value)}
+                                            placeholder="Yorum yazın..."
+                                            rows={3}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-coral focus:border-transparent resize-none"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={!commentText.trim() || submittingComment}
+                                            className="mt-2 px-4 py-2 bg-coral text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50"
+                                        >
+                                            {submittingComment ? 'Gönderiliyor...' : 'Gönder'}
+                                        </button>
+                                    </form>
+                                )}
+                                {!user && (
+                                    <p className="text-gray-500 text-sm mb-4">Yorum yapmak için giriş yapın.</p>
+                                )}
+                                <div className="space-y-4">
+                                    {comments.map((c) => (
+                                        <div className="flex gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
+                                            <UserAvatar user={c.user} size="sm" className="w-10 h-10 rounded-full flex-shrink-0" />
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2 text-sm">
+                                                        <Link to={`/profile/${c.user?.username}`} className="font-bold text-gray-900 dark:text-white hover:underline">
+                                                            {c.user?.username || 'Kullanıcı'}
+                                                        </Link>
+                                                        <span className="text-gray-500 text-xs">
+                                                            {c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: tr }) : ''}
+                                                        </span>
+                                                    </div>
+                                                    {(user?.id === c.user_id || canModerate) && (
+                                                        <button
+                                                            onClick={() => openDeleteCommentModal(c.id)}
+                                                            className="text-gray-400 hover:text-red-500 transition-colors"
+                                                            title="Yorumu sil"
+                                                        >
+                                                            <FaTrash className="text-xs" />
+                                                        </button>
+                                                    )}
+                                                    {user && user.id !== c.user_id && (
+                                                        <button
+                                                            onClick={() => openHideCommentModal(c.id)}
+                                                            className="text-gray-400 hover:text-orange-500 transition-colors ml-2"
+                                                            title="Yorumu gizle (sadece sen görmezsin)"
+                                                        >
+                                                            <FaEyeSlash className="text-xs" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">{c.content}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {comments.length === 0 && <p className="text-gray-500 text-sm">Henüz yorum yok.</p>}
+                                </div>
                             </div>
                         )}
 
-                        <div className="flex items-center gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
-                            <button
-                                type="button"
-                                onClick={handleLike}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${isLiked ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                            >
-                                <FaHeart /> <span>{likesCount}</span>
-                            </button>
-                            <span className="flex items-center gap-2 text-gray-500">
-                                <FaComment /> {opinion.comments_count ?? 0} yorum
-                            </span>
-                        </div>
-                    </div>
-
-                    {opinion.allow_comments && (
-                        <div className="border-t border-gray-100 dark:border-gray-700 p-6 md:p-8">
-                            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Yorumlar</h3>
-                            {user && (
-                                <form onSubmit={handleSubmitComment} className="mb-6">
-                                    <textarea
-                                        value={commentText}
-                                        onChange={(e) => setCommentText(e.target.value)}
-                                        placeholder="Yorum yazın..."
-                                        rows={3}
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-coral focus:border-transparent resize-none"
-                                    />
-                                    <button
-                                        type="submit"
-                                        disabled={!commentText.trim() || submittingComment}
-                                        className="mt-2 px-4 py-2 bg-coral text-white font-semibold rounded-xl hover:bg-orange-600 disabled:opacity-50"
-                                    >
-                                        {submittingComment ? 'Gönderiliyor...' : 'Gönder'}
-                                    </button>
-                                </form>
-                            )}
-                            {!user && (
-                                <p className="text-gray-500 text-sm mb-4">Yorum yapmak için giriş yapın.</p>
-                            )}
-                            <div className="space-y-4">
-                                {comments.map((c) => (
-                                    <div className="flex gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
-                                        <UserAvatar user={c.user} size="sm" className="w-10 h-10 rounded-full flex-shrink-0" />
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <Link to={`/profile/${c.user?.username}`} className="font-bold text-gray-900 dark:text-white hover:underline">
-                                                        {c.user?.username || 'Kullanıcı'}
-                                                    </Link>
-                                                    <span className="text-gray-500 text-xs">
-                                                        {c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: tr }) : ''}
-                                                    </span>
-                                                </div>
-                                                {(user?.id === c.user_id || canModerate) && (
-                                                    <button
-                                                        onClick={() => handleDeleteComment(c.id)}
-                                                        className="text-gray-400 hover:text-red-500 transition-colors"
-                                                        title="Yorumu sil"
-                                                    >
-                                                        <FaTrash className="text-xs" />
-                                                    </button>
-                                                )}
-                                                {user && user.id !== c.user_id && (
-                                                    <button
-                                                        onClick={() => handleHideComment(c.id)}
-                                                        className="text-gray-400 hover:text-orange-500 transition-colors ml-2"
-                                                        title="Yorumu gizle (sadece sen görmezsin)"
-                                                    >
-                                                        <FaEyeSlash className="text-xs" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">{c.content}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {comments.length === 0 && <p className="text-gray-500 text-sm">Henüz yorum yok.</p>}
+                        {!opinion.allow_comments && (
+                            <div className="border-t border-gray-100 dark:border-gray-700 p-6 text-center text-gray-500 text-sm">
+                                Yorumlar bu yazı için kapatılmış.
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </article>
+                </div>
+            </MainLayout>
 
-                    {!opinion.allow_comments && (
-                        <div className="border-t border-gray-100 dark:border-gray-700 p-6 text-center text-gray-500 text-sm">
-                            Yorumlar bu yazı için kapatılmış.
-                        </div>
-                    )}
-                </article>
-            </div>
-        </MainLayout>
+            <ConfirmationModal
+                isOpen={deleteCommentModal.isOpen}
+                onClose={() => setDeleteCommentModal({ isOpen: false, commentId: null })}
+                onConfirm={handleDeleteComment}
+                title="Yorumu Sil"
+                message="Bu yorumu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                confirmText="Sil"
+                cancelText="Vazgeç"
+                isDangerous={true}
+            />
+
+            <ConfirmationModal
+                isOpen={hideCommentModal.isOpen}
+                onClose={() => setHideCommentModal({ isOpen: false, commentId: null })}
+                onConfirm={handleHideComment}
+                title="Yorumu Gizle"
+                message="Bu yorumu gizlemek istediğinize emin misiniz? Sadece siz görmezsiniz, diğer kullanıcılar etkilenmez."
+                confirmText="Gizle"
+                cancelText="Vazgeç"
+                isDangerous={false}
+            />
+        </>
     );
 };
 
