@@ -70,8 +70,6 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         !user.avatar.includes('default');
     const displayName = user?.name || user?.username || '?';
 
-    import { normalizeAvatarUrl } from '../utils/avatarUrl';
-
     if (hasAvatar) {
         return (
             <img
