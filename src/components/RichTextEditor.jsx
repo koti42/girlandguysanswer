@@ -1,9 +1,14 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { FaBold, FaItalic, FaImage, FaPalette } from 'react-icons/fa';
 
 const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ±n...', uploadImage }) => {
     const editorRef = useRef(null);
     const fileInputRef = useRef(null);
+    const [selectedImg, setSelectedImg] = useState(null);
+    const [overlayStyle, setOverlayStyle] = useState(null);
+    const isResizing = useRef(false);
+    const startX = useRef(0);
+    const startWidth = useRef(0);
 
     useEffect(() => {
         if (editorRef.current && value !== editorRef.current.innerHTML) {
@@ -11,10 +16,90 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
         }
     }, [value]);
 
+    useEffect(() => {
+        const editor = editorRef.current;
+        if (!editor) return;
+
+        const handleClick = (e) => {
+            if (e.target.tagName === 'IMG') {
+                setSelectedImg(e.target);
+                updateOverlayPosition(e.target);
+            } else {
+                if (!e.target.classList.contains('resizer-handle')) {
+                    setSelectedImg(null);
+                    setOverlayStyle(null);
+                }
+            }
+        };
+
+        const handleScroll = () => {
+            if (selectedImg) updateOverlayPosition(selectedImg);
+        };
+
+        editor.addEventListener('click', handleClick);
+        editor.addEventListener('keydown', () => { setSelectedImg(null); setOverlayStyle(null); });
+        editor.addEventListener('scroll', handleScroll);
+
+        return () => {
+            editor.removeEventListener('click', handleClick);
+            editor.removeEventListener('keydown', () => { });
+            editor.removeEventListener('scroll', handleScroll);
+        };
+    }, [selectedImg]);
+
+    useEffect(() => {
+        if (!selectedImg) return;
+        const resizeObserver = new ResizeObserver(() => {
+            updateOverlayPosition(selectedImg);
+        });
+        resizeObserver.observe(selectedImg);
+        return () => resizeObserver.disconnect();
+    }, [selectedImg]);
+
+
+    const updateOverlayPosition = (img) => {
+        if (!editorRef.current || !img) return;
+        const editorRect = editorRef.current.getBoundingClientRect();
+        const imgRect = img.getBoundingClientRect();
+
+        setOverlayStyle({
+            top: imgRect.top - editorRect.top + editorRef.current.scrollTop,
+            left: imgRect.left - editorRect.left + editorRef.current.scrollLeft,
+            width: imgRect.width,
+            height: imgRect.height
+        });
+    };
+
+    const handleMouseDown = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        isResizing.current = true;
+        startX.current = e.clientX;
+        startWidth.current = selectedImg.offsetWidth;
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isResizing.current || !selectedImg) return;
+        const diff = e.clientX - startX.current;
+        const newWidth = Math.max(50, startWidth.current + diff);
+
+        selectedImg.style.width = `${newWidth}px`;
+        updateOverlayPosition(selectedImg);
+    };
+
+    const handleMouseUp = () => {
+        isResizing.current = false;
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        updateContent();
+    };
+
     const execCommand = (command, cmdValue = null) => {
         document.execCommand(command, false, cmdValue);
         editorRef.current?.focus();
-        // Trigger update after command
         setTimeout(updateContent, 0);
     };
 
@@ -53,7 +138,6 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
     const updateContent = () => {
         if (onChange && editorRef.current) {
             const content = editorRef.current.innerHTML;
-            // Only update if content actually changed
             if (content !== value) {
                 onChange(content);
             }
@@ -67,7 +151,7 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
     };
 
     return (
-        <div className="border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20 transition-all">
+        <div className="border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20 transition-all relative">
             {/* Toolbar */}
             <div className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-3 py-2 flex items-center gap-1 flex-wrap">
                 <button
@@ -103,7 +187,6 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
                 <button
                     type="button"
                     onMouseDown={(e) => {
-                        // Form submit / focus taÅŸmasÄ±nÄ± engelle
                         e.preventDefault();
                         e.stopPropagation();
                     }}
@@ -127,19 +210,41 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
             </div>
 
             {/* Editor */}
-            <div
-                ref={editorRef}
-                contentEditable
-                onInput={updateContent}
-                onPaste={handlePaste}
-                data-placeholder={placeholder}
-                className="min-h-[200px] max-h-[600px] overflow-y-auto resize-y p-4 outline-none dark:bg-gray-800 dark:text-white prose prose-sm max-w-none"
-                suppressContentEditableWarning
-                style={{
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word'
-                }}
-            />
+            <div className="relative">
+                <div
+                    ref={editorRef}
+                    contentEditable
+                    onInput={updateContent}
+                    onPaste={handlePaste}
+                    data-placeholder={placeholder}
+                    className="min-h-[200px] max-h-[600px] overflow-y-auto resize-y p-4 outline-none dark:bg-gray-800 dark:text-white prose prose-sm max-w-none"
+                    suppressContentEditableWarning
+                    style={{
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word'
+                    }}
+                />
+
+                {/* Resizer Overlay */}
+                {selectedImg && overlayStyle && (
+                    <div
+                        className="absolute border-2 border-coral pointer-events-none"
+                        style={{
+                            top: overlayStyle.top,
+                            left: overlayStyle.left,
+                            width: overlayStyle.width,
+                            height: overlayStyle.height,
+                            zIndex: 10
+                        }}
+                    >
+                        {/* Right Handle */}
+                        <div
+                            onMouseDown={handleMouseDown}
+                            className="resizer-handle absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-8 bg-coral rounded-md cursor-ew-resize pointer-events-auto shadow-md"
+                        />
+                    </div>
+                )}
+            </div>
 
             <style>{`
                 [contenteditable]:focus {
@@ -155,6 +260,10 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
                     height: auto;
                     border-radius: 8px;
                     margin: 8px 0;
+                    cursor: pointer;
+                }
+                [contenteditable] img:hover {
+                    opacity: 0.95;
                 }
                 [contenteditable] p {
                     margin: 0;
