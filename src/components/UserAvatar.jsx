@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaUserSecret } from 'react-icons/fa';
+import { normalizeAvatarUrl } from '../utils/avatarUrl';
 
 const UserAvatar = ({ user, size = "md", className = "" }) => {
     const sizeClasses = {
@@ -69,21 +70,7 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         !user.avatar.includes('default');
     const displayName = user?.name || user?.username || '?';
 
-    const normalizeAvatarUrl = (rawUrl) => {
-        if (!rawUrl) return rawUrl;
-
-        let url = String(rawUrl).trim();
-        if (!url) return url;
-
-        url = url.replace(/^(https?:\/\/)+/i, '');
-
-        url = url.replace(
-            /^herkeslersoruyor\.com\.tr\/herkeslersoruyor\.panalix\.com\.tr\//i,
-            'herkeslersoruyor.panalix.com.tr/'
-        );
-
-        return `https://${url}`;
-    };
+    import { normalizeAvatarUrl } from '../utils/avatarUrl';
 
     if (hasAvatar) {
         return (

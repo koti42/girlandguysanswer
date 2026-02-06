@@ -13,6 +13,7 @@ import { communityAPI, usersAPI } from '../../../services/api';
 import { toast } from 'react-hot-toast';
 import { echo } from '../../../services/echo';
 import { useAuth } from '../../../context/AuthContext';
+import { normalizeAvatarUrl } from '../../../utils/avatarUrl';
 
 const SpeakerAvatar = ({ participant, onClick, isHost }) => {
     const isSpeaking = useIsSpeaking(participant, { threshold: -60 });
@@ -42,7 +43,7 @@ const SpeakerAvatar = ({ participant, onClick, isHost }) => {
             <div className={`w-24 h-24 rounded-full overflow-hidden border-4 transition-all duration-300 ${shouldShowSpeaking ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)]' : 'border-transparent'}`}>
                 {metadata.avatar ? (
                     <img
-                        src={metadata.avatar}
+                        src={normalizeAvatarUrl(metadata.avatar)}
                         alt={participant.name}
                         className="w-full h-full object-cover"
                     />
@@ -555,7 +556,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
                                                     <img
-                                                        src={JSON.parse(p.metadata || '{}').avatar}
+                                                        src={normalizeAvatarUrl(JSON.parse(p.metadata || '{}').avatar)}
                                                         className="w-full h-full object-cover"
                                                     />
                                                 </div>
@@ -592,7 +593,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
                         <div className="flex items-center gap-4 mb-6">
                             <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
                                 <img
-                                    src={JSON.parse(selectedParticipant.metadata || '{}').avatar || `https://ui-avatars.com/api/?name=${selectedParticipant.name}`}
+                                    src={normalizeAvatarUrl(JSON.parse(selectedParticipant.metadata || '{}').avatar) || `https://ui-avatars.com/api/?name=${selectedParticipant.name}`}
                                     alt={selectedParticipant.name}
                                     className="w-full h-full object-cover"
                                 />
@@ -697,7 +698,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
                         >
                             <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center relative">
                                 {participant.metadata && JSON.parse(participant.metadata).avatar ? (
-                                    <img src={JSON.parse(participant.metadata).avatar} className="w-full h-full rounded-full" />
+                                    <img src={normalizeAvatarUrl(JSON.parse(participant.metadata).avatar)} className="w-full h-full rounded-full" />
                                 ) : (
                                     <span className="font-bold text-gray-400">{participant.name?.[0]}</span>
                                 )}

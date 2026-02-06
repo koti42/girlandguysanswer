@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaMicrophone, FaKeyboard, FaUserFriends, FaLock } from 'react-icons/fa';
+import { normalizeAvatarUrl } from '../../utils/avatarUrl';
 
 const CommunityCard = ({ community, onClick }) => {
     const isVoice = community.type === 'voice';
@@ -70,7 +71,7 @@ const CommunityCard = ({ community, onClick }) => {
                         <div className="relative">
                             {community.owner?.avatar ? (
                                 <img
-                                    src={community.owner.avatar}
+                                    src={normalizeAvatarUrl(community.owner.avatar)}
                                     alt={community.owner.username}
                                     className="w-8 h-8 rounded-full border-2 border-white/80 shadow-sm"
                                 />
