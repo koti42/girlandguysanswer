@@ -80,6 +80,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const [showReportModal, setShowReportModal] = useState(false);
     const [deleteCommentModal, setDeleteCommentModal] = useState({ isOpen: false, commentId: null, type: null, targetId: null });
     const [hideCommentModal, setHideCommentModal] = useState({ isOpen: false, commentId: null, type: null, targetId: null });
+    const [deleteAnswerModal, setDeleteAnswerModal] = useState({ isOpen: false, answerId: null });
+    const [hideAnswerModal, setHideAnswerModal] = useState({ isOpen: false, answerId: null });
 
     const openLikersModal = (type, id) => {
         if (!currentUser) {
@@ -181,6 +183,48 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         }
     };
 
+    const openDeleteAnswerModal = (answerId) => {
+        if (!currentUser) {
+            displayToast('Cevap silmek için giriş yapmalısınız.', 'error');
+            return;
+        }
+        setDeleteAnswerModal({ isOpen: true, answerId });
+    };
+
+    const handleDeleteAnswer = async () => {
+        const { answerId } = deleteAnswerModal;
+        if (!answerId) return;
+
+        try {
+            await answersAPI.delete(answerId);
+            setAnswers(prev => prev.filter(a => a.id !== answerId));
+            displayToast('Cevap başarıyla silindi.', 'success');
+        } catch (err) {
+            displayToast(err.response?.data?.message || 'Cevap silinemedi.', 'error');
+        }
+    };
+
+    const openHideAnswerModal = (answerId) => {
+        if (!currentUser) {
+            displayToast('Cevap gizlemek için giriş yapmalısınız.', 'error');
+            return;
+        }
+        setHideAnswerModal({ isOpen: true, answerId });
+    };
+
+    const handleHideAnswer = async () => {
+        const { answerId } = hideAnswerModal;
+        if (!answerId) return;
+
+        try {
+            await answersAPI.hide(answerId);
+            setAnswers(prev => prev.filter(a => a.id !== answerId));
+            displayToast('Cevap gizlendi.', 'success');
+        } catch (err) {
+            displayToast(err.response?.data?.message || 'Cevap gizlenemedi.', 'error');
+        }
+    };
+
     const openGifPicker = (context, key) => {
         setGifPickerContext({ context, key });
         setShowGifPicker(true);
@@ -222,7 +266,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             setLoading(false);
             setQuestion(initialQuestion);
             setAnswers(initialQuestion.answers || []);
-            // Initial hasMore checks
             checkInitialPagination(initialQuestion);
             return;
         }
@@ -562,9 +605,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         const commentGradientClass = comment.user?.gender === 'female'
             ? 'bg-gradient-to-br from-pink-100 to-pink-50 dark:from-pink-900/30 dark:to-pink-900/20 border-pink-400 dark:border-pink-600'
             : 'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-900/30 dark:to-cyan-900/20 border-cyan-400 dark:border-cyan-600';
-        const marginClasses = ['ml-0', 'ml-6', 'ml-12', 'ml-16'];
+        const marginClasses = ['ml-0', 'ml-3 md:ml-6', 'ml-6 md:ml-10', 'ml-8 md:ml-12'];
         const marginLeft = marginClasses[Math.min(level, 3)];
         const isReplyingToThis = replyingTo?.commentId === comment.id;
+
+        const isMainComment = level === 0;
+        const commentUserId = comment.user_id || comment.user?.id;
+        const isCommentOwner = currentUser?.id === commentUserId;
+        const isQuestionOwner = type === 'question' && (question?.isOwner || question?.user?.id === currentUser?.id);
+        const answer = type === 'answer' ? answers.find(a => a.id === targetId) : null;
+        const isAnswerOwner = type === 'answer' && (answer?.user?.id === currentUser?.id);
+        const canDeleteComment = isCommentOwner || canModerate || (isMainComment && (isQuestionOwner || isAnswerOwner));
 
         return (
             <div key={comment.id} className="space-y-3">
@@ -621,7 +672,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 >
                                     <FaReply className="text-xs" /> <span>{isReplyingToThis ? 'İptal' : 'Cevapla'}</span>
                                 </button>
-                                {(currentUser?.id === comment.user_id || canModerate) && (
+                                {canDeleteComment && (
                                     <button
                                         onClick={() => openDeleteCommentModal(comment.id, type, targetId)}
                                         className="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1"
@@ -630,7 +681,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         <FaTrash className="text-xs" /> <span>Sil</span>
                                     </button>
                                 )}
-                                {currentUser && currentUser.id !== comment.user_id && (
+                                {currentUser && currentUser.id !== commentUserId && (
                                     <button
                                         onClick={() => openHideCommentModal(comment.id, type, targetId)}
                                         className="text-xs text-gray-500 hover:text-orange-500 transition-colors flex items-center gap-1"
@@ -665,12 +716,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-2 text-sm"
                                     autoFocus
                                 />
-                                <div className="flex justify-between items-center">
+                                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 sm:gap-0">
                                     <div className="flex items-center gap-2">
                                         <button
                                             type="button"
                                             onClick={() => openGifPicker('reply', comment.id)}
-                                            className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:text-coral hover:bg-gray-200 transition-colors"
+                                            className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:text-coral hover:bg-gray-200 transition-colors flex-shrink-0"
                                             title="GIF Ekle"
                                         >
                                             <FaImage className="text-xs" />
@@ -678,12 +729,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         <button
                                             type="button"
                                             onClick={() => setReplyAnonymous(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-xs ${replyAnonymous[comment.id] ? 'bg-purple-100 text-purple-700 border-2 border-purple-300' : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'}`}
+                                            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg font-medium transition-all text-xs whitespace-nowrap ${replyAnonymous[comment.id] ? 'bg-purple-100 text-purple-700 border-2 border-purple-300' : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'}`}
                                         >
-                                            <FaUserSecret /> <span>{replyAnonymous[comment.id] ? 'Gizli yanıt' : 'Gizli Üye olarak yanıtla'}</span>
+                                            <FaUserSecret className="flex-shrink-0" /> <span className="hidden sm:inline">{replyAnonymous[comment.id] ? 'Gizli' : 'Gizli Üye'}</span>
                                         </button>
                                     </div>
-                                    <button type="submit" disabled={!replyTexts[comment.id]?.trim() && !replyGifUrls[comment.id]} className="bg-coral text-white font-semibold py-1.5 px-3 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs">Yanıtla</button>
+                                    <button type="submit" disabled={!replyTexts[comment.id]?.trim() && !replyGifUrls[comment.id]} className="bg-coral text-white font-semibold py-1.5 px-4 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs w-full sm:w-auto">Yanıtla</button>
                                 </div>
                             </form>
                         </div>
@@ -693,7 +744,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     <div className="space-y-3">
                         {comment.replies.map(reply => renderComment(reply, type, targetId, level + 1, currentMainCommentId))}
                         {(repliesPagination[comment.id]?.hasMore || (!repliesPagination[comment.id] && comment.replies.length >= 5)) && (
-                            <div className={`${marginClasses[Math.min(level + 1, 3)]} pt-1`}>
+                            <div className={`ml-3 md:ml-6 pt-1`}>
                                 <button onClick={() => loadMoreReplies(comment.id)} disabled={repliesPagination[comment.id]?.loading} className="text-xs font-semibold text-coral hover:text-coral-dark flex items-center gap-1 transition-colors">
                                     {repliesPagination[comment.id]?.loading ? (
                                         <><div className="animate-spin rounded-full h-3 w-3 border-2 border-coral border-t-transparent"></div> Yükleniyor...</>
@@ -1042,12 +1093,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 rows={4}
                                 className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-4"
                             />
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
                                         onClick={() => openGifPicker('answer', 'answer')}
-                                        className="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-coral transition-colors"
+                                        className="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-coral transition-colors flex-shrink-0"
                                         title="GIF Ekle"
                                     >
                                         <FaImage />
@@ -1055,12 +1106,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     <button
                                         type="button"
                                         onClick={() => setIsAnswerAnonymous(!isAnswerAnonymous)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isAnswerAnonymous ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-medium transition-all text-sm ${isAnswerAnonymous ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
                                     >
-                                        <FaUserSecret className="text-lg" /><span className="text-sm">{isAnswerAnonymous ? 'Gizli cevap' : 'Gizli Üye olarak cevapla'}</span>
+                                        <FaUserSecret className="flex-shrink-0" /><span className="hidden sm:inline">{isAnswerAnonymous ? 'Gizli cevap' : 'Gizli Üye olarak cevapla'}</span><span className="sm:hidden">{isAnswerAnonymous ? 'Gizli' : 'Gizli Üye'}</span>
                                     </button>
                                 </div>
-                                <button type="submit" disabled={!answerText.trim() && !answerGifUrl} className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-2xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">Cevap Gönder</button>
+                                <button type="submit" disabled={!answerText.trim() && !answerGifUrl} className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-2xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">Cevap Gönder</button>
                             </div>
                         </form>
                     </div>
@@ -1146,7 +1197,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                     </div>
                                                 )}
 
-                                                <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                                                     <div className="flex items-center gap-2">
                                                         <button
                                                             onClick={(e) => handleLike(e, 'answer', answer.id)}
@@ -1164,6 +1215,25 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                     <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                                         <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
                                                     </button>
+                                                    {/* Cevap Sil/Gizle Butonları */}
+                                                    {(answer.user?.id === currentUser?.id || canModerate) && (
+                                                        <button
+                                                            onClick={() => openDeleteAnswerModal(answer.id)}
+                                                            className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors text-sm"
+                                                            title="Cevabı sil"
+                                                        >
+                                                            <FaTrash className="text-xs" /> <span>Sil</span>
+                                                        </button>
+                                                    )}
+                                                    {currentUser && answer.user?.id !== currentUser?.id && (
+                                                        <button
+                                                            onClick={() => openHideAnswerModal(answer.id)}
+                                                            className="flex items-center gap-1 text-gray-500 hover:text-orange-500 transition-colors text-sm"
+                                                            title="Cevabı gizle (sadece sen görmezsin)"
+                                                        >
+                                                            <FaEyeSlash className="text-xs" /> <span>Gizle</span>
+                                                        </button>
+                                                    )}
                                                 </div>
 
                                                 {commentingOn?.type === 'answer' && commentingOn?.id === answer.id && (
@@ -1188,12 +1258,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-3"
                                                             autoFocus
                                                         />
-                                                        <div className="flex items-center justify-between">
+                                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-2">
                                                             <div className="flex items-center gap-2">
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => openGifPicker('comment', answerCommentKey)}
-                                                                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-coral transition-colors"
+                                                                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-coral transition-colors flex-shrink-0"
                                                                     title="GIF Ekle"
                                                                 >
                                                                     <FaImage className="text-sm" />
@@ -1201,14 +1271,14 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setCommentAnonymous(prev => ({ ...prev, [answerCommentKey]: !prev[answerCommentKey] }))}
-                                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all text-xs ${commentAnonymous[answerCommentKey] ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                                                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg font-medium transition-all text-xs ${commentAnonymous[answerCommentKey] ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
                                                                 >
-                                                                    <FaUserSecret /><span>{commentAnonymous[answerCommentKey] ? 'Gizli yorum' : 'Gizli Üye olarak yorum yap'}</span>
+                                                                    <FaUserSecret className="flex-shrink-0" /><span className="sm:hidden">Gizli</span><span className="hidden sm:inline">{commentAnonymous[answerCommentKey] ? 'Gizli yorum' : 'Gizli Üye'}</span>
                                                                 </button>
                                                             </div>
                                                             <div className="flex gap-2">
-                                                                <button type="button" onClick={() => setCommentingOn(null)} className="py-2 px-4 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm">İptal</button>
-                                                                <button type="submit" disabled={!commentTexts[answerCommentKey]?.trim() && !commentGifUrls[answerCommentKey]} className="bg-coral text-white font-semibold py-1.5 px-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm">Gönder</button>
+                                                                <button type="button" onClick={() => setCommentingOn(null)} className="py-2 px-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm flex-1 sm:flex-none">İptal</button>
+                                                                <button type="submit" disabled={!commentTexts[answerCommentKey]?.trim() && !commentGifUrls[answerCommentKey]} className="bg-coral text-white font-semibold py-1.5 px-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm flex-1 sm:flex-none">Gönder</button>
                                                             </div>
                                                         </div>
                                                     </form>
@@ -1284,6 +1354,28 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                 onConfirm={handleHideComment}
                 title="Yorumu Gizle"
                 message="Bu yorumu gizlemek istediğinize emin misiniz? Sadece siz görmezsiniz, diğer kullanıcılar etkilenmez."
+                confirmText="Gizle"
+                cancelText="Vazgeç"
+                isDangerous={false}
+            />
+
+            <ConfirmationModal
+                isOpen={deleteAnswerModal.isOpen}
+                onClose={() => setDeleteAnswerModal({ isOpen: false, answerId: null })}
+                onConfirm={handleDeleteAnswer}
+                title="Cevabı Sil"
+                message="Bu cevabı silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve cevabın altındaki tüm yorumlar da silinecektir."
+                confirmText="Sil"
+                cancelText="Vazgeç"
+                isDangerous={true}
+            />
+
+            <ConfirmationModal
+                isOpen={hideAnswerModal.isOpen}
+                onClose={() => setHideAnswerModal({ isOpen: false, answerId: null })}
+                onConfirm={handleHideAnswer}
+                title="Cevabı Gizle"
+                message="Bu cevabı gizlemek istediğinize emin misiniz? Sadece siz görmezsiniz, diğer kullanıcılar etkilenmez."
                 confirmText="Gizle"
                 cancelText="Vazgeç"
                 isDangerous={false}

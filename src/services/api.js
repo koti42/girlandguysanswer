@@ -73,7 +73,9 @@ export const questionsAPI = {
 
 export const answersAPI = {
     selectBestAnswer: (answerId) => api.post(`/answers/${answerId}/best`),
+    delete: (answerId) => api.delete(`/answers/${answerId}`),
     hide: (answerId) => api.post(`/answers/${answerId}/hide`),
+    unhide: (answerId) => api.delete(`/answers/${answerId}/hide`),
 };
 
 export const pollsAPI = {
