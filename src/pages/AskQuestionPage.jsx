@@ -113,6 +113,19 @@ const AskQuestionPage = () => {
         setToast({ type, message });
     };
 
+    const uploadImage = async (file) => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await questionsAPI.editorUpload(formData);
+            return response.data.data.url;
+        } catch (error) {
+            console.error('Resim yüklenirken hata:', error);
+            showToast('error', 'Resim yüklenirken bir hata oluştu');
+            return null;
+        }
+    };
+
     const handleSaveDraft = () => {
         if (!formData.title.trim()) {
             showToast('warning', 'Taslağı kaydetmek için en azından bir başlık girin');
@@ -438,6 +451,7 @@ const AskQuestionPage = () => {
                                 value={formData.description}
                                 onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
                                 placeholder="Sorunuzla ilgili daha fazla detay paylaşabilirsiniz..."
+                                uploadImage={uploadImage}
                             />
                             <span className="text-gray-400 dark:text-gray-500 text-sm block mt-2">Metin editörü ile zengin içerik oluşturabilirsiniz</span>
                         </div>

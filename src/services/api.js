@@ -68,7 +68,10 @@ export const questionsAPI = {
     getQuestionComments: (questionId, params) => api.get(`/questions/${questionId}/comments`, { params }),
     getAnswerComments: (answerId, params) => api.get(`/answers/${answerId}/comments`, { params }),
     toggleLike: (data) => api.post('/likes', data),
-    getLikers: (params) => api.get('/likes', { params })
+    getLikers: (params) => api.get('/likes', { params }),
+    editorUpload: (formData) => api.post('/questions/editor/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
 };
 
 export const answersAPI = {
