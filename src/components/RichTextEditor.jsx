@@ -63,8 +63,8 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
         const imgRect = img.getBoundingClientRect();
 
         setOverlayStyle({
-            top: imgRect.top - editorRect.top + editorRef.current.scrollTop,
-            left: imgRect.left - editorRect.left + editorRef.current.scrollLeft,
+            top: imgRect.top - editorRect.top,
+            left: imgRect.left - editorRect.left,
             width: imgRect.width,
             height: imgRect.height
         });
