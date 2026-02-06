@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import ProfileAvatar from '../components/ProfileAvatar';
 
 const LeaderboardPage = () => {
-    const [activeTab, setActiveTab] = useState('general'); 
+    const [activeTab, setActiveTab] = useState('general');
     const [loading, setLoading] = useState(true);
     const [leaderboard, setLeaderboard] = useState([]);
 
@@ -57,7 +57,7 @@ const LeaderboardPage = () => {
             <div className="max-w-4xl mx-auto">
                 <div className="text-center mb-10">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                        Liderlik Tablosu 🏆
+                        Üstatlar 🏆
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400">
                         Topluluğun en aktif ve sevilen üyeleri
@@ -70,8 +70,8 @@ const LeaderboardPage = () => {
                         <button
                             onClick={() => setActiveTab('general')}
                             className={`px-6 py-2.5 rounded-xl font-semibold transition-all ${activeTab === 'general'
-                                    ? 'bg-gradient-to-r from-coral to-orange-400 text-white shadow-md'
-                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                ? 'bg-gradient-to-r from-coral to-orange-400 text-white shadow-md'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                                 }`}
                         >
                             Genel
@@ -79,8 +79,8 @@ const LeaderboardPage = () => {
                         <button
                             onClick={() => setActiveTab('female')}
                             className={`px-6 py-2.5 rounded-xl font-semibold transition-all ${activeTab === 'female'
-                                    ? 'bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-md'
-                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                ? 'bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-md'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                                 }`}
                         >
                             Kadınlar
@@ -88,8 +88,8 @@ const LeaderboardPage = () => {
                         <button
                             onClick={() => setActiveTab('male')}
                             className={`px-6 py-2.5 rounded-xl font-semibold transition-all ${activeTab === 'male'
-                                    ? 'bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-md'
-                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                ? 'bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-md'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                                 }`}
                         >
                             Erkekler
@@ -124,8 +124,8 @@ const LeaderboardPage = () => {
                                             user={item.user}
                                             size="md"
                                             className={`w-12 h-12 md:w-14 md:h-14 border-2 ${(item.rank || index + 1) === 1 ? 'border-yellow-400' :
-                                                    (item.rank || index + 1) === 2 ? 'border-gray-300' :
-                                                        (item.rank || index + 1) === 3 ? 'border-orange-400' : 'border-transparent'
+                                                (item.rank || index + 1) === 2 ? 'border-gray-300' :
+                                                    (item.rank || index + 1) === 3 ? 'border-orange-400' : 'border-transparent'
                                                 }`}
                                         />
                                         {(item.rank || index + 1) === 1 && (

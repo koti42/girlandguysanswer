@@ -60,7 +60,6 @@ const Header = ({ onSearch }) => {
     };
 
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -71,7 +70,6 @@ const Header = ({ onSearch }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Instant Search with Debounce
     useEffect(() => {
         const timeoutId = setTimeout(async () => {
             if (searchQuery.trim().length >= 2) {
@@ -108,10 +106,9 @@ const Header = ({ onSearch }) => {
         }
     };
 
-    // Navigate to single result
     const handleResultClick = (slug) => {
         setShowDropdown(false);
-        setSearchQuery(''); // Optional: clear search after selection
+        setSearchQuery('');
         navigate(`/question/${slug}`);
     };
 
@@ -245,7 +242,7 @@ const Header = ({ onSearch }) => {
                         </button>
 
                         {/* Questions Button */}
-                        <button 
+                        <button
                             onClick={openQuestionsModal}
                             className="hidden sm:block text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm"
                         >
@@ -255,7 +252,7 @@ const Header = ({ onSearch }) => {
                         {/* Communities Button */}
                         <Link to="/communities" className="hidden sm:block">
                             <button className="text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm">
-                                Topluluk
+                                Meydan
                             </button>
                         </Link>
 
@@ -264,11 +261,10 @@ const Header = ({ onSearch }) => {
                             to="/ask"
                             className="bg-gradient-to-r from-coral to-orange-400 text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 rounded-full font-semibold hover:shadow-lg transition-all duration-300 text-xs sm:text-sm md:text-base whitespace-nowrap"
                         >
-                            <span className="hidden sm:inline">Soru Sor</span>
+                            <span className="hidden sm:inline">Sor Gitsin</span>
                             <span className="sm:hidden">+</span>
                         </Link>
 
-                        {/* Desktop Auth Buttons - Only show if NOT authenticated */}
 
 
                         {/* Messages Button */}
@@ -282,7 +278,6 @@ const Header = ({ onSearch }) => {
 
                         {/* Notifications */}
                         <NotificationBell />
-                        {/* Profile Picture */}
 
 
                         {/* User Menu or Auth Buttons */}
@@ -305,7 +300,7 @@ const Header = ({ onSearch }) => {
                                             className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                         >
                                             <FaUser className="text-gray-400" />
-                                            Profilim
+                                            Ben
                                         </Link>
                                         <Link
                                             to="/messages"
@@ -441,7 +436,7 @@ const Header = ({ onSearch }) => {
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
                             <FaPoll className="text-xl text-coral flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Anketli Sorular</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Nabız</span>
                         </button>
 
                         <button
@@ -452,7 +447,7 @@ const Header = ({ onSearch }) => {
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
                             <FaComment className="text-xl text-coral flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Görüşler</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Benceler</span>
                         </button>
 
                         <Link
@@ -461,12 +456,12 @@ const Header = ({ onSearch }) => {
                             className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                         >
                             <FaUsers className="text-xl text-coral" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Topluluk</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Meydan</span>
                         </Link>
 
                         <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
                         <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">
-                            Keşfet
+                            Pusula
                         </p>
 
                         <button
@@ -477,7 +472,7 @@ const Header = ({ onSearch }) => {
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
                             <FaCompass className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Keşfet</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Pusula</span>
                         </button>
 
                         <button
@@ -488,7 +483,7 @@ const Header = ({ onSearch }) => {
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
                             <FaFire className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Popüler</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Gündem</span>
                         </button>
 
                         <button
@@ -499,7 +494,7 @@ const Header = ({ onSearch }) => {
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
                             <FaLifeRing className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Yardım Bekleyenler</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Dayanışma</span>
                         </button>
 
                         <button
@@ -510,7 +505,7 @@ const Header = ({ onSearch }) => {
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
                             <FaStar className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">BiBilenler</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Üstatlar</span>
                         </button>
 
                         <button
@@ -521,7 +516,7 @@ const Header = ({ onSearch }) => {
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
                             <FaRobot className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Yapay Zeka</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Akıl Küpü</span>
                         </button>
 
                         {isAuthenticated ? (
@@ -532,7 +527,7 @@ const Header = ({ onSearch }) => {
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                                 >
                                     <FaQuestionCircle className="text-xl text-coral" />
-                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Soru Sor</span>
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Sor Gitsin</span>
                                 </Link>
                                 <Link
                                     to="/messages"
@@ -556,7 +551,7 @@ const Header = ({ onSearch }) => {
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                                 >
                                     <FaUser className="text-xl text-coral" />
-                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Profilim</span>
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Ben</span>
                                 </Link>
                                 <Link
                                     to="/settings"
@@ -610,21 +605,19 @@ const Header = ({ onSearch }) => {
                 </div>
             </div>
 
-{/* Mega Menu Modal */}
             {isQuestionsModalOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center animate-in fade-in duration-200 p-4 pt-8"
                     onClick={() => setIsQuestionsModalOpen(false)}
                 >
-                    <div 
+                    <div
                         className="bg-white dark:bg-gray-800 w-full max-w-6xl max-h-[85vh] flex animate-in zoom-in-95 duration-300 overflow-hidden rounded-2xl shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Left Side - 2 Column Grid Menu */}
                         <div className="w-full lg:w-2/3 bg-white dark:bg-gray-800 overflow-hidden flex flex-col">
                             {/* Header */}
                             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Keşfet</h2>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Pusula</h2>
                                 <button
                                     onClick={() => setIsQuestionsModalOpen(false)}
                                     className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -649,7 +642,7 @@ const Header = ({ onSearch }) => {
                                                 <FaCompass />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Keşfet</h3>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Pusula</h3>
                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">HerkeslerSoruyor'da şu an neler oluyor, hemen gör.</p>
                                             </div>
                                         </div>
@@ -668,7 +661,7 @@ const Header = ({ onSearch }) => {
                                                 <FaFire />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Popüler</h3>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Gündem</h3>
                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Günün çok konuşulanlarına göz at.</p>
                                             </div>
                                         </div>
@@ -687,7 +680,7 @@ const Header = ({ onSearch }) => {
                                                 <FaLifeRing />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Yardım Bekleyenler</h3>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Dayanışma</h3>
                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Desteğini bekleyen sorular, yardımcı cevaplar.</p>
                                             </div>
                                         </div>
@@ -706,8 +699,8 @@ const Header = ({ onSearch }) => {
                                                 <FaStar />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">BiBilenler</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Alanında uzman profesyonel BiBilenlere danış.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Üstatlar</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Alanında uzman profesyonel Üstatlara danış.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -725,14 +718,13 @@ const Header = ({ onSearch }) => {
                                                 <FaRobot />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Yapay Zeka</h3>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Akıl Küpü</h3>
                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Yapay zeka fenomenleri sorularını cevaplıyor, hemen sor!</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Sorular - Tıklanabilir */}
-                                    <div 
+                                    <div
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
                                             navigate('/questions');
@@ -763,7 +755,7 @@ const Header = ({ onSearch }) => {
                                                 <FaComment />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Görüşler</h3>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Benceler</h3>
                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Konular hakkında yazılar oku, kendi görüşünü paylaş.</p>
                                             </div>
                                         </div>
@@ -782,7 +774,7 @@ const Header = ({ onSearch }) => {
                                                 <FaPoll />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Anketler</h3>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Nabız</h3>
                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">İlgi çekici anketlere oy ver, gündemi belirle.</p>
                                             </div>
                                         </div>
@@ -859,9 +851,9 @@ const Header = ({ onSearch }) => {
                                     <h3 className="font-bold text-gray-900 dark:text-white text-lg">
                                         Konular <span className="font-normal text-gray-600 dark:text-gray-400">({categories.length})</span>
                                     </h3>
-                                    <Link 
-                                        to="/questions" 
-                                        onClick={() => setIsQuestionsModalOpen(false)} 
+                                    <Link
+                                        to="/questions"
+                                        onClick={() => setIsQuestionsModalOpen(false)}
                                         className="px-2.5 py-1 rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                     >
                                         Tümü
@@ -885,7 +877,7 @@ const Header = ({ onSearch }) => {
                                                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group"
                                             >
                                                 {/* Category Icon */}
-                                                <div 
+                                                <div
                                                     style={{ backgroundColor: cat.color || '#6B7280' }}
                                                     className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center text-white"
                                                 >

@@ -1,27 +1,31 @@
 import React from 'react';
 import Header from '../components/Header';
 
-const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false }) => {
+const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false, fullWidth = false, showMobileFooter = false }) => {
     return (
         <div className="min-h-screen bg-background dark:bg-gray-900 font-sans text-text-dark dark:text-gray-100 transition-colors">
             <Header onSearch={onSearch} />
-            <main className={`max-w-7xl mx-auto ${noMobilePadding ? 'px-0 py-0' : 'px-3 py-4'} md:px-6 md:py-6 transition-all duration-300`}>
-                <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
-                    {/* Main Feed */}
-                    <div className={`w-full ${sidebar ? 'lg:w-[68%]' : ''} flex flex-col gap-4 md:gap-6`}>
-                        {children}
-                    </div>
+            <main className={`${fullWidth ? '' : 'max-w-7xl mx-auto md:px-6 md:py-6'} ${noMobilePadding || fullWidth ? 'px-0 py-0' : 'px-3 py-4'} transition-all duration-300`}>
+                {fullWidth ? (
+                    children
+                ) : (
+                    <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
+                        {/* Main Feed */}
+                        <div className={`w-full ${sidebar ? 'lg:w-[68%]' : ''} flex flex-col gap-4 md:gap-6`}>
+                            {children}
+                        </div>
 
-                    {/* Sidebar - Hidden on mobile */}
-                    {sidebar && (
-                        <aside className="hidden lg:flex lg:w-[32%] flex-col gap-6">
-                            {sidebar}
-                        </aside>
-                    )}
-                </div>
+                        {/* Sidebar - Hidden on mobile */}
+                        {sidebar && (
+                            <aside className="hidden lg:flex lg:w-[32%] flex-col gap-6">
+                                {sidebar}
+                            </aside>
+                        )}
+                    </div>
+                )}
             </main>
 
-            <footer className="hidden md:block bg-gradient-to-r from-gray-900 to-gray-800 text-gray-300 py-12 mt-16">
+            <footer className={`${showMobileFooter ? 'block' : 'hidden md:block'} bg-gradient-to-r from-gray-900 to-gray-800 text-gray-300 py-12 mt-16`}>
                 <div className="max-w-7xl mx-auto px-4 md:px-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                         <div>

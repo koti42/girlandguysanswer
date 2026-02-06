@@ -11,7 +11,7 @@ const FeedTabs = ({ activeTab, onTabChange }) => {
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-transparent hover:border-gray-200 dark:hover:border-gray-700'
                     }`}
             >
-                <FaFire /> <span>Popüler</span>
+                <FaFire /> <span>Gündem</span>
             </button>
             <button
                 onClick={() => onTabChange('newest')}

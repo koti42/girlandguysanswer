@@ -86,13 +86,13 @@ const OpinionsPage = () => {
     return (
         <MainLayout sidebar={SidebarContent}>
             <SEO
-                title="Görüşler - Herkesler Soruyor"
+                title="Benceler - Herkesler Soruyor"
                 description="Kullanıcıların konular hakkındaki görüşlerini okuyun, kendi yazınızı paylaşın."
             />
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Görüşler</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Benceler</h1>
                         <p className="text-gray-500 dark:text-gray-400 mt-1">Konular hakkında yazılar, yorumlar ve beğeniler.</p>
                     </div>
                     {user && (
@@ -111,7 +111,7 @@ const OpinionsPage = () => {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Görüşlerde ara..."
+                        placeholder="Bencelerde ara..."
                         className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-coral focus:border-transparent"
                     />
                 </div>

@@ -51,18 +51,18 @@ const CommunityPage = () => {
     return (
         <MainLayout sidebar={SidebarContent}>
             <SEO
-                title="Topluluk Odaları - Herkesler Soruyor"
+                title="Meydan - Herkesler Soruyor"
                 description="Sesli sohbet odalarına katıl, yeni insanlarla tanış ve konular hakkında tartış."
                 jsonLd={{
                     "@context": "https://schema.org",
                     "@type": "CollectionPage",
-                    "name": "Topluluk Odaları",
+                    "name": "Meydan",
                     "description": "Sesli sohbet odaları ve tartışma grupları"
                 }}
             />
             <div className="flex flex-col gap-6 min-h-[calc(100vh-100px)]">
                 <div className="flex justify-between items-center mb-2">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Topluluk Odaları</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Meydan</h1>
                 </div>
 
                 {loading ? (

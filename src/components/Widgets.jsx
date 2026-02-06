@@ -28,7 +28,7 @@ export const TrendsWidget = () => {
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                 <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                     <span className="w-1 h-6 bg-coral rounded-full"></span>
-                    Trendler
+                    Gündem
                 </h3>
                 <div className="flex justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-2 border-coral border-t-transparent"></div>
@@ -43,7 +43,7 @@ export const TrendsWidget = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <span className="w-1 h-6 bg-coral rounded-full"></span>
-                Trendler
+                Gündem
             </h3>
             <div className="flex flex-col gap-3">
                 {tags.map((item, idx) => (
@@ -124,7 +124,7 @@ export const TopUsersWidget = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
             <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
                 <span className="w-1 h-6 bg-gold rounded-full"></span>
-                Topluluk Liderleri
+                Üstatlar
             </h3>
             <div className="flex justify-around items-end">
                 {/* 2nd Place */}

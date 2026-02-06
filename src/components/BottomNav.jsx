@@ -9,12 +9,12 @@ const BottomNav = () => {
     const { user } = useAuth();
 
     const navItems = [
-        { icon: FaHome, label: 'Ana Sayfa', path: '/' },
+        { icon: FaHome, label: 'Vitrin', path: '/' },
         { icon: FaQuestionCircle, label: 'Sorular', path: '/questions' },
-        { icon: FaPlus, label: 'Sor', path: '/ask' },
-        { icon: FaUsers, label: 'Topluluk', path: '/communities' },
-        { icon: FaSearch, label: 'Ara', path: '/search' },
-        { icon: FaUser, label: 'Profil', path: user ? `/profile/${user.username}` : '/login' }
+        { icon: FaPlus, label: 'Sor Gitsin', path: '/ask' },
+        { icon: FaUsers, label: 'Meydan', path: '/communities' },
+        { icon: FaSearch, label: 'Bul', path: '/search' },
+        { icon: FaUser, label: 'Ben', path: user ? `/profile/${user.username}` : '/login' }
     ];
 
     return (
