@@ -180,22 +180,20 @@ const RoomPage = () => {
 
     return (
         <MainLayout sidebar={SidebarContent} fullHeight>
-            {community && (
-                <SEO
-                    title={`${community.name} - Sesli Sohbet Odası | Herkesler Soruyor`}
-                    description={`${community.name} odasına katıl, sohbete dahil ol. ${community.description || 'Topluluk sohbet odası.'}`}
-                    jsonLd={{
-                        "@context": "https://schema.org",
-                        "@type": "SocialMediaPosting",
-                        "headline": community.name,
-                        "description": community.description || 'Topluluk sohbet odası.',
-                        "author": {
-                            "@type": "Person",
-                            "name": community.created_by_user?.username || community.created_by || 'Herkesler Soruyor'
-                        }
-                    }}
-                />
-            )}
+            <SEO
+                title={community?.name ? `${community.name} - Sesli Sohbet Odası | Herkesler Soruyor` : 'Topluluk Odası | Herkesler Soruyor'}
+                description={community?.name ? `${community.name} odasına katıl, sohbete dahil ol. ${community.description || 'Topluluk sohbet odası.'}` : 'Topluluk sohbet odasına katıl, sohbete dahil ol.'}
+                jsonLd={community ? {
+                    "@context": "https://schema.org",
+                    "@type": "SocialMediaPosting",
+                    "headline": community.name,
+                    "description": community.description || 'Topluluk sohbet odası.',
+                    "author": {
+                        "@type": "Person",
+                        "name": community.created_by_user?.username || community.created_by || 'Herkesler Soruyor'
+                    }
+                } : undefined}
+            />
             <div className="h-[calc(100vh-100px)] p-2">
                 {loading ? (
                     <div className="h-full flex items-center justify-center">
