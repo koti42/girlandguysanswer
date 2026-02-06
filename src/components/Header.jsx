@@ -429,8 +429,30 @@ const Header = ({ onSearch }) => {
                             }}
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
-                            <FaHome className="text-xl text-coral flex-shrink-0" />
+                            <FaQuestionCircle className="text-xl text-coral flex-shrink-0" />
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Sorular</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/questions?has_poll=1');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaPoll className="text-xl text-coral flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Anketli Sorular</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/opinions');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaComment className="text-xl text-coral flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Görüşler</span>
                         </button>
 
                         <Link
@@ -441,6 +463,66 @@ const Header = ({ onSearch }) => {
                             <FaUsers className="text-xl text-coral" />
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Topluluk</span>
                         </Link>
+
+                        <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">
+                            Keşfet
+                        </p>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/questions');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaCompass className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Keşfet</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/questions?sort=popular');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaFire className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Popüler</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/questions?no_comments=1&sort=newest');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaLifeRing className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Yardım Bekleyenler</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/leaderboard');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaStar className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">BiBilenler</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/ask');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaRobot className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Yapay Zeka</span>
+                        </button>
 
                         {isAuthenticated ? (
                             <>
@@ -555,7 +637,13 @@ const Header = ({ onSearch }) => {
                             <div className="flex-1 px-6 py-4 overflow-y-auto min-h-0">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                                     {/* Keşfet */}
-                                    <div className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 transition-all">
+                                    <div
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                    >
                                         <div className="flex gap-3">
                                             <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
                                                 <FaCompass />
@@ -568,7 +656,13 @@ const Header = ({ onSearch }) => {
                                     </div>
 
                                     {/* Popüler */}
-                                    <div className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 transition-all">
+                                    <div
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions?sort=popular');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                    >
                                         <div className="flex gap-3">
                                             <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
                                                 <FaFire />
@@ -581,7 +675,13 @@ const Header = ({ onSearch }) => {
                                     </div>
 
                                     {/* Yardım Bekleyenler */}
-                                    <div className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 transition-all">
+                                    <div
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions?no_comments=1&sort=newest');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                    >
                                         <div className="flex gap-3">
                                             <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
                                                 <FaLifeRing />
@@ -594,7 +694,13 @@ const Header = ({ onSearch }) => {
                                     </div>
 
                                     {/* BiBilenler */}
-                                    <div className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 transition-all">
+                                    <div
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/leaderboard');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                    >
                                         <div className="flex gap-3">
                                             <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
                                                 <FaStar />
@@ -607,7 +713,13 @@ const Header = ({ onSearch }) => {
                                     </div>
 
                                     {/* Yapay Zeka */}
-                                    <div className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 transition-all">
+                                    <div
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/ask');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                    >
                                         <div className="flex gap-3">
                                             <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
                                                 <FaRobot />

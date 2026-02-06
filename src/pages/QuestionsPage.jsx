@@ -15,13 +15,17 @@ const QuestionsPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const initialQuery = searchParams.get('search') || '';
     const initialHasPoll = searchParams.get('has_poll') === '1' || searchParams.get('has_poll') === 'true';
+    const initialNoComments = searchParams.get('no_comments') === '1' || searchParams.get('no_comments') === 'true';
+    const allowedSorts = new Set(['popular', 'newest', 'forYou']);
+    const initialSortRaw = searchParams.get('sort');
+    const initialSort = allowedSorts.has(initialSortRaw) ? initialSortRaw : 'popular';
     const [searchQuery, setSearchQuery] = useState(initialQuery);
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState({ id: 0, title: 'Tümü' });
     const [genderFilter, setGenderFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('popular');
-    const [noCommentsFilter, setNoCommentsFilter] = useState(false);
+    const [sortBy, setSortBy] = useState(initialSort);
+    const [noCommentsFilter, setNoCommentsFilter] = useState(initialNoComments);
     const [hasPollFilter, setHasPollFilter] = useState(initialHasPoll);
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -95,12 +99,21 @@ const QuestionsPage = () => {
 
     useEffect(() => {
         const next = new URLSearchParams(searchParams);
+
         if (searchQuery) next.set('search', searchQuery);
         else next.delete('search');
+
         if (hasPollFilter) next.set('has_poll', '1');
         else next.delete('has_poll');
+
+        if (noCommentsFilter) next.set('no_comments', '1');
+        else next.delete('no_comments');
+
+        if (sortBy && sortBy !== 'popular') next.set('sort', sortBy);
+        else next.delete('sort');
+
         setSearchParams(next);
-    }, [searchQuery, hasPollFilter]);
+    }, [searchQuery, hasPollFilter, noCommentsFilter, sortBy]);
 
     useEffect(() => {
         setCurrentPage(1);
