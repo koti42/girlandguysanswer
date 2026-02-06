@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
@@ -338,19 +338,24 @@ const AskQuestionPage = () => {
                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                 Kategori <span className="text-coral">*</span>
                             </label>
-                            <select
-                                name="category"
-                                value={formData.category}
-                                onChange={handleInputChange}
-                                disabled={loadingCategories}
-                                className={`w-full px-4 py-3 rounded-xl border ${errors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                    } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all disabled:opacity-50`}
-                            >
-                                <option value="">{loadingCategories ? 'Kategoriler yükleniyor...' : 'Kategori seçin...'}</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
-                                ))}
-                            </select>
+                            <div className="relative">
+                                <select
+                                    name="category"
+                                    value={formData.category}
+                                    onChange={handleInputChange}
+                                    disabled={loadingCategories}
+                                    className={`w-full px-4 py-3 pr-10 rounded-xl border appearance-none bg-white dark:bg-gray-700 ${errors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                        } dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all disabled:opacity-50`}
+                                >
+                                    <option value="">{loadingCategories ? 'Kategoriler yükleniyor...' : 'Kategori seçin...'}</option>
+                                    {categories.map(cat => (
+                                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500 dark:text-gray-400">
+                                    <FaChevronDown className="text-sm" />
+                                </div>
+                            </div>
                             {errors.category && <span className="text-red-500 text-sm mt-2 block">{errors.category}</span>}
                         </div>
 
@@ -530,12 +535,12 @@ const AskQuestionPage = () => {
                         </div>
 
                         {/* Anonymous Toggle */}
-                        <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-700/30">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-700/30">
                             <button
                                 type="button"
                                 onClick={() => setIsAnonymous(!isAnonymous)}
                                 disabled={isSubmitting}
-                                className={`flex items-center gap-3 px-5 py-3 rounded-xl font-semibold transition-all ${isAnonymous
+                                className={`w-full sm:w-auto flex items-center justify-center sm:justify-start gap-3 px-5 py-3 rounded-xl font-semibold transition-all ${isAnonymous
                                     ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-lg'
                                     : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-purple-300 dark:border-purple-600 hover:border-purple-400'
                                     }`}
@@ -543,24 +548,24 @@ const AskQuestionPage = () => {
                                 <FaUserSecret className="text-xl" />
                                 <span>{isAnonymous ? 'Gizli soru' : 'Gizli Üye olarak sor'}</span>
                             </button>
-                            <p className="text-sm text-purple-700 dark:text-purple-300">
+                            <p className="text-sm text-purple-700 dark:text-purple-300 text-center sm:text-right">
                                 {isAnonymous ? '🎭 Kimliğiniz gizli kalacak' : '👤 Herkese açık olarak sorulacak'}
                             </p>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex gap-3 pt-4">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-4">
                             <button
                                 type="button"
                                 onClick={() => navigate(-1)}
-                                className="px-6 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                                className="w-full sm:w-auto px-6 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                             >
                                 İptal
                             </button>
                             <button
                                 type="button"
                                 onClick={handleSaveDraft}
-                                className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-coral text-coral font-semibold hover:bg-coral/10 dark:hover:bg-coral/20 transition-all"
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-coral text-coral font-semibold hover:bg-coral/10 dark:hover:bg-coral/20 transition-all"
                             >
                                 <FaSave />
                                 Taslak Kaydet
@@ -568,7 +573,7 @@ const AskQuestionPage = () => {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white font-semibold hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                className="w-full sm:flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white font-semibold hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                                 {isSubmitting ? (
                                     <span className="flex items-center gap-2 justify-center">
