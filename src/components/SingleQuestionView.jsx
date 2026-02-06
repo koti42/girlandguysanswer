@@ -917,9 +917,24 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 leading-snug">{question.title}</h1>
                     {question.description && (
                         <div
-                            className="text-gray-700 dark:text-gray-300 mb-4 break-words [&>div]:mb-2 [&>div:last-child]:mb-0 [&_b]:font-semibold [&_strong]:font-semibold"
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.description, { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span'] }) }}
+                            className="text-gray-700 dark:text-gray-300 mb-4 break-words [&>div]:mb-2 [&>div:last-child]:mb-0 [&_b]:font-semibold [&_strong]:font-semibold [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-2"
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.description, { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span', 'img'], ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'class', 'style'] }) }}
                         />
+                    )}
+
+                    {question.description_images && question.description_images.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                            {question.description_images.map((imgUrl, index) => (
+                                <div key={index} className="rounded-xl overflow-hidden shadow-sm">
+                                    <img
+                                        src={imgUrl}
+                                        alt={`Resim ${index + 1}`}
+                                        className="w-full h-auto object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                        onClick={() => window.open(imgUrl, '_blank')}
+                                    />
+                                </div>
+                            ))}
+                        </div>
                     )}
 
                     <div className="flex flex-wrap gap-2 mb-4">
