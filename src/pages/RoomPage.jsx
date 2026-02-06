@@ -197,7 +197,21 @@ const RoomPage = () => {
                 />
             )}
             <div className="h-[calc(100vh-100px)] p-2">
-                {token && serverUrl ? (
+                {loading ? (
+                    <div className="h-full flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="w-16 h-16 rounded-full border-4 border-coral/20 border-t-coral animate-spin" />
+                            <p className="text-gray-600 dark:text-gray-400 font-medium">Odaya bağlanılıyor...</p>
+                        </div>
+                    </div>
+                ) : error ? (
+                    <div className="h-full flex items-center justify-center">
+                        <div className="text-center">
+                            <p className="text-red-500 dark:text-red-400 font-semibold mb-2">{error}</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Yönlendiriliyorsunuz...</p>
+                        </div>
+                    </div>
+                ) : token && serverUrl ? (
                     <LiveKitRoom
                         video={false}
                         audio={true}
@@ -249,9 +263,7 @@ const RoomPage = () => {
                             onClose={() => setIsChatOpen(false)}
                         />
                     </LiveKitRoom>
-                ) : (
-                    <div>Token hatası.</div>
-                )}
+                ) : null}
             </div>
         </MainLayout>
     );
