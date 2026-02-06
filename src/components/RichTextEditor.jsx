@@ -6,8 +6,12 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
     const fileInputRef = useRef(null);
     const [selectedImg, setSelectedImg] = useState(null);
     const [overlayStyle, setOverlayStyle] = useState(null);
+
+    // Resizing Refs
     const isResizing = useRef(false);
+    const activeHandle = useRef(null); // 'e', 's', 'se'
     const startX = useRef(0);
+    const startY = useRef(0);
     const startWidth = useRef(0);
 
     useEffect(() => {
@@ -70,11 +74,13 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
         });
     };
 
-    const handleMouseDown = (e) => {
+    const handleMouseDown = (e, handle) => {
         e.preventDefault();
         e.stopPropagation();
         isResizing.current = true;
+        activeHandle.current = handle;
         startX.current = e.clientX;
+        startY.current = e.clientY;
         startWidth.current = selectedImg.offsetWidth;
 
         document.addEventListener('mousemove', handleMouseMove);
@@ -83,8 +89,24 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
 
     const handleMouseMove = (e) => {
         if (!isResizing.current || !selectedImg) return;
-        const diff = e.clientX - startX.current;
-        const newWidth = Math.max(50, startWidth.current + diff);
+
+        let newWidth = startWidth.current;
+        const diffX = e.clientX - startX.current;
+        const diffY = e.clientY - startY.current;
+
+        if (activeHandle.current === 'e') {
+            // East (Right): Width changes with X movement
+            newWidth = startWidth.current + diffX;
+        } else if (activeHandle.current === 's') {
+            // South (Bottom): Width changes with Y movement (simulating scale)
+            newWidth = startWidth.current + diffY;
+        } else if (activeHandle.current === 'se') {
+            // South-East (Corner): Use the maximum movement to determine resize
+            // This generally feels most natural for maintaining aspect ratio while dragging corner
+            newWidth = startWidth.current + (Math.abs(diffX) > Math.abs(diffY) ? diffX : diffY);
+        }
+
+        newWidth = Math.max(50, newWidth); // Min width constraint
 
         selectedImg.style.width = `${newWidth}px`;
         updateOverlayPosition(selectedImg);
@@ -92,6 +114,7 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
 
     const handleMouseUp = () => {
         isResizing.current = false;
+        activeHandle.current = null;
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
         updateContent();
@@ -237,10 +260,22 @@ const RichTextEditor = ({ value, onChange, placeholder = 'DetaylarÄ± buraya yazÄ
                             zIndex: 10
                         }}
                     >
-                        {/* Right Handle */}
+                        {/* Right Handle (East) */}
                         <div
-                            onMouseDown={handleMouseDown}
-                            className="resizer-handle absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-8 bg-coral rounded-md cursor-ew-resize pointer-events-auto shadow-md"
+                            onMouseDown={(e) => handleMouseDown(e, 'e')}
+                            className="resizer-handle absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-8 bg-coral rounded-md cursor-ew-resize pointer-events-auto shadow-md hover:scale-110 transition-transform"
+                        />
+
+                        {/* Bottom Handle (South) */}
+                        <div
+                            onMouseDown={(e) => handleMouseDown(e, 's')}
+                            className="resizer-handle absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-8 h-4 bg-coral rounded-md cursor-ns-resize pointer-events-auto shadow-md hover:scale-110 transition-transform"
+                        />
+
+                        {/* Corner Handle (South-East) */}
+                        <div
+                            onMouseDown={(e) => handleMouseDown(e, 'se')}
+                            className="resizer-handle absolute right-0 bottom-0 translate-x-1/2 translate-y-1/2 w-4 h-4 bg-white border-2 border-coral rounded-full cursor-nwse-resize pointer-events-auto shadow-md hover:scale-110 transition-transform"
                         />
                     </div>
                 )}
