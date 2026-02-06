@@ -262,7 +262,7 @@ const Header = ({ onSearch }) => {
                             className="bg-gradient-to-r from-coral to-orange-400 text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 rounded-full font-semibold hover:shadow-lg transition-all duration-300 text-xs sm:text-sm md:text-base whitespace-nowrap"
                         >
                             <span className="hidden sm:inline">Sor Gitsin</span>
-                            <span className="sm:hidden">+</span>
+                            <span className="sm:hidden">Sorsana</span>
                         </Link>
 
 
