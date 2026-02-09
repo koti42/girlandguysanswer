@@ -30,6 +30,13 @@ import ContactPage from './pages/ContactPage';
 import PublicationGuidelinesPage from './pages/PublicationGuidelinesPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import KVKKPage from './pages/KVKKPage';
+import KullanimKurallariPage from './pages/KullanimKurallariPage';
+import YardimMerkeziPage from './pages/YardimMerkeziPage';
+import BlogPage from './pages/BlogPage';
+import GizlilikPolitikasiPage from './pages/GizlilikPolitikasiPage';
+import CerezPolitikasiPage from './pages/CerezPolitikasiPage';
+import ReklamPage from './pages/ReklamPage';
+import OrtaklikPage from './pages/OrtaklikPage';
 import TagsPage from './pages/TagsPage';
 import OpinionsPage from './pages/OpinionsPage';
 import CreateOpinionPage from './pages/CreateOpinionPage';
@@ -93,6 +100,13 @@ function App() {
                   <Route path="/yayin-ilkeleri" element={<PublicationGuidelinesPage />} />
                   <Route path="/site-sozlesmesi" element={<TermsOfServicePage />} />
                   <Route path="/kvkk-aydinlatma" element={<KVKKPage />} />
+                  <Route path="/kullanim-kurallari" element={<KullanimKurallariPage />} />
+                  <Route path="/yardim-merkezi" element={<YardimMerkeziPage />} />
+                  <Route path="/blog" element={<BlogPage />} />
+                  <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasiPage />} />
+                  <Route path="/cerez-politikasi" element={<CerezPolitikasiPage />} />
+                  <Route path="/reklam" element={<ReklamPage />} />
+                  <Route path="/ortaklik" element={<OrtaklikPage />} />
                   <Route path="/etiketler" element={<TagsPage />} />
                   <Route path="/opinions" element={<OpinionsPage />} />
                   <Route path="/opinions/yaz" element={<ProtectedRoute><CreateOpinionPage /></ProtectedRoute>} />

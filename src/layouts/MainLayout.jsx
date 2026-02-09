@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 
 const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false, fullWidth = false, showMobileFooter = false }) => {
@@ -31,33 +32,33 @@ const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false, full
                         <div>
                             <h4 className="font-bold text-white mb-4">Hakkımızda</h4>
                             <ul className="space-y-2 text-sm">
-                                <li><a href="#" className="hover:text-coral transition-colors">Biz Kimiz?</a></li>
-                                <li><a href="#" className="hover:text-coral transition-colors">Kariyer</a></li>
-                                <li><a href="#" className="hover:text-coral transition-colors">Basın</a></li>
+                                <li><Link to="/questions" className="hover:text-coral transition-colors">Ana Sayfa</Link></li>
+                                <li><Link to="/leaderboard" className="hover:text-coral transition-colors">Liderlik Tablosu</Link></li>
+                                <li><Link to="/etiketler" className="hover:text-coral transition-colors">Etiketler</Link></li>
                             </ul>
                         </div>
                         <div>
                             <h4 className="font-bold text-white mb-4">Topluluk</h4>
                             <ul className="space-y-2 text-sm">
-                                <li><a href="#" className="hover:text-coral transition-colors">Kullanım Kuralları</a></li>
-                                <li><a href="#" className="hover:text-coral transition-colors">Yardım Merkezi</a></li>
-                                <li><a href="#" className="hover:text-coral transition-colors">Blog</a></li>
+                                <li><Link to="/kullanim-kurallari" className="hover:text-coral transition-colors">Kullanım Kuralları</Link></li>
+                                <li><Link to="/yardim-merkezi" className="hover:text-coral transition-colors">Yardım Merkezi</Link></li>
+                                <li><Link to="/blog" className="hover:text-coral transition-colors">Blog</Link></li>
                             </ul>
                         </div>
                         <div>
                             <h4 className="font-bold text-white mb-4">Yasal</h4>
                             <ul className="space-y-2 text-sm">
-                                <li><a href="#" className="hover:text-coral transition-colors">Gizlilik Politikası</a></li>
-                                <li><a href="#" className="hover:text-coral transition-colors">Kullanım Şartları</a></li>
-                                <li><a href="#" className="hover:text-coral transition-colors">Çerez Politikası</a></li>
+                                <li><Link to="/gizlilik-politikasi" className="hover:text-coral transition-colors">Gizlilik Politikası</Link></li>
+                                <li><Link to="/site-sozlesmesi" className="hover:text-coral transition-colors">Kullanım Şartları</Link></li>
+                                <li><Link to="/cerez-politikasi" className="hover:text-coral transition-colors">Çerez Politikası</Link></li>
                             </ul>
                         </div>
                         <div>
                             <h4 className="font-bold text-white mb-4">İletişim</h4>
                             <ul className="space-y-2 text-sm">
-                                <li><a href="#" className="hover:text-coral transition-colors">Bize Ulaşın</a></li>
-                                <li><a href="#" className="hover:text-coral transition-colors">Reklam</a></li>
-                                <li><a href="#" className="hover:text-coral transition-colors">Ortaklık</a></li>
+                                <li><Link to="/iletisim" className="hover:text-coral transition-colors">Bize Ulaşın</Link></li>
+                                <li><Link to="/reklam" className="hover:text-coral transition-colors">Reklam</Link></li>
+                                <li><Link to="/ortaklik" className="hover:text-coral transition-colors">Ortaklık</Link></li>
                             </ul>
                         </div>
                     </div>
