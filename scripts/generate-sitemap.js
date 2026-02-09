@@ -5,6 +5,11 @@ import { dirname } from 'path';
 import https from 'https';
 
 const SITEMAP_URL = 'https://herkeslersoruyor.panalix.com.tr/api/sitemap.xml';
+const CANONICAL_ORIGIN = process.env.CANONICAL_ORIGIN || process.env.VITE_CANONICAL_ORIGIN || 'https://herkeslersoruyor.com.tr';
+
+function ensureCanonicalDomain(xmlContent) {
+    return xmlContent.replace(/https:\/\/herkeslersoruyor\.com(?=\/|"|>|$)/g, CANONICAL_ORIGIN.replace(/\/$/, ''));
+}
 
 async function fetchAndSaveSitemap() {
     console.log(`⏳ Fetching sitemap from backend: ${SITEMAP_URL}...`);
@@ -23,11 +28,14 @@ async function fetchAndSaveSitemap() {
     };
 
     try {
-        const xmlContent = await fetchSitemap(SITEMAP_URL);
+        let xmlContent = await fetchSitemap(SITEMAP_URL);
 
         if (!xmlContent.includes('<urlset') && !xmlContent.includes('<sitemapindex')) {
             console.warn('⚠️  Warning: Response does not look like a valid XML sitemap.');
         }
+
+        xmlContent = ensureCanonicalDomain(xmlContent);
+        console.log('🔗 URLs normalized to canonical origin: ' + CANONICAL_ORIGIN);
 
         const __dirname = dirname(fileURLToPath(import.meta.url));
         const outputPath = join(__dirname, '../public/sitemap.xml');
