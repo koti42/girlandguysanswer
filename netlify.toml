@@ -1,0 +1,8 @@
+# 301 Kalıcı Yönlendirme: Diğer domainler ana domaine (herkeslersoruyor.com.tr)
+# .com, .xyz vb. adreslere gelen istekler ana domaine yönlendirilir
+[[redirects]]
+  force = true
+  from = "/*"
+  to = "https://herkeslersoruyor.com.tr/:splat"
+  status = 301
+  conditions = {Host = ["herkeslersoruyor.com", "www.herkeslersoruyor.com", "herkeslersoruyor.xyz", "www.herkeslersoruyor.xyz"]}

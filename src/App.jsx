@@ -63,6 +63,7 @@ const GenderCheck = ({ children }) => {
 };
 
 import { NotificationProvider } from './context/NotificationContext';
+import DomainRedirect from './components/DomainRedirect';
 
 function App() {
   return (
@@ -70,9 +71,10 @@ function App() {
       <AuthProvider>
         <NotificationProvider>
           <Router>
-            <GenderCheck>
-              <div className="overflow-x-hidden">
-                <Routes>
+            <DomainRedirect>
+              <GenderCheck>
+                <div className="overflow-x-hidden">
+                  <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/questions" element={<QuestionsPage />} />
                   <Route path="/questions/:slug" element={<CategoryPage />} />
@@ -118,6 +120,7 @@ function App() {
                 </Routes>
               </div>
             </GenderCheck>
+            </DomainRedirect>
           </Router>
         </NotificationProvider>
       </AuthProvider>
