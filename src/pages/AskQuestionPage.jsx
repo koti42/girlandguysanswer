@@ -205,31 +205,26 @@ const AskQuestionPage = () => {
 
             const response = await questionsAPI.create(payload);
 
-            // Gamification Feedback
             const gamification = response.data.data?.gamification;
-            let delay = 1000;
 
-            if (gamification) {
-                if (gamification.points_added > 0) {
-                    setGamificationFeedback({
-                        points: gamification.points_added,
-                        reason: 'Soru Sorma'
-                    });
-                    delay = 2500; // Wait longer to show toast
-                }
-
-                if (gamification.leveled_up) {
-                    setShowLevelUp(gamification.new_level);
-                    delay = 3000; // Wait longer for modal
-                }
-            }
-
-            showToast('success', 'Sorunuz başarıyla yayınlandı!');
             localStorage.removeItem('questionDraft');
 
-            setTimeout(() => {
-                navigate('/questions');
-            }, delay);
+            const questionResponse = response.data.data?.question || response.data.data;
+            const slug = questionResponse?.slug || questionResponse?.id;
+
+            navigate('/question-submitted', {
+                state: {
+                    question: {
+                        title: formData.title,
+                        category: formData.category,
+                        tags: formData.tags,
+                        is_anonymous: isAnonymous,
+                    },
+                    gamification: gamification || null,
+                    slug: slug,
+                },
+                replace: true,
+            });
         } catch (error) {
             showToast('error', error.response?.data?.message || 'Soru yayınlanırken bir hata oluştu');
         } finally {

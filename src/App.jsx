@@ -34,6 +34,7 @@ import TagsPage from './pages/TagsPage';
 import OpinionsPage from './pages/OpinionsPage';
 import CreateOpinionPage from './pages/CreateOpinionPage';
 import OpinionDetailPage from './pages/OpinionDetailPage';
+import QuestionSubmittedPage from './pages/QuestionSubmittedPage';
 import AdminApp from './admin/AdminApp';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -73,6 +74,7 @@ function App() {
                   <Route path="/profile/:username/followers" element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
                   <Route path="/profile/:username/following" element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
                   <Route path="/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
+                  <Route path="/question-submitted" element={<ProtectedRoute><QuestionSubmittedPage /></ProtectedRoute>} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/signup" element={<SignupPage />} />
                   <Route path="/auth/google/callback" element={<GoogleCallback />} />
