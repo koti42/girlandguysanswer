@@ -6,6 +6,12 @@ function ensureCanonicalDomain(xmlContent) {
     return xmlContent.replace(/https:\/\/herkeslersoruyor\.com(?=\/|"|>|$)/g, origin);
 }
 
+function stripScriptTags(xmlContent) {
+    return xmlContent
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<script\b[^>]*\/>/gi, '');
+}
+
 exports.handler = async function () {
     try {
         const res = await fetch(SITEMAP_API);
@@ -13,6 +19,7 @@ exports.handler = async function () {
             return { statusCode: 502, body: 'Sitemap unavailable' };
         }
         let xml = await res.text();
+        xml = stripScriptTags(xml);
         xml = ensureCanonicalDomain(xml);
 
         return {
