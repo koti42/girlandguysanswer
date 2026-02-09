@@ -4,7 +4,7 @@ import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 
 const CategoryNav = ({ categories = [], selectedCategory, onSelectCategory }) => {
     return (
-        <div className="flex gap-4 overflow-x-auto pb-4 pt-2 scrollbar-hide">
+        <div className="flex gap-4 overflow-x-auto pb-4 pt-2 pl-2 scrollbar-hide">
             <div
                 onClick={() => onSelectCategory({ id: 0, name: 'Tümü' })}
                 className={`flex-shrink-0 w-32 h-24 rounded-2xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform shadow-md ${selectedCategory?.id === 0
