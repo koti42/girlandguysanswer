@@ -18,4 +18,4 @@ Allow: /
 User-agent: FacebookBot
 Allow: /
 
-Sitemap: https://herkeslersoruyor.panalix.com.tr/api/sitemap.xml
+Sitemap: https://herkeslersoruyor.com.tr/sitemap.xml

@@ -1,3 +1,9 @@
+# Sitemap: Her istekte API'den canlı çekilir, canonical domain ile döner
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/.netlify/functions/sitemap"
+  status = 200
+
 # 301 Kalıcı Yönlendirme: Diğer domainler ana domaine (herkeslersoruyor.com.tr)
 # .com, .xyz vb. adreslere gelen istekler ana domaine yönlendirilir
 [[redirects]]
