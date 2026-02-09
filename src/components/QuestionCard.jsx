@@ -237,11 +237,14 @@ const QuestionCard = ({ question, onModerationAction }) => {
                 </Link>
 
                 <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
-                    {question.tags.map((tag, idx) => (
-                        <span key={idx} className={`px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold transition-colors ${styles.badge}`}>
-                            #{tag}
-                        </span>
-                    ))}
+                    {question.tags.map((tag, idx) => {
+                        const displayTag = tag.startsWith('#') ? tag : `#${tag}`;
+                        return (
+                            <span key={idx} className={`px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold transition-colors ${styles.badge}`}>
+                                {displayTag}
+                            </span>
+                        );
+                    })}
                 </div>
 
                 {question.image && (

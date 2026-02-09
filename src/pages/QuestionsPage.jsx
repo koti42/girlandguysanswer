@@ -250,7 +250,6 @@ const QuestionsPage = () => {
                                                 if (action === 'remove') {
                                                     setQuestions(prev => prev.filter(q => q.id !== questionId));
                                                 } else {
-                                                    // Hide/unhide durumunda soruyu yeniden yükle
                                                     fetchQuestions(currentPage, false);
                                                 }
                                             }}
