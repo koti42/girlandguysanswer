@@ -5,7 +5,7 @@ import CommunityCard from '../components/Community/CommunityCard';
 import { FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import CreateRoomModal from '../components/Community/CreateRoomModal';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
 import SEO from '../components/SEO';
 
 const CommunityPage = () => {
@@ -45,6 +45,7 @@ const CommunityPage = () => {
             <TrendsWidget />
             <TopUsersWidget />
             <AnnouncementsWidget />
+            <PopularQuestionsWidget />
         </>
     );
 

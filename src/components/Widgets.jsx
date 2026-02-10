@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
-import { FaArrowUp, FaArrowDown, FaMinus, FaMedal, FaBullhorn } from 'react-icons/fa';
-import { tagsAPI, gamificationAPI } from '../services/api';
+import { FaArrowUp, FaArrowDown, FaMinus, FaMedal, FaBullhorn, FaFire, FaChevronRight } from 'react-icons/fa';
+import { tagsAPI, gamificationAPI, questionsAPI } from '../services/api';
 
 export const TrendsWidget = () => {
     const [tags, setTags] = useState([]);
@@ -147,7 +147,7 @@ export const TopUsersWidget = () => {
 
 export const AnnouncementsWidget = () => (
     <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl p-6 shadow-none border border-gray-200">
-        <h3 className="font-bold text-lg mb-2 flex items-center gap-2 text-gray-700">
+        <h3 className="font-bold text-lg mb-2 flex items-center gap-2 text-gray-700 dark:text-gray-100">
             <FaBullhorn className="text-coral" />
             Duyurular
         </h3>
@@ -156,3 +156,93 @@ export const AnnouncementsWidget = () => (
         </p>
     </div>
 );
+
+export const PopularQuestionsWidget = () => {
+    const [popularQuestions, setPopularQuestions] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPopularQuestions = async () => {
+            try {
+                const response = await questionsAPI.getAll({
+                    sort: 'popular',
+                    limit: 5,
+                });
+                const data = response.data?.data;
+                setPopularQuestions(data?.questions || data || []);
+            } catch (error) {
+                console.error('Popüler sorular yüklenirken hata:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPopularQuestions();
+    }, []);
+
+    if (!loading && popularQuestions.length === 0) return null;
+
+    return (
+        <div className="mt-4 bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-soft border border-gray-200 dark:border-gray-700 sticky top-24">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-coral/10 text-coral">
+                        <FaFire className="text-sm" />
+                    </span>
+                    <div>
+                        <h3 className="font-bold text-sm text-gray-800 dark:text-gray-100">
+                            Popüler Sorular
+                        </h3>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                            Şu an topluluğun en çok konuştuğu konular
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-coral border-t-transparent" />
+                </div>
+            ) : (
+                <ul className="flex flex-col gap-2">
+                    {popularQuestions.slice(0, 5).map((q, index) => (
+                        <li key={q.id}>
+                            <Link
+                                to={`/question/${q.slug}`}
+                                className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-3 py-2 flex items-start gap-3 hover:shadow-md hover:from-coral/5 hover:to-orange-100/10 dark:hover:from-coral/15 dark:hover:to-orange-500/10 border border-gray-100 dark:border-gray-700 transition-all"
+                            >
+                                <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-coral text-[10px] font-bold text-white flex-shrink-0 shadow-sm">
+                                    #{index + 1}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 group-hover:text-coral line-clamp-2">
+                                        {q.title}
+                                    </p>
+                                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+                                        {q.category?.name && (
+                                            <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-[10px] font-medium text-gray-600 dark:text-gray-300">
+                                                {q.category.name}
+                                            </span>
+                                        )}
+                                        {typeof q.answer_count === 'number' && q.answer_count > 0 && (
+                                            <span>
+                                                {q.answer_count} cevap
+                                            </span>
+                                        )}
+                                        {typeof q.view_count === 'number' && q.view_count > 0 && (
+                                            <span>
+                                                · {q.view_count} görüntüleme
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <FaChevronRight className="mt-0.5 text-xs text-gray-300 group-hover:text-coral flex-shrink-0" />
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+};

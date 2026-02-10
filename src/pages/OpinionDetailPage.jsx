@@ -8,7 +8,7 @@ import { FaHeart, FaComment, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icon
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import DOMPurify from 'dompurify';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
 import { notificationToast } from '../utils/notificationToast';
 import SEO from '../components/SEO';
 import { extractOpinionId } from '../utils/opinionUrl';
@@ -184,6 +184,7 @@ const OpinionDetailPage = () => {
             <TrendsWidget />
             <TopUsersWidget />
             <AnnouncementsWidget />
+            <PopularQuestionsWidget />
         </>
     );
 

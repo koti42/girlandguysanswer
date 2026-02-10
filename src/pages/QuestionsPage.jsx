@@ -4,7 +4,7 @@ import HeroSection from '../components/HeroSection';
 import CategoryNav from '../components/CategoryNav';
 import FeedTabs from '../components/FeedTabs';
 import QuestionCard from '../components/QuestionCard';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
 import { FaMars, FaVenus, FaGlobe, FaCommentSlash, FaPoll } from 'react-icons/fa';
 import { questionsAPI, categoriesAPI } from '../services/api';
 import SEO from '../components/SEO';
@@ -148,6 +148,7 @@ const QuestionsPage = () => {
             <TrendsWidget />
             <TopUsersWidget />
             <AnnouncementsWidget />
+            <PopularQuestionsWidget />
         </>
     );
 

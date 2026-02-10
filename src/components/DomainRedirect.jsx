@@ -7,8 +7,14 @@ const DomainRedirect = ({ children }) => {
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        const canonicalHost = getCanonicalHost();
         const currentHost = window.location.host;
+        const hostname = window.location.hostname;
+
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return;
+        }
+
+        const canonicalHost = getCanonicalHost();
         if (currentHost !== canonicalHost) {
             const target = getCanonicalUrl(pathname, search);
             window.location.replace(target);

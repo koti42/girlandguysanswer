@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import QuestionCard from '../components/QuestionCard';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
 import { questionsAPI, categoriesAPI } from '../services/api';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 import { FaArrowLeft, FaGoogle, FaFacebook, FaInstagram, FaTwitter, FaDownload, FaCommentSlash, FaPoll } from 'react-icons/fa';
@@ -119,6 +119,7 @@ const CategoryPage = () => {
             <TrendsWidget />
             <TopUsersWidget />
             <AnnouncementsWidget />
+            <PopularQuestionsWidget />
         </>
     );
 

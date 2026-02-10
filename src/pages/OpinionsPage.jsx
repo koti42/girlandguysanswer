@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import OpinionCard from '../components/OpinionCard';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
 import { opinionsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { FaPenFancy, FaSearch } from 'react-icons/fa';
@@ -80,6 +80,7 @@ const OpinionsPage = () => {
             <TrendsWidget />
             <TopUsersWidget />
             <AnnouncementsWidget />
+            <PopularQuestionsWidget />
         </>
     );
 

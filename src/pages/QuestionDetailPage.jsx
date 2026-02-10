@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FaQuestionCircle, FaHome, FaArrowLeft } from 'react-icons/fa';
 import DOMPurify from 'dompurify';
 import MainLayout from '../layouts/MainLayout';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
 import { questionsAPI } from '../services/api';
 import SingleQuestionView from '../components/SingleQuestionView';
 import SEO from '../components/SEO';
@@ -140,6 +140,7 @@ const QuestionDetailPage = () => {
             <TrendsWidget />
             <TopUsersWidget />
             <AnnouncementsWidget />
+            <PopularQuestionsWidget />
         </>
     );
 
