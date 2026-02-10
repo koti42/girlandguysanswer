@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaHeart, FaUsers, FaComments, FaRocket } from 'react-icons/fa';
+import { FaUsers, FaComments, FaRocket } from 'react-icons/fa';
 
 const HeroSection = () => {
     return (

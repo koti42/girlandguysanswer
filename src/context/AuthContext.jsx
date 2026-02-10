@@ -61,31 +61,26 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        const initAuth = async () => {
-            const storedUser = localStorage.getItem('user');
-            const storedToken = localStorage.getItem('token');
-            const storedPermissions = localStorage.getItem('permissions');
+        const storedUser = localStorage.getItem('user');
+        const storedToken = localStorage.getItem('token');
+        const storedPermissions = localStorage.getItem('permissions');
 
-            if (storedUser && storedToken) {
-                try {
-                    setUser(JSON.parse(storedUser));
-                    if (storedPermissions) {
-                        setPermissions(JSON.parse(storedPermissions));
-                    }
-                    // Güncel permissions'ı almak için API'yi çağır
-                    await getCurrentUser();
-                } catch (e) {
-                    localStorage.removeItem('user');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('permissions');
-                    setLoading(false);
+        if (storedUser && storedToken) {
+            try {
+                setUser(JSON.parse(storedUser));
+                if (storedPermissions) {
+                    setPermissions(JSON.parse(storedPermissions));
                 }
-            } else {
-                setLoading(false);
+            } catch (e) {
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                localStorage.removeItem('permissions');
             }
-        };
-
-        initAuth();
+            setLoading(false);
+            getCurrentUser();
+        } else {
+            setLoading(false);
+        }
     }, []);
 
     const extractPermissions = (responseData) => {

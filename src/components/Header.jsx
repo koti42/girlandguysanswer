@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay } from 'react-icons/fa';
+import { FaSearch, FaBell, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import NotificationBell from './NotificationBell';
+const NotificationBell = lazy(() => import('./NotificationBell'));
 import UserAvatar from './UserAvatar';
 import { categoriesAPI, questionsAPI } from '../services/api';
 import { getCategoryIcon } from '../utils/categoryIcons';
@@ -134,7 +134,7 @@ const Header = ({ onSearch }) => {
 
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity min-w-0">
-                        <img src="/logo.png" alt="Herkesler Soruyor Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                        <img src="/logo.webp" alt="Herkesler Soruyor Logo" width={40} height={40} fetchpriority="high" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
                         <span className="font-script text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl text-coral font-bold leading-none select-none truncate">
                             <span className="hidden sm:inline">Herkesler Soruyor</span>
                             <span className="sm:hidden">HS</span>
@@ -277,7 +277,9 @@ const Header = ({ onSearch }) => {
                         </Link>
 
                         {/* Notifications */}
-                        <NotificationBell />
+                        <Suspense fallback={<span className="p-2"><FaBell className="text-xl text-gray-400" /></span>}>
+                            <NotificationBell />
+                        </Suspense>
 
 
                         {/* User Menu or Auth Buttons */}
