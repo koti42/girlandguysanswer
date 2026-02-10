@@ -1,50 +1,52 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
-import LandingPage from './pages/LandingPage';
-import QuestionsPage from './pages/QuestionsPage';
-import ProfilePage from './pages/ProfilePage';
-import AskQuestionPage from './pages/AskQuestionPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import FollowersPage from './pages/FollowersPage';
-import FollowingPage from './pages/FollowingPage';
-import QuestionDetailPage from './pages/QuestionDetailPage';
-import MessagesPage from './pages/MessagesPage';
-import SettingsPage from './pages/SettingsPage';
-import NotificationsPage from './pages/NotificationsPage';
-import FollowRequestsPage from './pages/FollowRequestsPage';
-import LeaderboardPage from './pages/LeaderboardPage';
-import PusherTestPage from './pages/PusherTestPage';
-import CommunityPage from './pages/CommunityPage';
-import RoomPage from './pages/RoomPage';
-import CommunityInvitationsPage from './pages/CommunityInvitationsPage';
-import { useNavigate, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
-import GoogleCallback from './pages/GoogleCallback';
-import CompleteProfilePage from './pages/CompleteProfilePage';
-import ErrorPage from './pages/ErrorPage';
-import CategoryPage from './pages/CategoryPage';
-import ContactPage from './pages/ContactPage';
-import PublicationGuidelinesPage from './pages/PublicationGuidelinesPage';
-import TermsOfServicePage from './pages/TermsOfServicePage';
-import KVKKPage from './pages/KVKKPage';
-import KullanimKurallariPage from './pages/KullanimKurallariPage';
-import YardimMerkeziPage from './pages/YardimMerkeziPage';
-import BlogPage from './pages/BlogPage';
-import GizlilikPolitikasiPage from './pages/GizlilikPolitikasiPage';
-import CerezPolitikasiPage from './pages/CerezPolitikasiPage';
-import ReklamPage from './pages/ReklamPage';
-import OrtaklikPage from './pages/OrtaklikPage';
-import TagsPage from './pages/TagsPage';
-import OpinionsPage from './pages/OpinionsPage';
-import CreateOpinionPage from './pages/CreateOpinionPage';
-import OpinionDetailPage from './pages/OpinionDetailPage';
-import QuestionSubmittedPage from './pages/QuestionSubmittedPage';
-import AdminApp from './admin/AdminApp';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const QuestionsPage = lazy(() => import('./pages/QuestionsPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const AskQuestionPage = lazy(() => import('./pages/AskQuestionPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
+const FollowersPage = lazy(() => import('./pages/FollowersPage'));
+const FollowingPage = lazy(() => import('./pages/FollowingPage'));
+const QuestionDetailPage = lazy(() => import('./pages/QuestionDetailPage'));
+const MessagesPage = lazy(() => import('./pages/MessagesPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const FollowRequestsPage = lazy(() => import('./pages/FollowRequestsPage'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
+const PusherTestPage = lazy(() => import('./pages/PusherTestPage'));
+const CommunityPage = lazy(() => import('./pages/CommunityPage'));
+const RoomPage = lazy(() => import('./pages/RoomPage'));
+const CommunityInvitationsPage = lazy(() => import('./pages/CommunityInvitationsPage'));
+const GoogleCallback = lazy(() => import('./pages/GoogleCallback'));
+const CompleteProfilePage = lazy(() => import('./pages/CompleteProfilePage'));
+const ErrorPage = lazy(() => import('./pages/ErrorPage'));
+const CategoryPage = lazy(() => import('./pages/CategoryPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const PublicationGuidelinesPage = lazy(() => import('./pages/PublicationGuidelinesPage'));
+const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
+const KVKKPage = lazy(() => import('./pages/KVKKPage'));
+const KullanimKurallariPage = lazy(() => import('./pages/KullanimKurallariPage'));
+const YardimMerkeziPage = lazy(() => import('./pages/YardimMerkeziPage'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const GizlilikPolitikasiPage = lazy(() => import('./pages/GizlilikPolitikasiPage'));
+const CerezPolitikasiPage = lazy(() => import('./pages/CerezPolitikasiPage'));
+const ReklamPage = lazy(() => import('./pages/ReklamPage'));
+const OrtaklikPage = lazy(() => import('./pages/OrtaklikPage'));
+const TagsPage = lazy(() => import('./pages/TagsPage'));
+const OpinionsPage = lazy(() => import('./pages/OpinionsPage'));
+const CreateOpinionPage = lazy(() => import('./pages/CreateOpinionPage'));
+const OpinionDetailPage = lazy(() => import('./pages/OpinionDetailPage'));
+const QuestionSubmittedPage = lazy(() => import('./pages/QuestionSubmittedPage'));
+const AdminApp = lazy(() => import('./admin/AdminApp'));
+
+const RouteFallback = () => <div className="min-h-screen bg-[var(--bg)]" aria-hidden="true" />;
 
 const GenderCheck = ({ children }) => {
   const { user, loading } = useAuth();
@@ -74,6 +76,7 @@ function App() {
             <DomainRedirect>
               <GenderCheck>
                 <div className="overflow-x-hidden">
+                  <Suspense fallback={<RouteFallback />}>
                   <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/questions" element={<QuestionsPage />} />
@@ -118,6 +121,7 @@ function App() {
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
                 </Routes>
+                  </Suspense>
               </div>
             </GenderCheck>
             </DomainRedirect>

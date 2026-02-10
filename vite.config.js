@@ -7,5 +7,15 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-helmet': ['react-helmet-async'],
+          'vendor-echo': ['laravel-echo', 'pusher-js'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
   },
 })

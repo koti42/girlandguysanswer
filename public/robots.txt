@@ -5,7 +5,6 @@ Disallow: /settings
 Disallow: /profile/*
 Allow: /profile/
 
-# Allow specific AI bots
 User-agent: Google-Extended
 Allow: /
 
@@ -19,3 +18,6 @@ User-agent: FacebookBot
 Allow: /
 
 Sitemap: https://herkeslersoruyor.com.tr/sitemap.xml
+
+# Sadece standart direktifler geçerlidir: User-agent, Allow, Disallow, Sitemap.
+# Content-Signal vb. standart dışı satırlar "Unknown directive" hatası verir; eklemeyin.
