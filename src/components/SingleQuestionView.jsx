@@ -833,7 +833,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
             <div className="flex flex-col gap-6">
                 {/* Question Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
+                <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft border-l-4 ${question.user?.gender === 'female' ? 'border-pink-400 dark:border-pink-500' : 'border-blue-400 dark:border-blue-500'}`}>
                     <div className="flex items-center gap-3 mb-4">
                         {question.user.username === 'anonim' ? (
                             <>
@@ -1141,11 +1141,20 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
                                 const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
 
+                                const isFemaleAnswer = answer.user?.gender === 'female';
+                                const genderBorderClass = isBestAnswer
+                                    ? 'border-green-200 dark:border-green-800'
+                                    : isFemaleAnswer
+                                        ? 'border-pink-200 dark:border-pink-800/50'
+                                        : 'border-blue-200 dark:border-blue-800/50';
+                                const genderBgClass = isBestAnswer
+                                    ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900'
+                                    : isFemaleAnswer
+                                        ? 'bg-gradient-to-br from-pink-50 to-white dark:from-pink-900/20 dark:to-gray-800/60'
+                                        : 'bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800/60';
+
                                 return (
-                                    <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${isBestAnswer
-                                        ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800 ring-1 ring-green-100 dark:ring-green-900'
-                                        : 'bg-gray-50 dark:bg-gray-800/60 border-gray-100 dark:border-gray-700'
-                                        }`}>
+                                    <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${genderBgClass} ${genderBorderClass}`}>
                                         <div className="flex gap-4">
                                             {answer.user?.username === 'anonim' ? (
                                                 <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
