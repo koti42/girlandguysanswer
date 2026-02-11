@@ -23,6 +23,11 @@ const MessagesPage = () => {
     const [showMobileChat, setShowMobileChat] = useState(false);
     const [conversationToDelete, setConversationToDelete] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const activeConversationRef = React.useRef(activeConversation);
+
+    useEffect(() => {
+        activeConversationRef.current = activeConversation;
+    }, [activeConversation]);
 
     const ensureHttps = (url) => {
         if (!url) return url;
@@ -105,6 +110,8 @@ const MessagesPage = () => {
     };
 
     const handleNewMessageEvent = (message) => {
+        const isActiveConversation = activeConversationRef.current?.id === message.conversation_id;
+
         setConversations(prevConversations => {
             const conversationIndex = prevConversations.findIndex(
                 c => c.id === message.conversation_id
@@ -119,7 +126,7 @@ const MessagesPage = () => {
                         is_mine: message.sender_id === user.id
                     },
                     last_message_at: message.created_at,
-                    unread_count: activeConversation?.id === message.conversation_id
+                    unread_count: isActiveConversation
                         ? 0
                         : (updatedConversations[conversationIndex].unread_count || 0) + 1
                 };

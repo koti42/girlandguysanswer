@@ -105,6 +105,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const markAsRead = async () => {
         try {
             await messagesAPI.markAsRead(conversation.id);
+            window.dispatchEvent(new Event('notification:refresh'));
         } catch (error) {
             console.error('Error marking as read:', error);
         }
