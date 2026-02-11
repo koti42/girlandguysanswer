@@ -131,7 +131,7 @@ const AnswerCard = ({ answer, profileGender }) => {
                                             }}
                                         >
                                             {getCategoryIcon(questionCategory)}
-                                            {questionCategory}
+                                            {typeof questionCategory === 'object' ? questionCategory.name : questionCategory}
                                         </span>
                                     )}
                                 </div>

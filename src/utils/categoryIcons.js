@@ -1,4 +1,4 @@
-import { 
+import {
     FaHeart,
     FaHome,
     FaShoppingBag,
@@ -34,11 +34,14 @@ import {
 /**
  * API'den gelen kategorilere göre icon seçimi
  */
-export const getCategoryIcon = (categoryName) => {
-    if (!categoryName) return FaHome;
-    
+export const getCategoryIcon = (category) => {
+    if (!category) return FaHome;
+
+    const categoryName = typeof category === 'object' ? category.name : category;
+    if (!categoryName || typeof categoryName !== 'string') return FaHome;
+
     const lowerName = categoryName.toLowerCase().trim();
-    
+
     const iconMap = {
         'aile & toplum': FaHome,
         'alışveriş & hediyeler': FaShoppingBag,
@@ -79,20 +82,24 @@ export const getCategoryIcon = (categoryName) => {
 };
 
 
-export const getCategoryColor = (categoryColor) => {
-    if (categoryColor && categoryColor.startsWith('#')) {
+export const getCategoryColor = (category) => {
+    if (!category) return '#9E9E9E';
+
+    const categoryColor = typeof category === 'object' ? category.color : category;
+
+    if (categoryColor && typeof categoryColor === 'string' && categoryColor.startsWith('#')) {
         return categoryColor;
     }
-    
-    return '#9E9E9E'; 
+
+    return '#9E9E9E';
 };
 
 
 export const getCategoryHexColor = (categoryName) => {
     if (!categoryName) return '#6B7280';
-    
+
     const lowerName = categoryName.toLowerCase();
-    
+
     const hexColorMap = {
         'aşk & ilişkiler': '#EC4899',
         'moda & güzellik': '#FB923C',

@@ -258,7 +258,7 @@ const QuestionSubmittedPage = () => {
                                         }}
                                     >
                                         {getCategoryIcon(questionData.category)}
-                                        {questionData.category}
+                                        {typeof questionData.category === 'object' ? questionData.category.name : questionData.category}
                                     </span>
                                 )}
                                 {questionData.tags?.length > 0 && (

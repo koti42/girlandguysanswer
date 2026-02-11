@@ -193,7 +193,7 @@ const Header = ({ onSearch }) => {
                                                         </p>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                                                                {result.category}
+                                                                {result.category?.name || result.category}
                                                             </span>
                                                             <span className="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1">
                                                                 <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
