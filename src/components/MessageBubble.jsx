@@ -1,5 +1,5 @@
 import React from 'react';
-import { format } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { FaEllipsisV, FaCheck, FaCheckDouble } from 'react-icons/fa';
 
@@ -49,6 +49,17 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
             ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white'
             : 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white');
 
+    const formatMessageDateTime = (dateString) => {
+        if (!dateString) return '';
+        const d = new Date(dateString);
+        if (Number.isNaN(d.getTime())) return '';
+
+        const time = format(d, 'HH:mm', { locale: tr });
+        if (isToday(d)) return `Bugün ${time}`;
+        if (isYesterday(d)) return `Dün ${time}`;
+        return `${format(d, 'd MMM', { locale: tr })} ${time}`;
+    };
+
     return (
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3`}>
             <div
@@ -70,12 +81,12 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                 <div className="flex justify-between items-start mb-1.5 opacity-80 gap-2">
                     <div className="flex items-center gap-1">
                         <span className="text-[10px]">
-                            {format(new Date(message.created_at), 'HH:mm', { locale: tr })}
+                            {formatMessageDateTime(message.created_at)}
                         </span>
                         {isMine && (
                             <span className="text-xs">
                                 {message.read_at ? (
-                                    <FaCheckDouble className="text-blue-200" title={`Okundu: ${format(new Date(message.read_at), 'HH:mm')}`} />
+                                    <FaCheckDouble className="text-blue-200" title={`Okundu: ${formatMessageDateTime(message.read_at)}`} />
                                 ) : (
                                     <FaCheck className="text-white/70" title="Gönderildi" />
                                 )}
