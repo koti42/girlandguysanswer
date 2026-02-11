@@ -31,13 +31,38 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         setMessages([]);
         setLoading(true);
 
+        const abortController = new AbortController();
+
         if (conversation && conversation.id) {
-            fetchMessages();
-            markAsRead();
+            const convId = conversation.id;
+
+            (async () => {
+                try {
+                    const response = await messagesAPI.getMessages(convId);
+                    if (abortController.signal.aborted) return;
+                    if (conversationRef.current?.id !== convId) return;
+                    setMessages(response.data.data.messages || []);
+                    setTimeout(() => scrollToBottom(true), 100);
+                } catch (error) {
+                    if (!abortController.signal.aborted) {
+                        console.error('Error fetching messages:', error);
+                    }
+                } finally {
+                    if (!abortController.signal.aborted) {
+                        setLoading(false);
+                    }
+                }
+            })();
+
+            messagesAPI.markAsRead(convId)
+                .then(() => window.dispatchEvent(new Event('notification:refresh')))
+                .catch(() => {});
         } else if (conversation && !conversation.id) {
             setMessages([]);
             setLoading(false);
         }
+
+        return () => abortController.abort();
     }, [conversation?.id]);
 
     useEffect(() => {
@@ -45,23 +70,24 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
         const channel = subscribeToUserChannel(user.id, {
             onNewMessage: (data) => {
-                if (conversation && data.message.conversation_id === conversation.id) {
+                if (conversationRef.current && data.message.conversation_id === conversationRef.current.id) {
                     setMessages(prev => {
                         const exists = prev.some(msg => msg.id === data.message.id);
                         if (exists) return prev;
                         return [...prev, data.message];
                     });
 
-                    if (conversation.id && data.message.sender_id !== user.id) {
-                        markAsRead();
+                    if (conversationRef.current.id && data.message.sender_id !== user.id) {
+                        messagesAPI.markAsRead(conversationRef.current.id)
+                            .then(() => window.dispatchEvent(new Event('notification:refresh')))
+                            .catch(() => {});
                     }
                 }
             },
             onMessagesRead: (data) => {
-
-                if (conversation &&
-                    data.conversation_id === conversation.id &&
-                    data.reader_id === conversation.other_user.id) {
+                if (conversationRef.current &&
+                    data.conversation_id === conversationRef.current.id &&
+                    data.reader_id === conversationRef.current.other_user.id) {
 
                     setMessages(prev => prev.map(msg => {
                         if (msg.sender_id === user.id && !msg.read_at) {
@@ -88,28 +114,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             scrollToBottom();
         }
     }, [messages]);
-
-    const fetchMessages = async () => {
-        try {
-            setLoading(true);
-            const response = await messagesAPI.getMessages(conversation.id);
-            setMessages(response.data.data.messages || []);
-            setTimeout(() => scrollToBottom(true), 100);
-        } catch (error) {
-            console.error('Error fetching messages:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const markAsRead = async () => {
-        try {
-            await messagesAPI.markAsRead(conversation.id);
-            window.dispatchEvent(new Event('notification:refresh'));
-        } catch (error) {
-            console.error('Error marking as read:', error);
-        }
-    };
 
     const scrollToBottom = (force = false) => {
         const container = messagesContainerRef.current;
