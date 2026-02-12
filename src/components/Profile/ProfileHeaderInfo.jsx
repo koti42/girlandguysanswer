@@ -26,6 +26,17 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender }) => {
             <div className="flex flex-wrap items-center gap-2 mt-1">
                 <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>
 
+                {/* Online Status Badge */}
+                {profileData.is_online !== undefined && (
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${profileData.is_online
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                        }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${profileData.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        {profileData.is_online ? 'Çevrimiçi' : 'Çevrimdışı'}
+                    </span>
+                )}
+
                 {/* Level Badge */}
                 {profileData.level && (
                     <div

@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import usePresence from './hooks/usePresence';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const QuestionsPage = lazy(() => import('./pages/QuestionsPage'));
@@ -53,6 +54,8 @@ const GenderCheck = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  usePresence();
+
   React.useEffect(() => {
     if (!loading && user && !user.gender) {
       if (location.pathname !== '/complete-profile') {
@@ -77,53 +80,53 @@ function App() {
               <GenderCheck>
                 <div className="overflow-x-hidden">
                   <Suspense fallback={<RouteFallback />}>
-                  <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/questions" element={<QuestionsPage />} />
-                  <Route path="/questions/:slug" element={<CategoryPage />} />
-                  <Route path="/question/:slug" element={<QuestionDetailPage />} />
-                  <Route path="/profile/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-                  <Route path="/profile/:username/followers" element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
-                  <Route path="/profile/:username/following" element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
-                  <Route path="/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
-                  <Route path="/question-submitted" element={<ProtectedRoute><QuestionSubmittedPage /></ProtectedRoute>} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/signup" element={<SignupPage />} />
-                  <Route path="/auth/google/callback" element={<GoogleCallback />} />
-                  <Route path="/complete-profile" element={<CompleteProfilePage />} />
-                  <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-                  <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-                  <Route path="/search" element={<ProtectedRoute><QuestionsPage /></ProtectedRoute>} />
-                  <Route path="/leaderboard" element={<LeaderboardPage />} />
-                  <Route path="/communities" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
-                  <Route path="/community/:uuid" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
-                  <Route path="/community-invitations" element={<ProtectedRoute><CommunityInvitationsPage /></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-                  <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-                  <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
-                  <Route path="/iletisim" element={<ContactPage />} />
-                  <Route path="/yayin-ilkeleri" element={<PublicationGuidelinesPage />} />
-                  <Route path="/site-sozlesmesi" element={<TermsOfServicePage />} />
-                  <Route path="/kvkk-aydinlatma" element={<KVKKPage />} />
-                  <Route path="/kullanim-kurallari" element={<KullanimKurallariPage />} />
-                  <Route path="/yardim-merkezi" element={<YardimMerkeziPage />} />
-                  <Route path="/blog" element={<BlogPage />} />
-                  <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasiPage />} />
-                  <Route path="/cerez-politikasi" element={<CerezPolitikasiPage />} />
-                  <Route path="/reklam" element={<ReklamPage />} />
-                  <Route path="/ortaklik" element={<OrtaklikPage />} />
-                  <Route path="/etiketler" element={<TagsPage />} />
-                  <Route path="/opinions" element={<OpinionsPage />} />
-                  <Route path="/opinions/yaz" element={<ProtectedRoute><CreateOpinionPage /></ProtectedRoute>} />
-                  <Route path="/opinion/:slugOrId" element={<OpinionDetailPage />} />
-                  <Route path="/pusher-test" element={<PusherTestPage />} />
-                  <Route path="/cpl-manage/*" element={<AdminApp />} />
-                  <Route path="/500" element={<ErrorPage code={500} />} />
-                  <Route path="*" element={<ErrorPage code={404} />} />
-                </Routes>
+                    <Routes>
+                      <Route path="/" element={<LandingPage />} />
+                      <Route path="/questions" element={<QuestionsPage />} />
+                      <Route path="/questions/:slug" element={<CategoryPage />} />
+                      <Route path="/question/:slug" element={<QuestionDetailPage />} />
+                      <Route path="/profile/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                      <Route path="/profile/:username/followers" element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
+                      <Route path="/profile/:username/following" element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
+                      <Route path="/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
+                      <Route path="/question-submitted" element={<ProtectedRoute><QuestionSubmittedPage /></ProtectedRoute>} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
+                      <Route path="/auth/google/callback" element={<GoogleCallback />} />
+                      <Route path="/complete-profile" element={<CompleteProfilePage />} />
+                      <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+                      <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+                      <Route path="/search" element={<ProtectedRoute><QuestionsPage /></ProtectedRoute>} />
+                      <Route path="/leaderboard" element={<LeaderboardPage />} />
+                      <Route path="/communities" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+                      <Route path="/community/:uuid" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
+                      <Route path="/community-invitations" element={<ProtectedRoute><CommunityInvitationsPage /></ProtectedRoute>} />
+                      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+                      <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+                      <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
+                      <Route path="/iletisim" element={<ContactPage />} />
+                      <Route path="/yayin-ilkeleri" element={<PublicationGuidelinesPage />} />
+                      <Route path="/site-sozlesmesi" element={<TermsOfServicePage />} />
+                      <Route path="/kvkk-aydinlatma" element={<KVKKPage />} />
+                      <Route path="/kullanim-kurallari" element={<KullanimKurallariPage />} />
+                      <Route path="/yardim-merkezi" element={<YardimMerkeziPage />} />
+                      <Route path="/blog" element={<BlogPage />} />
+                      <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasiPage />} />
+                      <Route path="/cerez-politikasi" element={<CerezPolitikasiPage />} />
+                      <Route path="/reklam" element={<ReklamPage />} />
+                      <Route path="/ortaklik" element={<OrtaklikPage />} />
+                      <Route path="/etiketler" element={<TagsPage />} />
+                      <Route path="/opinions" element={<OpinionsPage />} />
+                      <Route path="/opinions/yaz" element={<ProtectedRoute><CreateOpinionPage /></ProtectedRoute>} />
+                      <Route path="/opinion/:slugOrId" element={<OpinionDetailPage />} />
+                      <Route path="/pusher-test" element={<PusherTestPage />} />
+                      <Route path="/cpl-manage/*" element={<AdminApp />} />
+                      <Route path="/500" element={<ErrorPage code={500} />} />
+                      <Route path="*" element={<ErrorPage code={404} />} />
+                    </Routes>
                   </Suspense>
-              </div>
-            </GenderCheck>
+                </div>
+              </GenderCheck>
             </DomainRedirect>
           </Router>
         </NotificationProvider>

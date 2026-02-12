@@ -114,6 +114,7 @@ export const usersAPI = {
     deleteAvatar: () => api.delete('/user/me/avatar'),
     deleteCoverImage: () => api.delete('/user/me/cover-image'),
     requestAccountDeletion: (password) => api.post('/user/me/delete', { password }),
+    heartbeat: () => api.post('/user/me/heartbeat'),
 };
 
 export const gifsAPI = {

@@ -56,7 +56,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
             messagesAPI.markAsRead(convId)
                 .then(() => window.dispatchEvent(new Event('notification:refresh')))
-                .catch(() => {});
+                .catch(() => { });
         } else if (conversation && !conversation.id) {
             setMessages([]);
             setLoading(false);
@@ -80,7 +80,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     if (conversationRef.current.id && data.message.sender_id !== user.id) {
                         messagesAPI.markAsRead(conversationRef.current.id)
                             .then(() => window.dispatchEvent(new Event('notification:refresh')))
-                            .catch(() => {});
+                            .catch(() => { });
                     }
                 }
             },
@@ -243,7 +243,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             {conversation.other_user.username}
                         </h3>
                         <p className="text-xs text-white/80">
-                            Aktif
+                            {conversation.other_user.is_online ? '🟢 Çevrimiçi' : 'Çevrimdışı'}
                         </p>
                     </div>
                     {/* Delete History Button */}

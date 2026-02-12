@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import OnlineIndicator from '../components/OnlineIndicator';
 
 const MessagesPage = () => {
     const { username } = useParams();
@@ -266,6 +267,11 @@ const MessagesPage = () => {
                                                 src={ensureHttps(conversation.other_user.avatar) || 'https://i.pravatar.cc/200?u=default'}
                                                 alt={conversation.other_user.username}
                                                 className="w-14 h-14 rounded-full object-cover"
+                                            />
+                                            <OnlineIndicator
+                                                isOnline={conversation.other_user.is_online}
+                                                size="md"
+                                                className="absolute bottom-0 right-0"
                                             />
                                             {conversation.unread_count > 0 && (
                                                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-coral rounded-full flex items-center justify-center">
