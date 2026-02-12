@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 const NotificationBell = lazy(() => import('./NotificationBell'));
 import UserAvatar from './UserAvatar';
-import { categoriesAPI, questionsAPI } from '../services/api';
+import { categoriesAPI, questionsAPI, messagesAPI } from '../services/api';
 import { getCategoryIcon } from '../utils/categoryIcons';
 
 const Header = ({ onSearch }) => {
@@ -26,6 +26,27 @@ const Header = ({ onSearch }) => {
     const [selectedModalCategory, setSelectedModalCategory] = useState(null);
     const { isDark, toggleTheme } = useTheme();
     const { user, isAuthenticated, logout } = useAuth();
+    const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        const checkUnread = async () => {
+            try {
+                const res = await messagesAPI.getConversations();
+                const conversations = res.data?.data?.conversations || res.data?.data || [];
+                const hasUnread = conversations.some(c => c.unread_count > 0);
+                setHasUnreadMessages(hasUnread);
+            } catch (e) {
+            }
+        };
+
+        checkUnread();
+
+        const handleRefresh = () => checkUnread();
+        window.addEventListener('notification:refresh', handleRefresh);
+        return () => window.removeEventListener('notification:refresh', handleRefresh);
+    }, [isAuthenticated]);
 
     const handleLogout = async () => {
         try {
@@ -38,7 +59,6 @@ const Header = ({ onSearch }) => {
         }
     };
 
-    // Sorular modal'ını aç ve kategorileri yükle
     const openQuestionsModal = async () => {
         setIsQuestionsModalOpen(true);
         if (categories.length === 0) {
@@ -78,7 +98,7 @@ const Header = ({ onSearch }) => {
                 try {
                     const response = await questionsAPI.getAll({
                         search: searchQuery,
-                        limit: 5 // Get top 5 results
+                        limit: 5 
                     });
                     setSearchResults(response.data.data.questions || []);
                 } catch (error) {
@@ -96,7 +116,6 @@ const Header = ({ onSearch }) => {
         return () => clearTimeout(timeoutId);
     }, [searchQuery]);
 
-    // Navigate to full results
     const handleFullSearch = () => {
         setShowDropdown(false);
         if (onSearch) {
@@ -270,10 +289,13 @@ const Header = ({ onSearch }) => {
                         {/* Messages Button */}
                         <Link
                             to="/messages"
-                            className="hidden md:block p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                            className="hidden md:block relative p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
                             title="Mesajlar"
                         >
                             <FaEnvelope className="text-base sm:text-lg" />
+                            {hasUnreadMessages && (
+                                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse" />
+                            )}
                         </Link>
 
                         {/* Notifications */}
@@ -308,7 +330,12 @@ const Header = ({ onSearch }) => {
                                             to="/messages"
                                             className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors md:hidden"
                                         >
-                                            <FaEnvelope className="text-gray-400" />
+                                            <div className="relative">
+                                                <FaEnvelope className="text-gray-400" />
+                                                {hasUnreadMessages && (
+                                                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                                                )}
+                                            </div>
                                             Mesajlar
                                         </Link>
                                         <Link
@@ -536,7 +563,12 @@ const Header = ({ onSearch }) => {
                                     onClick={closeMobileMenu}
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                                 >
-                                    <FaEnvelope className="text-xl text-coral" />
+                                    <div className="relative">
+                                        <FaEnvelope className="text-xl text-coral" />
+                                        {hasUnreadMessages && (
+                                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900" />
+                                        )}
+                                    </div>
                                     <span className="text-gray-700 dark:text-gray-200 font-medium">Mesajlar</span>
                                 </Link>
                                 <Link
