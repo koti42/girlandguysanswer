@@ -114,20 +114,31 @@ const MessagesPage = () => {
     };
 
     useEffect(() => {
+        const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
+        
+        if (totalUnread > 0) {
+            document.title = `(${totalUnread}) ${NEW_MESSAGE_TITLE}`;
+        } else {
+            document.title = DEFAULT_PAGE_TITLE;
+        }
+    }, [conversations]);
+
+    useEffect(() => {
         const handleVisibility = () => {
             if (document.visibilityState === 'visible') {
-                document.title = DEFAULT_PAGE_TITLE;
+                const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
+                if (totalUnread > 0) {
+                    document.title = `(${totalUnread}) ${NEW_MESSAGE_TITLE}`;
+                } else {
+                    document.title = DEFAULT_PAGE_TITLE;
+                }
             }
         };
         document.addEventListener('visibilitychange', handleVisibility);
         return () => document.removeEventListener('visibilitychange', handleVisibility);
-    }, []);
+    }, [conversations]);
 
     const handleNewMessageEvent = (message) => {
-        if (document.hidden && message.sender_id !== user?.id) {
-            document.title = NEW_MESSAGE_TITLE;
-        }
-
         const isActiveConversation = activeConversationRef.current?.id === message.conversation_id;
 
         setConversations(prevConversations => {

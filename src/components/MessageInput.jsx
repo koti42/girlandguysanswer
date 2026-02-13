@@ -46,6 +46,15 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
         };
     }, [message]);
 
+    const handleFocus = () => {
+        if (onTypingRef.current && message.trim().length > 0) {
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            if (typingStopRef.current) clearTimeout(typingStopRef.current);
+            onTypingRef.current(true);
+            typingStopRef.current = setTimeout(() => onTypingRef.current?.(false), 2000);
+        }
+    };
+
     useEffect(() => {
         return () => {
             if (recordingIntervalRef.current) {
@@ -305,7 +314,8 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                         }
                     }}
                     onKeyPress={handleKeyPress}
-                    onBlur={() => onTyping?.(false)}
+                    onFocus={handleFocus}
+                    onBlur={() => onTypingRef.current?.(false)}
                     placeholder={replyingTo ? "Yanıt..." : "Mesaj..."}
                     disabled={disabled || isRecording}
                     className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-base md:text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50"
