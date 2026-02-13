@@ -68,7 +68,7 @@ const MessagesPage = () => {
         if (!user) return;
 
         subscribeToUserChannel(user.id, {
-            onNewMessage: handleNewMessageEvent
+            onNewMessage: (data) => handleNewMessageEvent(data.message || data)
         });
     };
 
@@ -140,30 +140,45 @@ const MessagesPage = () => {
 
     const handleNewMessageEvent = (message) => {
         const isActiveConversation = activeConversationRef.current?.id === message.conversation_id;
+        const isOwnMessage = message.sender_id === user?.id;
 
         setConversations(prevConversations => {
             const conversationIndex = prevConversations.findIndex(
                 c => c.id === message.conversation_id
             );
 
+            let finalConversations;
+            
             if (conversationIndex !== -1) {
                 const updatedConversations = [...prevConversations];
+                const currentUnread = updatedConversations[conversationIndex].unread_count || 0;
+                const newUnreadCount = isActiveConversation
+                    ? 0
+                    : (isOwnMessage ? currentUnread : currentUnread + 1);
+                
                 updatedConversations[conversationIndex] = {
                     ...updatedConversations[conversationIndex],
                     latest_message: {
                         ...message,
-                        is_mine: message.sender_id === user.id
+                        is_mine: isOwnMessage
                     },
                     last_message_at: message.created_at,
-                    unread_count: isActiveConversation
-                        ? 0
-                        : (updatedConversations[conversationIndex].unread_count || 0) + 1
+                    unread_count: newUnreadCount
                 };
                 const [movedConv] = updatedConversations.splice(conversationIndex, 1);
-                return [movedConv, ...updatedConversations];
+                finalConversations = [movedConv, ...updatedConversations];
+            } else {
+                finalConversations = prevConversations;
             }
-
-            return prevConversations;
+            
+            const totalUnread = finalConversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
+            if (totalUnread > 0 && !isOwnMessage) {
+                document.title = `(${totalUnread}) ${NEW_MESSAGE_TITLE}`;
+            } else if (totalUnread === 0) {
+                document.title = DEFAULT_PAGE_TITLE;
+            }
+            
+            return finalConversations;
         });
     };
 
