@@ -29,7 +29,7 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                     </audio>
                 );
             default:
-                return <p className="whitespace-pre-wrap break-words text-sm leading-relaxed min-w-0">{message.content}</p>;
+                return <p className="whitespace-pre-wrap break-words text-sm leading-relaxed min-w-0 max-w-full" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{message.content}</p>;
         }
     };
 

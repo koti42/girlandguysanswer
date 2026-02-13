@@ -279,7 +279,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             {/* Messages Area - Scrollable (Flex-1) */}
             <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto bg-white dark:bg-gray-900 w-full"
+                className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto bg-white dark:bg-gray-900 w-full"
                 style={{ WebkitOverflowScrolling: 'touch' }}
             >
                 {loading ? (
@@ -298,7 +298,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         </div>
                     </div>
                 ) : (
-                    <div className="py-4 w-full">
+                    <div className="py-4 w-full min-w-0 max-w-full">
                         {messages.map((message) => (
                             <MessageBubble
                                 key={message.id}
