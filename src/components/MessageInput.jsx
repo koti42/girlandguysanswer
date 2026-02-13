@@ -12,6 +12,9 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
     const [selectedFile, setSelectedFile] = useState(null);
     const [fileType, setFileType] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
+    const [isEphemeral, setIsEphemeral] = useState(false);
+    const [ephemeralMaxViews, setEphemeralMaxViews] = useState(null); // 1 veya 2
+    const [showEphemeralModal, setShowEphemeralModal] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
     const imageInputRef = useRef(null);
@@ -81,7 +84,6 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
     };
 
     const handleFileSelect = (e, type) => {
-        // ... (rest of the function)
         const file = e.target.files[0];
         if (!file) return;
 
@@ -90,16 +92,32 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
             return;
         }
 
+        // Görsel için: seçilir seçilmez otomatik gönder
+        if (type === 'image') {
+            onSendMessage({
+                content: '',
+                file,
+                type: 'image',
+                is_ephemeral: isEphemeral,
+                ephemeral_max_views: isEphemeral ? ephemeralMaxViews : null,
+            });
+
+            // Temizlik
+            if (imageInputRef.current) imageInputRef.current.value = '';
+            setSelectedFile(null);
+            setFileType(null);
+            setPreviewUrl(null);
+            setIsEphemeral(false);
+            setEphemeralMaxViews(null);
+
+            return;
+        }
+
+        // Diğer dosya tipleri için eski davranış
         setSelectedFile(file);
         setFileType(type);
-
-        if (type === 'image') {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewUrl(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
+        setIsEphemeral(false);
+        setEphemeralMaxViews(null);
     };
 
     // ... (rest of functions)
@@ -188,13 +206,18 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
         onSendMessage({
             content: message.trim(),
             file: selectedFile,
-            type: selectedFile ? fileType : 'text'
+            type: selectedFile ? fileType : 'text',
+            is_ephemeral: isEphemeral,
+            ephemeral_max_views: isEphemeral ? ephemeralMaxViews : null,
         });
 
         setMessage('');
         setSelectedFile(null);
         setFileType(null);
         setPreviewUrl(null);
+        setIsEphemeral(false);
+        setEphemeralMaxViews(null);
+        setShowEphemeralModal(false);
     };
 
     const handleKeyPress = (e) => {
@@ -208,6 +231,8 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
         setSelectedFile(null);
         setFileType(null);
         setPreviewUrl(null);
+        setIsEphemeral(false);
+        setEphemeralMaxViews(null);
         if (imageInputRef.current) imageInputRef.current.value = '';
     };
 
@@ -217,8 +242,82 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    const openImagePickerWithChoice = (mode) => {
+        if (mode === 'normal') {
+            setIsEphemeral(false);
+            setEphemeralMaxViews(null);
+        } else if (mode === 'one') {
+            setIsEphemeral(true);
+            setEphemeralMaxViews(1);
+        } else if (mode === 'two') {
+            setIsEphemeral(true);
+            setEphemeralMaxViews(2);
+        }
+
+        setShowEphemeralModal(false);
+
+        // Modal kapandıktan hemen sonra dosya seçici aç
+        setTimeout(() => {
+            if (imageInputRef.current) {
+                imageInputRef.current.click();
+            }
+        }, 0);
+    };
+
     return (
         <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2 min-w-0 overflow-hidden">
+            {/* Ephemeral seçenek modalı */}
+            {showEphemeralModal && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-4 w-[90%] max-w-sm">
+                        <h3 className="text-sm font-bold mb-2 text-gray-800 dark:text-gray-100">
+                            Fotoğraf gizlilik ayarı
+                        </h3>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
+                            Bu fotoğrafı normal mi göndermek istiyorsun, yoksa tek/iki bakmalık mı olsun?
+                        </p>
+                        <div className="space-y-2">
+                            <button
+                                type="button"
+                                onClick={() => openImagePickerWithChoice('normal')}
+                                className={`w-full px-3 py-2 rounded-xl border text-sm font-medium ${!isEphemeral
+                                    ? 'border-purple-500 text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/20'
+                                    : 'border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100'
+                                    }`}
+                            >
+                                Normal fotoğraf
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => openImagePickerWithChoice('one')}
+                                className={`w-full px-3 py-2 rounded-xl border text-sm font-medium ${isEphemeral && ephemeralMaxViews === 1
+                                    ? 'border-pink-500 text-pink-600 dark:text-pink-300 bg-pink-50 dark:bg-pink-900/20'
+                                    : 'border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100'
+                                    }`}
+                            >
+                                Tek bakmalık (1 görüntüleme / 10 sn)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => openImagePickerWithChoice('two')}
+                                className={`w-full px-3 py-2 rounded-xl border text-sm font-medium ${isEphemeral && ephemeralMaxViews === 2
+                                    ? 'border-orange-500 text-orange-600 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/20'
+                                    : 'border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100'
+                                    }`}
+                            >
+                                İki kere bakmalık (2 görüntüleme / her açılışta 10 sn)
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowEphemeralModal(false)}
+                            className="mt-3 w-full text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        >
+                            Vazgeç
+                        </button>
+                    </div>
+                </div>
+            )}
             {replyingTo && (
                 <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-pink-500 flex justify-between items-center text-gray-100">
                     <div className="flex flex-col overflow-hidden">
@@ -295,8 +394,8 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
 
                 {/* Image Button */}
                 <button
-                    onClick={() => imageInputRef.current?.click()}
-                    disabled={disabled || selectedFile || isRecording}
+                    onClick={() => setShowEphemeralModal(true)}
+                    disabled={disabled || isRecording}
                     className="p-1 sm:p-1.5 text-gray-500 hover:text-coral disabled:opacity-50 flex-shrink-0"
                 >
                     <FaImage className="text-base" />

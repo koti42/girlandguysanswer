@@ -169,7 +169,8 @@ export const messagesAPI = {
     }),
     markAsRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`),
     deleteConversation: (conversationId) => api.delete(`/messages/conversations/${conversationId}`),
-    sendTyping: (conversationId, typing = true) => api.post(`/messages/conversations/${conversationId}/typing`, { typing })
+    sendTyping: (conversationId, typing = true) => api.post(`/messages/conversations/${conversationId}/typing`, { typing }),
+    viewEphemeralFile: (messageId) => api.get(`/messages/${messageId}/file`, { responseType: 'blob' }),
 };
 
 export const notificationsAPI = {

@@ -145,7 +145,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         }
     };
 
-    const handleSendMessage = async ({ content, file, type }) => {
+    const handleSendMessage = async ({ content, file, type, is_ephemeral, ephemeral_max_views }) => {
         if (!conversation) return;
 
         const tempMessage = {
@@ -156,7 +156,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             sender_id: user.id,
             created_at: new Date().toISOString(),
             read_at: null, // Explicitly null for single checkmark
-            is_temp: true
+            is_temp: true,
+            is_ephemeral: is_ephemeral || false,
+            ephemeral_max_views: ephemeral_max_views || null,
         };
 
         setMessages(prev => [...prev, tempMessage]);
@@ -178,7 +180,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 formData.append('type', type);
                 formData.append('file', file);
                 if (content) formData.append('content', content);
-                if (replyingTo?.id) formData.append('reply_to_message_id', replyingTo.id); // Include reply ID
+                if (replyingTo?.id) formData.append('reply_to_message_id', replyingTo.id);
+                if (is_ephemeral) formData.append('is_ephemeral', '1');
+                if (ephemeral_max_views) formData.append('ephemeral_max_views', ephemeral_max_views);
 
                 response = await messagesAPI.sendFile(formData);
             }
@@ -342,7 +346,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     disabled={false}
                     replyingTo={replyingTo}
                     onCancelReply={() => setReplyingTo(null)}
-                    onTyping={conversation?.id ? (typing) => messagesAPI.sendTyping(conversation.id, typing).catch(() => {}) : undefined}
+                    onTyping={conversation?.id ? (typing) => messagesAPI.sendTyping(conversation.id, typing).catch(() => { }) : undefined}
                 />
             </div>
         </div>
