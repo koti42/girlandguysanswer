@@ -30,6 +30,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         conversationRef.current = conversation;
         setMessages([]);
         setLoading(true);
+        setReplyingTo(null);
 
         const abortController = new AbortController();
 
