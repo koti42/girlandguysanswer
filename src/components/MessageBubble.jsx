@@ -29,7 +29,7 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                     </audio>
                 );
             default:
-                return <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.content}</p>;
+                return <p className="whitespace-pre-wrap break-words text-sm leading-relaxed min-w-0">{message.content}</p>;
         }
     };
 
@@ -61,9 +61,9 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
     };
 
     return (
-        <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3`}>
+        <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3 min-w-0`}>
             <div
-                className={`max-w-[75%] px-4 py-3 rounded-lg shadow-sm ${bubbleClass} relative group`}
+                className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative group`}
             >
                 {/* Quoted Message */}
                 {message.reply_to && (

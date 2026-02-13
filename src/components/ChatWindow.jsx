@@ -314,7 +314,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             </div>
 
             {/* Interaction Zone (Sticky Bottom) - Input Only */}
-            <div className="flex-shrink-0 w-full z-20 sticky bottom-0 bg-white dark:bg-gray-900">
+            <div className="flex-shrink-0 w-full min-w-0 z-20 sticky bottom-0 bg-white dark:bg-gray-900">
                 <MessageInput
                     onSendMessage={handleSendMessage}
                     disabled={false}

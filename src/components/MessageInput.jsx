@@ -180,7 +180,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
     };
 
     return (
-        <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2">
+        <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2 min-w-0 overflow-hidden">
             {replyingTo && (
                 <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-pink-500 flex justify-between items-center text-gray-100">
                     <div className="flex flex-col overflow-hidden">
@@ -239,7 +239,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                 </div>
             )}
 
-            <div className="flex items-center gap-1 sm:gap-1.5 mb-1">
+            <div className="flex items-center gap-1 sm:gap-1.5 mb-1 min-w-0">
                 {/* Avatar - Hidden on mobile */}
                 <img
                     src={ensureHttps(user?.avatar) || 'https://i.pravatar.cc/200?u=default'}
