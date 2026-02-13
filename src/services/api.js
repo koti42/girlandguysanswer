@@ -168,7 +168,8 @@ export const messagesAPI = {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
     markAsRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`),
-    deleteConversation: (conversationId) => api.delete(`/messages/conversations/${conversationId}`)
+    deleteConversation: (conversationId) => api.delete(`/messages/conversations/${conversationId}`),
+    sendTyping: (conversationId, typing = true) => api.post(`/messages/conversations/${conversationId}/typing`, { typing })
 };
 
 export const notificationsAPI = {

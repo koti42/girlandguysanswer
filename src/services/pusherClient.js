@@ -24,6 +24,10 @@ export const subscribeToUserChannel = (userId, callbacks) => {
         channel.bind('messages-read', callbacks.onMessagesRead);
     }
 
+    if (callbacks.onUserTyping) {
+        channel.bind('user-typing', callbacks.onUserTyping);
+    }
+
     return channel;
 };
 

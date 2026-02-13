@@ -12,6 +12,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import OnlineIndicator from '../components/OnlineIndicator';
 
+const DEFAULT_PAGE_TITLE = 'Herkesler Soruyor';
+const NEW_MESSAGE_TITLE = 'Yeni mesajınız var - Herkesler Soruyor';
+
 const MessagesPage = () => {
     const { username } = useParams();
     const navigate = useNavigate();
@@ -110,7 +113,21 @@ const MessagesPage = () => {
         }
     };
 
+    useEffect(() => {
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                document.title = DEFAULT_PAGE_TITLE;
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+        return () => document.removeEventListener('visibilitychange', handleVisibility);
+    }, []);
+
     const handleNewMessageEvent = (message) => {
+        if (document.hidden && message.sender_id !== user?.id) {
+            document.title = NEW_MESSAGE_TITLE;
+        }
+
         const isActiveConversation = activeConversationRef.current?.id === message.conversation_id;
 
         setConversations(prevConversations => {

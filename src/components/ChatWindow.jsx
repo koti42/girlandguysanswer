@@ -9,11 +9,15 @@ import { messagesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
 
+const TYPING_RESET_MS = 3000;
+
 const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [replyingTo, setReplyingTo] = useState(null); // State for the message being replied to
-    const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete confirmation modal
+    const [replyingTo, setReplyingTo] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [otherUserTyping, setOtherUserTyping] = useState(null);
+    const typingResetRef = useRef(null);
     const { user } = useAuth();
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
@@ -31,6 +35,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         setMessages([]);
         setLoading(true);
         setReplyingTo(null);
+        setOtherUserTyping(null);
 
         const abortController = new AbortController();
 
@@ -97,10 +102,20 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         return msg;
                     }));
                 }
+            },
+            onUserTyping: (data) => {
+                if (!conversationRef.current || data.conversation_id !== conversationRef.current.id) return;
+                if (data.user_id === user.id) return;
+                if (typingResetRef.current) clearTimeout(typingResetRef.current);
+                setOtherUserTyping(data.typing ? (data.username || conversationRef.current.other_user?.username) : null);
+                if (data.typing) {
+                    typingResetRef.current = setTimeout(() => setOtherUserTyping(null), TYPING_RESET_MS);
+                }
             }
         });
 
         return () => {
+            if (typingResetRef.current) clearTimeout(typingResetRef.current);
             unsubscribeFromChannel(user.id);
         };
     }, [conversation?.id, user]);
@@ -244,7 +259,13 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             {conversation.other_user.username}
                         </h3>
                         <p className="text-xs text-white/80">
-                            {conversation.other_user.is_online ? '🟢 Çevrimiçi' : 'Çevrimdışı'}
+                            {otherUserTyping ? (
+                                <span className="italic">{otherUserTyping} yazıyor...</span>
+                            ) : conversation.other_user.is_online ? (
+                                '🟢 Çevrimiçi'
+                            ) : (
+                                'Çevrimdışı'
+                            )}
                         </p>
                     </div>
                     {/* Delete History Button */}
@@ -321,6 +342,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     disabled={false}
                     replyingTo={replyingTo}
                     onCancelReply={() => setReplyingTo(null)}
+                    onTyping={conversation?.id ? (typing) => messagesAPI.sendTyping(conversation.id, typing).catch(() => {}) : undefined}
                 />
             </div>
         </div>

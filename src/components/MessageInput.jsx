@@ -2,9 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaImage, FaMicrophone, FaTimes, FaStop, FaPaperPlane } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
-const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelReply }) => {
+const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelReply, onTyping }) => {
     const { user } = useAuth();
     const [message, setMessage] = useState('');
+    const typingTimeoutRef = useRef(null);
+    const typingStopRef = useRef(null);
+    const onTypingRef = useRef(onTyping);
+    onTypingRef.current = onTyping;
     const [selectedFile, setSelectedFile] = useState(null);
     const [fileType, setFileType] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -24,6 +28,23 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
             inputRef.current.focus();
         }
     }, [replyingTo]);
+
+    useEffect(() => {
+        const fn = onTypingRef.current;
+        if (!fn) return;
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        if (typingStopRef.current) clearTimeout(typingStopRef.current);
+        if (message.trim().length === 0) {
+            fn(false);
+            return;
+        }
+        typingTimeoutRef.current = setTimeout(() => onTypingRef.current?.(true), 300);
+        typingStopRef.current = setTimeout(() => onTypingRef.current?.(false), 2000);
+        return () => {
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            if (typingStopRef.current) clearTimeout(typingStopRef.current);
+        };
+    }, [message]);
 
     useEffect(() => {
         return () => {
@@ -284,6 +305,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                         }
                     }}
                     onKeyPress={handleKeyPress}
+                    onBlur={() => onTyping?.(false)}
                     placeholder={replyingTo ? "Yanıt..." : "Mesaj..."}
                     disabled={disabled || isRecording}
                     className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-base md:text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50"

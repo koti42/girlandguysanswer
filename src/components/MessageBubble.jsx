@@ -67,9 +67,9 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
             >
                 {/* Quoted Message */}
                 {message.reply_to && (
-                    <div className="mb-2 p-2 bg-black/10 dark:bg-white/10 rounded-lg border-l-4 border-white/50 text-xs">
-                        <p className="font-bold opacity-90 mb-0.5">{message.reply_to.sender?.username}</p>
-                        <p className="opacity-75 truncate">
+                    <div className="mb-2 p-2 min-w-0 max-w-full overflow-hidden bg-black/10 dark:bg-white/10 rounded-lg border-l-4 border-white/50 text-xs">
+                        <p className="font-bold opacity-90 mb-0.5 truncate">{message.reply_to.sender?.username}</p>
+                        <p className="opacity-75 break-words line-clamp-2 min-w-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                             {message.reply_to.type === 'image' ? '📷 Fotoğraf' :
                                 message.reply_to.type === 'audio' ? '🎤 Sesli Mesaj' :
                                     message.reply_to.content}
