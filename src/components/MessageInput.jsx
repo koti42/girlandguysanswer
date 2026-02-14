@@ -18,11 +18,18 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
     const [ephemeralModalChosenOption, setEphemeralModalChosenOption] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
+    const [volumeWave, setVolumeWave] = useState([]);
+    const WAVE_LENGTH = 52;
     const imageInputRef = useRef(null);
     const mediaRecorderRef = useRef(null);
+    const streamRef = useRef(null);
+    const cancelRequestedRef = useRef(false);
     const audioChunksRef = useRef([]);
     const recordingIntervalRef = useRef(null);
     const inputRef = useRef(null);
+    const audioContextRef = useRef(null);
+    const analyserRef = useRef(null);
+    const volumeAnimationRef = useRef(null);
 
     const MAX_CHARS = 1000;
 
@@ -137,9 +144,57 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
 
 
 
+    const stopVolumeVisualization = () => {
+        if (volumeAnimationRef.current != null) {
+            cancelAnimationFrame(volumeAnimationRef.current);
+            volumeAnimationRef.current = null;
+        }
+        if (audioContextRef.current) {
+            audioContextRef.current.close().catch(() => {});
+            audioContextRef.current = null;
+        }
+        analyserRef.current = null;
+        setVolumeWave([]);
+    };
+
+    const startVolumeVisualization = (stream) => {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContextRef.current = audioContext;
+            const source = audioContext.createMediaStreamSource(stream);
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 128;
+            analyser.smoothingTimeConstant = 0.5;
+            source.connect(analyser);
+            analyserRef.current = analyser;
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            const updateVolume = () => {
+                if (!analyserRef.current || !audioContextRef.current) return;
+                analyser.getByteFrequencyData(dataArray);
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                const level = Math.min(1, (sum / dataArray.length / 255) * 2.2);
+
+                setVolumeWave((prev) => {
+                    const next = [...prev, level];
+                    if (next.length > WAVE_LENGTH) return next.slice(-WAVE_LENGTH);
+                    return next;
+                });
+                volumeAnimationRef.current = requestAnimationFrame(updateVolume);
+            };
+            updateVolume();
+        } catch (e) {
+            setVolumeWave(Array(WAVE_LENGTH).fill(0.15));
+        }
+    };
+
     const startRecording = async () => {
         try {
+            cancelRequestedRef.current = false;
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            streamRef.current = stream;
             const mediaRecorder = new MediaRecorder(stream);
             mediaRecorderRef.current = mediaRecorder;
             audioChunksRef.current = [];
@@ -151,26 +206,41 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
             };
 
             mediaRecorder.onstop = () => {
+                stopVolumeVisualization();
+                if (cancelRequestedRef.current) {
+                    cancelRequestedRef.current = false;
+                    streamRef.current?.getTracks().forEach(track => track.stop());
+                    streamRef.current = null;
+                    setIsRecording(false);
+                    setRecordingTime(0);
+                    if (recordingIntervalRef.current) {
+                        clearInterval(recordingIntervalRef.current);
+                        recordingIntervalRef.current = null;
+                    }
+                    audioChunksRef.current = [];
+                    return;
+                }
                 const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                 const audioFile = new File([audioBlob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
-
                 onSendMessage({
                     content: '',
                     file: audioFile,
                     type: 'audio'
                 });
-
-                stream.getTracks().forEach(track => track.stop());
+                streamRef.current?.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
                 setIsRecording(false);
                 setRecordingTime(0);
                 if (recordingIntervalRef.current) {
                     clearInterval(recordingIntervalRef.current);
+                    recordingIntervalRef.current = null;
                 }
             };
 
             mediaRecorder.start();
             setIsRecording(true);
             setRecordingTime(0);
+            startVolumeVisualization(stream);
 
             recordingIntervalRef.current = setInterval(() => {
                 setRecordingTime(prev => prev + 1);
@@ -189,17 +259,19 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
     };
 
     const cancelRecording = () => {
+        cancelRequestedRef.current = true;
+        stopVolumeVisualization();
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
             mediaRecorderRef.current.stop();
-            mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
         }
-
+        streamRef.current?.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
         setIsRecording(false);
         setRecordingTime(0);
         audioChunksRef.current = [];
-
         if (recordingIntervalRef.current) {
             clearInterval(recordingIntervalRef.current);
+            recordingIntervalRef.current = null;
         }
     };
 
@@ -377,26 +449,53 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                 </div>
             )}
             {isRecording && (
-                <div className="mb-2 p-2 bg-red-50 rounded-lg border border-red-200 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <FaMicrophone className="text-red-500 animate-pulse" />
-                        <div>
-                            <p className="text-xs font-bold text-red-600">Kaydediliyor...</p>
-                            <p className="text-sm font-mono font-bold text-red-700">{formatTime(recordingTime)}</p>
+                <div className="mb-2 px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex-shrink-0 w-11 h-11 rounded-full bg-coral/10 dark:bg-coral/20 flex items-center justify-center ring-2 ring-coral/30 dark:ring-coral/40">
+                            <FaMicrophone className="text-coral text-base animate-pulse" />
+                        </div>
+                        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Ses kaydediliyor</p>
+                            <div className="flex items-end justify-center gap-[2px] h-6 min-h-[24px]">
+                                {volumeWave.length === 0 ? (
+                                    <div className="flex items-end gap-[2px]">
+                                        {Array.from({ length: 24 }).map((_, i) => (
+                                            <div
+                                                key={i}
+                                                className="w-0.5 rounded-full bg-coral/40 dark:bg-coral/50"
+                                                style={{ height: `${4 + (i % 3) * 4}px` }}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    volumeWave.map((level, i) => (
+                                        <div
+                                            key={i}
+                                            className="w-[3px] min-w-[3px] rounded-full bg-coral/80 dark:bg-coral transition-[height] duration-75 ease-out flex-shrink-0"
+                                            style={{ height: `${Math.max(3, 4 + level * 18)}px` }}
+                                        />
+                                    ))
+                                )}
+                            </div>
+                            <p className="text-base font-mono font-semibold text-gray-600 dark:text-gray-400 tabular-nums">{formatTime(recordingTime)}</p>
                         </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                         <button
-                            onClick={stopRecording}
-                            className="p-1.5 bg-green-500 text-white rounded-full hover:bg-green-600"
+                            type="button"
+                            onClick={cancelRecording}
+                            className="px-3 py-2 rounded-xl bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5"
                         >
-                            <FaStop className="text-xs" />
+                            <FaTimes className="text-[10px]" />
+                            İptal
                         </button>
                         <button
-                            onClick={cancelRecording}
-                            className="p-1.5 bg-gray-500 text-white rounded-full hover:bg-gray-600"
+                            type="button"
+                            onClick={stopRecording}
+                            className="px-4 py-2 rounded-xl bg-coral hover:bg-coral/90 text-white text-xs font-semibold shadow-sm hover:shadow transition-all flex items-center gap-1.5"
                         >
-                            <FaTimes className="text-xs" />
+                            <FaStop className="text-[10px]" />
+                            Gönder
                         </button>
                     </div>
                 </div>
@@ -448,7 +547,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                 <button
                     onClick={isRecording ? stopRecording : startRecording}
                     disabled={disabled || selectedFile}
-                    className={`p-1 sm:p-1.5 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-gray-500 hover:text-coral'
+                    className={`p-1 sm:p-1.5 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-coral' : 'text-gray-500 hover:text-coral'
                         }`}
                 >
                     <FaMicrophone className="text-base" />
