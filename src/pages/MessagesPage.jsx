@@ -66,6 +66,9 @@ const MessagesPage = () => {
             }
         } else if (username && !loading && conversations.length === 0) {
             fetchUserForNewConversation(username);
+        } else if (!username) {
+            setActiveConversation(null);
+            setShowMobileChat(false);
         }
     }, [username, conversations, loading]);
 
@@ -228,6 +231,7 @@ const MessagesPage = () => {
     };
 
     const handleBack = () => {
+        setActiveConversation(null);
         setShowMobileChat(false);
         navigate('/messages');
     };

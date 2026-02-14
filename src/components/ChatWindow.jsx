@@ -236,7 +236,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         Mesajlarınız
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400">
-                        Bir soh bet seçin veya yeni bir konuşma başlatın
+                        Bir sohbet seçin veya yeni bir konuşma başlatın.
                     </p>
                 </div>
             </div>
