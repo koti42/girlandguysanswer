@@ -6,6 +6,17 @@ import { messagesAPI } from '../services/api';
 
 const EPHEMERAL_DURATION = 10; // seconds
 
+function isEphemeralExpiredFromBackend(message, isMine) {
+    if (isMine || !message?.is_ephemeral) return false;
+    const maxViews = message.ephemeral_max_views;
+    const viewCount = message.ephemeral_view_count ?? 0;
+    if (maxViews && viewCount >= maxViews) return true;
+    const firstViewed = message.ephemeral_first_viewed_at;
+    if (!firstViewed) return false;
+    const viewedAt = new Date(firstViewed).getTime();
+    return (Date.now() - viewedAt) >= EPHEMERAL_DURATION * 1000;
+}
+
 const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
@@ -18,15 +29,45 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
     const [ephemeralLoading, setEphemeralLoading] = useState(false);
     const [ephemeralError, setEphemeralError] = useState(null);
     const [countdown, setCountdown] = useState(EPHEMERAL_DURATION);
-    const [expired, setExpired] = useState(false);
+    const [expired, setExpired] = useState(() => isEphemeralExpiredFromBackend(message, isMine));
     const countdownRef = useRef(null);
     const blobUrlRef = useRef(null);
+
+    useEffect(() => {
+        if (message.is_ephemeral && !isMine) {
+            setExpired(isEphemeralExpiredFromBackend(message, isMine));
+        }
+    }, [message.id, message.is_ephemeral, message.ephemeral_first_viewed_at, message.ephemeral_view_count, message.ephemeral_max_views, isMine]);
+
+    // Sender: load ephemeral image once so they can see it (with auth)
+    useEffect(() => {
+        if (!message.is_ephemeral || !isMine || message.type !== 'image') return;
+        let revoked = false;
+        messagesAPI.viewEphemeralFile(message.id)
+            .then((res) => {
+                if (revoked) return;
+                const url = URL.createObjectURL(res.data);
+                blobUrlRef.current = url;
+                setEphemeralBlobUrl(url);
+                const t = setTimeout(() => {
+                    if (blobUrlRef.current) {
+                        URL.revokeObjectURL(blobUrlRef.current);
+                        blobUrlRef.current = null;
+                        setEphemeralBlobUrl(null);
+                    }
+                }, EPHEMERAL_DURATION * 1000);
+                return () => clearTimeout(t);
+            })
+            .catch(() => setEphemeralError('Yüklenemedi'));
+        return () => { revoked = true; };
+    }, [message.id, message.is_ephemeral, isMine, message.type]);
 
     // Cleanup blob URL on unmount
     useEffect(() => {
         return () => {
             if (blobUrlRef.current) {
                 URL.revokeObjectURL(blobUrlRef.current);
+                blobUrlRef.current = null;
             }
         };
     }, []);
@@ -60,20 +101,9 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
         };
     }, [showEphemeralViewer, ephemeralLoading, ephemeralError]);
 
-    const handleOpenEphemeral = useCallback(async () => {
-        if (expired || isMine) {
-            if (isMine) {
-                // Sender can always view their own photo (no countdown needed)
-                setShowEphemeralViewer(true);
-                return;
-            }
-            return;
-        }
-
+    const loadEphemeralBlob = useCallback(async () => {
         setEphemeralLoading(true);
         setEphemeralError(null);
-        setShowEphemeralViewer(true);
-
         try {
             const response = await messagesAPI.viewEphemeralFile(message.id);
             const blob = response.data;
@@ -91,7 +121,19 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
         } finally {
             setEphemeralLoading(false);
         }
-    }, [expired, isMine, message.id]);
+    }, [message.id]);
+
+    const handleOpenEphemeral = useCallback(async () => {
+        if (expired) return;
+
+        if (ephemeralBlobUrl) {
+            setShowEphemeralViewer(true);
+            return;
+        }
+
+        setShowEphemeralViewer(true);
+        await loadEphemeralBlob();
+    }, [expired, ephemeralBlobUrl, loadEphemeralBlob]);
 
     const handleCloseEphemeral = useCallback(() => {
         setShowEphemeralViewer(false);
@@ -112,8 +154,6 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
     };
 
     const renderContent = () => {
-        const apiBase = import.meta.env.VITE_API_URL || 'https://herkeslersoruyor.panalix.com.tr/api';
-
         switch (message.type) {
             case 'image':
                 if (message.is_ephemeral) {
@@ -130,16 +170,28 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                                     <span className="text-[11px] text-white/60 font-medium">Süresi doldu</span>
                                 </div>
                             ) : isMine ? (
-                                // Sender sees their own photo normally
                                 <>
-                                    <img
-                                        src={`${apiBase.replace(/\/$/, '')}/messages/${message.id}/file`}
-                                        alt="Gizli fotoğraf"
-                                        className="max-w-full rounded-lg pointer-events-none"
-                                        style={{ maxHeight: '300px' }}
-                                        draggable={false}
-                                        onContextMenu={(e) => e.preventDefault()}
-                                    />
+                                    {ephemeralBlobUrl ? (
+                                        <img
+                                            src={ephemeralBlobUrl}
+                                            alt="Gizli fotoğraf"
+                                            className="max-w-full rounded-lg pointer-events-none"
+                                            style={{ maxHeight: '300px' }}
+                                            draggable={false}
+                                            onContextMenu={(e) => e.preventDefault()}
+                                        />
+                                    ) : (
+                                        <div className="w-48 h-32 rounded-lg flex flex-col items-center justify-center bg-white/10 gap-2">
+                                            {ephemeralLoading ? (
+                                                <span className="text-[11px] text-white/70">Yükleniyor...</span>
+                                            ) : (
+                                                <>
+                                                    <FaEye className="text-white/70 text-xl" />
+                                                    <span className="text-[10px] text-white/70">Görüntülemek için dokun</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
                                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                         <span className="px-2 py-1 text-[10px] font-semibold bg-black/60 text-white rounded-full">
                                             {getEphemeralLabel()}
@@ -204,11 +256,6 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
         return `${format(d, 'd MMM', { locale: tr })} ${time}`;
     };
 
-    // Sender's ephemeral image src (direct API URL, since sender can always view)
-    const senderEphemeralSrc = isMine && message.is_ephemeral
-        ? `${(import.meta.env.VITE_API_URL || 'https://herkeslersoruyor.panalix.com.tr/api').replace(/\/$/, '')}/messages/${message.id}/file`
-        : null;
-
     return (
         <>
             {/* Ephemeral Photo Viewer Overlay */}
@@ -244,8 +291,8 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                             </div>
                         )}
 
-                        {/* Image */}
-                        {!ephemeralLoading && !ephemeralError && (
+                        {/* Image - only when we have blob URL (revoked after 10s for devtools) */}
+                        {!ephemeralLoading && !ephemeralError && ephemeralBlobUrl && (
                             <>
                                 {/* Countdown Progress Bar */}
                                 {!isMine && (
@@ -268,7 +315,7 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                                 )}
 
                                 <img
-                                    src={isMine ? senderEphemeralSrc : ephemeralBlobUrl}
+                                    src={ephemeralBlobUrl}
                                     alt="Gizli fotoğraf"
                                     className="max-w-full max-h-[70vh] rounded-xl"
                                     draggable={false}
