@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes } from 'react-icons/fa';
+import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause } from 'react-icons/fa';
 import { messagesAPI } from '../services/api';
 
 const EPHEMERAL_DURATION = 10; // seconds
@@ -61,6 +61,11 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
     const [expired, setExpired] = useState(() => isEphemeralExpiredFromBackend(message, isMine));
     const countdownRef = useRef(null);
     const blobUrlRef = useRef(null);
+    const audioRef = useRef(null);
+    const [playbackSpeed, setPlaybackSpeed] = useState(1);
+    const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+    const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+    const [audioDuration, setAudioDuration] = useState(0);
 
     useEffect(() => {
         if (message.is_ephemeral && !isMine) {
@@ -273,12 +278,102 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                         )}
                     </>
                 );
-            case 'audio':
+            case 'audio': {
+                const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+                const formatSec = (s) => {
+                    if (!s || !Number.isFinite(s)) return '0:00';
+                    const m = Math.floor(s / 60);
+                    const sec = Math.floor(s % 60);
+                    return `${m}:${sec.toString().padStart(2, '0')}`;
+                };
+                const togglePlayPause = () => {
+                    const el = audioRef.current;
+                    if (!el) return;
+                    if (el.paused) {
+                        el.playbackRate = playbackSpeed;
+                        el.play();
+                    } else {
+                        el.pause();
+                    }
+                };
+                const seek = (e) => {
+                    const el = audioRef.current;
+                    if (!el || !audioDuration) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                    el.currentTime = p * audioDuration;
+                };
                 return (
-                    <audio controls className="max-w-full">
-                        <source src={ensureHttps(message.file_url)} type="audio/webm" />
-                    </audio>
+                    <div className="space-y-2 min-w-0 max-w-full">
+                        <audio
+                            ref={audioRef}
+                            className="hidden"
+                            onPlay={() => setIsAudioPlaying(true)}
+                            onPause={() => setIsAudioPlaying(false)}
+                            onEnded={() => {
+                                setIsAudioPlaying(false);
+                                setAudioCurrentTime(0);
+                            }}
+                            onTimeUpdate={() => setAudioCurrentTime(audioRef.current?.currentTime ?? 0)}
+                            onLoadedMetadata={() => {
+                                const el = audioRef.current;
+                                if (el) {
+                                    el.playbackRate = playbackSpeed;
+                                    setAudioDuration(el.duration);
+                                }
+                            }}
+                            onDurationChange={() => setAudioDuration(audioRef.current?.duration ?? 0)}
+                        >
+                            <source src={ensureHttps(message.file_url)} type="audio/webm" />
+                        </audio>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={togglePlayPause}
+                                className="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+                            >
+                                {isAudioPlaying ? <FaPause className="text-sm" /> : <FaPlay className="text-sm ml-0.5" />}
+                            </button>
+                            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                                <div
+                                    className="h-1.5 bg-white/20 rounded-full cursor-pointer overflow-hidden"
+                                    onClick={seek}
+                                >
+                                    <div
+                                        className="h-full bg-white/70 rounded-full transition-[width]"
+                                        style={{ width: `${audioDuration ? (audioCurrentTime / audioDuration) * 100 : 0}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between text-[10px] text-white/70">
+                                    <span>{formatSec(audioCurrentTime)}</span>
+                                    <span>{formatSec(audioDuration)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                            <span className="text-[11px] opacity-80 mr-0.5">Hız:</span>
+                            {speeds.map((speed) => (
+                                <button
+                                    key={speed}
+                                    type="button"
+                                    onClick={() => {
+                                        setPlaybackSpeed(speed);
+                                        if (audioRef.current) {
+                                            audioRef.current.playbackRate = speed;
+                                        }
+                                    }}
+                                    className={`px-2 py-1 rounded-lg text-[11px] font-medium transition-colors ${playbackSpeed === speed
+                                        ? 'bg-white/25 text-white'
+                                        : 'bg-white/10 text-white/80 hover:bg-white/20'
+                                        }`}
+                                >
+                                    {speed === 1 ? '1x' : `${speed}x`}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 );
+            }
             default: {
                 const content = message.content || '';
                 const youtubeLinks = getYoutubeVideoLinks(content);
