@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone } from 'react-icons/fa';
+import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes } from 'react-icons/fa';
 import { messagesAPI } from '../services/api';
 
 const EPHEMERAL_DURATION = 10; // seconds
@@ -53,6 +53,7 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
     };
 
     const [showEphemeralViewer, setShowEphemeralViewer] = useState(false);
+    const [showImageModal, setShowImageModal] = useState(false);
     const [ephemeralBlobUrl, setEphemeralBlobUrl] = useState(null);
     const [ephemeralLoading, setEphemeralLoading] = useState(false);
     const [ephemeralError, setEphemeralError] = useState(null);
@@ -239,14 +240,38 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                         </div>
                     );
                 }
+                const imageUrl = ensureHttps(message.file_url);
                 return (
-                    <img
-                        src={ensureHttps(message.file_url)}
-                        alt="Image"
-                        className="max-w-full rounded-lg cursor-pointer"
-                        style={{ maxHeight: '300px' }}
-                        onClick={() => window.open(ensureHttps(message.file_url), '_blank')}
-                    />
+                    <>
+                        <img
+                            src={imageUrl}
+                            alt="Image"
+                            className="max-w-[200px] rounded-lg cursor-pointer object-cover hover:opacity-90 transition-opacity"
+                            style={{ maxHeight: '180px' }}
+                            onClick={() => setShowImageModal(true)}
+                        />
+                        {showImageModal && (
+                            <div
+                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+                                onClick={() => setShowImageModal(false)}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setShowImageModal(false)}
+                                    className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                                    aria-label="Kapat"
+                                >
+                                    <FaTimes className="text-xl" />
+                                </button>
+                                <img
+                                    src={imageUrl}
+                                    alt="Image"
+                                    className="max-w-full max-h-full object-contain rounded-lg"
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
+                        )}
+                    </>
                 );
             case 'audio':
                 return (
