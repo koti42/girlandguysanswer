@@ -6,6 +6,34 @@ import { messagesAPI } from '../services/api';
 
 const EPHEMERAL_DURATION = 10; // seconds
 
+const YOUTUBE_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})/gi;
+
+function getYoutubeVideoLinks(content) {
+    if (!content || typeof content !== 'string') return [];
+    const seen = new Set();
+    const result = [];
+    let m;
+    const re = new RegExp(YOUTUBE_URL_REGEX.source, 'gi');
+    while ((m = re.exec(content)) !== null) {
+        const videoId = m[1];
+        const fullUrl = m[0].startsWith('http') ? m[0] : `https://${m[0]}`;
+        const isMusic = /music\.youtube\.com/i.test(m[0]);
+        if (!seen.has(videoId)) {
+            seen.add(videoId);
+            result.push({ url: fullUrl, videoId, isMusic });
+        }
+    }
+    return result;
+}
+
+function contentWithShortLinks(content) {
+    if (!content || typeof content !== 'string') return '';
+    return content.replace(YOUTUBE_URL_REGEX, (match) => {
+        const isMusic = /music\.youtube\.com/i.test(match);
+        return isMusic ? '🔗 YouTube Music linki' : '🔗 Video linki';
+    });
+}
+
 function isEphemeralExpiredFromBackend(message, isMine) {
     if (isMine || !message?.is_ephemeral) return false;
     const maxViews = message.ephemeral_max_views;
@@ -226,8 +254,40 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                         <source src={ensureHttps(message.file_url)} type="audio/webm" />
                     </audio>
                 );
-            default:
-                return <p className="whitespace-pre-wrap break-words text-sm leading-relaxed min-w-0 max-w-full" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{message.content}</p>;
+            default: {
+                const content = message.content || '';
+                const youtubeLinks = getYoutubeVideoLinks(content);
+                return (
+                    <div className="min-w-0 max-w-full space-y-2">
+                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{contentWithShortLinks(content)}</p>
+                        {youtubeLinks.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                                {youtubeLinks.map(({ url, videoId, isMusic }) => (
+                                    <a
+                                        key={videoId}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex overflow-hidden rounded-lg border border-white/20 bg-black/20 hover:bg-black/30 transition-colors no-underline text-inherit max-w-[320px]"
+                                    >
+                                        <img
+                                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                                            alt=""
+                                            className="w-28 h-20 object-cover flex-shrink-0"
+                                        />
+                                        <div className="flex flex-col justify-center min-w-0 p-2">
+                                            <span className="text-xs font-medium opacity-90">
+                                                {isMusic ? 'YouTube Music' : 'YouTube'}
+                                            </span>
+                                            <span className="text-[11px] opacity-75 truncate">Videoyu izle</span>
+                                        </div>
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
         }
     };
 
