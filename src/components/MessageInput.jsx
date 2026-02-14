@@ -15,6 +15,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
     const [isEphemeral, setIsEphemeral] = useState(false);
     const [ephemeralMaxViews, setEphemeralMaxViews] = useState(null); // 1 veya 2
     const [showEphemeralModal, setShowEphemeralModal] = useState(false);
+    const [ephemeralModalChosenOption, setEphemeralModalChosenOption] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
     const imageInputRef = useRef(null);
@@ -109,6 +110,8 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
             setPreviewUrl(null);
             setIsEphemeral(false);
             setEphemeralMaxViews(null);
+            setShowEphemeralModal(false);
+            setEphemeralModalChosenOption(null);
 
             return;
         }
@@ -242,7 +245,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const openImagePickerWithChoice = (mode) => {
+    const setPhotoOptionInModal = (mode) => {
         if (mode === 'normal') {
             setIsEphemeral(false);
             setEphemeralMaxViews(null);
@@ -253,15 +256,16 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
             setIsEphemeral(true);
             setEphemeralMaxViews(2);
         }
+        setEphemeralModalChosenOption(mode);
+    };
 
+    const openPhotoPickerFromModal = () => {
+        if (imageInputRef.current) imageInputRef.current.click();
+    };
+
+    const closeEphemeralModal = () => {
         setShowEphemeralModal(false);
-
-        // Modal kapandıktan hemen sonra dosya seçici aç
-        setTimeout(() => {
-            if (imageInputRef.current) {
-                imageInputRef.current.click();
-            }
-        }, 0);
+        setEphemeralModalChosenOption(null);
     };
 
     return (
@@ -271,7 +275,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                 <>
                     <div
                         className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
-                        onClick={() => setShowEphemeralModal(false)}
+                        onClick={closeEphemeralModal}
                         aria-hidden="true"
                     />
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
@@ -286,14 +290,16 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                                 <h3 className="text-lg font-bold text-center text-gray-900 dark:text-gray-100 mb-2">
                                     Fotoğraf gönder
                                 </h3>
-                                <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-                                    Bu fotoğrafı normal mi göndermek istiyorsun, yoksa tek veya iki bakmalık mı olsun?
+                                <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
+                                    {ephemeralModalChosenOption == null
+                                        ? 'Önce nasıl göndermek istediğini seç, sonra fotoğrafı seç.'
+                                        : 'Seçimin hazır. Aşağıdan fotoğrafı seç.'}
                                 </p>
                                 <div className="space-y-2 mb-4">
                                     <button
                                         type="button"
-                                        onClick={() => openImagePickerWithChoice('normal')}
-                                        className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${!isEphemeral
+                                        onClick={() => setPhotoOptionInModal('normal')}
+                                        className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${ephemeralModalChosenOption === 'normal'
                                             ? 'border-coral bg-coral/10 text-coral dark:bg-coral/20 dark:text-coral'
                                             : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                             }`}
@@ -302,8 +308,8 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => openImagePickerWithChoice('one')}
-                                        className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${isEphemeral && ephemeralMaxViews === 1
+                                        onClick={() => setPhotoOptionInModal('one')}
+                                        className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${ephemeralModalChosenOption === 'one'
                                             ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400'
                                             : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                             }`}
@@ -312,8 +318,8 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => openImagePickerWithChoice('two')}
-                                        className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${isEphemeral && ephemeralMaxViews === 2
+                                        onClick={() => setPhotoOptionInModal('two')}
+                                        className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${ephemeralModalChosenOption === 'two'
                                             ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
                                             : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                             }`}
@@ -321,9 +327,21 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                                         İki bakmalık (2 görüntüleme, her biri 10 sn)
                                     </button>
                                 </div>
+                                {ephemeralModalChosenOption != null && (
+                                    <div className="mb-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                        <button
+                                            type="button"
+                                            onClick={openPhotoPickerFromModal}
+                                            className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white text-sm font-semibold shadow-lg hover:shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <FaImage className="text-base" />
+                                            Fotoğraf seç
+                                        </button>
+                                    </div>
+                                )}
                                 <button
                                     type="button"
-                                    onClick={() => setShowEphemeralModal(false)}
+                                    onClick={closeEphemeralModal}
                                     className="w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors"
                                 >
                                     Vazgeç
@@ -409,7 +427,10 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
 
                 {/* Image Button */}
                 <button
-                    onClick={() => setShowEphemeralModal(true)}
+                    onClick={() => {
+                        setEphemeralModalChosenOption(null);
+                        setShowEphemeralModal(true);
+                    }}
                     disabled={disabled || isRecording}
                     className="p-1 sm:p-1.5 text-gray-500 hover:text-coral disabled:opacity-50 flex-shrink-0"
                 >
