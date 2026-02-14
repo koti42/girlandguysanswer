@@ -223,12 +223,19 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
         setShowEphemeralModal(false);
     };
 
-    const handleKeyPress = (e) => {
+    const handleKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSend();
         }
     };
+
+    useEffect(() => {
+        const el = inputRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+    }, [message]);
 
     const clearFile = () => {
         setSelectedFile(null);
@@ -409,7 +416,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                 </div>
             )}
 
-            <div className="flex items-center gap-1 sm:gap-1.5 mb-1 min-w-0">
+            <div className="flex items-end gap-1 sm:gap-1.5 mb-1 min-w-0">
                 {/* Avatar - Hidden on mobile */}
                 <img
                     src={ensureHttps(user?.avatar) || 'https://i.pravatar.cc/200?u=default'}
@@ -447,10 +454,11 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                     <FaMicrophone className="text-base" />
                 </button>
 
-                {/* Input Field */}
-                <input
+                {/* Input Field - textarea aşağı doğru genişler */}
+                <textarea
                     ref={inputRef}
                     value={message}
+                    rows={1}
                     onChange={(e) => {
                         if (e.target.value.length <= MAX_CHARS) {
                             setMessage(e.target.value);
@@ -461,7 +469,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                             }
                         }
                     }}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyDown}
                     onFocus={handleFocus}
                     onBlur={() => {
                         if (typingStopRef.current) clearTimeout(typingStopRef.current);
@@ -469,7 +477,7 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
                     }}
                     placeholder={replyingTo ? "Yanıt..." : "Mesaj..."}
                     disabled={disabled || isRecording}
-                    className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-base md:text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50"
+                    className="flex-1 min-w-0 px-2 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-base md:text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-400 disabled:opacity-50 resize-none overflow-y-auto min-h-[38px] max-h-[120px]"
                 />
 
                 {/* Send Button - Icon on mobile, Text on desktop */}
