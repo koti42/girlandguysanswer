@@ -268,55 +268,70 @@ const MessageInput = ({ onSendMessage, disabled = false, replyingTo, onCancelRep
         <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2 min-w-0 overflow-hidden">
             {/* Ephemeral seçenek modalı */}
             {showEphemeralModal && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-4 w-[90%] max-w-sm">
-                        <h3 className="text-sm font-bold mb-2 text-gray-800 dark:text-gray-100">
-                            Fotoğraf gizlilik ayarı
-                        </h3>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
-                            Bu fotoğrafı normal mi göndermek istiyorsun, yoksa tek/iki bakmalık mı olsun?
-                        </p>
-                        <div className="space-y-2">
-                            <button
-                                type="button"
-                                onClick={() => openImagePickerWithChoice('normal')}
-                                className={`w-full px-3 py-2 rounded-xl border text-sm font-medium ${!isEphemeral
-                                    ? 'border-purple-500 text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/20'
-                                    : 'border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100'
-                                    }`}
-                            >
-                                Normal fotoğraf
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => openImagePickerWithChoice('one')}
-                                className={`w-full px-3 py-2 rounded-xl border text-sm font-medium ${isEphemeral && ephemeralMaxViews === 1
-                                    ? 'border-pink-500 text-pink-600 dark:text-pink-300 bg-pink-50 dark:bg-pink-900/20'
-                                    : 'border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100'
-                                    }`}
-                            >
-                                Tek bakmalık (1 görüntüleme / 10 sn)
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => openImagePickerWithChoice('two')}
-                                className={`w-full px-3 py-2 rounded-xl border text-sm font-medium ${isEphemeral && ephemeralMaxViews === 2
-                                    ? 'border-orange-500 text-orange-600 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/20'
-                                    : 'border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100'
-                                    }`}
-                            >
-                                İki kere bakmalık (2 görüntüleme / her açılışta 10 sn)
-                            </button>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setShowEphemeralModal(false)}
-                            className="mt-3 w-full text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                <>
+                    <div
+                        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+                        onClick={() => setShowEphemeralModal(false)}
+                        aria-hidden="true"
+                    />
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
+                        <div
+                            className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden pointer-events-auto"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            Vazgeç
-                        </button>
+                            <div className="p-6">
+                                <div className="flex items-center justify-center w-12 h-12 mx-auto bg-pink-100 dark:bg-pink-900/30 rounded-full mb-4">
+                                    <FaImage className="text-xl text-pink-600 dark:text-pink-400" />
+                                </div>
+                                <h3 className="text-lg font-bold text-center text-gray-900 dark:text-gray-100 mb-2">
+                                    Fotoğraf gönder
+                                </h3>
+                                <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+                                    Bu fotoğrafı normal mi göndermek istiyorsun, yoksa tek veya iki bakmalık mı olsun?
+                                </p>
+                                <div className="space-y-2 mb-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => openImagePickerWithChoice('normal')}
+                                        className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${!isEphemeral
+                                            ? 'border-coral bg-coral/10 text-coral dark:bg-coral/20 dark:text-coral'
+                                            : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                            }`}
+                                    >
+                                        Normal fotoğraf
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => openImagePickerWithChoice('one')}
+                                        className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${isEphemeral && ephemeralMaxViews === 1
+                                            ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400'
+                                            : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                            }`}
+                                    >
+                                        Tek bakmalık (1 görüntüleme, 10 sn)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => openImagePickerWithChoice('two')}
+                                        className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${isEphemeral && ephemeralMaxViews === 2
+                                            ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
+                                            : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                            }`}
+                                    >
+                                        İki bakmalık (2 görüntüleme, her biri 10 sn)
+                                    </button>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEphemeralModal(false)}
+                                    className="w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors"
+                                >
+                                    Vazgeç
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </>
             )}
             {replyingTo && (
                 <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-pink-500 flex justify-between items-center text-gray-100">
