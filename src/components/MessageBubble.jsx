@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock } from 'react-icons/fa';
+import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone } from 'react-icons/fa';
 import { messagesAPI } from '../services/api';
 
 const EPHEMERAL_DURATION = 10; // seconds
@@ -351,9 +351,17 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                         <div className="mb-2 p-2 min-w-0 max-w-full overflow-hidden bg-black/10 dark:bg-white/10 rounded-lg border-l-4 border-white/50 text-xs">
                             <p className="font-bold opacity-90 mb-0.5 truncate">{message.reply_to.sender?.username}</p>
                             <p className="opacity-75 break-words line-clamp-2 min-w-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                                {message.reply_to.type === 'image' ? '📷 Fotoğraf' :
-                                    message.reply_to.type === 'audio' ? '🎤 Sesli Mesaj' :
-                                        message.reply_to.content}
+                                {message.reply_to.type === 'image' ? (
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <FaImage className="text-sm opacity-80 shrink-0" /> Fotoğraf
+                                    </span>
+                                ) : message.reply_to.type === 'audio' ? (
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <FaMicrophone className="text-sm opacity-80 shrink-0" /> Sesli Mesaj
+                                    </span>
+                                ) : (
+                                    message.reply_to.content
+                                )}
                             </p>
                         </div>
                     )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaSearch, FaTrash } from 'react-icons/fa';
 import ChatWindow from '../components/ChatWindow';
@@ -14,6 +14,7 @@ import OnlineIndicator from '../components/OnlineIndicator';
 
 const DEFAULT_PAGE_TITLE = 'Herkesler Soruyor';
 const NEW_MESSAGE_TITLE = 'Yeni mesajınız var - Herkesler Soruyor';
+const TYPING_RESET_MS = 3000;
 
 const MessagesPage = () => {
     const { username } = useParams();
@@ -27,6 +28,8 @@ const MessagesPage = () => {
     const [showMobileChat, setShowMobileChat] = useState(false);
     const [conversationToDelete, setConversationToDelete] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [typingByConversationId, setTypingByConversationId] = useState({});
+    const typingTimeoutsRef = useRef({});
     const activeConversationRef = React.useRef(activeConversation);
 
     useEffect(() => {
@@ -44,6 +47,8 @@ const MessagesPage = () => {
         setupPusher();
 
         return () => {
+            Object.values(typingTimeoutsRef.current).forEach(clearTimeout);
+            typingTimeoutsRef.current = {};
             if (user) {
                 unsubscribeFromChannel(user.id);
             }
@@ -68,7 +73,33 @@ const MessagesPage = () => {
         if (!user) return;
 
         subscribeToUserChannel(user.id, {
-            onNewMessage: (data) => handleNewMessageEvent(data.message || data)
+            onNewMessage: (data) => handleNewMessageEvent(data.message || data),
+            onUserTyping: (data) => {
+                if (data.user_id === user.id) return;
+                const convId = data.conversation_id;
+                if (typingTimeoutsRef.current[convId]) {
+                    clearTimeout(typingTimeoutsRef.current[convId]);
+                    delete typingTimeoutsRef.current[convId];
+                }
+                if (data.typing) {
+                    const usernameTyping = data.username || null;
+                    setTypingByConversationId(prev => ({ ...prev, [convId]: usernameTyping }));
+                    typingTimeoutsRef.current[convId] = setTimeout(() => {
+                        delete typingTimeoutsRef.current[convId];
+                        setTypingByConversationId(prev => {
+                            const next = { ...prev };
+                            delete next[convId];
+                            return next;
+                        });
+                    }, TYPING_RESET_MS);
+                } else {
+                    setTypingByConversationId(prev => {
+                        const next = { ...prev };
+                        delete next[convId];
+                        return next;
+                    });
+                }
+            }
         });
     };
 
@@ -341,8 +372,14 @@ const MessagesPage = () => {
                                             </div>
                                             <p className={`text-sm truncate ${conversation.unread_count > 0 ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-500 dark:text-gray-400'
                                                 }`}>
-                                                {conversation.latest_message?.is_mine && 'Siz: '}
-                                                {renderMessagePreview(conversation.latest_message)}
+                                                {typingByConversationId[conversation.id] !== undefined ? (
+                                                    <span className="italic text-coral">{(typingByConversationId[conversation.id] || conversation.other_user?.username) || 'Birisi'} yazıyor...</span>
+                                                ) : (
+                                                    <>
+                                                        {conversation.latest_message?.is_mine && 'Siz: '}
+                                                        {renderMessagePreview(conversation.latest_message)}
+                                                    </>
+                                                )}
                                             </p>
                                         </div>
 
