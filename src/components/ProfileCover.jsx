@@ -52,11 +52,11 @@ const ProfileCover = ({ coverPhoto, onCoverUpload, onCoverRemove }) => {
 
     return (
         <>
-            <div className="relative h-52 sm:h-56 bg-gray-200 dark:bg-gray-700 rounded-t-2xl overflow-hidden group flex items-center justify-center">
+            <div className="relative h-52 sm:h-56 bg-gray-200 dark:bg-gray-700 rounded-t-2xl overflow-hidden group">
                 <img
                     src={coverPhoto}
                     alt="Kapak"
-                    className="w-full h-full object-contain cursor-pointer"
+                    className="w-full h-full object-cover object-center cursor-pointer"
                     onClick={() => coverPhoto && setIsLightboxOpen(true)}
                 />
                 {onCoverUpload && (
