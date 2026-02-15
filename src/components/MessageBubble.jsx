@@ -8,6 +8,8 @@ import { messagesAPI } from '../services/api';
 const EPHEMERAL_DURATION = 10; // seconds
 const EDIT_DELETE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 const REACTION_EMOJIS = ['😠', '😂', '❤️', '😢']; // kızgın, gülme, kalp, üzgün
+const REACTION_PICKER_WIDTH = 220;
+const REACTION_PICKER_HEIGHT = 48;
 
 function canEditOrDeleteMessage(message, isMine) {
     if (!isMine || message.user_deleted_at) return false;
@@ -85,7 +87,7 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
     const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
     const reactionButtonRef = useRef(null);
     const reactionPickerRef = useRef(null);
-    const [reactionPickerPosition, setReactionPickerPosition] = useState({ top: 0, right: 0 });
+    const [reactionPickerPosition, setReactionPickerPosition] = useState({ top: 0, left: 0 });
 
     const canEditOrDelete = canEditOrDeleteMessage(message, isMine);
     const canEdit = canEditOrDelete && message.type === 'text' && onEdit;
@@ -122,10 +124,9 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
         const updateReactionPos = () => {
             if (reactionButtonRef.current) {
                 const rect = reactionButtonRef.current.getBoundingClientRect();
-                setReactionPickerPosition({
-                    top: rect.top - 8,
-                    right: window.innerWidth - rect.right,
-                });
+                const left = Math.max(8, Math.min(rect.left, window.innerWidth - REACTION_PICKER_WIDTH - 8));
+                const top = Math.max(8, rect.top - REACTION_PICKER_HEIGHT - 8);
+                setReactionPickerPosition({ top, left });
             }
         };
         updateReactionPos();
@@ -639,10 +640,9 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                                 setReactionPickerOpen(next);
                                 if (next && reactionButtonRef.current) {
                                     const rect = reactionButtonRef.current.getBoundingClientRect();
-                                    setReactionPickerPosition({
-                                        top: rect.top - 8,
-                                        right: window.innerWidth - rect.right,
-                                    });
+                                    const left = Math.max(8, Math.min(rect.left, window.innerWidth - REACTION_PICKER_WIDTH - 8));
+                                    const top = Math.max(8, rect.top - REACTION_PICKER_HEIGHT - 8);
+                                    setReactionPickerPosition({ top, left });
                                 }
                             }}
                             className="text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 touch-manipulation"
@@ -851,8 +851,8 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                         ref={reactionPickerRef}
                         className="fixed flex items-center gap-1 p-1.5 rounded-xl bg-gray-800 dark:bg-gray-700 shadow-xl border border-gray-600 z-[9999]"
                         style={{
-                            top: reactionPickerPosition.top - 44,
-                            right: reactionPickerPosition.right,
+                            top: reactionPickerPosition.top,
+                            left: reactionPickerPosition.left,
                         }}
                     >
                         {REACTION_EMOJIS.map((emoji) => (
