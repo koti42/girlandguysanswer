@@ -259,7 +259,7 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
                                     </div>
                                     <div className="text-center p-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                                         <div className="font-bold text-coral text-lg leading-tight">{xp}</div>
-                                        <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">XP Puan</div>
+                                        <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Uzmanlık Puanı</div>
                                     </div>
                                 </div>
 

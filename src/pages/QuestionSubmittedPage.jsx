@@ -220,7 +220,7 @@ const QuestionSubmittedPage = () => {
                             <div className="mt-5 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-5 py-2.5 border border-white/30">
                                 <FaGem className="text-yellow-300" />
                                 <span className="font-bold text-lg">+{gamificationData.points_added}</span>
-                                <span className="text-white/80 text-sm">Xper Puan kazandın!</span>
+                                <span className="text-white/80 text-sm">Uzmanlık puanı kazandın!</span>
                             </div>
                         )}
                     </div>
@@ -319,7 +319,7 @@ const QuestionSubmittedPage = () => {
                         </div>
                         <div>
                             <h4 className="font-semibold text-gray-800 dark:text-white text-sm mb-1">En İyi Cevabı Seç</h4>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Her cinsiyetten bir en iyi cevap seçerek +1 Xper puan kazan.</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Her cinsiyetten bir en iyi cevap seçerek +1 Uzmanlık puanı kazan.</p>
                         </div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-gray-700 flex items-start gap-4">

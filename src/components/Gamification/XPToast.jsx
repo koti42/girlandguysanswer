@@ -24,7 +24,7 @@ const XPToast = ({ points, position = 'top-center' }) => {
         <div className={`fixed ${positionClasses[position]} z-50 animate-bounce-short pointer-events-none`}>
             <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3 transform scale-110">
                 <FaStar className="text-yellow-200 text-xl animate-spin-slow" />
-                <span className="font-black text-xl tracking-wide">+{points} XP</span>
+                <span className="font-black text-xl tracking-wide">+{points} Uzmanlık</span>
             </div>
         </div>
     );

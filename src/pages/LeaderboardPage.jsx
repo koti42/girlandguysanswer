@@ -155,7 +155,7 @@ const LeaderboardPage = () => {
                                 {/* XP Stats */}
                                 <div className="text-right px-2 md:px-4">
                                     <div className="text-lg md:text-xl font-black text-coral">
-                                        {item.xp?.toLocaleString()} <span className="text-xs font-medium text-gray-400">XP</span>
+                                        {item.xp?.toLocaleString()} <span className="text-xs font-medium text-gray-400">Uzmanlık</span>
                                     </div>
                                 </div>
                             </Link>

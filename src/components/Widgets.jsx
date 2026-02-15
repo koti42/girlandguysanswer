@@ -111,7 +111,7 @@ export const TopUsersWidget = () => {
                     <Link to={`/profile/${user.username}`} className="block text-sm font-bold text-gray-800 dark:text-white hover:underline truncate max-w-[80px]">
                         {user.username}
                     </Link>
-                    <span className="text-[10px] text-gray-500">{Math.floor(entry.xp || 0)} XP</span>
+                    <span className="text-[10px] text-gray-500">{Math.floor(entry.xp || 0)} Uzmanlık</span>
                 </div>
                 {index === 0 && <FaMedal className="text-gold text-3xl absolute -top-4 right-0" />}
                 {index === 1 && <FaMedal className="text-gray-400 text-xl absolute -top-3 right-0" />}

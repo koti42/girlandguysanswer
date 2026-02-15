@@ -309,7 +309,7 @@ const LandingPage = () => {
                                     <div className="absolute -top-2 -right-2 w-8 h-8 bg-gray-800 dark:bg-white text-white dark:text-gray-800 rounded-full flex items-center justify-center font-bold text-sm shadow-md">3</div>
                                 </div>
                                 <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Puan Kazan</h3>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Cevapla, beğen, tartış. Xper puanı kazan ve seviye atla.</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Cevapla, beğen, tartış. Uzmanlık puanı kazan ve seviye atla.</p>
                             </div>
                         </div>
                     </div>
@@ -346,7 +346,7 @@ const LandingPage = () => {
                             <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <FaGem className="text-xl text-amber-500" />
                             </div>
-                            <h3 className="font-bold text-gray-800 dark:text-white mb-1.5">Xper Sistemi</h3>
+                            <h3 className="font-bold text-gray-800 dark:text-white mb-1.5">Uzmanlık Sistemi</h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Puan kazan, rozet topla, liderlik tablosunda yüksel</p>
                         </div>
                     </div>

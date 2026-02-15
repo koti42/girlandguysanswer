@@ -44,14 +44,14 @@ const ProfileStats = ({ stats, isVIP = false }) => {
                         }`}>
                         {stats.xperPoints?.toLocaleString()}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Xper Puanı</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Uzmanlık Puanı</div>
                 </div>
                 <div className="text-center">
                     <div className={`text-xl font-bold ${isVIP ? 'text-purple-600 dark:text-purple-400' : 'text-gray-800 dark:text-white'
                         }`}>
                         #{stats.generalRank}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Genel Xper sıralaması</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Genel Uzmanlık sıralaması</div>
                 </div>
                 <div className="text-center">
                     <div className={`text-xl font-bold ${isVIP ? 'text-pink-600 dark:text-pink-400' : 'text-gray-800 dark:text-white'
