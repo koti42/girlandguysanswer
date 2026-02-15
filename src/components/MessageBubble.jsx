@@ -374,6 +374,35 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted =
                     </div>
                 );
             }
+            case 'gif': {
+                const gifUrl = ensureHttps(message.file_url || message.content);
+                if (!gifUrl) return null;
+                return (
+                    <div className="rounded-lg overflow-hidden max-w-[200px]">
+                        <img
+                            src={gifUrl}
+                            alt="GIF"
+                            className="w-full h-auto object-contain rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
+                            style={{ maxHeight: '160px' }}
+                            onClick={() => window.open(gifUrl, '_blank')}
+                        />
+                    </div>
+                );
+            }
+            case 'sticker': {
+                const stickerUrl = ensureHttps(message.file_url || message.content);
+                if (!stickerUrl) return null;
+                return (
+                    <div className="rounded-lg overflow-hidden max-w-[120px]">
+                        <img
+                            src={stickerUrl}
+                            alt="Çıkartma"
+                            className="w-full h-auto object-contain rounded-lg"
+                            style={{ maxHeight: '120px' }}
+                        />
+                    </div>
+                );
+            }
             default: {
                 const content = message.content || '';
                 const youtubeLinks = getYoutubeVideoLinks(content);
@@ -550,6 +579,10 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted =
                                         <span className="inline-flex items-center gap-1.5">
                                             <FaMicrophone className="text-sm opacity-80 shrink-0" /> Sesli Mesaj
                                         </span>
+                                    ) : message.reply_to.type === 'gif' ? (
+                                        <span className="inline-flex items-center gap-1.5">GIF</span>
+                                    ) : message.reply_to.type === 'sticker' ? (
+                                        <span className="inline-flex items-center gap-1.5">Çıkartma</span>
                                     ) : (
                                         message.reply_to.content
                                     )}

@@ -294,6 +294,10 @@ const MessagesPage = () => {
                 return '📷 Fotoğraf';
             case 'audio':
                 return '🎵 Ses dosyası';
+            case 'gif':
+                return 'GIF';
+            case 'sticker':
+                return 'Çıkartma';
             default:
                 return message.content || 'Mesaj';
         }

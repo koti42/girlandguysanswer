@@ -3,7 +3,7 @@ import { FaArrowLeft, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
-import MessageInput from './MessageInput';
+import MessageInput from './MessageInput/index.jsx';
 import ConfirmationModal from './ConfirmationModal';
 import { messagesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -149,14 +149,15 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const handleSendMessage = async ({ content, file, type, is_ephemeral, ephemeral_max_views }) => {
         if (!conversation) return;
 
+        const isGifOrSticker = type === 'gif' || type === 'sticker';
         const tempMessage = {
             id: `temp-${Date.now()}`,
             content: content || '',
-            file_url: file ? URL.createObjectURL(file) : null,
+            file_url: file ? URL.createObjectURL(file) : (isGifOrSticker ? content || null : null),
             type: type,
             sender_id: user.id,
             created_at: new Date().toISOString(),
-            read_at: null, // Explicitly null for single checkmark
+            read_at: null,
             is_temp: true,
             is_ephemeral: is_ephemeral || false,
             ephemeral_max_views: ephemeral_max_views || null,
@@ -173,7 +174,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     receiver_id: conversationRef.current.other_user.id,
                     content,
                     type: 'text',
-                    reply_to_message_id: replyingTo?.id // Include reply ID if exists
+                    reply_to_message_id: replyingTo?.id
+                });
+            } else if (isGifOrSticker) {
+                response = await messagesAPI.sendMessage({
+                    receiver_id: conversationRef.current.other_user.id,
+                    content,
+                    type,
+                    reply_to_message_id: replyingTo?.id
                 });
             } else {
                 const formData = new FormData();

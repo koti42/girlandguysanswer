@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import MessageBubble from '../../MessageBubble';
-import MessageInput from '../../MessageInput';
+import MessageInput from '../../MessageInput/index.jsx';
 import { communityAPI } from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import { useRoomContext } from '@livekit/components-react';
