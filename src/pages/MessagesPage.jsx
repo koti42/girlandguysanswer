@@ -306,8 +306,8 @@ const MessagesPage = () => {
     return (
         <MainLayout noMobilePadding={true}>
             <div className="flex flex-col h-[calc(100vh-80px)] bg-white dark:bg-gray-900 w-full">
-                {/* Main Content Area */}
-                <div className="flex-1 flex overflow-hidden">
+                {/* Main Content Area - mobilde altta oval geçiş için yuvarlatılmış */}
+                <div className="flex-1 flex overflow-hidden md:rounded-none rounded-b-2xl">
                     {/* Conversations List Sidebar */}
                     <div className={`${showMobileChat ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-96 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800`}>
                         <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-800">
@@ -418,8 +418,8 @@ const MessagesPage = () => {
                     </div>
                 </div>
 
-                {/* Bottom Navigation - Sadece mobilde göster, web'de gizle */}
-                <div className="flex-shrink-0 w-full md:hidden">
+                {/* Bottom Navigation - Sadece mobilde göster, web'de gizle; üst kenarlar oval */}
+                <div className="flex-shrink-0 w-full md:hidden px-2 pb-1">
                     <BottomNav />
                 </div>
 

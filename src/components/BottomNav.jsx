@@ -18,8 +18,8 @@ const BottomNav = () => {
     ];
 
     return (
-        <nav className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-            <div className="flex justify-around items-center py-2">
+        <nav className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 rounded-t-2xl shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.2)]">
+            <div className="flex justify-around items-center py-2 pt-3 px-1">
                 {navItems.map((item, index) => {
                     const Icon = item.icon;
                     const isActive = location.pathname === item.path ||
