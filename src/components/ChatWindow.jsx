@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaArrowLeft, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
@@ -224,6 +224,24 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         }
     };
 
+    const scrollToMessageId = useCallback((messageId) => {
+        if (messageId == null) return;
+        const id = String(messageId);
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        const el = container.querySelector(`[data-message-id="${id}"]`);
+        if (!el) return;
+        setHighlightedMessageId(messageId);
+        window.setTimeout(() => setHighlightedMessageId(null), 2200);
+        requestAnimationFrame(() => {
+            const elRect = el.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const elTopRelativeToContainer = elRect.top - containerRect.top + container.scrollTop;
+            const scrollTarget = elTopRelativeToContainer - container.clientHeight / 2 + el.clientHeight / 2;
+            container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+        });
+    }, []);
+
     if (!conversation) {
         return (
             <div className="flex flex-col items-center justify-center h-[100dvh] bg-gray-50 dark:bg-gray-900">
@@ -334,6 +352,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                     senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
                                     onReply={(msg) => setReplyingTo(msg)}
                                     isHighlighted={highlightedMessageId === message.id}
+                                    onScrollToMessage={scrollToMessageId}
                                 />
                             </div>
                         ))}
@@ -350,23 +369,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     replyingTo={replyingTo}
                     onCancelReply={() => setReplyingTo(null)}
                     onTyping={conversation?.id ? (typing) => messagesAPI.sendTyping(conversation.id, typing).catch(() => { }) : undefined}
-                    onScrollToQuotedMessage={(messageId) => {
-                        if (messageId == null) return;
-                        const id = String(messageId);
-                        const container = messagesContainerRef.current;
-                        if (!container) return;
-                        const el = container.querySelector(`[data-message-id="${id}"]`);
-                        if (!el) return;
-                        setHighlightedMessageId(messageId);
-                        window.setTimeout(() => setHighlightedMessageId(null), 2200);
-                        requestAnimationFrame(() => {
-                            const elRect = el.getBoundingClientRect();
-                            const containerRect = container.getBoundingClientRect();
-                            const elTopRelativeToContainer = elRect.top - containerRect.top + container.scrollTop;
-                            const scrollTarget = elTopRelativeToContainer - container.clientHeight / 2 + el.clientHeight / 2;
-                            container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
-                        });
-                    }}
+                    onScrollToQuotedMessage={scrollToMessageId}
                 />
             </div>
         </div>

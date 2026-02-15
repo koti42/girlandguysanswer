@@ -45,7 +45,7 @@ function isEphemeralExpiredFromBackend(message, isMine) {
     return (Date.now() - viewedAt) >= EPHEMERAL_DURATION * 1000;
 }
 
-const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted = false }) => {
+const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted = false, onScrollToMessage }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -526,25 +526,37 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted =
                 <div
                     className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative group transition-all duration-300 ${isHighlighted ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''}`}
                 >
-                    {/* Quoted Message */}
-                    {message.reply_to && (
-                        <div className="mb-2 p-2 min-w-0 max-w-full overflow-hidden bg-black/10 dark:bg-white/10 rounded-lg border-l-4 border-white/50 text-xs">
-                            <p className="font-bold opacity-90 mb-0.5 truncate">{message.reply_to.sender?.username}</p>
-                            <p className="opacity-75 break-words line-clamp-2 min-w-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                                {message.reply_to.type === 'image' ? (
-                                    <span className="inline-flex items-center gap-1.5">
-                                        <FaImage className="text-sm opacity-80 shrink-0" /> Fotoğraf
-                                    </span>
-                                ) : message.reply_to.type === 'audio' ? (
-                                    <span className="inline-flex items-center gap-1.5">
-                                        <FaMicrophone className="text-sm opacity-80 shrink-0" /> Sesli Mesaj
-                                    </span>
-                                ) : (
-                                    message.reply_to.content
-                                )}
-                            </p>
-                        </div>
-                    )}
+                    {/* Quoted Message - tıklanınca alıntılanan mesaja gider */}
+                    {message.reply_to && (() => {
+                        const replyToId = message.reply_to.id ?? message.reply_to.message_id;
+                        const isClickable = replyToId != null && onScrollToMessage;
+                        return (
+                            <div
+                                role={isClickable ? 'button' : undefined}
+                                tabIndex={isClickable ? 0 : undefined}
+                                onClick={isClickable ? () => onScrollToMessage(replyToId) : undefined}
+                                onKeyDown={isClickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onScrollToMessage(replyToId); } } : undefined}
+                                className={`mb-2 p-2 min-w-0 max-w-full overflow-hidden bg-black/10 dark:bg-white/10 rounded-lg border-l-4 border-white/50 text-xs select-none ${isClickable ? 'cursor-pointer hover:bg-black/15 dark:hover:bg-white/15 transition-colors' : ''}`}
+                                style={isClickable ? { WebkitUserSelect: 'none', userSelect: 'none' } : undefined}
+                                title={isClickable ? 'Alıntılanan mesaja git' : undefined}
+                            >
+                                <p className="font-bold opacity-90 mb-0.5 truncate">{message.reply_to.sender?.username}</p>
+                                <p className="opacity-75 break-words line-clamp-2 min-w-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                                    {message.reply_to.type === 'image' ? (
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <FaImage className="text-sm opacity-80 shrink-0" /> Fotoğraf
+                                        </span>
+                                    ) : message.reply_to.type === 'audio' ? (
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <FaMicrophone className="text-sm opacity-80 shrink-0" /> Sesli Mesaj
+                                        </span>
+                                    ) : (
+                                        message.reply_to.content
+                                    )}
+                                </p>
+                            </div>
+                        );
+                    })()}
 
                     {/* Time + Menu */}
                     <div className="flex justify-between items-start mb-1.5 opacity-80 gap-2">
