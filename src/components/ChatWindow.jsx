@@ -336,63 +336,45 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     }, []);
 
     const handleExportPdf = useCallback(async () => {
-        if (!conversation || messages.length === 0) {
-            notificationToast.error('İndirilecek mesaj yok.');
+        if (!conversation?.id) {
+            notificationToast.error('Konuşma bulunamadı.');
             return;
         }
         try {
-            const { jsPDF } = await import('jspdf');
-            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const pageW = doc.internal.pageSize.getWidth();
-            const margin = 15;
-            const maxW = pageW - margin * 2;
-            let y = 20;
-            const lineHeight = 6;
-            const dateFormat = (dateStr) => {
-                try {
-                    const d = new Date(dateStr);
-                    return d.toLocaleString('tr-TR');
-                } catch (_) { return dateStr || ''; }
-            };
-
-            doc.setFontSize(14);
-            doc.text(`Konuşma: ${user?.username || 'Ben'} - ${conversation.other_user?.username || 'Kullanıcı'}`, margin, y);
-            y += 12;
-            doc.setFontSize(9);
-
-            for (const m of messages) {
-                if (y > 270) {
-                    doc.addPage();
-                    y = 20;
-                }
-                const sender = m.sender_id === user?.id ? (user?.username || 'Ben') : (conversation.other_user?.username || 'Diğer');
-                const time = dateFormat(m.created_at);
-                const header = `[${time}] ${sender}:`;
-                doc.setFont(undefined, 'bold');
-                doc.text(header, margin, y);
-                y += lineHeight;
-                doc.setFont(undefined, 'normal');
-                const content = (m.content || '(medya)').replace(/\r\n/g, '\n').replace(/\n/g, ' ');
-                const lines = doc.splitTextToSize(content, maxW);
-                lines.forEach((line) => {
-                    if (y > 270) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    doc.text(line, margin, y);
-                    y += lineHeight;
-                });
-                y += 4;
+            const res = await messagesAPI.getConversationPdf(conversation.id);
+            const contentType = res.headers?.['content-type'] || '';
+            if (contentType.includes('application/json')) {
+                const text = await res.data.text();
+                const data = JSON.parse(text);
+                notificationToast.error(data?.message || 'PDF alınamadı.');
+                return;
             }
-
-            const filename = `konusma-${conversation.other_user?.username || 'kullanici'}-${new Date().toISOString().slice(0, 10)}.pdf`;
-            doc.save(filename);
+            const blob = res.data;
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const disposition = res.headers?.['content-disposition'];
+            const filenameMatch = disposition && /filename="?([^";]+)"?/.exec(disposition);
+            a.download = filenameMatch ? filenameMatch[1].trim() : `konusma-${conversation.other_user?.username || 'kullanici'}-${new Date().toISOString().slice(0, 10)}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
             notificationToast.success('PDF indirildi.');
         } catch (err) {
-            console.error('PDF export error:', err);
-            notificationToast.error('PDF oluşturulurken hata oluştu.');
+            if (err.response?.data instanceof Blob) {
+                try {
+                    const text = await err.response.data.text();
+                    const data = JSON.parse(text);
+                    notificationToast.error(data?.message || 'PDF oluşturulurken hata oluştu.');
+                } catch (_) {
+                    notificationToast.error('PDF oluşturulurken hata oluştu.');
+                }
+            } else {
+                notificationToast.error(err.response?.data?.message || 'PDF oluşturulurken hata oluştu.');
+            }
         }
-    }, [conversation, messages, user]);
+    }, [conversation]);
 
     const scrollToMessageId = useCallback((messageId) => {
         if (messageId == null) return;
