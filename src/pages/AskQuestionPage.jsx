@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
@@ -10,7 +10,9 @@ import { useAuth } from '../context/AuthContext';
 import XPToast from '../components/Gamification/XPToast';
 import LevelUpModal from '../components/Gamification/LevelUpModal';
 import SEO from '../components/SEO';
-import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
+import { getCategoryIcon, getCategoryColor, getCategoryHexColor } from '../utils/categoryIcons';
+import UserAvatar from '../components/UserAvatar';
+import DOMPurify from 'dompurify';
 
 const AskQuestionPage = () => {
     const navigate = useNavigate();
@@ -32,6 +34,7 @@ const AskQuestionPage = () => {
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gamificationFeedback, setGamificationFeedback] = useState(null);
     const [showLevelUp, setShowLevelUp] = useState(null);
+    const [showPreview, setShowPreview] = useState(false);
 
     const [addPoll, setAddPoll] = useState(false);
     const [pollTitle, setPollTitle] = useState('');
@@ -169,15 +172,8 @@ const AskQuestionPage = () => {
         setPollOptions(prev => prev.map((o, i) => i === index ? { ...o, text } : o));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!validateForm()) {
-            showToast('error', 'Lütfen tüm zorunlu alanları doldurun');
-            return;
-        }
-
+    const doSubmit = async () => {
         setIsSubmitting(true);
-
         try {
             const payload = {
                 title: formData.title,
@@ -230,6 +226,15 @@ const AskQuestionPage = () => {
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!validateForm()) {
+            showToast('error', 'Lütfen tüm zorunlu alanları doldurun');
+            return;
+        }
+        setShowPreview(true);
     };
 
     const TipsWidget = () => (
@@ -299,6 +304,125 @@ const AskQuestionPage = () => {
         </>
     );
 
+    const categoryForPreview = categories.find(c => c.name === formData.category);
+    const previewCategoryColor = categoryForPreview?.color ? getCategoryColor(categoryForPreview) : getCategoryHexColor(formData.category);
+    const PreviewCard = () => (
+        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-200/50 dark:border-gray-700/50">
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4">Soru önizlemesi — Sorulduğunda böyle görünecek</p>
+            <div className="rounded-2xl border border-gray-200 dark:border-gray-600 overflow-hidden bg-white dark:bg-gray-800 shadow-lg">
+                <div className="p-4 md:p-6 space-y-4">
+                    <div className="flex items-center gap-3">
+                        <UserAvatar
+                            user={isAnonymous ? { username: 'anonim', name: 'Gizli Üye' } : currentUser}
+                            size="md"
+                            className="ring-2 ring-white dark:ring-gray-700"
+                        />
+                        <div>
+                            <p className="font-bold text-gray-900 dark:text-white">
+                                {isAnonymous ? 'Gizli Üye' : (currentUser?.username || 'Kullanıcı')}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                                {formData.category && (
+                                    <span
+                                        style={{ backgroundColor: previewCategoryColor }}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-xs font-bold"
+                                    >
+                                        {React.createElement(getCategoryIcon(formData.category), { className: 'text-sm' })}
+                                        {formData.category}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    <h2 className="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 leading-snug">
+                        {formData.title}
+                    </h2>
+                    {formData.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                            {formData.tags.map((tag, idx) => (
+                                <span key={idx} className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                    {tag.startsWith('#') ? tag : `#${tag}`}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                    {formData.description && (
+                        <div
+                            className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
+                            dangerouslySetInnerHTML={{
+                                __html: DOMPurify.sanitize(formData.description, {
+                                    ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span', 'img'],
+                                    ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'class', 'style']
+                                })
+                            }}
+                        />
+                    )}
+                    {gifUrl && (
+                        <div className="rounded-xl overflow-hidden">
+                            <img src={gifUrl} alt="GIF" className="w-full max-w-sm h-auto object-contain rounded-xl" />
+                        </div>
+                    )}
+                    {addPoll && (() => {
+                        const filled = pollOptions.filter(o => o.text.trim());
+                        if (filled.length < 2) return null;
+                        return (
+                            <div className="pt-2 border-t border-gray-100 dark:border-gray-600">
+                                <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-1.5">
+                                    <FaPoll /> Anket {pollTitle.trim() && `— ${pollTitle.trim()}`}
+                                </p>
+                                <ul className="space-y-1.5">
+                                    {filled.map((opt, i) => (
+                                        <li key={i} className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                                            <span className="w-5 h-5 rounded border border-gray-300 dark:border-gray-500 flex items-center justify-center text-xs">{i + 1}</span>
+                                            {opt.text.trim()}
+                                        </li>
+                                    ))}
+                                </ul>
+                                {pollEndsAt && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                                        Bitiş: {new Date(pollEndsAt).toLocaleString('tr-TR')}
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    })()}
+                </div>
+                <div className="px-4 md:px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-600 flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">0 beğeni · 0 cevap</span>
+                </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                <button
+                    type="button"
+                    onClick={() => setShowPreview(false)}
+                    disabled={isSubmitting}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-50"
+                >
+                    <FaArrowLeft />
+                    Geri Düzenle
+                </button>
+                <button
+                    type="button"
+                    onClick={doSubmit}
+                    disabled={isSubmitting}
+                    className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white font-semibold hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                    {isSubmitting ? (
+                        <>
+                            <FaCheckCircle className="animate-spin" />
+                            Yayınlanıyor...
+                        </>
+                    ) : (
+                        <>
+                            <FaCheckCircle />
+                            Soruyu Gönder
+                        </>
+                    )}
+                </button>
+            </div>
+        </div>
+    );
+
     return (
         <MainLayout sidebar={SidebarContent}>
             <SEO
@@ -310,13 +434,20 @@ const AskQuestionPage = () => {
                 <div className="relative bg-gradient-to-r from-coral via-orange-400 to-pink-400 rounded-3xl p-8 md:p-10 text-white shadow-2xl overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-transparent to-blue-600/20 animate-pulse"></div>
                     <div className="relative z-10">
-                        <h1 className="text-3xl md:text-4xl font-bold mb-3 drop-shadow-lg">Soru Sor 💡</h1>
-                        <p className="text-white/95 text-lg">Topluluğa sormak istediğin soruyu detaylı bir şekilde anlat</p>
+                        <h1 className="text-3xl md:text-4xl font-bold mb-3 drop-shadow-lg">
+                            {showPreview ? 'Soru önizlemesi' : 'Soru Sor 💡'}
+                        </h1>
+                        <p className="text-white/95 text-lg">
+                            {showPreview ? 'Onaylıyorsan soruyu gönder, değiştirmek için geri dön' : 'Topluluğa sormak istediğin soruyu detaylı bir şekilde anlat'}
+                        </p>
                     </div>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
                     <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24 blur-3xl"></div>
                 </div>
 
+                {showPreview ? (
+                    <PreviewCard />
+                ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Main Form Card with glassmorphism */}
                     <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-200/50 dark:border-gray-700/50">
@@ -596,6 +727,7 @@ const AskQuestionPage = () => {
                         </div>
                     </div>
                 </form>
+                )}
 
                 {/* Toast Notification */}
                 {toast && (
