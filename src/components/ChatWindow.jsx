@@ -112,6 +112,22 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 if (data.typing) {
                     typingResetRef.current = setTimeout(() => setOtherUserTyping(null), TYPING_RESET_MS);
                 }
+            },
+            onMessageUpdated: (data) => {
+                if (!conversationRef.current || data.message?.conversation_id !== conversationRef.current.id) return;
+                setMessages(prev => prev.map(m =>
+                    m.id === data.message.id
+                        ? { ...m, content: data.message.content, edited_at: data.message.edited_at }
+                        : m
+                ));
+            },
+            onMessageDeleted: (data) => {
+                if (!conversationRef.current || data.message?.conversation_id !== conversationRef.current.id) return;
+                setMessages(prev => prev.map(m =>
+                    m.id === data.message.id
+                        ? { ...m, user_deleted_at: data.message.user_deleted_at }
+                        : m
+                ));
             }
         });
 
@@ -231,6 +247,33 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             notificationToast.error(errorMsg);
         }
     };
+
+    const handleDeleteMessage = useCallback(async (msg) => {
+        try {
+            const res = await messagesAPI.deleteMessage(msg.id);
+            const updated = res.data?.data?.message;
+            if (updated) {
+                setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, user_deleted_at: updated.user_deleted_at } : m));
+            }
+        } catch (err) {
+            const msgText = err.response?.data?.message || 'Mesaj silinemedi.';
+            notificationToast.error(msgText);
+        }
+    }, []);
+
+    const handleEditMessage = useCallback(async (msg, newContent) => {
+        if (!newContent || newContent === (msg.content || '')) return;
+        try {
+            const res = await messagesAPI.updateMessage(msg.id, { content: newContent });
+            const updated = res.data?.data?.message;
+            if (updated) {
+                setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, content: updated.content, edited_at: updated.edited_at } : m));
+            }
+        } catch (err) {
+            const msgText = err.response?.data?.message || 'Mesaj güncellenemedi.';
+            notificationToast.error(msgText);
+        }
+    }, []);
 
     const scrollToMessageId = useCallback((messageId) => {
         if (messageId == null) return;
@@ -359,6 +402,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                     isMine={message.sender_id === user.id}
                                     senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
                                     onReply={(msg) => setReplyingTo(msg)}
+                                    onEdit={handleEditMessage}
+                                    onDelete={handleDeleteMessage}
                                     isHighlighted={highlightedMessageId === message.id}
                                     onScrollToMessage={scrollToMessageId}
                                 />

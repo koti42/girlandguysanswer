@@ -28,6 +28,14 @@ export const subscribeToUserChannel = (userId, callbacks) => {
         channel.bind('user-typing', callbacks.onUserTyping);
     }
 
+    if (callbacks.onMessageUpdated) {
+        channel.bind('message-updated', callbacks.onMessageUpdated);
+    }
+
+    if (callbacks.onMessageDeleted) {
+        channel.bind('message-deleted', callbacks.onMessageDeleted);
+    }
+
     return channel;
 };
 

@@ -1,10 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause } from 'react-icons/fa';
+import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause, FaEdit, FaTrash } from 'react-icons/fa';
 import { messagesAPI } from '../services/api';
 
 const EPHEMERAL_DURATION = 10; // seconds
+const EDIT_DELETE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+
+function canEditOrDeleteMessage(message, isMine) {
+    if (!isMine || message.user_deleted_at) return false;
+    const sentAt = new Date(message.created_at).getTime();
+    return sentAt + EDIT_DELETE_WINDOW_MS > Date.now();
+}
 
 const YOUTUBE_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})/gi;
 
@@ -45,7 +53,7 @@ function isEphemeralExpiredFromBackend(message, isMine) {
     return (Date.now() - viewedAt) >= EPHEMERAL_DURATION * 1000;
 }
 
-const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted = false, onScrollToMessage }) => {
+const MessageBubble = ({ message, isMine, senderGender, onReply, onEdit, onDelete, isHighlighted = false, onScrollToMessage }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -66,6 +74,43 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted =
     const [isAudioPlaying, setIsAudioPlaying] = useState(false);
     const [audioCurrentTime, setAudioCurrentTime] = useState(0);
     const [audioDuration, setAudioDuration] = useState(0);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [editContent, setEditContent] = useState('');
+    const menuRef = useRef(null);
+    const menuButtonRef = useRef(null);
+    const menuDropdownRef = useRef(null);
+    const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+
+    const canEditOrDelete = canEditOrDeleteMessage(message, isMine);
+    const canEdit = canEditOrDelete && message.type === 'text' && onEdit;
+    const canDelete = canEditOrDelete && onDelete;
+
+    const updateMenuPosition = useCallback(() => {
+        if (menuButtonRef.current) {
+            const rect = menuButtonRef.current.getBoundingClientRect();
+            setMenuPosition({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!menuOpen) return;
+        updateMenuPosition();
+        const handleClickOutside = (e) => {
+            const inButton = menuRef.current?.contains(e.target);
+            const inDropdown = menuDropdownRef.current?.contains(e.target);
+            if (!inButton && !inDropdown) setMenuOpen(false);
+        };
+        const handleScrollOrResize = () => updateMenuPosition();
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('scroll', handleScrollOrResize, true);
+        window.addEventListener('resize', handleScrollOrResize);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', handleScrollOrResize, true);
+            window.removeEventListener('resize', handleScrollOrResize);
+        };
+    }, [menuOpen, updateMenuPosition]);
 
     useEffect(() => {
         if (message.is_ephemeral && !isMine) {
@@ -555,6 +600,19 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted =
                 <div
                     className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative group transition-all duration-300 ${isHighlighted ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''}`}
                 >
+                    {message.user_deleted_at ? (
+                        <>
+                            <div className="flex justify-between items-center gap-2">
+                                <span className="text-xs italic opacity-90">
+                                    {(message.sender?.username || 'Kullanıcı')} mesajı sildi
+                                </span>
+                            </div>
+                            <span className="text-[10px] opacity-75 mt-1 block">
+                                {formatMessageDateTime(message.created_at)}
+                            </span>
+                        </>
+                    ) : (
+                        <>
                     {/* Quoted Message - tıklanınca alıntılanan mesaja gider */}
                     {message.reply_to && (() => {
                         const replyToId = message.reply_to.id ?? message.reply_to.message_id;
@@ -597,7 +655,7 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted =
                             <span className="text-[10px]">
                                 {formatMessageDateTime(message.created_at)}
                             </span>
-                            {isMine && (
+                            {isMine && !message.user_deleted_at && (
                                 <span className="text-xs">
                                     {message.read_at ? (
                                         <FaCheckDouble className="text-blue-200" title={`Okundu: ${formatMessageDateTime(message.read_at)}`} />
@@ -607,18 +665,100 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted =
                                 </span>
                             )}
                         </div>
-                        {/* Reply Button (visible on hover or always on mobile) */}
-                        <button
-                            onClick={() => onReply && onReply(message)}
-                            className="text-white opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
-                            title="Yanıtla"
-                        >
-                            <FaEllipsisV className="text-xs transform rotate-90" />
-                        </button>
+                        <div className="relative" ref={menuRef}>
+                            <button
+                                ref={menuButtonRef}
+                                type="button"
+                                onClick={() => {
+                                    const next = !menuOpen;
+                                    setMenuOpen(next);
+                                    if (next && menuButtonRef.current) {
+                                        const rect = menuButtonRef.current.getBoundingClientRect();
+                                        setMenuPosition({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+                                    }
+                                }}
+                                className="text-white opacity-80 hover:opacity-100 transition-opacity focus:opacity-100 p-1 touch-manipulation"
+                                title="Menü"
+                                aria-label="Menü"
+                            >
+                                <FaEllipsisV className="text-xs transform rotate-90" />
+                            </button>
+                            {menuOpen && createPortal(
+                                <div
+                                    ref={menuDropdownRef}
+                                    className="fixed py-1 min-w-[120px] bg-gray-800 dark:bg-gray-700 rounded-lg shadow-xl border border-gray-600 z-[9999]"
+                                    style={{ top: menuPosition.top, right: menuPosition.right }}
+                                >
+                                    {onReply && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { onReply(message); setMenuOpen(false); }}
+                                            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-gray-700 dark:hover:bg-gray-600 flex items-center gap-2"
+                                        >
+                                            Yanıtla
+                                        </button>
+                                    )}
+                                    {canEdit && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { setEditContent(message.content || ''); setEditing(true); setMenuOpen(false); }}
+                                            className="w-full px-3 py-2 text-left text-sm text-white hover:bg-gray-700 dark:hover:bg-gray-600 flex items-center gap-2"
+                                        >
+                                            <FaEdit className="text-sm" /> Düzenle
+                                        </button>
+                                    )}
+                                    {canDelete && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { onDelete(message); setMenuOpen(false); }}
+                                            className="w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-gray-700 dark:hover:bg-gray-600 flex items-center gap-2"
+                                        >
+                                            <FaTrash className="text-sm" /> Sil
+                                        </button>
+                                    )}
+                                </div>,
+                                document.body
+                            )}
+                        </div>
                     </div>
 
+                    {/* Edit mode */}
+                    {editing && message.type === 'text' && (
+                        <div className="mt-2 space-y-2">
+                            <textarea
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                                className="w-full min-h-[60px] px-3 py-2 rounded-lg bg-white/20 text-white placeholder-white/60 text-sm resize-none border border-white/30 focus:outline-none focus:ring-1 focus:ring-white/50"
+                                placeholder="Mesaj..."
+                                rows={3}
+                                autoFocus
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => { onEdit(message, editContent.trim()); setEditing(false); }}
+                                    className="px-3 py-1.5 rounded-lg bg-white/25 text-white text-sm font-medium hover:bg-white/30"
+                                >
+                                    Kaydet
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => { setEditing(false); setEditContent(''); }}
+                                    className="px-3 py-1.5 rounded-lg bg-white/10 text-white/90 text-sm hover:bg-white/20"
+                                >
+                                    İptal
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Content */}
-                    {renderContent()}
+                    {!editing && renderContent()}
+                    {message.edited_at && !editing && (
+                        <p className="text-[10px] opacity-75 mt-1 italic">düzenlendi</p>
+                    )}
+                        </>
+                    )}
                 </div>
             </div>
         </>

@@ -171,6 +171,8 @@ export const messagesAPI = {
     deleteConversation: (conversationId) => api.delete(`/messages/conversations/${conversationId}`),
     sendTyping: (conversationId, typing = true) => api.post(`/messages/conversations/${conversationId}/typing`, { typing }),
     viewEphemeralFile: (messageId) => api.get(`/messages/${messageId}/file`, { responseType: 'blob' }),
+    updateMessage: (messageId, data) => api.patch(`/messages/${messageId}`, data),
+    deleteMessage: (messageId) => api.delete(`/messages/${messageId}`),
 };
 
 export const notificationsAPI = {
