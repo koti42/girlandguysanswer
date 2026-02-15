@@ -418,8 +418,8 @@ const MessagesPage = () => {
                     </div>
                 </div>
 
-                {/* Bottom Navigation - Fixed at bottom */}
-                <div className="flex-shrink-0 w-full">
+                {/* Bottom Navigation - Sadece mobilde göster, web'de gizle */}
+                <div className="flex-shrink-0 w-full md:hidden">
                     <BottomNav />
                 </div>
 
