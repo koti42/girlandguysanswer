@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FaSearch, FaSpinner, FaTimes } from 'react-icons/fa';
 import { gifsAPI } from '../services/api';
 
@@ -90,8 +91,8 @@ const GifPickerModal = ({ isOpen, onClose, onSelect, title = 'GIF Seç' }) => {
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+    const modalContent = (
+        <div className="fixed inset-0 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" style={{ zIndex: 99999 }}>
             <div className="bg-white dark:bg-gray-800 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
                 <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                     <h3 className="text-lg font-bold text-gray-800 dark:text-white">{title}</h3>
@@ -172,6 +173,8 @@ const GifPickerModal = ({ isOpen, onClose, onSelect, title = 'GIF Seç' }) => {
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };
 
 export default GifPickerModal;
