@@ -128,6 +128,12 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         ? { ...m, user_deleted_at: data.message.user_deleted_at }
                         : m
                 ));
+            },
+            onMessageReaction: (data) => {
+                if (!conversationRef.current || data.message?.conversation_id !== conversationRef.current.id) return;
+                setMessages(prev => prev.map(m =>
+                    m.id === data.message.id ? { ...m, reactions: data.message.reactions || [] } : m
+                ));
             }
         });
 
@@ -258,6 +264,18 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         } catch (err) {
             const msgText = err.response?.data?.message || 'Mesaj silinemedi.';
             notificationToast.error(msgText);
+        }
+    }, []);
+
+    const handleReaction = useCallback(async (msg, emoji) => {
+        try {
+            const res = await messagesAPI.setReaction(msg.id, { emoji });
+            const reactions = res.data?.data?.reactions ?? res.data?.data?.message?.reactions;
+            if (reactions) {
+                setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, reactions } : m));
+            }
+        } catch (err) {
+            notificationToast.error(err.response?.data?.message || 'Reaksiyon eklenemedi.');
         }
     }, []);
 
@@ -400,10 +418,12 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                 <MessageBubble
                                     message={message}
                                     isMine={message.sender_id === user.id}
+                                    currentUserId={user?.id}
                                     senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
                                     onReply={(msg) => setReplyingTo(msg)}
                                     onEdit={handleEditMessage}
                                     onDelete={handleDeleteMessage}
+                                    onReaction={handleReaction}
                                     isHighlighted={highlightedMessageId === message.id}
                                     onScrollToMessage={scrollToMessageId}
                                 />

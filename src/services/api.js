@@ -173,6 +173,7 @@ export const messagesAPI = {
     viewEphemeralFile: (messageId) => api.get(`/messages/${messageId}/file`, { responseType: 'blob' }),
     updateMessage: (messageId, data) => api.patch(`/messages/${messageId}`, data),
     deleteMessage: (messageId) => api.delete(`/messages/${messageId}`),
+    setReaction: (messageId, data) => api.post(`/messages/${messageId}/reaction`, data),
 };
 
 export const notificationsAPI = {

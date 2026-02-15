@@ -36,6 +36,10 @@ export const subscribeToUserChannel = (userId, callbacks) => {
         channel.bind('message-deleted', callbacks.onMessageDeleted);
     }
 
+    if (callbacks.onMessageReaction) {
+        channel.bind('message-reaction', callbacks.onMessageReaction);
+    }
+
     return channel;
 };
 

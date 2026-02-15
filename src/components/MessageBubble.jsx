@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause, FaEdit, FaTrash, FaSmile } from 'react-icons/fa';
 import { messagesAPI } from '../services/api';
 
 const EPHEMERAL_DURATION = 10; // seconds
 const EDIT_DELETE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const REACTION_EMOJIS = ['😠', '😂', '❤️', '😢']; // kızgın, gülme, kalp, üzgün
 
 function canEditOrDeleteMessage(message, isMine) {
     if (!isMine || message.user_deleted_at) return false;
@@ -53,7 +54,7 @@ function isEphemeralExpiredFromBackend(message, isMine) {
     return (Date.now() - viewedAt) >= EPHEMERAL_DURATION * 1000;
 }
 
-const MessageBubble = ({ message, isMine, senderGender, onReply, onEdit, onDelete, isHighlighted = false, onScrollToMessage }) => {
+const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, onEdit, onDelete, onReaction, isHighlighted = false, onScrollToMessage }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -81,6 +82,10 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, onEdit, onDelet
     const menuButtonRef = useRef(null);
     const menuDropdownRef = useRef(null);
     const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+    const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+    const reactionButtonRef = useRef(null);
+    const reactionPickerRef = useRef(null);
+    const [reactionPickerPosition, setReactionPickerPosition] = useState({ top: 0, right: 0 });
 
     const canEditOrDelete = canEditOrDeleteMessage(message, isMine);
     const canEdit = canEditOrDelete && message.type === 'text' && onEdit;
@@ -111,6 +116,33 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, onEdit, onDelet
             window.removeEventListener('resize', handleScrollOrResize);
         };
     }, [menuOpen, updateMenuPosition]);
+
+    useEffect(() => {
+        if (!reactionPickerOpen) return;
+        const updateReactionPos = () => {
+            if (reactionButtonRef.current) {
+                const rect = reactionButtonRef.current.getBoundingClientRect();
+                setReactionPickerPosition({
+                    top: rect.top - 8,
+                    right: window.innerWidth - rect.right,
+                });
+            }
+        };
+        updateReactionPos();
+        const handleClickOutside = (e) => {
+            const inButton = reactionButtonRef.current?.contains(e.target);
+            const inPicker = reactionPickerRef.current?.contains(e.target);
+            if (!inButton && !inPicker) setReactionPickerOpen(false);
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('scroll', updateReactionPos, true);
+        window.addEventListener('resize', updateReactionPos);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', updateReactionPos, true);
+            window.removeEventListener('resize', updateReactionPos);
+        };
+    }, [reactionPickerOpen]);
 
     useEffect(() => {
         if (message.is_ephemeral && !isMine) {
@@ -596,9 +628,33 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, onEdit, onDelet
                 </div>
             )}
 
-            <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3 min-w-0 transition-all duration-300`}>
+            <div className={`flex items-center gap-1 ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3 min-w-0 transition-all duration-300 group`}>
+                {onReaction && !message.user_deleted_at && (
+                    <div className={`flex-shrink-0 ${isMine ? 'order-2 ml-1' : 'order-first mr-1'}`}>
+                        <button
+                            ref={reactionButtonRef}
+                            type="button"
+                            onClick={() => {
+                                const next = !reactionPickerOpen;
+                                setReactionPickerOpen(next);
+                                if (next && reactionButtonRef.current) {
+                                    const rect = reactionButtonRef.current.getBoundingClientRect();
+                                    setReactionPickerPosition({
+                                        top: rect.top - 8,
+                                        right: window.innerWidth - rect.right,
+                                    });
+                                }
+                            }}
+                            className="text-gray-500 dark:text-gray-400 opacity-70 group-hover:opacity-100 hover:opacity-100 transition-opacity focus:opacity-100 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 touch-manipulation"
+                            title="Reaksiyon ekle"
+                            aria-label="Reaksiyon ekle"
+                        >
+                            <FaSmile className="text-base" />
+                        </button>
+                    </div>
+                )}
                 <div
-                    className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative group transition-all duration-300 ${isHighlighted ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''}`}
+                    className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative transition-all duration-300 ${isHighlighted ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''} ${isMine ? 'order-1' : 'order-2'}`}
                 >
                     {message.user_deleted_at ? (
                         <>
@@ -757,9 +813,65 @@ const MessageBubble = ({ message, isMine, senderGender, onReply, onEdit, onDelet
                     {message.edited_at && !editing && (
                         <p className="text-[10px] opacity-75 mt-1 italic">düzenlendi</p>
                     )}
+
+                    {/* Reactions summary – atılan emojiler mesajın altında */}
+                    {!message.user_deleted_at && (() => {
+                        const reactionsList = message.reactions || [];
+                        const byEmoji = {};
+                        reactionsList.forEach((r) => {
+                            if (!byEmoji[r.emoji]) byEmoji[r.emoji] = [];
+                            byEmoji[r.emoji].push(r.user_id);
+                        });
+                        const summary = Object.entries(byEmoji).map(([emoji, userIds]) => ({
+                            emoji,
+                            count: userIds.length,
+                            includesMe: currentUserId && userIds.includes(currentUserId),
+                        }));
+                        if (summary.length === 0) return null;
+                        return (
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                                {summary.map(({ emoji, count, includesMe }) => (
+                                    <span
+                                        key={emoji}
+                                        className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs ${includesMe ? 'bg-white/25 ring-1 ring-white/40' : 'bg-black/15'}`}
+                                        title={count > 1 ? `${count} kişi` : ''}
+                                    >
+                                        <span>{emoji}</span>
+                                        {count > 1 && <span className="opacity-90">{count}</span>}
+                                    </span>
+                                ))}
+                            </div>
+                        );
+                    })()}
                         </>
                     )}
                 </div>
+                {reactionPickerOpen && createPortal(
+                    <div
+                        ref={reactionPickerRef}
+                        className="fixed flex items-center gap-1 p-1.5 rounded-xl bg-gray-800 dark:bg-gray-700 shadow-xl border border-gray-600 z-[9999]"
+                        style={{
+                            top: reactionPickerPosition.top - 44,
+                            right: reactionPickerPosition.right,
+                        }}
+                    >
+                        {REACTION_EMOJIS.map((emoji) => (
+                            <button
+                                key={emoji}
+                                type="button"
+                                onClick={() => {
+                                    onReaction(message, emoji);
+                                    setReactionPickerOpen(false);
+                                }}
+                                className="p-2 rounded-lg text-lg leading-none hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors hover:scale-110"
+                                title={emoji === '😠' ? 'Kızgın' : emoji === '😂' ? 'Gülme' : emoji === '❤️' ? 'Kalp' : 'Üzgün'}
+                            >
+                                {emoji}
+                            </button>
+                        ))}
+                    </div>,
+                    document.body
+                )}
             </div>
         </>
     );
