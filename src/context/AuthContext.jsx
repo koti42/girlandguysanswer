@@ -27,13 +27,16 @@ export const AuthProvider = ({ children }) => {
 
         try {
             const response = await authAPI.getCurrentUser();
-            const userData = response.data.data?.user || response.data.user || response.data.data;
-            const perms = extractPermissions(response.data.data || response.data);
-            const accountStatus = response.data.data?.accountStatus || response.data.accountStatus || null;
+            const data = response.data.data || response.data;
+            const userData = data.user || response.data.user || response.data.data;
+            const perms = extractPermissions(data);
+            const accountStatus = data.accountStatus || response.data.accountStatus || null;
+            const levelProgress = data.level_progress || null;
 
             if (userData) {
                 if (!userData.username && userData.name) userData.username = userData.name;
                 userData.accountStatus = accountStatus;
+                userData.levelProgress = levelProgress;
                 localStorage.setItem('user', JSON.stringify(userData));
                 localStorage.setItem('permissions', JSON.stringify(perms));
                 setUser(userData);

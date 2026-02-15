@@ -313,22 +313,63 @@ const Header = ({ onSearch }) => {
                                 </button>
 
                                 {/* Dropdown Menu */}
-                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform group-hover:translate-y-0 translate-y-2">
-                                    <div className="p-3 border-b border-gray-100 dark:border-gray-700">
+                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-coral/20 dark:border-coral/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform group-hover:translate-y-0 translate-y-2 overflow-hidden">
+                                    <div className="p-3 border-b border-coral/10 dark:border-gray-600 bg-gradient-to-b from-coral/5 to-transparent dark:from-coral/10 dark:to-transparent">
                                         <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{user.name || user.username}</p>
                                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                                        {user.levelProgress && (() => {
+                                            const lp = user.levelProgress;
+                                            const progressPct = Math.round((lp.progress ?? 0) * 100);
+                                            return (
+                                                <div className="mt-3 p-2.5 rounded-lg bg-white/80 dark:bg-gray-700/80 border border-coral/20 dark:border-orange-400/20 shadow-soft backdrop-blur-sm">
+                                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                                        <span className="text-xs font-bold px-2 py-1 rounded-md bg-gradient-to-r from-coral/20 to-orange-400/20 dark:from-coral/30 dark:to-orange-400/30 text-coral dark:text-orange-300 border border-coral/30 dark:border-orange-400/30">
+                                                            {lp.level?.name}
+                                                        </span>
+                                                        {lp.next_level_name != null ? (
+                                                            <span className="text-[10px] font-semibold text-coral dark:text-orange-300 tabular-nums">
+                                                                {lp.xp_to_next_level} XP
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">Maks.</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="relative h-2.5 w-full rounded-full overflow-hidden bg-coral/15 dark:bg-coral/25 shadow-inner">
+                                                        <div
+                                                            className="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-coral to-orange-400 shadow-sm"
+                                                            style={{
+                                                                width: `${progressPct}%`,
+                                                                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25)'
+                                                            }}
+                                                        />
+                                                        {progressPct > 0 && progressPct < 100 && (
+                                                            <div
+                                                                className="absolute top-0 bottom-0 w-1 rounded-full bg-white/70 pointer-events-none"
+                                                                style={{ left: `calc(${progressPct}% - 2px)` }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    {lp.next_level_name != null && (
+                                                        <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-1.5 flex items-center gap-1">
+                                                            <span className="opacity-80">Sonraki:</span>
+                                                            <span className="font-semibold text-coral dark:text-orange-300">{lp.next_level_name}</span>
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                     <div className="p-2">
                                         <Link
                                             to={`/profile/${user.username}`}
-                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-coral/10 dark:hover:bg-coral/20 rounded-lg transition-colors hover:text-coral dark:hover:text-orange-300"
                                         >
                                             <FaUser className="text-gray-400" />
-                                            Ben
+                                            Profilim
                                         </Link>
                                         <Link
                                             to="/messages"
-                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors md:hidden"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-coral/10 dark:hover:bg-coral/20 rounded-lg transition-colors md:hidden hover:text-coral dark:hover:text-orange-300"
                                         >
                                             <div className="relative">
                                                 <FaEnvelope className="text-gray-400" />
@@ -340,14 +381,14 @@ const Header = ({ onSearch }) => {
                                         </Link>
                                         <Link
                                             to="/follow-requests"
-                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-coral/10 dark:hover:bg-coral/20 rounded-lg transition-colors hover:text-coral dark:hover:text-orange-300"
                                         >
                                             <FaUserPlus className="text-purple-500" />
                                             <span>Takip İstekleri</span>
                                         </Link>
                                         <Link
                                             to="/settings"
-                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-coral/10 dark:hover:bg-coral/20 rounded-lg transition-colors hover:text-coral dark:hover:text-orange-300"
                                         >
                                             <FaUser className="text-gray-400" />
                                             Ayarlar
