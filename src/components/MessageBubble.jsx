@@ -645,7 +645,7 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                                     });
                                 }
                             }}
-                            className="text-gray-500 dark:text-gray-400 opacity-70 group-hover:opacity-100 hover:opacity-100 transition-opacity focus:opacity-100 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 touch-manipulation"
+                            className="text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 touch-manipulation"
                             title="Reaksiyon ekle"
                             aria-label="Reaksiyon ekle"
                         >
