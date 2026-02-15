@@ -311,6 +311,19 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         });
     }, []);
 
+    const otherGender = conversation?.other_user?.gender;
+    const isFemale = otherGender === 'female' || otherGender === 'kiz' || otherGender === 'kadın' || otherGender === 'woman';
+    const themeHeaderClass = isFemale
+        ? 'bg-gradient-to-r from-pink-500 to-rose-500'
+        : 'bg-gradient-to-r from-blue-500 to-indigo-600';
+    const themeBorderClass = isFemale
+        ? 'border-pink-400 dark:border-pink-500'
+        : 'border-blue-400 dark:border-blue-500';
+    const themeBgClass = isFemale
+        ? 'bg-pink-50/30 dark:bg-pink-900/10'
+        : 'bg-blue-50/30 dark:bg-blue-900/10';
+    const themeSpinnerClass = isFemale ? 'border-pink-500' : 'border-blue-500';
+
     if (!conversation) {
         return (
             <div className="flex flex-col items-center justify-center h-[100dvh] bg-gray-50 dark:bg-gray-900">
@@ -333,12 +346,12 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-gray-900 relative w-full overflow-hidden">
-            {/* Header - Pink Bar (Sticky Top) */}
-            <div className="flex-shrink-0 bg-pink-500 p-4 w-full z-10 sticky top-0">
+            {/* Header - cinsiyete göre renk (kadın: pembe, erkek: mavi) */}
+            <div className={`flex-shrink-0 ${themeHeaderClass} p-4 w-full z-10 sticky top-0`}>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={onBack}
-                        className="text-white hover:bg-pink-600 p-2 rounded-lg transition-colors"
+                        className="text-white/90 hover:bg-white/20 p-2 rounded-lg transition-colors"
                     >
                         <FaArrowLeft className="text-lg" />
                     </button>
@@ -398,7 +411,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             >
                 {loading ? (
                     <div className="flex justify-center items-center h-full">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500"></div>
+                        <div className={`animate-spin rounded-full h-16 w-16 border-b-4 ${themeSpinnerClass}`}></div>
                     </div>
                 ) : messages.length === 0 ? (
                     <div className="flex justify-center items-center h-full px-4">
@@ -434,8 +447,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 )}
             </div>
 
-            {/* Interaction Zone (Sticky Bottom) - Input Only */}
-            <div className="flex-shrink-0 w-full min-w-0 z-20 sticky bottom-0 bg-white dark:bg-gray-900">
+            {/* Mesaj kutusu - karşı tarafın cinsiyetine göre renk teması */}
+            <div className={`flex-shrink-0 w-full min-w-0 z-20 sticky bottom-0 border-t-2 ${themeBorderClass} ${themeBgClass}`}>
                 <MessageInput
                     onSendMessage={handleSendMessage}
                     disabled={false}

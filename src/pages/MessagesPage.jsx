@@ -337,11 +337,17 @@ const MessagesPage = () => {
                                     <p className="text-gray-500">Henüz mesaj yok</p>
                                 </div>
                             ) : (
-                                filteredConversations.map((conversation) => (
+                                filteredConversations.map((conversation) => {
+                                    const otherGender = conversation.other_user?.gender;
+                                    const isFemale = otherGender === 'female' || otherGender === 'kiz' || otherGender === 'kadın' || otherGender === 'woman';
+                                    const rowAccentClass = isFemale
+                                        ? 'border-l-4 border-l-pink-400 dark:border-l-pink-500'
+                                        : 'border-l-4 border-l-blue-400 dark:border-l-blue-500';
+                                    return (
                                     <div
                                         key={conversation.id}
                                         onClick={() => handleConversationClick(conversation)}
-                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer border-b border-gray-100 dark:border-gray-800 transition-colors group ${activeConversation?.id === conversation.id ? 'bg-gray-50 dark:bg-gray-800' : ''
+                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer border-b border-gray-100 dark:border-gray-800 transition-colors group ${rowAccentClass} ${activeConversation?.id === conversation.id ? 'bg-gray-50 dark:bg-gray-800' : ''
                                             }`}
                                     >
                                         <div className="relative">
@@ -403,7 +409,8 @@ const MessagesPage = () => {
                                             <FaTrash className="text-sm" />
                                         </button>
                                     </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
                     </div>
