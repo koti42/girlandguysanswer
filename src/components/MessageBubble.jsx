@@ -630,7 +630,7 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
 
             <div className={`flex items-center gap-1 ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3 min-w-0 transition-all duration-300 group`}>
                 {onReaction && !message.user_deleted_at && (
-                    <div className={`flex-shrink-0 ${isMine ? 'order-2 ml-1' : 'order-first mr-1'}`}>
+                    <div className={`flex-shrink-0 ${isMine ? 'order-1 mr-1' : 'order-2 ml-1'}`}>
                         <button
                             ref={reactionButtonRef}
                             type="button"
@@ -654,7 +654,7 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                     </div>
                 )}
                 <div
-                    className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative transition-all duration-300 ${isHighlighted ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''} ${isMine ? 'order-1' : 'order-2'}`}
+                    className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative transition-all duration-300 ${isHighlighted ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''} ${isMine ? 'order-2' : 'order-1'}`}
                 >
                     {message.user_deleted_at ? (
                         <>
