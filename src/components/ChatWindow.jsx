@@ -15,6 +15,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [replyingTo, setReplyingTo] = useState(null);
+    const [highlightedMessageId, setHighlightedMessageId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [otherUserTyping, setOtherUserTyping] = useState(null);
     const typingResetRef = useRef(null);
@@ -326,13 +327,15 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 ) : (
                     <div className="py-4 w-full min-w-0 max-w-full">
                         {messages.map((message) => (
-                            <MessageBubble
-                                key={message.id}
-                                message={message}
-                                isMine={message.sender_id === user.id}
-                                senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
-                                onReply={(msg) => setReplyingTo(msg)}
-                            />
+                            <div key={message.id} data-message-id={String(message.id)}>
+                                <MessageBubble
+                                    message={message}
+                                    isMine={message.sender_id === user.id}
+                                    senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
+                                    onReply={(msg) => setReplyingTo(msg)}
+                                    isHighlighted={highlightedMessageId === message.id}
+                                />
+                            </div>
                         ))}
                         <div ref={messagesEndRef} />
                     </div>
@@ -347,6 +350,23 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     replyingTo={replyingTo}
                     onCancelReply={() => setReplyingTo(null)}
                     onTyping={conversation?.id ? (typing) => messagesAPI.sendTyping(conversation.id, typing).catch(() => { }) : undefined}
+                    onScrollToQuotedMessage={(messageId) => {
+                        if (messageId == null) return;
+                        const id = String(messageId);
+                        const container = messagesContainerRef.current;
+                        if (!container) return;
+                        const el = container.querySelector(`[data-message-id="${id}"]`);
+                        if (!el) return;
+                        setHighlightedMessageId(messageId);
+                        window.setTimeout(() => setHighlightedMessageId(null), 2200);
+                        requestAnimationFrame(() => {
+                            const elRect = el.getBoundingClientRect();
+                            const containerRect = container.getBoundingClientRect();
+                            const elTopRelativeToContainer = elRect.top - containerRect.top + container.scrollTop;
+                            const scrollTarget = elTopRelativeToContainer - container.clientHeight / 2 + el.clientHeight / 2;
+                            container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+                        });
+                    }}
                 />
             </div>
         </div>

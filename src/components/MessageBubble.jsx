@@ -45,7 +45,7 @@ function isEphemeralExpiredFromBackend(message, isMine) {
     return (Date.now() - viewedAt) >= EPHEMERAL_DURATION * 1000;
 }
 
-const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
+const MessageBubble = ({ message, isMine, senderGender, onReply, isHighlighted = false }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -522,9 +522,9 @@ const MessageBubble = ({ message, isMine, senderGender, onReply }) => {
                 </div>
             )}
 
-            <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3 min-w-0`}>
+            <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3 min-w-0 transition-all duration-300`}>
                 <div
-                    className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative group`}
+                    className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative group transition-all duration-300 ${isHighlighted ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''}`}
                 >
                     {/* Quoted Message */}
                     {message.reply_to && (
