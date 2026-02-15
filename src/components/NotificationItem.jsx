@@ -34,6 +34,24 @@ const getNotificationIcon = (type) => {
     }
 };
 
+const getDisplayUser = (notification) => {
+    const d = notification?.data;
+    if (d?.user) return d.user;
+    if (notification?.type === 'new_message' && (d?.sender_username || d?.sender_avatar)) {
+        return { username: d.sender_username, avatar: d.sender_avatar, name: d.sender_username };
+    }
+    return null;
+};
+
+const getMessageLabel = (notification) => {
+    const d = notification?.data;
+    if (notification?.type === 'new_message' && d?.sender_username) {
+        const msg = d.message ? `: ${d.message}` : '';
+        return `${d.sender_username}'den mesaj${msg}`;
+    }
+    return d?.message || 'Yeni bildirim';
+};
+
 const NotificationItem = ({ notification, onClick, onDelete, compact = false }) => {
     const handleClick = (e) => {
         if (e.target.closest('.delete-button')) return;
@@ -44,6 +62,9 @@ const NotificationItem = ({ notification, onClick, onDelete, compact = false }) 
         e.stopPropagation();
         onDelete?.(notification.id);
     };
+
+    const displayUser = getDisplayUser(notification);
+    const messageLabel = getMessageLabel(notification);
 
     if (compact) {
         return (
@@ -60,7 +81,7 @@ const NotificationItem = ({ notification, onClick, onDelete, compact = false }) 
 
                 <div className="relative flex-shrink-0">
                     <UserAvatar
-                        user={notification.data?.user}
+                        user={displayUser}
                         size="sm"
                         className="w-10 h-10 ring-2 ring-white dark:ring-gray-800"
                     />
@@ -73,7 +94,7 @@ const NotificationItem = ({ notification, onClick, onDelete, compact = false }) 
 
                 <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-800 dark:text-gray-200 font-medium line-clamp-2 leading-snug">
-                        {notification.data?.message || 'Yeni bildirim'}
+                        {messageLabel}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -111,7 +132,7 @@ const NotificationItem = ({ notification, onClick, onDelete, compact = false }) 
 
             <div className="relative flex-shrink-0">
                 <UserAvatar
-                    user={notification.data?.user}
+                    user={displayUser}
                     size="md"
                     className="w-12 h-12 ring-2 ring-white dark:ring-gray-800"
                 />
@@ -122,7 +143,7 @@ const NotificationItem = ({ notification, onClick, onDelete, compact = false }) 
 
             <div className="flex-1 min-w-0 pt-0.5">
                 <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1.5 leading-snug">
-                    {notification.data?.message || 'Yeni bildirim'}
+                    {messageLabel}
                 </p>
 
                 {notification.data?.question_title && (

@@ -27,9 +27,18 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
     const showBrowserNotification = useCallback((notification) => {
         if ('Notification' in window && Notification.permission === 'granted') {
             try {
-                const notif = new Notification('Yeni Bildirim', {
-                    body: notification.data?.message || 'Yeni bir bildiriminiz var',
-                    icon: notification.data?.user?.avatar || '/vite.svg',
+                const d = notification.data;
+                const isNewMessage = notification.type === 'new_message';
+                const title = isNewMessage && d?.sender_username
+                    ? `${d.sender_username}'den mesaj`
+                    : 'Yeni Bildirim';
+                const body = isNewMessage && d?.sender_username
+                    ? (d.message || 'Yeni mesaj')
+                    : (d?.message || 'Yeni bir bildiriminiz var');
+                const icon = d?.sender_avatar || d?.user?.avatar || '/vite.svg';
+                const notif = new Notification(title, {
+                    body,
+                    icon,
                     badge: '/vite.svg',
                     tag: notification.id,
                     requireInteraction: false,
