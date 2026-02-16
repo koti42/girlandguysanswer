@@ -17,6 +17,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [loadingOlder, setLoadingOlder] = useState(false);
     const [hasMoreOlder, setHasMoreOlder] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showSearchInput, setShowSearchInput] = useState(false);
     const [replyingTo, setReplyingTo] = useState(null);
     const [highlightedMessageId, setHighlightedMessageId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -450,10 +451,10 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     </button>
 
                     <div
-                        className="flex-1 cursor-pointer"
+                        className="flex-1 min-w-0 cursor-pointer"
                         onClick={() => navigate(`/profile/${conversation.other_user.username}`)}
                     >
-                        <h3 className="font-bold text-white">
+                        <h3 className="font-bold text-white truncate">
                             {conversation.other_user.username}
                         </h3>
                         <p className="text-xs text-white/80">
@@ -466,6 +467,16 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             )}
                         </p>
                     </div>
+                    {!loading && messages.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setShowSearchInput((v) => !v)}
+                            className={`p-2 rounded-full transition-colors ${showSearchInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            title="Mesajlarda ara"
+                        >
+                            <FaSearch className="text-lg" />
+                        </button>
+                    )}
                     {canExportPdf && (
                         <button
                             type="button"
@@ -484,6 +495,45 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         <FaTrash className="text-lg" />
                     </button>
                 </div>
+                {showSearchInput && !loading && messages.length > 0 && (
+                    <div className="mt-3 pt-2 border-t border-white/20">
+                        <div className="relative flex items-center">
+                            <FaSearch className="absolute left-4 text-white/70 text-sm pointer-events-none" />
+                            <input
+                                type="text"
+                                placeholder="Mesajlarda ara..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-11 pr-11 py-2.5 rounded-xl bg-white/15 text-white placeholder-white/60 text-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-white/30 transition-all"
+                                autoFocus
+                            />
+                            {searchQuery ? (
+                                <button
+                                    type="button"
+                                    onClick={() => { setSearchQuery(''); setShowSearchInput(false); }}
+                                    className="absolute right-3 p-1 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                                    title="Temizle ve kapat"
+                                >
+                                    ×
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowSearchInput(false)}
+                                    className="absolute right-3 text-white/70 hover:text-white text-xs font-medium"
+                                    title="Kapat"
+                                >
+                                    Kapat
+                                </button>
+                            )}
+                        </div>
+                        {searchQuery.trim() && (
+                            <p className="text-xs text-white/70 mt-1.5 pl-1">
+                                {filteredMessages.length} mesaj bulundu
+                            </p>
+                        )}
+                    </div>
+                )}
             </div>
 
             <ConfirmationModal
@@ -504,36 +554,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 cancelText="Vazgeç"
                 isDangerous={true}
             />
-
-            {/* Mesajlarda arama */}
-            {!loading && messages.length > 0 && (
-                <div className="flex-shrink-0 px-3 py-2 border-b border-gray-100 dark:border-gray-800">
-                    <div className="relative">
-                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                        <input
-                            type="text"
-                            placeholder="Mesajlarda ara..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border-0 text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-coral/30"
-                        />
-                        {searchQuery && (
-                            <button
-                                type="button"
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
-                            >
-                                ×
-                            </button>
-                        )}
-                    </div>
-                    {searchQuery.trim() && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {filteredMessages.length} mesaj bulundu
-                        </p>
-                    )}
-                </div>
-            )}
 
             {/* Messages Area - Scrollable (Flex-1) */}
             <div
