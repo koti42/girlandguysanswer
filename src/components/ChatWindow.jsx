@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf } from 'react-icons/fa';
+import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
@@ -21,6 +21,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [replyingTo, setReplyingTo] = useState(null);
     const [highlightedMessageId, setHighlightedMessageId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showNotebook, setShowNotebook] = useState(false);
+    const [notes, setNotes] = useState([]);
+    const [loadingNotes, setLoadingNotes] = useState(false);
+    const [noteContent, setNoteContent] = useState('');
+    const [noteVisibleToOther, setNoteVisibleToOther] = useState(false);
+    const [editingNoteId, setEditingNoteId] = useState(null);
+    const [editContent, setEditContent] = useState('');
+    const [editVisibleToOther, setEditVisibleToOther] = useState(false);
     const [otherUserTyping, setOtherUserTyping] = useState(null);
     const typingResetRef = useRef(null);
     const loadingOlderRef = useRef(false);
@@ -377,6 +385,68 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         }
     }, [conversation]);
 
+    const fetchNotes = useCallback(async () => {
+        if (!conversation?.id) return;
+        setLoadingNotes(true);
+        try {
+            const res = await messagesAPI.getNotes(conversation.id);
+            setNotes(res.data?.data?.notes ?? []);
+        } catch (err) {
+            notificationToast.error(err.response?.data?.message || 'Notlar yüklenemedi.');
+        } finally {
+            setLoadingNotes(false);
+        }
+    }, [conversation?.id]);
+
+    useEffect(() => {
+        if (showNotebook && conversation?.id) fetchNotes();
+    }, [showNotebook, conversation?.id, fetchNotes]);
+
+    const handleAddNote = useCallback(async () => {
+        const content = noteContent.trim();
+        if (!content || !conversation?.id) return;
+        try {
+            const res = await messagesAPI.createNote(conversation.id, { content, is_visible_to_other: noteVisibleToOther });
+            setNotes(prev => [res.data?.data?.note, ...prev]);
+            setNoteContent('');
+            setNoteVisibleToOther(false);
+            notificationToast.success('Not eklendi.');
+        } catch (err) {
+            notificationToast.error(err.response?.data?.message || 'Not eklenemedi.');
+        }
+    }, [conversation?.id, noteContent, noteVisibleToOther]);
+
+    const handleUpdateNote = useCallback(async () => {
+        if (editingNoteId == null || !editContent.trim()) return;
+        try {
+            const res = await messagesAPI.updateNote(editingNoteId, { content: editContent.trim(), is_visible_to_other: editVisibleToOther });
+            setNotes(prev => prev.map(n => n.id === editingNoteId ? (res.data?.data?.note ?? n) : n));
+            setEditingNoteId(null);
+            setEditContent('');
+            setEditVisibleToOther(false);
+            notificationToast.success('Not güncellendi.');
+        } catch (err) {
+            notificationToast.error(err.response?.data?.message || 'Not güncellenemedi.');
+        }
+    }, [editingNoteId, editContent, editVisibleToOther]);
+
+    const handleDeleteNote = useCallback(async (noteId) => {
+        try {
+            await messagesAPI.deleteNote(noteId);
+            setNotes(prev => prev.filter(n => n.id !== noteId));
+            if (editingNoteId === noteId) setEditingNoteId(null);
+            notificationToast.success('Not silindi.');
+        } catch (err) {
+            notificationToast.error(err.response?.data?.message || 'Not silinemedi.');
+        }
+    }, [editingNoteId]);
+
+    const startEditNote = useCallback((note) => {
+        setEditingNoteId(note.id);
+        setEditContent(note.content || '');
+        setEditVisibleToOther(note.is_visible_to_other || false);
+    }, []);
+
     const scrollToMessageId = useCallback((messageId) => {
         if (messageId == null) return;
         const id = String(messageId);
@@ -467,6 +537,16 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             )}
                         </p>
                     </div>
+                    {conversation?.id && (
+                        <button
+                            type="button"
+                            onClick={() => setShowNotebook(v => !v)}
+                            className={`p-2 rounded-full transition-colors ${showNotebook ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            title="Not Defteri"
+                        >
+                            <FaBook className="text-lg" />
+                        </button>
+                    )}
                     {!loading && messages.length > 0 && (
                         <button
                             type="button"
@@ -554,6 +634,85 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 cancelText="Vazgeç"
                 isDangerous={true}
             />
+
+            {/* Not Defteri - çizgili defter */}
+            {showNotebook && (
+                <div className="fixed inset-0 z-50 flex flex-col bg-gray-900/80 dark:bg-gray-950/90" onClick={() => setShowNotebook(false)}>
+                    <div className="flex-1 flex flex-col min-h-0 m-4 rounded-2xl overflow-hidden shadow-2xl bg-amber-50/95 dark:bg-stone-900/95 border border-amber-200/80 dark:border-stone-700 max-w-2xl w-full mx-auto" onClick={e => e.stopPropagation()}>
+                        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-amber-200/80 dark:border-stone-700 bg-amber-100/80 dark:bg-stone-800/80">
+                            <h3 className="font-semibold text-amber-900 dark:text-amber-100 flex items-center gap-2">
+                                <FaBook className="text-amber-700 dark:text-amber-300" />
+                                Not Defteri
+                            </h3>
+                            <button type="button" onClick={() => setShowNotebook(false)} className="p-2 rounded-lg text-amber-700 dark:text-amber-300 hover:bg-amber-200/50 dark:hover:bg-stone-700">×</button>
+                        </div>
+                        <div
+                            className="flex-1 min-h-0 overflow-y-auto px-6 pb-6 pt-4"
+                            style={{
+                                backgroundImage: 'repeating-linear-gradient(transparent, transparent 0px, transparent 27px, rgba(180,140,80,0.22) 27px, rgba(180,140,80,0.22) 28px)',
+                                backgroundAttachment: 'local',
+                            }}
+                        >
+                            <div className="pl-8 relative" style={{ borderLeft: '3px solid rgba(180,100,60,0.5)' }}>
+                                <div className="mb-6">
+                                    <textarea
+                                        value={noteContent}
+                                        onChange={e => setNoteContent(e.target.value)}
+                                        placeholder="Yeni not yaz..."
+                                        rows={3}
+                                        className="w-full resize-none bg-transparent border-0 text-amber-900 dark:text-amber-100 placeholder-amber-500/70 focus:ring-0 focus:outline-none text-sm leading-7"
+                                    />
+                                    <label className="flex items-center gap-2 mt-2 text-amber-800 dark:text-amber-200 text-sm cursor-pointer">
+                                        <input type="checkbox" checked={noteVisibleToOther} onChange={e => setNoteVisibleToOther(e.target.checked)} className="rounded border-amber-400 text-amber-600 focus:ring-amber-500" />
+                                        Karşı tarafa göster
+                                    </label>
+                                    <button type="button" onClick={handleAddNote} disabled={!noteContent.trim() || loadingNotes} className="mt-2 px-4 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 disabled:opacity-50">Ekle</button>
+                                </div>
+                                {loadingNotes ? (
+                                    <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-400 border-t-transparent" /></div>
+                                ) : notes.length === 0 ? (
+                                    <p className="text-amber-600 dark:text-amber-400 text-sm py-4">Henüz not yok. Yukarıdan ekleyebilirsin.</p>
+                                ) : (
+                                    <div className="space-y-6">
+                                        {notes.map((note) => (
+                                            <div key={note.id} className="py-2 border-b border-amber-200/50 dark:border-stone-600/50 last:border-0">
+                                                {editingNoteId === note.id ? (
+                                                    <div>
+                                                        <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={3} className="w-full resize-none bg-amber-50/50 dark:bg-stone-800/50 border border-amber-200 dark:border-stone-600 rounded-lg p-2 text-amber-900 dark:text-amber-100 text-sm focus:ring-2 focus:ring-amber-400" />
+                                                        <label className="flex items-center gap-2 mt-2 text-amber-800 dark:text-amber-200 text-sm cursor-pointer">
+                                                            <input type="checkbox" checked={editVisibleToOther} onChange={e => setEditVisibleToOther(e.target.checked)} className="rounded border-amber-400 text-amber-600 focus:ring-amber-500" />
+                                                            Karşı tarafa göster
+                                                        </label>
+                                                        <div className="flex gap-2 mt-2">
+                                                            <button type="button" onClick={handleUpdateNote} className="px-3 py-1 rounded bg-amber-600 text-white text-sm">Kaydet</button>
+                                                            <button type="button" onClick={() => { setEditingNoteId(null); setEditContent(''); setEditVisibleToOther(false); }} className="px-3 py-1 rounded bg-gray-400 text-white text-sm">İptal</button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <p className="text-amber-900 dark:text-amber-100 text-sm whitespace-pre-wrap leading-7">{note.content}</p>
+                                                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                            <span className="text-xs text-amber-600 dark:text-amber-400">{note.user?.username || 'Kullanıcı'}</span>
+                                                            <span className="text-xs text-amber-500 dark:text-amber-500">{new Date(note.created_at).toLocaleDateString('tr-TR')}</span>
+                                                            {note.is_visible_to_other && <span className="text-xs px-1.5 py-0.5 rounded bg-amber-200/80 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200">Karşı tarafa göster</span>}
+                                                            {note.user_id === user?.id && (
+                                                                <span className="flex gap-1 ml-auto">
+                                                                    <button type="button" onClick={() => startEditNote(note)} className="text-xs text-amber-700 dark:text-amber-300 hover:underline">Düzenle</button>
+                                                                    <button type="button" onClick={() => handleDeleteNote(note.id)} className="text-xs text-red-600 dark:text-red-400 hover:underline">Sil</button>
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Messages Area - Scrollable (Flex-1) */}
             <div

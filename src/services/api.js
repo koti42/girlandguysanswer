@@ -164,6 +164,10 @@ export const messagesAPI = {
     getConversations: () => api.get('/messages/conversations'),
     getMessages: (conversationId, params = {}) => api.get(`/messages/conversations/${conversationId}`, { params }),
     getConversationPdf: (conversationId) => api.get(`/messages/conversations/${conversationId}/pdf`, { responseType: 'blob' }),
+    getNotes: (conversationId) => api.get(`/messages/conversations/${conversationId}/notes`),
+    createNote: (conversationId, data) => api.post(`/messages/conversations/${conversationId}/notes`, data),
+    updateNote: (noteId, data) => api.patch(`/messages/notes/${noteId}`, data),
+    deleteNote: (noteId) => api.delete(`/messages/notes/${noteId}`),
     sendMessage: (data) => api.post('/messages/send', data),
     sendFile: (formData) => api.post('/messages/send', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
