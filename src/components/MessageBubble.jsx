@@ -40,10 +40,15 @@ function getYoutubeVideoLinks(content) {
 
 function contentWithShortLinks(content) {
     if (!content || typeof content !== 'string') return '';
-    return content.replace(YOUTUBE_URL_REGEX, (match) => {
-        const isMusic = /music\.youtube\.com/i.test(match);
-        return isMusic ? '🔗 YouTube Music linki' : '🔗 Video linki';
-    });
+    return content
+        .replace(YOUTUBE_URL_REGEX, (match) => {
+            const isMusic = /music\.youtube\.com/i.test(match);
+            return isMusic ? '🔗 YouTube Music linki' : '🔗 Video linki';
+        })
+        // Instagram URL'lerini tamamen kaldırıyoruz, çünkü altta preview kartı var.
+        .replace(INSTAGRAM_URL_REGEX, '')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 function getInstagramLinks(content) {
