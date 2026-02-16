@@ -18,6 +18,7 @@ function canEditOrDeleteMessage(message, isMine) {
 }
 
 const YOUTUBE_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})/gi;
+const INSTAGRAM_URL_REGEX = /https?:\/\/(?:www\.)?instagram\.com\/[^\s]+/gi;
 
 function getYoutubeVideoLinks(content) {
     if (!content || typeof content !== 'string') return [];
@@ -43,6 +44,22 @@ function contentWithShortLinks(content) {
         const isMusic = /music\.youtube\.com/i.test(match);
         return isMusic ? '🔗 YouTube Music linki' : '🔗 Video linki';
     });
+}
+
+function getInstagramLinks(content) {
+    if (!content || typeof content !== 'string') return [];
+    const seen = new Set();
+    const result = [];
+    let m;
+    const re = new RegExp(INSTAGRAM_URL_REGEX.source, 'gi');
+    while ((m = re.exec(content)) !== null) {
+        const url = m[0];
+        if (!seen.has(url)) {
+            seen.add(url);
+            result.push(url);
+        }
+    }
+    return result;
 }
 
 function isEphemeralExpiredFromBackend(message, isMine) {
@@ -484,6 +501,7 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
             default: {
                 const content = message.content || '';
                 const youtubeLinks = getYoutubeVideoLinks(content);
+            const instagramLinks = getInstagramLinks(content);
                 return (
                     <div className="min-w-0 max-w-full space-y-2">
                         <p className="whitespace-pre-wrap break-words text-sm leading-relaxed" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{contentWithShortLinks(content)}</p>
@@ -510,6 +528,40 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                                         </div>
                                     </a>
                                 ))}
+                            </div>
+                        )}
+                        {instagramLinks.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                                {instagramLinks.map((url, idx) => {
+                                    let displayPath = '';
+                                    try {
+                                        const parsed = new URL(url);
+                                        displayPath = parsed.pathname.replace(/\/$/, '') || '/';
+                                    } catch {
+                                        displayPath = url.replace(/^https?:\/\//i, '');
+                                    }
+                                    return (
+                                        <a
+                                            key={idx}
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-stretch overflow-hidden rounded-lg border border-white/20 bg-gradient-to-r from-pink-500/40 via-rose-500/40 to-orange-400/40 hover:from-pink-500/60 hover:via-rose-500/60 hover:to-orange-400/60 transition-colors no-underline text-inherit max-w-[320px] backdrop-blur-sm"
+                                        >
+                                            <div className="w-10 flex items-center justify-center bg-gradient-to-br from-pink-500 to-orange-400 text-white font-semibold text-xs flex-shrink-0">
+                                                IG
+                                            </div>
+                                            <div className="flex flex-col justify-center min-w-0 p-2 bg-black/10">
+                                                <span className="text-xs font-medium text-white/90">
+                                                    Instagram bağlantısı
+                                                </span>
+                                                <span className="text-[11px] text-white/80 truncate">
+                                                    {displayPath}
+                                                </span>
+                                            </div>
+                                        </a>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
