@@ -53,7 +53,7 @@ export const TrendsWidget = () => {
                         className="flex items-center justify-between group"
                     >
                         <span className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium group-hover:bg-coral/10 group-hover:text-coral transition-colors flex-1 truncate">
-                            #{item.tag}
+                            {item.tag.startsWith('#') ? item.tag : `#${item.tag}`}
                         </span>
                         <div className="flex items-center gap-1.5 text-gray-400 text-xs flex-shrink-0 ml-2">
                             {item.trend === 'up' && <FaArrowUp className="text-green-500" title="Yükseliş" />}

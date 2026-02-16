@@ -519,7 +519,7 @@ const AskQuestionPage = () => {
                                                     disabled={!canAdd}
                                                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${canAdd ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-coral/20 hover:text-coral dark:hover:bg-coral/20 dark:hover:text-coral' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-default'}`}
                                                 >
-                                                    <span>#{item.tag}</span>
+                                                    <span>{item.tag.startsWith('#') ? item.tag : `#${item.tag}`}</span>
                                                     {item.trend === 'up' && <FaArrowUp className="text-green-500 text-xs" title="Yükseliş" />}
                                                     {item.trend === 'down' && <FaArrowDown className="text-red-500 text-xs" title="Düşüş" />}
                                                     {item.trend === 'same' && <FaMinus className="text-gray-400 text-xs" title="Değişmedi" />}
