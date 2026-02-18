@@ -78,7 +78,7 @@ function isEphemeralExpiredFromBackend(message, isMine) {
     return (Date.now() - viewedAt) >= EPHEMERAL_DURATION * 1000;
 }
 
-const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, onEdit, onDelete, onReaction, isHighlighted = false, onScrollToMessage }) => {
+const MessageBubble = ({ message, theme = 'default', isMine, senderGender, currentUserId, onReply, onEdit, onDelete, onReaction, isHighlighted = false, onScrollToMessage }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -581,13 +581,17 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
         senderGender === 'woman' ||
         senderGender === 'kadın';
 
-    const bubbleClass = isMine
-        ? (isFemale
-            ? 'bg-gradient-to-br from-pink-400 to-rose-400 text-white'
-            : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white')
-        : (isFemale
-            ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white'
-            : 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white');
+    const bubbleClass = theme === 'adult'
+        ? (isMine
+            ? 'bg-gradient-to-br from-rose-600 via-pink-600 to-red-500 text-white border-2 border-rose-300/50 shadow-[0_0_25px_rgba(239,68,68,0.7),0_0_40px_rgba(236,72,153,0.5),0_8px_32px_rgba(220,38,38,0.4),inset_0_1px_0_rgba(255,255,255,0.3)]'
+            : 'bg-gradient-to-br from-red-950/95 via-rose-950/95 to-pink-950/95 text-white border-2 border-rose-600/50 shadow-[0_0_25px_rgba(190,18,60,0.8),0_0_40px_rgba(159,18,57,0.6),0_8px_32px_rgba(127,29,29,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]')
+        : (isMine
+            ? (isFemale
+                ? 'bg-gradient-to-br from-pink-400 to-rose-400 text-white'
+                : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white')
+            : (isFemale
+                ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white'
+                : 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white'));
 
     const formatMessageDateTime = (dateString) => {
         if (!dateString) return '';
@@ -712,6 +716,14 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                 )}
                 <div
                     className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative transition-all duration-300 ${isHighlighted ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''} ${isMine ? 'order-2' : 'order-1'}`}
+                    style={theme === 'adult' ? {
+                        backgroundImage: isMine 
+                            ? 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,182,193,0.2) 0%, transparent 50%), linear-gradient(135deg, rgba(239,68,68,1) 0%, rgba(236,72,153,1) 50%, rgba(220,38,38,1) 100%)'
+                            : 'radial-gradient(circle at 30% 40%, rgba(190,18,60,0.3) 0%, transparent 60%), radial-gradient(circle at 70% 60%, rgba(159,18,57,0.25) 0%, transparent 60%), linear-gradient(135deg, rgba(127,29,29,0.95) 0%, rgba(159,18,57,0.95) 50%, rgba(190,18,60,0.95) 100%)',
+                        boxShadow: isMine
+                            ? '0 0 30px rgba(239,68,68,0.8), 0 0 50px rgba(236,72,153,0.6), 0 8px 32px rgba(220,38,38,0.5), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 0 rgba(0,0,0,0.2)'
+                            : '0 0 30px rgba(190,18,60,0.9), 0 0 50px rgba(159,18,57,0.7), 0 8px 32px rgba(127,29,29,0.6), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.3)'
+                    } : undefined}
                 >
                     {message.user_deleted_at ? (
                         <>
