@@ -222,6 +222,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const handleSendMessage = async ({ content, file, type, is_ephemeral, ephemeral_max_views }) => {
         if (!conversation) return;
 
+        const replyToId = replyingTo?.id;
+        setReplyingTo(null);
+
         const isGifOrSticker = type === 'gif' || type === 'sticker';
         const tempMessage = {
             id: `temp-${Date.now()}`,
@@ -247,14 +250,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     receiver_id: conversationRef.current.other_user.id,
                     content,
                     type: 'text',
-                    reply_to_message_id: replyingTo?.id
+                    reply_to_message_id: replyToId
                 });
             } else if (isGifOrSticker) {
                 response = await messagesAPI.sendMessage({
                     receiver_id: conversationRef.current.other_user.id,
                     content,
                     type,
-                    reply_to_message_id: replyingTo?.id
+                    reply_to_message_id: replyToId
                 });
             } else {
                 const formData = new FormData();
@@ -262,7 +265,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 formData.append('type', type);
                 formData.append('file', file);
                 if (content) formData.append('content', content);
-                if (replyingTo?.id) formData.append('reply_to_message_id', replyingTo.id);
+                if (replyToId) formData.append('reply_to_message_id', replyToId);
                 if (is_ephemeral) formData.append('is_ephemeral', '1');
                 if (ephemeral_max_views) formData.append('ephemeral_max_views', ephemeral_max_views);
 
@@ -272,11 +275,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             if (response.data?.success === false) {
                 setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
                 notificationToast.error(response.data?.message || 'Mesaj gönderilemedi.');
-                setReplyingTo(null);
                 return;
             }
-
-            setReplyingTo(null);
 
             const newMessage = response.data.data.message;
             const conversationData = response.data.data.conversation;
