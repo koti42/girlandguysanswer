@@ -124,6 +124,7 @@ const SignupPage = () => {
             email: formData.email,
             password: formData.password,
             gender: formData.gender,
+            terms_accepted: formData.agreeTerms,
             recaptcha_token: recaptchaToken,
             recaptcha_action: 'signup',
         });
