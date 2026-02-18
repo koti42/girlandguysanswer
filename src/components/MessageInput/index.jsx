@@ -8,7 +8,7 @@ import StickerGifDrawer from './StickerGifDrawer';
 import RecordingBar from './RecordingBar';
 import { MAX_CHARS, WAVE_LENGTH } from './constants';
 
-export default function MessageInput({ onSendMessage, disabled = false, replyingTo, onCancelReply, onTyping, onScrollToQuotedMessage, theme = 'default' }) {
+export default function MessageInput({ onSendMessage, disabled = false, replyingTo, onCancelReply, onTyping, onScrollToQuotedMessage }) {
     const { user } = useAuth();
     const [message, setMessage] = useState('');
     const typingTimeoutRef = useRef(null);
@@ -277,10 +277,8 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
         setEphemeralModalChosenOption(mode);
     };
 
-    const isAdultTheme = theme === 'adult';
-
     return (
-        <div className={`${isAdultTheme ? 'bg-gradient-to-r from-zinc-950 via-fuchsia-950 to-rose-900 border-t border-fuchsia-500/30' : 'bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800'} p-2 min-w-0 overflow-hidden`}>
+        <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2 min-w-0 overflow-hidden">
             <EphemeralPhotoModal
                 isOpen={showEphemeralModal}
                 chosenOption={ephemeralModalChosenOption}
@@ -297,7 +295,6 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                 currentUserId={user?.id}
                 onScrollToQuotedMessage={onScrollToQuotedMessage}
                 onCancelReply={onCancelReply}
-                theme={theme}
             />
 
             <StickerGifDrawer
@@ -357,7 +354,7 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                     type="button"
                     onClick={() => setShowStickerGifDrawer(prev => !prev)}
                     disabled={disabled || isRecording}
-                    className={`p-1 sm:p-1.5 flex-shrink-0 transition-colors ${showStickerGifDrawer ? (isAdultTheme ? 'text-fuchsia-300' : 'text-coral') : (isAdultTheme ? 'text-white/70 hover:text-fuchsia-200' : 'text-gray-500 hover:text-coral')} disabled:opacity-50`}
+                    className={`p-1 sm:p-1.5 flex-shrink-0 transition-colors ${showStickerGifDrawer ? 'text-coral' : 'text-gray-500 hover:text-coral'} disabled:opacity-50`}
                     title="Çıkartma ve GIF"
                 >
                     <FaSmile className="text-base" />
@@ -368,14 +365,14 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                         setShowEphemeralModal(true);
                     }}
                     disabled={disabled || isRecording}
-                    className={`p-1 sm:p-1.5 disabled:opacity-50 flex-shrink-0 ${isAdultTheme ? 'text-white/70 hover:text-fuchsia-200' : 'text-gray-500 hover:text-coral'}`}
+                    className="p-1 sm:p-1.5 disabled:opacity-50 flex-shrink-0 text-gray-500 hover:text-coral"
                 >
                     <FaImage className="text-base" />
                 </button>
                 <button
                     onClick={isRecording ? stopRecording : startRecording}
                     disabled={disabled || selectedFile}
-                    className={`p-1 sm:p-1.5 disabled:opacity-50 flex-shrink-0 ${isRecording ? (isAdultTheme ? 'text-fuchsia-200' : 'text-coral') : (isAdultTheme ? 'text-white/70 hover:text-fuchsia-200' : 'text-gray-500 hover:text-coral')}`}
+                    className={`p-1 sm:p-1.5 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-coral' : 'text-gray-500 hover:text-coral'}`}
                 >
                     <FaMicrophone className="text-base" />
                 </button>
@@ -401,12 +398,12 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                     }}
                     placeholder={replyingTo ? 'Yanıt...' : 'Mesaj...'}
                     disabled={disabled || isRecording}
-                    className={`flex-1 min-w-0 px-2 py-1.5 rounded-lg text-base md:text-sm focus:outline-none focus:ring-1 disabled:opacity-50 resize-none overflow-y-auto min-h-[38px] max-h-[120px] ${isAdultTheme ? 'bg-white/10 text-white placeholder-white/50 focus:ring-fuchsia-400 border border-white/10' : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-purple-400'}`}
+                    className="flex-1 min-w-0 px-2 py-1.5 rounded-lg text-base md:text-sm focus:outline-none focus:ring-1 disabled:opacity-50 resize-none overflow-y-auto min-h-[38px] max-h-[120px] bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-purple-400"
                 />
                 <button
                     onClick={handleSend}
                     disabled={disabled || (!message.trim() && !selectedFile) || isRecording}
-                    className={`p-1.5 sm:p-2 md:px-4 md:py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center min-w-[32px] sm:min-w-[36px] ${isAdultTheme ? 'bg-gradient-to-r from-fuchsia-600 to-rose-600 hover:from-fuchsia-500 hover:to-rose-500' : 'bg-purple-600 hover:bg-purple-700'}`}
+                    className="p-1.5 sm:p-2 md:px-4 md:py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center min-w-[32px] sm:min-w-[36px] bg-purple-600 hover:bg-purple-700"
                 >
                     <FaPaperPlane className="text-sm md:hidden" />
                     <span className="hidden md:inline text-xs font-bold">GÖNDER</span>

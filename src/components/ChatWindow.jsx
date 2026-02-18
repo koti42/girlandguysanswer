@@ -40,29 +40,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const navigate = useNavigate();
 
     const canExportPdf = user?.username === 'Koti42' || permissions?.is_super_admin;
-    const [chatTheme, setChatTheme] = useState('default'); // 'default' | 'adult'
-
-    const isAdultThemeEligible = useMemo(() => {
-        const a = (user?.username || '').toLowerCase();
-        const b = (conversation?.other_user?.username || '').toLowerCase();
-        const eligibleUsers = ['lebensmüde', 'koti42', 'miskin-kedim'];
-        return eligibleUsers.includes(a) && eligibleUsers.includes(b);
-    }, [user?.username, conversation?.other_user?.username]);
-
-    useEffect(() => {
-        if (!conversation?.id || !isAdultThemeEligible) {
-            setChatTheme('default');
-            return;
-        }
-        const key = `chatTheme:${conversation.id}`;
-        const saved = window.localStorage.getItem(key);
-        setChatTheme(saved === 'adult' ? 'adult' : 'default');
-    }, [conversation?.id, isAdultThemeEligible]);
-
-    useEffect(() => {
-        if (!conversation?.id || !isAdultThemeEligible) return;
-        window.localStorage.setItem(`chatTheme:${conversation.id}`, chatTheme);
-    }, [conversation?.id, isAdultThemeEligible, chatTheme]);
 
     const ensureHttps = (url) => {
         if (!url) return url;
@@ -490,21 +467,11 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
     const otherGender = conversation?.other_user?.gender;
     const isFemale = otherGender === 'female' || otherGender === 'kiz' || otherGender === 'kadın' || otherGender === 'woman';
-    const isAdultTheme = isAdultThemeEligible && chatTheme === 'adult';
 
-    const themeHeaderClass = isAdultTheme
-        ? 'bg-gradient-to-r from-zinc-950 via-fuchsia-950 to-rose-900'
-        : (isFemale ? 'bg-gradient-to-r from-pink-500 to-rose-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600');
-
-    const themeBorderClass = isAdultTheme
-        ? 'border-fuchsia-500/40 dark:border-fuchsia-400/40'
-        : (isFemale ? 'border-pink-400 dark:border-pink-500' : 'border-blue-400 dark:border-blue-500');
-
-    const themeBgClass = isAdultTheme
-        ? 'bg-gradient-to-b from-zinc-950 via-gray-950 to-black'
-        : (isFemale ? 'bg-pink-50/30 dark:bg-pink-900/10' : 'bg-blue-50/30 dark:bg-blue-900/10');
-
-    const themeSpinnerClass = isAdultTheme ? 'border-fuchsia-400' : (isFemale ? 'border-pink-500' : 'border-blue-500');
+    const themeHeaderClass = isFemale ? 'bg-gradient-to-r from-pink-500 to-rose-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600';
+    const themeBorderClass = isFemale ? 'border-pink-400 dark:border-pink-500' : 'border-blue-400 dark:border-blue-500';
+    const themeBgClass = isFemale ? 'bg-pink-50/30 dark:bg-pink-900/10' : 'bg-blue-50/30 dark:bg-blue-900/10';
+    const themeSpinnerClass = isFemale ? 'border-pink-500' : 'border-blue-500';
 
     const filteredMessages = useMemo(() => {
         if (!searchQuery.trim()) return messages;
@@ -537,7 +504,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     }
 
     return (
-        <div className={`flex flex-col h-full relative w-full overflow-hidden ${isAdultTheme ? 'bg-black' : 'bg-white dark:bg-gray-900'}`}>
+        <div className="flex flex-col h-full relative w-full overflow-hidden bg-white dark:bg-gray-900">
             {/* Header - cinsiyete göre renk (kadın: pembe, erkek: mavi) */}
             <div className={`flex-shrink-0 ${themeHeaderClass} p-4 w-full z-10 sticky top-0`}>
                 <div className="flex items-center gap-3">
@@ -565,26 +532,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             )}
                         </p>
                     </div>
-                    {isAdultThemeEligible && (
-                        <div className="flex items-center rounded-full bg-white/10 border border-white/15 overflow-hidden">
-                            <button
-                                type="button"
-                                onClick={() => setChatTheme('default')}
-                                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${chatTheme === 'default' ? 'bg-white/25 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-                                title="Normal tema"
-                            >
-                                Normal
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setChatTheme('adult')}
-                                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${chatTheme === 'adult' ? 'bg-white/25 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-                                title="+18 tema"
-                            >
-                                +18
-                            </button>
-                        </div>
-                    )}
                     {conversation?.id && (
                         <button
                             type="button"
@@ -765,7 +712,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             {/* Messages Area - Scrollable (Flex-1) */}
             <div
                 ref={messagesContainerRef}
-                className={`flex-1 min-w-0 overflow-x-hidden overflow-y-auto w-full ${isAdultTheme ? themeBgClass : 'bg-white dark:bg-gray-900'}`}
+                className={`flex-1 min-w-0 overflow-x-hidden overflow-y-auto w-full bg-white dark:bg-gray-900`}
                 style={{ WebkitOverflowScrolling: 'touch' }}
                 onScroll={(e) => {
                     if (e.target.scrollTop < 150 && hasMoreOlder && !loadingOlder && messages.length > 0) {
@@ -802,7 +749,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             <div key={message.id} data-message-id={String(message.id)}>
                                 <MessageBubble
                                     message={message}
-                                    theme={isAdultTheme ? 'adult' : 'default'}
                                     isMine={message.sender_id === user.id}
                                     currentUserId={user?.id}
                                     senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
@@ -829,7 +775,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     onCancelReply={() => setReplyingTo(null)}
                     onTyping={conversation?.id ? (typing) => messagesAPI.sendTyping(conversation.id, typing).catch(() => { }) : undefined}
                     onScrollToQuotedMessage={scrollToMessageId}
-                    theme={isAdultTheme ? 'adult' : 'default'}
                 />
             </div>
         </div>
