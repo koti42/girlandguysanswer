@@ -123,13 +123,47 @@ const ProfilePage = () => {
                     }
                 }
 
+                const createdDateValue = data.created_at || data.createdAt || data.created;
+                
+                const parseDate = (dateString) => {
+                    if (!dateString) {
+                        return null; // Tarih yoksa null döndür
+                    }
+                    
+                    if (typeof dateString === 'string') {
+                        const dateOnly = dateString.split('T')[0];
+                        if (dateOnly && dateOnly.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                            const [year, month, day] = dateOnly.split('-').map(Number);
+                            if (year && month && day) {
+                                return new Date(year, month - 1, day);
+                            }
+                        }
+                    }
+                    
+                    if (dateString instanceof Date) {
+                        return dateString;
+                    }
+                    
+                    const date = new Date(dateString);
+                    if (isNaN(date.getTime())) {
+                        return null;
+                    }
+                    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                };
+                
+                const joinedDate = parseDate(createdDateValue);
+                const formattedDate = joinedDate ? joinedDate.toLocaleDateString('tr-TR', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                }) : null;
+                
                 setProfileData({
                     ...data,
                     name: data.username,
                     coverPhoto: ensureHttps(data.coverImage) || DEFAULT_COVER,
                     avatar: ensureHttps(data.avatar) || DEFAULT_AVATAR,
                     location: data.location || 'Konum belirtilmedi',
-                    joinedDate: new Date((data.created_at || Date.now())).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
+                    joinedDate: formattedDate,
                     badges: data.badges || [],
                     level: data.level || { name: 'Yeni Üye', color: '#999' },
                     xp: data.xp || 0,

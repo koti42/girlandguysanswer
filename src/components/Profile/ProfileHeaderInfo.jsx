@@ -86,7 +86,9 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender }) => {
 
             <div className="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
                 <div className="flex items-center gap-1"><FaMapMarkerAlt />{profileData.location}</div>
-                <div className="flex items-center gap-1"><FaCalendarAlt />Katıldı {profileData.joinedDate}</div>
+                {profileData.joinedDate && (
+                    <div className="flex items-center gap-1"><FaCalendarAlt />Katıldı {profileData.joinedDate}</div>
+                )}
             </div>
         </div>
     );
