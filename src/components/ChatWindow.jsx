@@ -33,6 +33,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [ephemeralTtlSeconds, setEphemeralTtlSeconds] = useState(null);
     const [ephemeralTtlLabel, setEphemeralTtlLabel] = useState(null);
     const [ephemeralSettingLoading, setEphemeralSettingLoading] = useState(false);
+    const [countdownTick, setCountdownTick] = useState(() => Date.now());
     const typingResetRef = useRef(null);
     const loadingOlderRef = useRef(false);
     const prependScrollRef = useRef(null);
@@ -248,6 +249,40 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         { value: 86400, label: '24 saat' },
         { value: 604800, label: '1 hafta' },
     ];
+
+    const nowMs = countdownTick;
+    const nextExpiresAtMs = useMemo(() => {
+        if (!ephemeralTtlSeconds || !messages.length) return null;
+        const now = nowMs;
+        const times = messages
+            .map((m) => {
+                if (m.expires_at) return new Date(m.expires_at).getTime();
+                if (m.created_at && ephemeralTtlSeconds) return new Date(m.created_at).getTime() + ephemeralTtlSeconds * 1000;
+                return null;
+            })
+            .filter((t) => t != null && t > now);
+        return times.length ? Math.min(...times) : null;
+    }, [ephemeralTtlSeconds, messages, nowMs]);
+
+    const countdownText = useMemo(() => {
+        if (nextExpiresAtMs == null) return null;
+        const sec = Math.max(0, Math.floor((nextExpiresAtMs - nowMs) / 1000));
+        if (sec <= 0) return 'Kısa süre içinde silinecek';
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const s = sec % 60;
+        const parts = [];
+        if (h > 0) parts.push(`${h} saat`);
+        if (m > 0) parts.push(`${m} dakika`);
+        if (s > 0 || parts.length === 0) parts.push(`${s} saniye`);
+        return `${parts.join(' ')} sonra silinecek`;
+    }, [nextExpiresAtMs, nowMs]);
+
+    useEffect(() => {
+        if (ephemeralTtlSeconds <= 0) return;
+        const interval = setInterval(() => setCountdownTick(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, [ephemeralTtlSeconds]);
 
     const handleEphemeralChange = useCallback(async (e) => {
         if (!conversation?.id) return;
@@ -761,15 +796,15 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 </div>
             )}
 
-            {/* Süreli mesaj banner - iki tarafa da görünür */}
+            {/* Süreli mesaj banner - kalan süre anlık geri sayım */}
             {ephemeralTtlSeconds > 0 && (
-                <div className={`flex-shrink-0 px-4 py-2.5 flex items-center justify-center gap-2 text-sm ${isFemale ? 'bg-pink-50 dark:bg-pink-950/30 border-b border-pink-200/60 dark:border-pink-800/50' : 'bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200/60 dark:border-blue-800/50'}`}>
+                <div className={`flex-shrink-0 px-4 py-2.5 flex items-center justify-center gap-2 text-sm flex-wrap ${isFemale ? 'bg-pink-50 dark:bg-pink-950/30 border-b border-pink-200/60 dark:border-pink-800/50' : 'bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200/60 dark:border-blue-800/50'}`}>
                     <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isFemale ? 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'}`}>
                         <FaClock className="text-xs opacity-90" />
                         <span className="font-medium">{ephemeralTtlLabel || 'Süreli'}</span>
                     </span>
-                    <span className={isFemale ? 'text-pink-700/90 dark:text-pink-300/90' : 'text-blue-700/90 dark:text-blue-300/90'}>
-                        Mesajlar bu süre sonra otomatik silinir
+                    <span className={`font-medium tabular-nums ${isFemale ? 'text-pink-700 dark:text-pink-300' : 'text-blue-700 dark:text-blue-300'}`}>
+                        {countdownText ?? `Yeni mesajlar ${ephemeralTtlLabel || 'seçilen süre'} sonra silinecek`}
                     </span>
                 </div>
             )}
