@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook } from 'react-icons/fa';
+import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
@@ -30,6 +30,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [editContent, setEditContent] = useState('');
     const [editVisibleToOther, setEditVisibleToOther] = useState(false);
     const [otherUserTyping, setOtherUserTyping] = useState(null);
+    const [ephemeralTtlSeconds, setEphemeralTtlSeconds] = useState(null);
+    const [ephemeralTtlLabel, setEphemeralTtlLabel] = useState(null);
+    const [ephemeralSettingLoading, setEphemeralSettingLoading] = useState(false);
     const typingResetRef = useRef(null);
     const loadingOlderRef = useRef(false);
     const prependScrollRef = useRef(null);
@@ -53,6 +56,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         setLoading(true);
         setReplyingTo(null);
         setOtherUserTyping(null);
+        setEphemeralTtlSeconds(null);
+        setEphemeralTtlLabel(null);
 
         const abortController = new AbortController();
 
@@ -67,6 +72,13 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     const data = response.data?.data || {};
                     setMessages(data.messages || []);
                     setHasMoreOlder(data.has_more !== false);
+                    if (data.ephemeral_ttl_seconds != null) {
+                        setEphemeralTtlSeconds(data.ephemeral_ttl_seconds);
+                        setEphemeralTtlLabel(data.ephemeral_ttl_label || null);
+                    } else {
+                        setEphemeralTtlSeconds(null);
+                        setEphemeralTtlLabel(null);
+                    }
                     setTimeout(() => scrollToBottom(true), 100);
                 } catch (error) {
                     if (!abortController.signal.aborted) {
@@ -185,6 +197,17 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 setMessages(prev => prev.map(m =>
                     m.id === data.message.id ? { ...m, reactions: data.message.reactions || [] } : m
                 ));
+            },
+            onEphemeralModeUpdated: (data) => {
+                if (!conversationRef.current || data.conversation_id !== conversationRef.current.id) return;
+                setEphemeralTtlSeconds(data.ephemeral_ttl_seconds ?? null);
+                setEphemeralTtlLabel(data.ephemeral_ttl_label ?? null);
+                notificationToast(
+                    data.ephemeral_ttl_seconds
+                        ? `Süreli mesaj modu açıldı: Mesajlar ${data.ephemeral_ttl_label || 'seçilen süre'} sonra silinecek.`
+                        : 'Süreli mesaj modu kapatıldı.',
+                    'info'
+                );
             }
         });
 
@@ -218,6 +241,35 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             });
         }
     };
+
+    const EPHEMERAL_OPTIONS = [
+        { value: '', label: 'Kapalı' },
+        { value: 3600, label: '1 saat' },
+        { value: 86400, label: '24 saat' },
+        { value: 604800, label: '1 hafta' },
+    ];
+
+    const handleEphemeralChange = useCallback(async (e) => {
+        if (!conversation?.id) return;
+        const raw = e.target.value;
+        const value = raw === '' ? null : parseInt(raw, 10);
+        setEphemeralSettingLoading(true);
+        try {
+            await messagesAPI.updateEphemeralSettings(conversation.id, {
+                ephemeral_ttl_seconds: value,
+            });
+            setEphemeralTtlSeconds(value);
+            setEphemeralTtlLabel(value ? EPHEMERAL_OPTIONS.find(o => o.value === value)?.label : null);
+            notificationToast(
+                value ? `Süreli mesaj: Mesajlar ${EPHEMERAL_OPTIONS.find(o => o.value === value)?.label} sonra silinecek.` : 'Süreli mesaj modu kapatıldı.',
+                'success'
+            );
+        } catch (err) {
+            notificationToast(err.response?.data?.message || 'Ayar güncellenemedi.', 'error');
+        } finally {
+            setEphemeralSettingLoading(false);
+        }
+    }, [conversation?.id]);
 
     const handleSendMessage = async ({ content, file, type, is_ephemeral, ephemeral_max_views }) => {
         if (!conversation) return;
@@ -709,6 +761,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 </div>
             )}
 
+            {/* Süreli mesaj banner - iki tarafa da görünür */}
+            {ephemeralTtlSeconds > 0 && (
+                <div className="flex-shrink-0 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800 flex items-center gap-2 text-amber-800 dark:text-amber-200 text-sm">
+                    <FaClock className="flex-shrink-0 text-amber-600 dark:text-amber-400" />
+                    <span>Bu sohbetteki mesajlar <strong>{ephemeralTtlLabel || 'seçilen süre'}</strong> sonra otomatik silinecek.</span>
+                </div>
+            )}
+
             {/* Messages Area - Scrollable (Flex-1) */}
             <div
                 ref={messagesContainerRef}
@@ -768,6 +828,27 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
             {/* Mesaj kutusu - karşı tarafın cinsiyetine göre renk teması */}
             <div className={`flex-shrink-0 w-full min-w-0 z-20 sticky bottom-0 border-t-2 ${themeBorderClass} ${themeBgClass}`}>
+                {/* Süreli mesaj seçici - sohbet inputunun hemen üstünde */}
+                {conversation?.id && (
+                    <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-200/50 dark:border-gray-700/50">
+                        <FaClock className="text-gray-500 dark:text-gray-400 text-sm flex-shrink-0" />
+                        <label htmlFor="ephemeral-select" className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Süreli mesaj:</label>
+                        <select
+                            id="ephemeral-select"
+                            value={ephemeralTtlSeconds ?? ''}
+                            onChange={handleEphemeralChange}
+                            disabled={ephemeralSettingLoading}
+                            className="flex-1 min-w-0 max-w-[140px] text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 py-1.5 px-2 focus:ring-2 focus:ring-coral focus:border-coral disabled:opacity-50"
+                        >
+                            {EPHEMERAL_OPTIONS.map((opt) => (
+                                <option key={opt.value === '' ? 'off' : opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                        {ephemeralSettingLoading && (
+                            <span className="text-xs text-gray-500">Kaydediliyor...</span>
+                        )}
+                    </div>
+                )}
                 <MessageInput
                     onSendMessage={handleSendMessage}
                     disabled={false}

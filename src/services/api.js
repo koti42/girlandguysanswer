@@ -173,6 +173,7 @@ export const messagesAPI = {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
     markAsRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`),
+    updateEphemeralSettings: (conversationId, data) => api.patch(`/messages/conversations/${conversationId}/ephemeral-settings`, data),
     deleteConversation: (conversationId) => api.delete(`/messages/conversations/${conversationId}`),
     sendTyping: (conversationId, typing = true) => api.post(`/messages/conversations/${conversationId}/typing`, { typing }),
     viewEphemeralFile: (messageId) => api.get(`/messages/${messageId}/file`, { responseType: 'blob' }),

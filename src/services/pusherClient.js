@@ -40,6 +40,10 @@ export const subscribeToUserChannel = (userId, callbacks) => {
         channel.bind('message-reaction', callbacks.onMessageReaction);
     }
 
+    if (callbacks.onEphemeralModeUpdated) {
+        channel.bind('ephemeral-mode-updated', callbacks.onEphemeralModeUpdated);
+    }
+
     return channel;
 };
 
