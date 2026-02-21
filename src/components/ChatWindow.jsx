@@ -763,9 +763,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
             {/* Süreli mesaj banner - iki tarafa da görünür */}
             {ephemeralTtlSeconds > 0 && (
-                <div className="flex-shrink-0 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800 flex items-center gap-2 text-amber-800 dark:text-amber-200 text-sm">
-                    <FaClock className="flex-shrink-0 text-amber-600 dark:text-amber-400" />
-                    <span>Bu sohbetteki mesajlar <strong>{ephemeralTtlLabel || 'seçilen süre'}</strong> sonra otomatik silinecek.</span>
+                <div className={`flex-shrink-0 px-4 py-2.5 flex items-center justify-center gap-2 text-sm ${isFemale ? 'bg-pink-50 dark:bg-pink-950/30 border-b border-pink-200/60 dark:border-pink-800/50' : 'bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200/60 dark:border-blue-800/50'}`}>
+                    <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isFemale ? 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'}`}>
+                        <FaClock className="text-xs opacity-90" />
+                        <span className="font-medium">{ephemeralTtlLabel || 'Süreli'}</span>
+                    </span>
+                    <span className={isFemale ? 'text-pink-700/90 dark:text-pink-300/90' : 'text-blue-700/90 dark:text-blue-300/90'}>
+                        Mesajlar bu süre sonra otomatik silinir
+                    </span>
                 </div>
             )}
 
@@ -828,24 +833,43 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
             {/* Mesaj kutusu - karşı tarafın cinsiyetine göre renk teması */}
             <div className={`flex-shrink-0 w-full min-w-0 z-20 sticky bottom-0 border-t-2 ${themeBorderClass} ${themeBgClass}`}>
-                {/* Süreli mesaj seçici - sohbet inputunun hemen üstünde */}
+                {/* Süreli mesaj - sohbet temasına uyumlu pill seçici */}
                 {conversation?.id && (
-                    <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-200/50 dark:border-gray-700/50">
-                        <FaClock className="text-gray-500 dark:text-gray-400 text-sm flex-shrink-0" />
-                        <label htmlFor="ephemeral-select" className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Süreli mesaj:</label>
-                        <select
-                            id="ephemeral-select"
-                            value={ephemeralTtlSeconds ?? ''}
-                            onChange={handleEphemeralChange}
-                            disabled={ephemeralSettingLoading}
-                            className="flex-1 min-w-0 max-w-[140px] text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 py-1.5 px-2 focus:ring-2 focus:ring-coral focus:border-coral disabled:opacity-50"
-                        >
-                            {EPHEMERAL_OPTIONS.map((opt) => (
-                                <option key={opt.value === '' ? 'off' : opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
+                    <div className={`px-3 py-2.5 flex items-center justify-between gap-2 flex-wrap ${isFemale ? 'border-b border-pink-200/50 dark:border-pink-800/40' : 'border-b border-blue-200/50 dark:border-blue-800/40'}`}>
+                        <span className={`flex items-center gap-1.5 text-xs font-medium ${isFemale ? 'text-pink-600 dark:text-pink-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                            <FaClock className="text-[10px] opacity-80" />
+                            Süreli mesaj
+                        </span>
+                        <div className="flex items-center gap-1 flex-wrap">
+                            {EPHEMERAL_OPTIONS.map((opt) => {
+                                const isActive = (opt.value === '' && (ephemeralTtlSeconds == null || ephemeralTtlSeconds === '')) || opt.value === ephemeralTtlSeconds;
+                                return (
+                                    <button
+                                        key={opt.value === '' ? 'off' : opt.value}
+                                        type="button"
+                                        onClick={() => {
+                                            if (ephemeralSettingLoading) return;
+                                            const fakeEvent = { target: { value: opt.value === '' ? '' : String(opt.value) } };
+                                            handleEphemeralChange(fakeEvent);
+                                        }}
+                                        disabled={ephemeralSettingLoading}
+                                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 ${
+                                            isActive
+                                                ? isFemale
+                                                    ? 'bg-pink-500 text-white shadow-sm'
+                                                    : 'bg-blue-500 text-white shadow-sm'
+                                                : isFemale
+                                                    ? 'bg-pink-100/70 dark:bg-pink-900/30 text-pink-600 dark:text-pink-300 hover:bg-pink-200/70 dark:hover:bg-pink-800/40'
+                                                    : 'bg-blue-100/70 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 hover:bg-blue-200/70 dark:hover:bg-blue-800/40'
+                                        }`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
                         {ephemeralSettingLoading && (
-                            <span className="text-xs text-gray-500">Kaydediliyor...</span>
+                            <span className={`text-[10px] ${isFemale ? 'text-pink-500' : 'text-blue-500'}`}>Kaydediliyor...</span>
                         )}
                     </div>
                 )}
