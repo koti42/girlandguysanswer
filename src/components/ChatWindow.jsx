@@ -209,6 +209,15 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         : 'Süreli mesaj modu kapatıldı.',
                     'info'
                 );
+            },
+            onScreenshotTaken: (data) => {
+                if (!conversationRef.current) return;
+                if (data.message?.conversation_id && data.message.conversation_id !== conversationRef.current.id) return;
+                const by = data.screenshot_by?.username || 'Bir kullanıcı';
+                notificationToast(
+                    `${by} tek bakmalık fotoğrafının ekran görüntüsünü aldı!`,
+                    'warning'
+                );
             }
         });
 

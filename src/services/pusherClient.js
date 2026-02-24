@@ -44,6 +44,10 @@ export const subscribeToUserChannel = (userId, callbacks) => {
         channel.bind('ephemeral-mode-updated', callbacks.onEphemeralModeUpdated);
     }
 
+    if (callbacks.onScreenshotTaken) {
+        channel.bind('screenshot-taken', callbacks.onScreenshotTaken);
+    }
+
     return channel;
 };
 
