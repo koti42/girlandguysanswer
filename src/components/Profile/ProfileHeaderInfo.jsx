@@ -26,6 +26,24 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender }) => {
             <div className="flex flex-wrap items-center gap-2 mt-1">
                 <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>
 
+                {/* Admin / Super Admin Badge */}
+                {profileData.roles && Array.isArray(profileData.roles) && profileData.roles.length > 0 && (
+                    <>
+                        {profileData.roles.includes('super_admin') && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-sm border border-white/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
+                                Super Admin
+                            </span>
+                        )}
+                        {!profileData.roles.includes('super_admin') && profileData.roles.includes('admin') && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-sky-600 to-cyan-500 text-white shadow-sm border border-white/10">
+                                <span className="w-1.5 h-1.5 rounded-full bg-lime-300 animate-pulse" />
+                                Admin
+                            </span>
+                        )}
+                    </>
+                )}
+
                 {/* Online Status Badge */}
                 {profileData.is_online !== undefined && (
                     <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${profileData.is_online
