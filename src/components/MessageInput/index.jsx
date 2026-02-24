@@ -81,20 +81,24 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
     };
 
     const handleFileSelect = (e, type) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 10 * 1024 * 1024) {
-            alert('Dosya boyutu 10MB\'dan küçük olmalıdır.');
-            return;
-        }
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
         if (type === 'image') {
-            onSendMessage({
-                content: '',
-                file,
-                type: 'image',
-                is_ephemeral: isEphemeral,
-                ephemeral_max_views: isEphemeral ? ephemeralMaxViews : null,
-            });
+            for (const file of files) {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('Her bir dosya boyutu 10MB\'dan küçük olmalıdır.');
+                    continue;
+                }
+                onSendMessage({
+                    content: '',
+                    file,
+                    type: 'image',
+                    is_ephemeral: isEphemeral,
+                    ephemeral_max_views: isEphemeral ? ephemeralMaxViews : null,
+                });
+            }
+
             if (imageInputRef.current) imageInputRef.current.value = '';
             setSelectedFile(null);
             setFileType(null);
@@ -103,6 +107,13 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
             setEphemeralMaxViews(null);
             setShowEphemeralModal(false);
             setEphemeralModalChosenOption(null);
+            return;
+        }
+
+        const file = files[0];
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) {
+            alert('Dosya boyutu 10MB\'dan küçük olmalıdır.');
             return;
         }
         setSelectedFile(file);
@@ -347,6 +358,7 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                     ref={imageInputRef}
                     type="file"
                     accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                    multiple
                     onChange={(e) => handleFileSelect(e, 'image')}
                     className="hidden"
                 />
