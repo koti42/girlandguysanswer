@@ -176,6 +176,7 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
     // Sender: load ephemeral image once so they can see it (with auth)
     useEffect(() => {
         if (!message.is_ephemeral || !isMine || message.type !== 'image') return;
+        if (!message.id || String(message.id).startsWith('temp-')) return;
         let revoked = false;
         messagesAPI.viewEphemeralFile(message.id)
             .then((res) => {
@@ -216,7 +217,6 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                 if (prev <= 1) {
                     clearInterval(countdownRef.current);
                     setShowEphemeralViewer(false);
-                    // Cleanup blob URL
                     if (blobUrlRef.current) {
                         URL.revokeObjectURL(blobUrlRef.current);
                         blobUrlRef.current = null;
@@ -291,7 +291,6 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
         switch (message.type) {
             case 'image':
                 if (message.is_ephemeral) {
-                    // For ephemeral images: show a placeholder/badge instead of loading the actual image
                     return (
                         <div
                             className="relative cursor-pointer select-none"
