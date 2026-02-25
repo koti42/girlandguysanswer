@@ -288,9 +288,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         const now = nowMs;
         const times = messages
             .map((m) => {
-                if (m.expires_at) return new Date(m.expires_at).getTime();
-                if (m.created_at && ephemeralTtlSeconds) return new Date(m.created_at).getTime() + ephemeralTtlSeconds * 1000;
-                return null;
+                if (!m.expires_at) return null;
+                return new Date(m.expires_at).getTime();
             })
             .filter((t) => t != null && t > now);
         return times.length ? Math.min(...times) : null;
