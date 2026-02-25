@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock } from 'react-icons/fa';
+import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
@@ -30,6 +30,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [editContent, setEditContent] = useState('');
     const [editVisibleToOther, setEditVisibleToOther] = useState(false);
     const [otherUserTyping, setOtherUserTyping] = useState(null);
+    const [showEncryptionInfo, setShowEncryptionInfo] = useState(false);
     const [ephemeralTtlSeconds, setEphemeralTtlSeconds] = useState(null);
     const [ephemeralTtlLabel, setEphemeralTtlLabel] = useState(null);
     const [ephemeralSettingLoading, setEphemeralSettingLoading] = useState(false);
@@ -59,6 +60,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         setOtherUserTyping(null);
         setEphemeralTtlSeconds(null);
         setEphemeralTtlLabel(null);
+        setShowEncryptionInfo(false);
 
         const abortController = new AbortController();
 
@@ -79,6 +81,13 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     } else {
                         setEphemeralTtlSeconds(null);
                         setEphemeralTtlLabel(null);
+                    }
+                    try {
+                        const storageKey = `chat_encryption_info_hidden_${convId}`;
+                        const hidden = localStorage.getItem(storageKey) === '1';
+                        setShowEncryptionInfo(!hidden);
+                    } catch (e) {
+                        setShowEncryptionInfo(true);
                     }
                     setTimeout(() => scrollToBottom(true), 100);
                 } catch (error) {
@@ -250,6 +259,20 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 behavior: 'smooth'
             });
         }
+    };
+
+    const handleDismissEncryptionInfo = () => {
+        if (!conversationRef.current?.id) {
+            setShowEncryptionInfo(false);
+            return;
+        }
+        try {
+            const storageKey = `chat_encryption_info_hidden_${conversationRef.current.id}`;
+            localStorage.setItem(storageKey, '1');
+        } catch (e) {
+            // ignore
+        }
+        setShowEncryptionInfo(false);
     };
 
     const EPHEMERAL_OPTIONS = [
@@ -706,6 +729,29 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     </div>
                 )}
             </div>
+
+            {showEncryptionInfo && (
+                <div className="flex-shrink-0 px-4 py-2.5 flex items-start gap-2 text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-100 border-b border-emerald-200/70 dark:border-emerald-800/70">
+                    <div className="mt-0.5">
+                        <FaLock className="text-sm" />
+                    </div>
+                    <div className="flex-1">
+                        <div className="font-semibold text-[13px]">
+                            Bu sohbet 256-bit şifreleme ile korunuyor
+                        </div>
+                        <p className="text-[11px] opacity-90">
+                            Mesaj içerikleri veritabanında AES-256 ile şifrelenmiş olarak saklanır.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleDismissEncryptionInfo}
+                        className="ml-2 text-[11px] font-medium text-emerald-800 dark:text-emerald-100 hover:text-emerald-900 dark:hover:text-white px-2 py-1 rounded-full hover:bg-emerald-100/80 dark:hover:bg-emerald-800/80 transition-colors"
+                    >
+                        Kapat
+                    </button>
+                </div>
+            )}
 
             <ConfirmationModal
                 isOpen={showDeleteModal}
