@@ -81,15 +81,15 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     if (data.ephemeral_ttl_seconds != null) {
                         setEphemeralTtlSeconds(data.ephemeral_ttl_seconds);
                         setEphemeralTtlLabel(data.ephemeral_ttl_label || null);
-                    }
-                    try {
-                        const nickRes = await messagesAPI.getNickname(conversation.id);
-                        setNickname(nickRes.data?.data?.nickname || '');
-                    } catch (e) {
-                        console.log('getNickname error:', e);
                     } else {
                         setEphemeralTtlSeconds(null);
                         setEphemeralTtlLabel(null);
+                    }
+                    try {
+                        const nickRes = await messagesAPI.getNickname(convId);
+                        setNickname(nickRes.data?.data?.nickname || '');
+                    } catch (e) {
+                        console.log('getNickname error:', e);
                     }
                     try {
                         const storageKey = `chat_encryption_info_hidden_${convId}`;
