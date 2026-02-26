@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSearch, FaTrash } from 'react-icons/fa';
+import { FaSearch, FaTrash, FaLock, FaUnlock } from 'react-icons/fa';
 import ChatWindow from '../components/ChatWindow';
 import ConfirmationModal from '../components/ConfirmationModal';
 import BottomNav from '../components/BottomNav';
@@ -29,6 +29,8 @@ const MessagesPage = () => {
     const [conversationToDelete, setConversationToDelete] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [typingByConversationId, setTypingByConversationId] = useState({});
+    const [lockedResults, setLockedResults] = useState([]);
+    const [searchingLocked, setSearchingLocked] = useState(false);
     const typingTimeoutsRef = useRef({});
     const activeConversationRef = React.useRef(activeConversation);
 
@@ -288,6 +290,28 @@ const MessagesPage = () => {
             (conv.nickname && conv.nickname.toLowerCase().includes(q));
     });
 
+    const handleSearchLocked = async () => {
+        if (!searchQuery.trim()) return;
+        setSearchingLocked(true);
+        try {
+            const res = await messagesAPI.searchLocked({ password: searchQuery.trim() });
+            setLockedResults(res.data?.data || []);
+        } catch (error) {
+            console.error('Error searching locked conversations:', error);
+            setLockedResults([]);
+        } finally {
+            setSearchingLocked(false);
+        }
+    };
+
+    const handleLockedConversationClick = (conversation) => {
+        setActiveConversation({ ...conversation, is_locked: true });
+        setShowMobileChat(true);
+        setLockedResults([]);
+        setSearchQuery('');
+        navigate(`/messages/${conversation.other_user.username}`);
+    };
+
     const renderMessagePreview = (message) => {
         if (!message) return 'Henüz mesaj yok';
 
@@ -321,15 +345,66 @@ const MessagesPage = () => {
                                 <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Ara..."
+                                    placeholder="Ara veya şifre gir..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral"
+                                    onChange={(e) => { setSearchQuery(e.target.value); setLockedResults([]); }}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearchLocked(); }}
+                                    className="w-full pl-10 pr-12 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral"
                                 />
+                                {searchQuery.trim() && (
+                                    <button
+                                        onClick={handleSearchLocked}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-coral flex items-center justify-center hover:bg-coral/80 transition-colors"
+                                        title="Gizli sohbet ara"
+                                    >
+                                        <FaUnlock className="text-white text-xs" />
+                                    </button>
+                                )}
                             </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto">
+                            {/* Locked Conversations Results */}
+                            {lockedResults.length > 0 && (
+                                <div className="border-b-2 border-coral/20">
+                                    <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+                                        <FaLock className="text-coral text-xs" />
+                                        <span className="text-xs font-bold text-coral uppercase tracking-wider">Gizli Sohbetler</span>
+                                    </div>
+                                    {lockedResults.map((conv) => (
+                                        <div
+                                            key={conv.id}
+                                            onClick={() => handleLockedConversationClick(conv)}
+                                            className="flex items-center gap-3 p-3 px-4 hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer border-b border-coral/10 transition-colors"
+                                        >
+                                            <div className="relative">
+                                                <img
+                                                    src={ensureHttps(conv.other_user?.avatar) || 'https://i.pravatar.cc/200?u=default'}
+                                                    alt={conv.other_user?.username}
+                                                    className="w-11 h-11 rounded-full object-cover"
+                                                />
+                                                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-coral rounded-full flex items-center justify-center border-2 border-white dark:border-gray-900">
+                                                    <FaLock className="text-white" style={{ fontSize: '8px' }} />
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">
+                                                    {conv.nickname || conv.other_user?.username}
+                                                </h4>
+                                                <p className="text-xs text-gray-400 truncate">Gizli sohbet</p>
+                                            </div>
+                                            <FaLock className="text-coral/50 text-xs flex-shrink-0" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {searchingLocked && (
+                                <div className="flex items-center justify-center gap-2 py-3 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-coral"></div>
+                                    <span className="text-xs text-gray-400">Gizli sohbetler aranıyor...</span>
+                                </div>
+                            )}
+
                             {loading ? (
                                 <div className="flex justify-center items-center h-full">
                                     <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-coral"></div>

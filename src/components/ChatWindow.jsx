@@ -21,6 +21,13 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [replyingTo, setReplyingTo] = useState(null);
     const [highlightedMessageId, setHighlightedMessageId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [lockModalOpen, setLockModalOpen] = useState(false);
+    const [lockPassword, setLockPassword] = useState('');
+    const [lockConfirmPassword, setLockConfirmPassword] = useState('');
+    const [lockLoading, setLockLoading] = useState(false);
+    const [isLocked, setIsLocked] = useState(conversation?.is_locked || false);
+    const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+    const [unlockPassword, setUnlockPassword] = useState('');
     const [showNotebook, setShowNotebook] = useState(false);
     const [notes, setNotes] = useState([]);
     const [loadingNotes, setLoadingNotes] = useState(false);
@@ -38,6 +45,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [showNicknameInput, setShowNicknameInput] = useState(false);
     const [nicknameSaving, setNicknameSaving] = useState(false);
     const [countdownTick, setCountdownTick] = useState(() => Date.now());
+    useEffect(() => {
+        setIsLocked(conversation?.is_locked || false);
+    }, [conversation]);
     const typingResetRef = useRef(null);
     const loadingOlderRef = useRef(false);
     const prependScrollRef = useRef(null);
@@ -644,6 +654,52 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         );
     }
 
+    const handleLockConversation = async () => {
+        if (!lockPassword.trim() || lockPassword.length < 4) {
+            notificationToast('Şifre en az 4 karakter olmalıdır.', 'error');
+            return;
+        }
+        if (lockPassword !== lockConfirmPassword) {
+            notificationToast('Şifreler eşleşmiyor.', 'error');
+            return;
+        }
+        if (!conversation?.id) return;
+        setLockLoading(true);
+        try {
+            await messagesAPI.lockConversation(conversation.id, { password: lockPassword });
+            setLockModalOpen(false);
+            setLockPassword('');
+            setLockConfirmPassword('');
+            notificationToast('Sohbet gizlendi! Mesaj listesinde şifrenizle arayarak erişebilirsiniz.', 'success');
+            setTimeout(() => { if (onBack) onBack(); }, 1500);
+        } catch (error) {
+            console.error('Lock error:', error);
+            notificationToast('Sohbet gizlenemedi.', 'error');
+        } finally {
+            setLockLoading(false);
+        }
+    };
+
+    const handleUnlockConversation = async () => {
+        if (!unlockPassword.trim()) return;
+        if (!conversation?.id) return;
+        setLockLoading(true);
+        try {
+            await messagesAPI.unlockConversation(conversation.id, { password: unlockPassword });
+            setUnlockModalOpen(false);
+            setUnlockPassword('');
+            setIsLocked(false);
+            notificationToast('Sohbet kilidi kaldırıldı.', 'success');
+        } catch (error) {
+            console.error('Unlock error:', error);
+            const msg = error.response?.data?.message || 'Kilit kaldırılamadı.';
+            notificationToast(msg, 'error');
+        } finally {
+            setLockLoading(false);
+        }
+    };
+
+
     return (
         <div className="flex flex-col h-full relative w-full overflow-hidden bg-white dark:bg-gray-900">
             {/* Header - cinsiyete göre renk (kadın: pembe, erkek: mavi) */}
@@ -712,6 +768,16 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     >
                         <FaTag className="text-lg" />
                     </button>
+                    {conversation?.id && (
+                        <button
+                            type="button"
+                            onClick={() => isLocked ? setUnlockModalOpen(true) : setLockModalOpen(true)}
+                            className={`p-2 rounded-full transition-colors ${isLocked ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            title={isLocked ? 'Kilidi Kaldır' : 'Sohbeti Gizle'}
+                        >
+                            {isLocked ? <FaUnlock className="text-lg" /> : <FaLock className="text-lg" />}
+                        </button>
+                    )}
                     <button
                         onClick={() => setShowDeleteModal(true)}
                         className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
@@ -825,6 +891,93 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 cancelText="Vazgeç"
                 isDangerous={true}
             />
+
+                {/* Lock Conversation Modal */}
+                {lockModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { setLockModalOpen(false); setLockPassword(''); setLockConfirmPassword(''); }}>
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 max-w-[90vw] shadow-2xl" onClick={e => e.stopPropagation()}>
+                            <div className="flex flex-col items-center mb-5">
+                                <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-3">
+                                    <FaLock className="text-coral text-2xl" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Sohbeti Gizle</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-2">
+                                    Bu sohbet mesaj listenizden gizlenecek. Sadece belirlediğiniz şifreyi arama çubuğuna yazarak erişebilirsiniz.
+                                </p>
+                            </div>
+                            <input
+                                type="password"
+                                placeholder="Şifre belirleyin (min 4 karakter)"
+                                value={lockPassword}
+                                onChange={e => setLockPassword(e.target.value)}
+                                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 mb-3 focus:outline-none focus:ring-2 focus:ring-coral"
+                            />
+                            <input
+                                type="password"
+                                placeholder="Şifreyi tekrar girin"
+                                value={lockConfirmPassword}
+                                onChange={e => setLockConfirmPassword(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleLockConversation(); }}
+                                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 mb-5 focus:outline-none focus:ring-2 focus:ring-coral"
+                            />
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => { setLockModalOpen(false); setLockPassword(''); setLockConfirmPassword(''); }}
+                                    className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    Vazgeç
+                                </button>
+                                <button
+                                    onClick={handleLockConversation}
+                                    disabled={lockLoading}
+                                    className="flex-1 py-3 rounded-xl bg-coral text-white font-bold hover:bg-coral/80 transition-colors disabled:opacity-50"
+                                >
+                                    {lockLoading ? '...' : 'Gizle'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Unlock Conversation Modal */}
+                {unlockModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { setUnlockModalOpen(false); setUnlockPassword(''); }}>
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 max-w-[90vw] shadow-2xl" onClick={e => e.stopPropagation()}>
+                            <div className="flex flex-col items-center mb-5">
+                                <div className="w-16 h-16 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center mb-3">
+                                    <FaUnlock className="text-green-500 text-2xl" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Kilidi Kaldır</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-2">
+                                    Bu sohbetin gizliliğini kaldırmak için şifrenizi girin. Sohbet tekrar mesaj listenizde görünecek.
+                                </p>
+                            </div>
+                            <input
+                                type="password"
+                                placeholder="Şifrenizi girin"
+                                value={unlockPassword}
+                                onChange={e => setUnlockPassword(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleUnlockConversation(); }}
+                                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 mb-5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            />
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => { setUnlockModalOpen(false); setUnlockPassword(''); }}
+                                    className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    Vazgeç
+                                </button>
+                                <button
+                                    onClick={handleUnlockConversation}
+                                    disabled={lockLoading}
+                                    className="flex-1 py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-400 transition-colors disabled:opacity-50"
+                                >
+                                    {lockLoading ? '...' : 'Kilidi Kaldır'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             {/* Not Defteri - çizgili defter */}
             {showNotebook && (

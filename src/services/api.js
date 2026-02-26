@@ -182,6 +182,9 @@ export const messagesAPI = {
     setReaction: (messageId, data) => api.post(`/messages/${messageId}/reaction`, data),
     setNickname: (conversationId, data) => api.post(`/messages/conversations/${conversationId}/nickname`, data),
     getNickname: (conversationId) => api.get(`/messages/conversations/${conversationId}/nickname`),
+    lockConversation: (conversationId, data) => api.post(`/messages/conversations/${conversationId}/lock`, data),
+    unlockConversation: (conversationId, data) => api.post(`/messages/conversations/${conversationId}/unlock`, data),
+    searchLocked: (data) => api.post(`/messages/search-locked`, data),
 };
 
 export const notificationsAPI = {
