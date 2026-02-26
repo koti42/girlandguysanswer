@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaTag } from 'react-icons/fa';
+import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaUnlock, FaTag } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
