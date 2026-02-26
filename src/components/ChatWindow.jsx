@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaUnlock, FaTag } from 'react-icons/fa';
+import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaUnlock, FaTag, FaEllipsisV } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
@@ -45,6 +45,19 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [showNicknameInput, setShowNicknameInput] = useState(false);
     const [nicknameSaving, setNicknameSaving] = useState(false);
     const [countdownTick, setCountdownTick] = useState(() => Date.now());
+    const [showActionMenu, setShowActionMenu] = useState(false);
+    const actionMenuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
+                setShowActionMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     useEffect(() => {
         setIsLocked(conversation?.is_locked || false);
     }, [conversation]);
@@ -730,7 +743,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             )}
                         </p>
                     </div>
-                    <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 overflow-x-auto scrollbar-hide ml-auto flex-shrink-0 max-w-[50%] xs:max-w-[55%] sm:max-w-none">
+                    {/* Desktop/Tablet Horizontal Menu */}
+                    <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 lg:gap-3 ml-auto flex-shrink-0">
                         {conversation?.id && (
                             <button
                                 type="button"
@@ -786,6 +800,71 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         >
                             <FaTrash className="text-base sm:text-lg" />
                         </button>
+                    </div>
+
+                    {/* Mobile Dropdown Menu */}
+                    <div className="flex sm:hidden relative ml-auto flex-shrink-0" ref={actionMenuRef}>
+                        <button
+                            onClick={() => setShowActionMenu(!showActionMenu)}
+                            className={`p-1.5 rounded-full transition-colors flex-shrink-0 ${showActionMenu ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                        >
+                            <FaEllipsisV className="text-base" />
+                        </button>
+
+                        {showActionMenu && (
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-1 z-50 animate-in fade-in zoom-in duration-200">
+                                {conversation?.id && (
+                                    <button
+                                        onClick={() => { setShowNotebook(v => !v); setShowActionMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                                    >
+                                        <FaBook className={showNotebook ? 'text-coral' : 'text-gray-400'} />
+                                        <span>Not Defteri</span>
+                                    </button>
+                                )}
+                                {!loading && messages.length > 0 && (
+                                    <button
+                                        onClick={() => { setShowSearchInput(v => !v); setShowActionMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
+                                    >
+                                        <FaSearch className={showSearchInput ? 'text-coral' : 'text-gray-400'} />
+                                        <span>Mesajlarda Ara</span>
+                                    </button>
+                                )}
+                                {canExportPdf && (
+                                    <button
+                                        onClick={() => { handleExportPdf(); setShowActionMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
+                                    >
+                                        <FaFilePdf className="text-gray-400" />
+                                        <span>PDF İndir</span>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => { setShowNicknameInput(v => !v); setShowActionMenu(false); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
+                                >
+                                    <FaTag className={showNicknameInput ? 'text-coral' : 'text-gray-400'} />
+                                    <span>Takma Ad Ver</span>
+                                </button>
+                                {conversation?.id && (
+                                    <button
+                                        onClick={() => { isLocked ? setUnlockModalOpen(true) : setLockModalOpen(true); setShowActionMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
+                                    >
+                                        {isLocked ? <FaUnlock className="text-coral" /> : <FaLock className="text-gray-400" />}
+                                        <span>{isLocked ? 'Kilidi Kaldır' : 'Sohbeti Gizle'}</span>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => { setShowDeleteModal(true); setShowActionMenu(false); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors border-t border-gray-100 dark:border-gray-700/50"
+                                >
+                                    <FaTrash className="text-red-500" />
+                                    <span>Sohbeti Temizle</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
                 {showSearchInput && !loading && messages.length > 0 && (
