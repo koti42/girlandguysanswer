@@ -331,7 +331,7 @@ const MessagesPage = () => {
 
     return (
         <MainLayout noMobilePadding={true}>
-            <div className="flex flex-col h-[calc(100vh-80px)] bg-white dark:bg-gray-900 w-full">
+            <div className="flex flex-col bg-white dark:bg-gray-900 w-full" style={{ height: 'calc(100dvh - 56px)' }}>
                 {/* Main Content Area - mobilde altta oval geçiş için yuvarlatılmış */}
                 <div className="flex-1 flex overflow-hidden md:rounded-none rounded-b-2xl">
                     {/* Conversations List Sidebar */}
@@ -505,10 +505,12 @@ const MessagesPage = () => {
                     </div>
                 </div>
 
-                {/* Bottom Navigation - Sadece mobilde göster, web'de gizle; üst kenarlar oval */}
-                <div className="flex-shrink-0 w-full md:hidden px-2 pb-1">
-                    <BottomNav />
-                </div>
+                {/* Bottom Navigation - Sohbet açıkken gizle, sadece konuşmalar listesinde göster */}
+                {!showMobileChat && (
+                    <div className="flex-shrink-0 w-full md:hidden px-2 pb-1">
+                        <BottomNav />
+                    </div>
+                )}
 
                 <ConfirmationModal
                     isOpen={showDeleteModal}

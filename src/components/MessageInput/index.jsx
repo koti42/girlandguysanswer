@@ -289,7 +289,7 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
     };
 
     return (
-        <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2 min-w-0 overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2 sm:p-3 min-w-0 overflow-hidden">
             <EphemeralPhotoModal
                 isOpen={showEphemeralModal}
                 chosenOption={ephemeralModalChosenOption}
@@ -348,11 +348,11 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                 </div>
             )}
 
-            <div className="flex items-end gap-1 sm:gap-1.5 mb-1 min-w-0">
+            <div className="flex items-end gap-1 sm:gap-2 min-w-0">
                 <img
                     src={ensureHttps(user?.avatar) || 'https://i.pravatar.cc/200?u=default'}
                     alt="You"
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 hidden md:block"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0 hidden md:block"
                 />
                 <input
                     ref={imageInputRef}
@@ -366,10 +366,10 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                     type="button"
                     onClick={() => setShowStickerGifDrawer(prev => !prev)}
                     disabled={disabled || isRecording}
-                    className={`p-1 sm:p-1.5 flex-shrink-0 transition-colors ${showStickerGifDrawer ? 'text-coral' : 'text-gray-500 hover:text-coral'} disabled:opacity-50`}
+                    className={`p-1.5 sm:p-2 flex-shrink-0 transition-colors ${showStickerGifDrawer ? 'text-coral' : 'text-gray-500 hover:text-coral'} disabled:opacity-50`}
                     title="Çıkartma ve GIF"
                 >
-                    <FaSmile className="text-base" />
+                    <FaSmile className="text-base sm:text-lg" />
                 </button>
                 <button
                     onClick={() => {
@@ -377,16 +377,16 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                         setShowEphemeralModal(true);
                     }}
                     disabled={disabled || isRecording}
-                    className="p-1 sm:p-1.5 disabled:opacity-50 flex-shrink-0 text-gray-500 hover:text-coral"
+                    className="p-1.5 sm:p-2 disabled:opacity-50 flex-shrink-0 text-gray-500 hover:text-coral"
                 >
-                    <FaImage className="text-base" />
+                    <FaImage className="text-base sm:text-lg" />
                 </button>
                 <button
                     onClick={isRecording ? stopRecording : startRecording}
                     disabled={disabled || selectedFile}
-                    className={`p-1 sm:p-1.5 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-coral' : 'text-gray-500 hover:text-coral'}`}
+                    className={`p-1.5 sm:p-2 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-coral' : 'text-gray-500 hover:text-coral'}`}
                 >
-                    <FaMicrophone className="text-base" />
+                    <FaMicrophone className="text-base sm:text-lg" />
                 </button>
                 <textarea
                     ref={inputRef}
@@ -410,18 +410,18 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                     }}
                     placeholder={replyingTo ? 'Yanıt...' : 'Mesaj...'}
                     disabled={disabled || isRecording}
-                    className="flex-1 min-w-0 px-2 py-1.5 rounded-lg text-base md:text-sm focus:outline-none focus:ring-1 disabled:opacity-50 resize-none overflow-y-auto min-h-[38px] max-h-[120px] bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-purple-400"
+                    className="flex-1 min-w-0 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-1 disabled:opacity-50 resize-none overflow-y-auto min-h-[36px] max-h-[100px] sm:max-h-[120px] bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-purple-400"
                 />
                 <button
                     onClick={handleSend}
                     disabled={disabled || (!message.trim() && !selectedFile) || isRecording}
-                    className="p-1.5 sm:p-2 md:px-4 md:py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center min-w-[32px] sm:min-w-[36px] bg-purple-600 hover:bg-purple-700"
+                    className="p-2 sm:p-2.5 md:px-4 md:py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center justify-center min-w-[40px] sm:min-w-[44px] bg-purple-600 hover:bg-purple-700"
                 >
-                    <FaPaperPlane className="text-sm md:hidden" />
-                    <span className="hidden md:inline text-xs font-bold">GÖNDER</span>
+                    <FaPaperPlane className="text-sm sm:text-base md:hidden" />
+                    <span className="hidden md:inline text-sm font-medium">Gönder</span>
                 </button>
             </div>
-            <div className="text-right text-[10px] text-gray-500">
+            <div className="text-right text-[10px] sm:text-xs text-gray-500 mt-1">
                 {message.length}/{MAX_CHARS}
             </div>
         </div>

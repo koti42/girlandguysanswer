@@ -701,15 +701,15 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
 
     return (
-        <div className="flex flex-col h-full relative w-full overflow-hidden bg-white dark:bg-gray-900">
+        <div className="flex flex-col h-full relative w-full overflow-x-hidden bg-white dark:bg-gray-900">
             {/* Header - cinsiyete göre renk (kadın: pembe, erkek: mavi) */}
-            <div className={`flex-shrink-0 ${themeHeaderClass} p-4 w-full z-10 sticky top-0`}>
-                <div className="flex items-center gap-3">
+            <div className={`flex-shrink-0 ${themeHeaderClass} p-3 sm:p-4 w-full z-10 sticky top-0`}>
+                <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
                     <button
                         onClick={onBack}
-                        className="text-white/90 hover:bg-white/20 p-2 rounded-lg transition-colors"
+                        className="text-white/90 hover:bg-white/20 p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0"
                     >
-                        <FaArrowLeft className="text-lg" />
+                        <FaArrowLeft className="text-base sm:text-lg" />
                     </button>
 
                     <div
@@ -734,56 +734,56 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         <button
                             type="button"
                             onClick={() => setShowNotebook(v => !v)}
-                            className={`p-2 rounded-full transition-colors ${showNotebook ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNotebook ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
                             title="Not Defteri"
                         >
-                            <FaBook className="text-lg" />
+                            <FaBook className="text-base sm:text-lg" />
                         </button>
                     )}
                     {!loading && messages.length > 0 && (
                         <button
                             type="button"
                             onClick={() => setShowSearchInput((v) => !v)}
-                            className={`p-2 rounded-full transition-colors ${showSearchInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showSearchInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
                             title="Mesajlarda ara"
                         >
-                            <FaSearch className="text-lg" />
+                            <FaSearch className="text-base sm:text-lg" />
                         </button>
                     )}
                     {canExportPdf && (
                         <button
                             type="button"
                             onClick={handleExportPdf}
-                            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                            className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
                             title="Konuşmayı PDF indir"
                         >
-                            <FaFilePdf className="text-lg" />
+                            <FaFilePdf className="text-base sm:text-lg" />
                         </button>
                     )}
                     <button
                         type="button"
                         onClick={() => setShowNicknameInput(v => !v)}
-                        className={`p-2 rounded-full transition-colors ${showNicknameInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                        className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNicknameInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
                         title="Takma Ad Ver"
                     >
-                        <FaTag className="text-lg" />
+                        <FaTag className="text-base sm:text-lg" />
                     </button>
                     {conversation?.id && (
                         <button
                             type="button"
                             onClick={() => isLocked ? setUnlockModalOpen(true) : setLockModalOpen(true)}
-                            className={`p-2 rounded-full transition-colors ${isLocked ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${isLocked ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
                             title={isLocked ? 'Kilidi Kaldır' : 'Sohbeti Gizle'}
                         >
-                            {isLocked ? <FaUnlock className="text-lg" /> : <FaLock className="text-lg" />}
+                            {isLocked ? <FaUnlock className="text-base sm:text-lg" /> : <FaLock className="text-base sm:text-lg" />}
                         </button>
                     )}
                     <button
                         onClick={() => setShowDeleteModal(true)}
-                        className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                        className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
                         title="Sohbeti Temizle"
                     >
-                        <FaTrash className="text-lg" />
+                        <FaTrash className="text-base sm:text-lg" />
                     </button>
                 </div>
                 {showSearchInput && !loading && messages.length > 0 && (
@@ -892,92 +892,92 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 isDangerous={true}
             />
 
-                {/* Lock Conversation Modal */}
-                {lockModalOpen && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { setLockModalOpen(false); setLockPassword(''); setLockConfirmPassword(''); }}>
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 max-w-[90vw] shadow-2xl" onClick={e => e.stopPropagation()}>
-                            <div className="flex flex-col items-center mb-5">
-                                <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-3">
-                                    <FaLock className="text-coral text-2xl" />
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Sohbeti Gizle</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-2">
-                                    Bu sohbet mesaj listenizden gizlenecek. Sadece belirlediğiniz şifreyi arama çubuğuna yazarak erişebilirsiniz.
-                                </p>
+            {/* Lock Conversation Modal */}
+            {lockModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { setLockModalOpen(false); setLockPassword(''); setLockConfirmPassword(''); }}>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 max-w-[90vw] shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="flex flex-col items-center mb-5">
+                            <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-3">
+                                <FaLock className="text-coral text-2xl" />
                             </div>
-                            <input
-                                type="password"
-                                placeholder="Şifre belirleyin (min 4 karakter)"
-                                value={lockPassword}
-                                onChange={e => setLockPassword(e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 mb-3 focus:outline-none focus:ring-2 focus:ring-coral"
-                            />
-                            <input
-                                type="password"
-                                placeholder="Şifreyi tekrar girin"
-                                value={lockConfirmPassword}
-                                onChange={e => setLockConfirmPassword(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') handleLockConversation(); }}
-                                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 mb-5 focus:outline-none focus:ring-2 focus:ring-coral"
-                            />
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => { setLockModalOpen(false); setLockPassword(''); setLockConfirmPassword(''); }}
-                                    className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                >
-                                    Vazgeç
-                                </button>
-                                <button
-                                    onClick={handleLockConversation}
-                                    disabled={lockLoading}
-                                    className="flex-1 py-3 rounded-xl bg-coral text-white font-bold hover:bg-coral/80 transition-colors disabled:opacity-50"
-                                >
-                                    {lockLoading ? '...' : 'Gizle'}
-                                </button>
-                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Sohbeti Gizle</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-2">
+                                Bu sohbet mesaj listenizden gizlenecek. Sadece belirlediğiniz şifreyi arama çubuğuna yazarak erişebilirsiniz.
+                            </p>
+                        </div>
+                        <input
+                            type="password"
+                            placeholder="Şifre belirleyin (min 4 karakter)"
+                            value={lockPassword}
+                            onChange={e => setLockPassword(e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 mb-3 focus:outline-none focus:ring-2 focus:ring-coral"
+                        />
+                        <input
+                            type="password"
+                            placeholder="Şifreyi tekrar girin"
+                            value={lockConfirmPassword}
+                            onChange={e => setLockConfirmPassword(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleLockConversation(); }}
+                            className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 mb-5 focus:outline-none focus:ring-2 focus:ring-coral"
+                        />
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { setLockModalOpen(false); setLockPassword(''); setLockConfirmPassword(''); }}
+                                className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Vazgeç
+                            </button>
+                            <button
+                                onClick={handleLockConversation}
+                                disabled={lockLoading}
+                                className="flex-1 py-3 rounded-xl bg-coral text-white font-bold hover:bg-coral/80 transition-colors disabled:opacity-50"
+                            >
+                                {lockLoading ? '...' : 'Gizle'}
+                            </button>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Unlock Conversation Modal */}
-                {unlockModalOpen && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { setUnlockModalOpen(false); setUnlockPassword(''); }}>
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 max-w-[90vw] shadow-2xl" onClick={e => e.stopPropagation()}>
-                            <div className="flex flex-col items-center mb-5">
-                                <div className="w-16 h-16 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center mb-3">
-                                    <FaUnlock className="text-green-500 text-2xl" />
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Kilidi Kaldır</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-2">
-                                    Bu sohbetin gizliliğini kaldırmak için şifrenizi girin. Sohbet tekrar mesaj listenizde görünecek.
-                                </p>
+            {/* Unlock Conversation Modal */}
+            {unlockModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { setUnlockModalOpen(false); setUnlockPassword(''); }}>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 max-w-[90vw] shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="flex flex-col items-center mb-5">
+                            <div className="w-16 h-16 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center mb-3">
+                                <FaUnlock className="text-green-500 text-2xl" />
                             </div>
-                            <input
-                                type="password"
-                                placeholder="Şifrenizi girin"
-                                value={unlockPassword}
-                                onChange={e => setUnlockPassword(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') handleUnlockConversation(); }}
-                                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 mb-5 focus:outline-none focus:ring-2 focus:ring-green-500"
-                            />
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => { setUnlockModalOpen(false); setUnlockPassword(''); }}
-                                    className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                >
-                                    Vazgeç
-                                </button>
-                                <button
-                                    onClick={handleUnlockConversation}
-                                    disabled={lockLoading}
-                                    className="flex-1 py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-400 transition-colors disabled:opacity-50"
-                                >
-                                    {lockLoading ? '...' : 'Kilidi Kaldır'}
-                                </button>
-                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Kilidi Kaldır</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-2">
+                                Bu sohbetin gizliliğini kaldırmak için şifrenizi girin. Sohbet tekrar mesaj listenizde görünecek.
+                            </p>
+                        </div>
+                        <input
+                            type="password"
+                            placeholder="Şifrenizi girin"
+                            value={unlockPassword}
+                            onChange={e => setUnlockPassword(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleUnlockConversation(); }}
+                            className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 mb-5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { setUnlockModalOpen(false); setUnlockPassword(''); }}
+                                className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Vazgeç
+                            </button>
+                            <button
+                                onClick={handleUnlockConversation}
+                                disabled={lockLoading}
+                                className="flex-1 py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-400 transition-colors disabled:opacity-50"
+                            >
+                                {lockLoading ? '...' : 'Kilidi Kaldır'}
+                            </button>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
             {/* Not Defteri - çizgili defter */}
             {showNotebook && (
@@ -1074,7 +1074,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             {/* Messages Area - Scrollable (Flex-1) */}
             <div
                 ref={messagesContainerRef}
-                className={`flex-1 min-w-0 overflow-x-hidden overflow-y-auto w-full bg-white dark:bg-gray-900`}
+                className={`flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto w-full bg-white dark:bg-gray-900`}
                 style={{ WebkitOverflowScrolling: 'touch' }}
                 onScroll={(e) => {
                     if (e.target.scrollTop < 150 && hasMoreOlder && !loadingOlder && messages.length > 0) {
@@ -1129,15 +1129,15 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             </div>
 
             {/* Mesaj kutusu - karşı tarafın cinsiyetine göre renk teması */}
-            <div className={`flex-shrink-0 w-full min-w-0 z-20 sticky bottom-0 border-t-2 ${themeBorderClass} ${themeBgClass}`}>
-                {/* Süreli mesaj - sohbet temasına uyumlu pill seçici */}
+            <div className={`flex-shrink-0 w-full min-w-0 z-20 border-t-2 ${themeBorderClass} ${themeBgClass}`}>
+                {/* Süreli mesaj - sohbet temasına uyumlu pill seçici (mobilde dikey & kaydırılabilir) */}
                 {conversation?.id && (
-                    <div className={`px-3 py-2.5 flex items-center justify-between gap-2 flex-wrap ${isFemale ? 'border-b border-pink-200/50 dark:border-pink-800/40' : 'border-b border-blue-200/50 dark:border-blue-800/40'}`}>
-                        <span className={`flex items-center gap-1.5 text-xs font-medium ${isFemale ? 'text-pink-600 dark:text-pink-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                    <div className={`px-2 sm:px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2 ${isFemale ? 'border-b border-pink-200/50 dark:border-pink-800/40' : 'border-b border-blue-200/50 dark:border-blue-800/40'}`}>
+                        <span className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-medium flex-shrink-0 ${isFemale ? 'text-pink-600 dark:text-pink-400' : 'text-blue-600 dark:text-blue-400'}`}>
                             <FaClock className="text-[10px] opacity-80" />
                             Süreli mesaj
                         </span>
-                        <div className="flex items-center gap-1 flex-wrap">
+                        <div className="flex items-center gap-1 flex-nowrap overflow-x-auto min-w-0 pb-1 scrollbar-hide">
                             {EPHEMERAL_OPTIONS.map((opt) => {
                                 const isActive = (opt.value === '' && (ephemeralTtlSeconds == null || ephemeralTtlSeconds === '')) || opt.value === ephemeralTtlSeconds;
                                 return (
@@ -1150,15 +1150,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                             handleEphemeralChange(fakeEvent);
                                         }}
                                         disabled={ephemeralSettingLoading}
-                                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 ${
-                                            isActive
+                                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 ${isActive
                                                 ? isFemale
                                                     ? 'bg-pink-500 text-white shadow-sm'
                                                     : 'bg-blue-500 text-white shadow-sm'
                                                 : isFemale
                                                     ? 'bg-pink-100/70 dark:bg-pink-900/30 text-pink-600 dark:text-pink-300 hover:bg-pink-200/70 dark:hover:bg-pink-800/40'
                                                     : 'bg-blue-100/70 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 hover:bg-blue-200/70 dark:hover:bg-blue-800/40'
-                                        }`}
+                                            }`}
                                     >
                                         {opt.label}
                                     </button>
