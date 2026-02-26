@@ -656,11 +656,11 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
     const handleLockConversation = async () => {
         if (!lockPassword.trim() || lockPassword.length < 4) {
-            notificationToast('Şifre en az 4 karakter olmalıdır.', 'error');
+            notificationToast.error('Şifre en az 4 karakter olmalıdır.');
             return;
         }
         if (lockPassword !== lockConfirmPassword) {
-            notificationToast('Şifreler eşleşmiyor.', 'error');
+            notificationToast.error('Şifreler eşleşmiyor.');
             return;
         }
         if (!conversation?.id) return;
@@ -670,11 +670,11 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             setLockModalOpen(false);
             setLockPassword('');
             setLockConfirmPassword('');
-            notificationToast('Sohbet gizlendi! Mesaj listesinde şifrenizle arayarak erişebilirsiniz.', 'success');
+            notificationToast.success('Sohbet gizlendi! Mesaj listesinde şifrenizle arayarak erişebilirsiniz.');
             setTimeout(() => { if (onBack) onBack(); }, 1500);
         } catch (error) {
             console.error('Lock error:', error);
-            notificationToast('Sohbet gizlenemedi.', 'error');
+            notificationToast.error('Sohbet gizlenemedi.');
         } finally {
             setLockLoading(false);
         }
@@ -689,11 +689,11 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             setUnlockModalOpen(false);
             setUnlockPassword('');
             setIsLocked(false);
-            notificationToast('Sohbet kilidi kaldırıldı.', 'success');
+            notificationToast.success('Sohbet kilidi kaldırıldı.');
         } catch (error) {
             console.error('Unlock error:', error);
             const msg = error.response?.data?.message || 'Kilit kaldırılamadı.';
-            notificationToast(msg, 'error');
+            notificationToast.error(msg);
         } finally {
             setLockLoading(false);
         }
