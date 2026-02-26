@@ -730,61 +730,63 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             )}
                         </p>
                     </div>
-                    {conversation?.id && (
+                    <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 overflow-x-auto scrollbar-hide ml-auto flex-shrink-0 max-w-[50%] xs:max-w-[55%] sm:max-w-none">
+                        {conversation?.id && (
+                            <button
+                                type="button"
+                                onClick={() => setShowNotebook(v => !v)}
+                                className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNotebook ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                                title="Not Defteri"
+                            >
+                                <FaBook className="text-base sm:text-lg" />
+                            </button>
+                        )}
+                        {!loading && messages.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowSearchInput((v) => !v)}
+                                className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showSearchInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                                title="Mesajlarda ara"
+                            >
+                                <FaSearch className="text-base sm:text-lg" />
+                            </button>
+                        )}
+                        {canExportPdf && (
+                            <button
+                                type="button"
+                                onClick={handleExportPdf}
+                                className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
+                                title="Konuşmayı PDF indir"
+                            >
+                                <FaFilePdf className="text-base sm:text-lg" />
+                            </button>
+                        )}
                         <button
                             type="button"
-                            onClick={() => setShowNotebook(v => !v)}
-                            className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNotebook ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                            title="Not Defteri"
+                            onClick={() => setShowNicknameInput(v => !v)}
+                            className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNicknameInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            title="Takma Ad Ver"
                         >
-                            <FaBook className="text-base sm:text-lg" />
+                            <FaTag className="text-base sm:text-lg" />
                         </button>
-                    )}
-                    {!loading && messages.length > 0 && (
+                        {conversation?.id && (
+                            <button
+                                type="button"
+                                onClick={() => isLocked ? setUnlockModalOpen(true) : setLockModalOpen(true)}
+                                className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${isLocked ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                                title={isLocked ? 'Kilidi Kaldır' : 'Sohbeti Gizle'}
+                            >
+                                {isLocked ? <FaUnlock className="text-base sm:text-lg" /> : <FaLock className="text-base sm:text-lg" />}
+                            </button>
+                        )}
                         <button
-                            type="button"
-                            onClick={() => setShowSearchInput((v) => !v)}
-                            className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showSearchInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                            title="Mesajlarda ara"
-                        >
-                            <FaSearch className="text-base sm:text-lg" />
-                        </button>
-                    )}
-                    {canExportPdf && (
-                        <button
-                            type="button"
-                            onClick={handleExportPdf}
+                            onClick={() => setShowDeleteModal(true)}
                             className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
-                            title="Konuşmayı PDF indir"
+                            title="Sohbeti Temizle"
                         >
-                            <FaFilePdf className="text-base sm:text-lg" />
+                            <FaTrash className="text-base sm:text-lg" />
                         </button>
-                    )}
-                    <button
-                        type="button"
-                        onClick={() => setShowNicknameInput(v => !v)}
-                        className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNicknameInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                        title="Takma Ad Ver"
-                    >
-                        <FaTag className="text-base sm:text-lg" />
-                    </button>
-                    {conversation?.id && (
-                        <button
-                            type="button"
-                            onClick={() => isLocked ? setUnlockModalOpen(true) : setLockModalOpen(true)}
-                            className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${isLocked ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                            title={isLocked ? 'Kilidi Kaldır' : 'Sohbeti Gizle'}
-                        >
-                            {isLocked ? <FaUnlock className="text-base sm:text-lg" /> : <FaLock className="text-base sm:text-lg" />}
-                        </button>
-                    )}
-                    <button
-                        onClick={() => setShowDeleteModal(true)}
-                        className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
-                        title="Sohbeti Temizle"
-                    >
-                        <FaTrash className="text-base sm:text-lg" />
-                    </button>
+                    </div>
                 </div>
                 {showSearchInput && !loading && messages.length > 0 && (
                     <div className="mt-3 pt-2 border-t border-white/20">
@@ -1151,12 +1153,12 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                         }}
                                         disabled={ephemeralSettingLoading}
                                         className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 ${isActive
-                                                ? isFemale
-                                                    ? 'bg-pink-500 text-white shadow-sm'
-                                                    : 'bg-blue-500 text-white shadow-sm'
-                                                : isFemale
-                                                    ? 'bg-pink-100/70 dark:bg-pink-900/30 text-pink-600 dark:text-pink-300 hover:bg-pink-200/70 dark:hover:bg-pink-800/40'
-                                                    : 'bg-blue-100/70 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 hover:bg-blue-200/70 dark:hover:bg-blue-800/40'
+                                            ? isFemale
+                                                ? 'bg-pink-500 text-white shadow-sm'
+                                                : 'bg-blue-500 text-white shadow-sm'
+                                            : isFemale
+                                                ? 'bg-pink-100/70 dark:bg-pink-900/30 text-pink-600 dark:text-pink-300 hover:bg-pink-200/70 dark:hover:bg-pink-800/40'
+                                                : 'bg-blue-100/70 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 hover:bg-blue-200/70 dark:hover:bg-blue-800/40'
                                             }`}
                                     >
                                         {opt.label}
