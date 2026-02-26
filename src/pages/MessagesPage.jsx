@@ -282,9 +282,11 @@ const MessagesPage = () => {
         }
     };
 
-    const filteredConversations = conversations.filter(conv =>
-        conv.other_user.username.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredConversations = conversations.filter(conv => {
+        const q = searchQuery.toLowerCase();
+        return conv.other_user.username.toLowerCase().includes(q) ||
+            (conv.nickname && conv.nickname.toLowerCase().includes(q));
+    });
 
     const renderMessagePreview = (message) => {
         if (!message) return 'Henüz mesaj yok';
@@ -373,7 +375,10 @@ const MessagesPage = () => {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-baseline mb-1">
                                                 <h3 className="font-semibold text-gray-800 dark:text-gray-100 truncate">
-                                                    {conversation.other_user.username}
+                                                    {conversation.nickname || conversation.other_user.username}
+                                                    {conversation.nickname && (
+                                                        <span className="ml-1.5 text-xs font-normal text-gray-400">@{conversation.other_user.username}</span>
+                                                    )}
                                                 </h3>
                                                 {conversation.last_message_at && (
                                                     <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
