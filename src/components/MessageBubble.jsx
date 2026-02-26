@@ -422,9 +422,9 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                                 }
                             }}
                             onDurationChange={() => setAudioDuration(audioRef.current?.duration ?? 0)}
-                        >
-                            <source src={ensureHttps(message.file_url)} type="audio/webm" />
-                        </audio>
+                            src={ensureHttps(message.file_url)}
+                            preload="metadata"
+                        />
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
