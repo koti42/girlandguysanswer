@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock } from 'react-icons/fa';
+import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaTag } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
@@ -34,6 +34,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [ephemeralTtlSeconds, setEphemeralTtlSeconds] = useState(null);
     const [ephemeralTtlLabel, setEphemeralTtlLabel] = useState(null);
     const [ephemeralSettingLoading, setEphemeralSettingLoading] = useState(false);
+    const [nickname, setNickname] = useState('');
+    const [showNicknameInput, setShowNicknameInput] = useState(false);
+    const [nicknameSaving, setNicknameSaving] = useState(false);
     const [countdownTick, setCountdownTick] = useState(() => Date.now());
     const typingResetRef = useRef(null);
     const loadingOlderRef = useRef(false);
@@ -78,6 +81,12 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     if (data.ephemeral_ttl_seconds != null) {
                         setEphemeralTtlSeconds(data.ephemeral_ttl_seconds);
                         setEphemeralTtlLabel(data.ephemeral_ttl_label || null);
+                    }
+                    try {
+                        const nickRes = await messagesAPI.getNickname(conversation.id);
+                        setNickname(nickRes.data?.data?.nickname || '');
+                    } catch (e) {
+                        console.log('getNickname error:', e);
                     } else {
                         setEphemeralTtlSeconds(null);
                         setEphemeralTtlLabel(null);
@@ -336,6 +345,20 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             setEphemeralSettingLoading(false);
         }
     }, [conversation?.id]);
+
+    const handleSaveNickname = async () => {
+        if (nicknameSaving) return;
+        setNicknameSaving(true);
+        try {
+            await messagesAPI.setNickname(conversation.id, { nickname: nickname.trim() || null });
+            setShowNicknameInput(false);
+            notificationToast('Takma ad güncellendi', 'success');
+        } catch (e) {
+            notificationToast('Takma ad güncellenemedi', 'error');
+        } finally {
+            setNicknameSaving(false);
+        }
+    };
 
     const handleSendMessage = async ({ content, file, type, is_ephemeral, ephemeral_max_views }) => {
         if (!conversation) return;
@@ -639,6 +662,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     >
                         <h3 className="font-bold text-white truncate">
                             {conversation.other_user.username}
+                            {nickname ? <span className="ml-1.5 text-xs font-normal text-white/70">({nickname})</span> : null}
                         </h3>
                         <p className="text-xs text-white/80">
                             {otherUserTyping ? (
@@ -680,6 +704,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             <FaFilePdf className="text-lg" />
                         </button>
                     )}
+                    <button
+                        type="button"
+                        onClick={() => setShowNicknameInput(v => !v)}
+                        className={`p-2 rounded-full transition-colors ${showNicknameInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                        title="Takma Ad Ver"
+                    >
+                        <FaTag className="text-lg" />
+                    </button>
                     <button
                         onClick={() => setShowDeleteModal(true)}
                         className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
@@ -725,6 +757,29 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                 {filteredMessages.length} mesaj bulundu
                             </p>
                         )}
+                    </div>
+                )}
+                {showNicknameInput && (
+                    <div className="mt-3 pt-2 border-t border-white/20">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                placeholder="Takma ad girin..."
+                                value={nickname}
+                                onChange={(e) => setNickname(e.target.value)}
+                                maxLength={30}
+                                className="flex-1 px-3 py-2 rounded-xl bg-white/15 text-white placeholder-white/60 text-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleSaveNickname}
+                                disabled={nicknameSaving}
+                                className="px-4 py-2 rounded-xl bg-white/25 text-white text-sm font-medium hover:bg-white/35 transition-colors disabled:opacity-50"
+                            >
+                                {nicknameSaving ? '...' : 'Kaydet'}
+                            </button>
+                        </div>
+                        <p className="text-xs text-white/60 mt-1">Karşı taraf da görebilir</p>
                     </div>
                 )}
             </div>

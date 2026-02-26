@@ -599,6 +599,19 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
         return `${format(d, 'd MMM', { locale: tr })} ${time}`;
     };
 
+    if (message.type === 'system') {
+        return (
+            <div className="flex justify-center py-2 px-4">
+                <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-700/50 px-4 py-1.5 rounded-full max-w-[80%]">
+                    <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-xs text-gray-400 italic text-center">{message.content}</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             {/* Ephemeral Photo Viewer Overlay */}

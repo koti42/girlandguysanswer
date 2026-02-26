@@ -180,6 +180,8 @@ export const messagesAPI = {
     updateMessage: (messageId, data) => api.patch(`/messages/${messageId}`, data),
     deleteMessage: (messageId) => api.delete(`/messages/${messageId}`),
     setReaction: (messageId, data) => api.post(`/messages/${messageId}/reaction`, data),
+    setNickname: (conversationId, data) => api.post(`/messages/conversations/${conversationId}/nickname`, data),
+    getNickname: (conversationId) => api.get(`/messages/conversations/${conversationId}/nickname`),
 };
 
 export const notificationsAPI = {
