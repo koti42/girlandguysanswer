@@ -4,6 +4,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause, FaEdit, FaTrash, FaSmile } from 'react-icons/fa';
 import { messagesAPI } from '../services/api';
+import LinkRedirectModal from './LinkRedirectModal';
 
 const EPHEMERAL_DURATION = 10; // seconds
 const EDIT_DELETE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
@@ -19,6 +20,35 @@ function canEditOrDeleteMessage(message, isMine) {
 
 const YOUTUBE_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})/gi;
 const INSTAGRAM_URL_REGEX = /https?:\/\/(?:www\.)?instagram\.com\/[^\s]+/gi;
+const GENERAL_URL_REGEX = /https?:\/\/[^\s<>"']+|www\.[^\s<>"']+/gi;
+
+function linkifyText(text, onLinkClick) {
+    if (!text) return text;
+    const parts = [];
+    let lastIndex = 0;
+    const re = new RegExp(GENERAL_URL_REGEX.source, 'gi');
+    let match;
+    while ((match = re.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            parts.push(text.slice(lastIndex, match.index));
+        }
+        const url = match[0];
+        const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+        parts.push(
+            <button
+                key={match.index}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onLinkClick(fullUrl); }}
+                className="underline underline-offset-2 opacity-90 hover:opacity-100 break-all text-left"
+            >
+                {url}
+            </button>
+        );
+        lastIndex = match.index + url.length;
+    }
+    if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+    return parts.length > 0 ? parts : text;
+}
 
 function getYoutubeVideoLinks(content) {
     if (!content || typeof content !== 'string') return [];
@@ -281,6 +311,8 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
         }
     }, [isMine]);
 
+    const [pendingLinkUrl, setPendingLinkUrl] = useState(null);
+
     const getEphemeralLabel = () => {
         if (message.ephemeral_max_views === 1) return 'Tek bakmalık • 10 sn';
         if (message.ephemeral_max_views === 2) return 'İki kere bakmalık • 10 sn';
@@ -508,16 +540,15 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
             const instagramLinks = getInstagramLinks(content);
                 return (
                     <div className="min-w-0 max-w-full space-y-2">
-                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{contentWithShortLinks(content)}</p>
+                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{linkifyText(contentWithShortLinks(content), setPendingLinkUrl)}</p>
                         {youtubeLinks.length > 0 && (
                             <div className="flex flex-col gap-2">
                                 {youtubeLinks.map(({ url, videoId, isMusic }) => (
-                                    <a
+                                    <button
                                         key={videoId}
-                                        href={url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex overflow-hidden rounded-lg border border-white/20 bg-black/20 hover:bg-black/30 transition-colors no-underline text-inherit max-w-[320px]"
+                                        type="button"
+                                        onClick={() => setPendingLinkUrl(url)}
+                                        className="flex overflow-hidden rounded-lg border border-white/20 bg-black/20 hover:bg-black/30 transition-colors no-underline text-inherit max-w-[320px] text-left"
                                     >
                                         <img
                                             src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
@@ -530,7 +561,7 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                                             </span>
                                             <span className="text-[11px] opacity-75 truncate">Videoyu izle</span>
                                         </div>
-                                    </a>
+                                    </button>
                                 ))}
                             </div>
                         )}
@@ -545,12 +576,11 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                                         displayPath = url.replace(/^https?:\/\//i, '');
                                     }
                                     return (
-                                        <a
+                                        <button
                                             key={idx}
-                                            href={url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-stretch overflow-hidden rounded-lg border border-white/20 bg-gradient-to-r from-pink-500/40 via-rose-500/40 to-orange-400/40 hover:from-pink-500/60 hover:via-rose-500/60 hover:to-orange-400/60 transition-colors no-underline text-inherit max-w-[320px] backdrop-blur-sm"
+                                            type="button"
+                                            onClick={() => setPendingLinkUrl(url)}
+                                            className="flex items-stretch overflow-hidden rounded-lg border border-white/20 bg-gradient-to-r from-pink-500/40 via-rose-500/40 to-orange-400/40 hover:from-pink-500/60 hover:via-rose-500/60 hover:to-orange-400/60 transition-colors no-underline text-inherit max-w-[320px] backdrop-blur-sm text-left"
                                         >
                                             <div className="w-10 flex items-center justify-center bg-gradient-to-br from-pink-500 to-orange-400 text-white font-semibold text-xs flex-shrink-0">
                                                 IG
@@ -563,7 +593,7 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                                                     {displayPath}
                                                 </span>
                                             </div>
-                                        </a>
+                                        </button>
                                     );
                                 })}
                             </div>
@@ -942,6 +972,9 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                     document.body
                 )}
             </div>
+            {pendingLinkUrl && (
+                <LinkRedirectModal url={pendingLinkUrl} onClose={() => setPendingLinkUrl(null)} />
+            )}
         </>
     );
 };
