@@ -294,6 +294,28 @@ const Header = ({ onSearch }) => {
                                     <div className="p-3 border-b border-gray-100 dark:border-gray-700">
                                         <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{user.name || user.username}</p>
                                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                                        {user.levelProgress && (
+                                            <div className="mt-2">
+                                                <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">
+                                                    <span>Seviye</span>
+                                                    {user.levelProgress.next_level_name ? (
+                                                        <span className="truncate">
+                                                            %{Math.round((user.levelProgress.progress || 0) * 100)}
+                                                        </span>
+                                                    ) : (
+                                                        <span>Maks</span>
+                                                    )}
+                                                </div>
+                                                <div className="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"
+                                                        style={{
+                                                            width: `${Math.min(100, Math.max(0, (user.levelProgress.progress || 0) * 100))}%`,
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="p-2">
                                         <Link
