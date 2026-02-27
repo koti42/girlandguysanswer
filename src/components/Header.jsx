@@ -300,7 +300,7 @@ const Header = ({ onSearch }) => {
                                                     <span>Seviye</span>
                                                     {user.levelProgress.next_level_name ? (
                                                         <span className="truncate">
-                                                            %{Math.round((user.levelProgress.progress || 0) * 100)}
+                                                            %{Math.round((user.levelProgress.progress || 0) * 100)} • Sonraki: {user.levelProgress.next_level_name}
                                                         </span>
                                                     ) : (
                                                         <span>Maks</span>
