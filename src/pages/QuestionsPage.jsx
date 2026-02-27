@@ -4,29 +4,21 @@ import HeroSection from '../components/HeroSection';
 import CategoryNav from '../components/CategoryNav';
 import FeedTabs from '../components/FeedTabs';
 import QuestionCard from '../components/QuestionCard';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
-import { FaMars, FaVenus, FaGlobe, FaCommentSlash, FaPoll } from 'react-icons/fa';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
+import { FaMars, FaVenus, FaGlobe } from 'react-icons/fa';
 import { questionsAPI, categoriesAPI } from '../services/api';
-import SEO from '../components/SEO';
 
 import { useSearchParams } from 'react-router-dom';
 
 const QuestionsPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const initialQuery = searchParams.get('search') || '';
-    const initialHasPoll = searchParams.get('has_poll') === '1' || searchParams.get('has_poll') === 'true';
-    const initialNoComments = searchParams.get('no_comments') === '1' || searchParams.get('no_comments') === 'true';
-    const allowedSorts = new Set(['popular', 'newest', 'forYou']);
-    const initialSortRaw = searchParams.get('sort');
-    const initialSort = allowedSorts.has(initialSortRaw) ? initialSortRaw : 'popular';
     const [searchQuery, setSearchQuery] = useState(initialQuery);
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState({ id: 0, title: 'Tümü' });
     const [genderFilter, setGenderFilter] = useState('all');
-    const [sortBy, setSortBy] = useState(initialSort);
-    const [noCommentsFilter, setNoCommentsFilter] = useState(initialNoComments);
-    const [hasPollFilter, setHasPollFilter] = useState(initialHasPoll);
+    const [sortBy, setSortBy] = useState('popular');
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -69,9 +61,7 @@ const QuestionsPage = () => {
                 gender: genderFilter !== 'all' ? genderFilter : undefined,
                 sort: sortBy,
                 page: page,
-                limit: 10,
-                ...(noCommentsFilter ? { no_comments: 1 } : {}),
-                ...(hasPollFilter ? { has_poll: 1 } : {})
+                limit: 10
             };
 
             const response = await questionsAPI.getAll(params);
@@ -93,33 +83,24 @@ const QuestionsPage = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [searchQuery, selectedCategory, genderFilter, sortBy, noCommentsFilter, hasPollFilter]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy]);
 
 
 
     useEffect(() => {
-        const next = new URLSearchParams(searchParams);
-
-        if (searchQuery) next.set('search', searchQuery);
-        else next.delete('search');
-
-        if (hasPollFilter) next.set('has_poll', '1');
-        else next.delete('has_poll');
-
-        if (noCommentsFilter) next.set('no_comments', '1');
-        else next.delete('no_comments');
-
-        if (sortBy && sortBy !== 'popular') next.set('sort', sortBy);
-        else next.delete('sort');
-
-        setSearchParams(next);
-    }, [searchQuery, hasPollFilter, noCommentsFilter, sortBy]);
+        if (searchQuery) {
+            setSearchParams({ search: searchQuery });
+        } else {
+            searchParams.delete('search');
+            setSearchParams(searchParams);
+        }
+    }, [searchQuery, setSearchParams]);
 
     useEffect(() => {
         setCurrentPage(1);
         setQuestions([]);
         fetchQuestions(1, false);
-    }, [searchQuery, selectedCategory, genderFilter, sortBy, noCommentsFilter, hasPollFilter]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -148,16 +129,11 @@ const QuestionsPage = () => {
             <TrendsWidget />
             <TopUsersWidget />
             <AnnouncementsWidget />
-            <PopularQuestionsWidget />
         </>
     );
 
     return (
         <MainLayout sidebar={SidebarContent} onSearch={setSearchQuery}>
-            <SEO
-                title="Sorular - Herkesler Soruyor"
-                description="Sorulara göz atın, cevap verin, anketli soruları keşfedin."
-            />
             <div className="flex flex-col gap-8">
                 <HeroSection />
 
@@ -200,26 +176,6 @@ const QuestionsPage = () => {
                                 <FaMars className="text-blue-500" />
                                 <span>Erkekler Soruyor</span>
                             </button>
-                            <button
-                                onClick={() => setNoCommentsFilter(prev => !prev)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${noCommentsFilter
-                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                    }`}
-                            >
-                                <FaCommentSlash />
-                                <span>Hiç yorum almamış</span>
-                            </button>
-                            <button
-                                onClick={() => setHasPollFilter(prev => !prev)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${hasPollFilter
-                                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                    }`}
-                            >
-                                <FaPoll />
-                                <span>Sadece anketli sorular</span>
-                            </button>
                         </div>
 
                         {searchQuery && (
@@ -251,6 +207,7 @@ const QuestionsPage = () => {
                                                 if (action === 'remove') {
                                                     setQuestions(prev => prev.filter(q => q.id !== questionId));
                                                 } else {
+                                                    // Hide/unhide durumunda soruyu yeniden yükle
                                                     fetchQuestions(currentPage, false);
                                                 }
                                             }}

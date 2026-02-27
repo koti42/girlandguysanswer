@@ -1,12 +1,11 @@
-import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-const NotificationBell = lazy(() => import('./NotificationBell'));
+import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
-import { categoriesAPI, questionsAPI, messagesAPI } from '../services/api';
-import { getCategoryIcon } from '../utils/categoryIcons';
+import { categoriesAPI, questionsAPI } from '../services/api';
 
 const Header = ({ onSearch }) => {
     const navigate = useNavigate();
@@ -24,29 +23,9 @@ const Header = ({ onSearch }) => {
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [selectedModalCategory, setSelectedModalCategory] = useState(null);
+    const [modalActiveTab, setModalActiveTab] = useState('tum-sorular'); // tum-sorular, populer, cevapsiz
     const { isDark, toggleTheme } = useTheme();
     const { user, isAuthenticated, logout } = useAuth();
-    const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
-
-    useEffect(() => {
-        if (!isAuthenticated) return;
-
-        const checkUnread = async () => {
-            try {
-                const res = await messagesAPI.getConversations();
-                const conversations = res.data?.data?.conversations || res.data?.data || [];
-                const hasUnread = conversations.some(c => c.unread_count > 0);
-                setHasUnreadMessages(hasUnread);
-            } catch (e) {
-            }
-        };
-
-        checkUnread();
-
-        const handleRefresh = () => checkUnread();
-        window.addEventListener('notification:refresh', handleRefresh);
-        return () => window.removeEventListener('notification:refresh', handleRefresh);
-    }, [isAuthenticated]);
 
     const handleLogout = async () => {
         try {
@@ -98,7 +77,7 @@ const Header = ({ onSearch }) => {
                 try {
                     const response = await questionsAPI.getAll({
                         search: searchQuery,
-                        limit: 5 
+                        limit: 5 // Get top 5 results
                     });
                     setSearchResults(response.data.data.questions || []);
                 } catch (error) {
@@ -125,9 +104,10 @@ const Header = ({ onSearch }) => {
         }
     };
 
+    // Navigate to single result
     const handleResultClick = (slug) => {
         setShowDropdown(false);
-        setSearchQuery('');
+        setSearchQuery(''); // Optional: clear search after selection
         navigate(`/question/${slug}`);
     };
 
@@ -153,7 +133,7 @@ const Header = ({ onSearch }) => {
 
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity min-w-0">
-                        <img src="/logo.webp" alt="Herkesler Soruyor Logo" width={40} height={40} fetchpriority="high" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                        <img src="/logo.png" alt="Herkesler Soruyor Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
                         <span className="font-script text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl text-coral font-bold leading-none select-none truncate">
                             <span className="hidden sm:inline">Herkesler Soruyor</span>
                             <span className="sm:hidden">HS</span>
@@ -212,7 +192,7 @@ const Header = ({ onSearch }) => {
                                                         </p>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                                                                {result.category?.name || result.category}
+                                                                {result.category}
                                                             </span>
                                                             <span className="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1">
                                                                 <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
@@ -261,7 +241,7 @@ const Header = ({ onSearch }) => {
                         </button>
 
                         {/* Questions Button */}
-                        <button
+                        <button 
                             onClick={openQuestionsModal}
                             className="hidden sm:block text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm"
                         >
@@ -271,7 +251,7 @@ const Header = ({ onSearch }) => {
                         {/* Communities Button */}
                         <Link to="/communities" className="hidden sm:block">
                             <button className="text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm">
-                                Meydan
+                                Topluluk
                             </button>
                         </Link>
 
@@ -280,28 +260,25 @@ const Header = ({ onSearch }) => {
                             to="/ask"
                             className="bg-gradient-to-r from-coral to-orange-400 text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 rounded-full font-semibold hover:shadow-lg transition-all duration-300 text-xs sm:text-sm md:text-base whitespace-nowrap"
                         >
-                            <span className="hidden sm:inline">Sor Gitsin</span>
-                            <span className="sm:hidden">Sorsana</span>
+                            <span className="hidden sm:inline">Soru Sor</span>
+                            <span className="sm:hidden">+</span>
                         </Link>
 
+                        {/* Desktop Auth Buttons - Only show if NOT authenticated */}
 
 
                         {/* Messages Button */}
                         <Link
                             to="/messages"
-                            className="hidden md:block relative p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                            className="hidden md:block p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
                             title="Mesajlar"
                         >
                             <FaEnvelope className="text-base sm:text-lg" />
-                            {hasUnreadMessages && (
-                                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse" />
-                            )}
                         </Link>
 
                         {/* Notifications */}
-                        <Suspense fallback={<span className="p-2"><FaBell className="text-xl text-gray-400" /></span>}>
-                            <NotificationBell />
-                        </Suspense>
+                        <NotificationBell />
+                        {/* Profile Picture */}
 
 
                         {/* User Menu or Auth Buttons */}
@@ -313,82 +290,36 @@ const Header = ({ onSearch }) => {
                                 </button>
 
                                 {/* Dropdown Menu */}
-                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-coral/20 dark:border-coral/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform group-hover:translate-y-0 translate-y-2 overflow-hidden">
-                                    <div className="p-3 border-b border-coral/10 dark:border-gray-600 bg-gradient-to-b from-coral/5 to-transparent dark:from-coral/10 dark:to-transparent">
+                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform group-hover:translate-y-0 translate-y-2">
+                                    <div className="p-3 border-b border-gray-100 dark:border-gray-700">
                                         <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{user.name || user.username}</p>
                                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-                                        {user.levelProgress && (() => {
-                                            const lp = user.levelProgress;
-                                            const progressPct = Math.round((lp.progress ?? 0) * 100);
-                                            return (
-                                                <div className="mt-3 p-2.5 rounded-lg bg-white/80 dark:bg-gray-700/80 border border-coral/20 dark:border-orange-400/20 shadow-soft backdrop-blur-sm">
-                                                    <div className="flex items-center justify-between gap-2 mb-2">
-                                                        <span className="text-xs font-bold px-2 py-1 rounded-md bg-gradient-to-r from-coral/20 to-orange-400/20 dark:from-coral/30 dark:to-orange-400/30 text-coral dark:text-orange-300 border border-coral/30 dark:border-orange-400/30">
-                                                            {lp.level?.name}
-                                                        </span>
-                                                        {lp.next_level_name != null ? (
-                                                            <span className="text-[10px] font-semibold text-coral dark:text-orange-300 tabular-nums">
-                                                                {lp.xp_to_next_level} XP
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">Maks.</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="relative h-2.5 w-full rounded-full overflow-hidden bg-coral/15 dark:bg-coral/25 shadow-inner">
-                                                        <div
-                                                            className="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-coral to-orange-400 shadow-sm"
-                                                            style={{
-                                                                width: `${progressPct}%`,
-                                                                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25)'
-                                                            }}
-                                                        />
-                                                        {progressPct > 0 && progressPct < 100 && (
-                                                            <div
-                                                                className="absolute top-0 bottom-0 w-1 rounded-full bg-white/70 pointer-events-none"
-                                                                style={{ left: `calc(${progressPct}% - 2px)` }}
-                                                            />
-                                                        )}
-                                                    </div>
-                                                    {lp.next_level_name != null && (
-                                                        <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-1.5 flex items-center gap-1">
-                                                            <span className="opacity-80">Sonraki:</span>
-                                                            <span className="font-semibold text-coral dark:text-orange-300">{lp.next_level_name}</span>
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            );
-                                        })()}
                                     </div>
                                     <div className="p-2">
                                         <Link
                                             to={`/profile/${user.username}`}
-                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-coral/10 dark:hover:bg-coral/20 rounded-lg transition-colors hover:text-coral dark:hover:text-orange-300"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                         >
                                             <FaUser className="text-gray-400" />
                                             Profilim
                                         </Link>
                                         <Link
                                             to="/messages"
-                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-coral/10 dark:hover:bg-coral/20 rounded-lg transition-colors md:hidden hover:text-coral dark:hover:text-orange-300"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors md:hidden"
                                         >
-                                            <div className="relative">
-                                                <FaEnvelope className="text-gray-400" />
-                                                {hasUnreadMessages && (
-                                                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
-                                                )}
-                                            </div>
+                                            <FaEnvelope className="text-gray-400" />
                                             Mesajlar
                                         </Link>
                                         <Link
                                             to="/follow-requests"
-                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-coral/10 dark:hover:bg-coral/20 rounded-lg transition-colors hover:text-coral dark:hover:text-orange-300"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                         >
                                             <FaUserPlus className="text-purple-500" />
                                             <span>Takip İstekleri</span>
                                         </Link>
                                         <Link
                                             to="/settings"
-                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-coral/10 dark:hover:bg-coral/20 rounded-lg transition-colors hover:text-coral dark:hover:text-orange-300"
+                                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                         >
                                             <FaUser className="text-gray-400" />
                                             Ayarlar
@@ -494,30 +425,8 @@ const Header = ({ onSearch }) => {
                             }}
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
-                            <FaQuestionCircle className="text-xl text-coral flex-shrink-0" />
+                            <FaHome className="text-xl text-coral flex-shrink-0" />
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Sorular</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                closeMobileMenu();
-                                navigate('/questions?has_poll=1');
-                            }}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
-                        >
-                            <FaPoll className="text-xl text-coral flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Nabız</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                closeMobileMenu();
-                                navigate('/opinions');
-                            }}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
-                        >
-                            <FaComment className="text-xl text-coral flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Benceler</span>
                         </button>
 
                         <Link
@@ -526,68 +435,8 @@ const Header = ({ onSearch }) => {
                             className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                         >
                             <FaUsers className="text-xl text-coral" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Meydan</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Topluluk</span>
                         </Link>
-
-                        <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
-                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">
-                            Pusula
-                        </p>
-
-                        <button
-                            onClick={() => {
-                                closeMobileMenu();
-                                navigate('/questions');
-                            }}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
-                        >
-                            <FaCompass className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Pusula</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                closeMobileMenu();
-                                navigate('/questions?sort=popular');
-                            }}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
-                        >
-                            <FaFire className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Gündem</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                closeMobileMenu();
-                                navigate('/questions?no_comments=1&sort=newest');
-                            }}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
-                        >
-                            <FaLifeRing className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Dayanışma</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                closeMobileMenu();
-                                navigate('/leaderboard');
-                            }}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
-                        >
-                            <FaStar className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Üstatlar</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                closeMobileMenu();
-                                navigate('/ask');
-                            }}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
-                        >
-                            <FaRobot className="text-xl text-gray-500 dark:text-gray-300 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Akıl Küpü</span>
-                        </button>
 
                         {isAuthenticated ? (
                             <>
@@ -597,19 +446,14 @@ const Header = ({ onSearch }) => {
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                                 >
                                     <FaQuestionCircle className="text-xl text-coral" />
-                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Sor Gitsin</span>
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Soru Sor</span>
                                 </Link>
                                 <Link
                                     to="/messages"
                                     onClick={closeMobileMenu}
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                                 >
-                                    <div className="relative">
-                                        <FaEnvelope className="text-xl text-coral" />
-                                        {hasUnreadMessages && (
-                                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900" />
-                                        )}
-                                    </div>
+                                    <FaEnvelope className="text-xl text-coral" />
                                     <span className="text-gray-700 dark:text-gray-200 font-medium">Mesajlar</span>
                                 </Link>
                                 <Link
@@ -626,7 +470,7 @@ const Header = ({ onSearch }) => {
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                                 >
                                     <FaUser className="text-xl text-coral" />
-                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Ben</span>
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Profilim</span>
                                 </Link>
                                 <Link
                                     to="/settings"
@@ -680,291 +524,279 @@ const Header = ({ onSearch }) => {
                 </div>
             </div>
 
+{/* Mega Menu Modal */}
             {isQuestionsModalOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center animate-in fade-in duration-200 p-4 pt-8"
+                <div 
+                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center animate-in fade-in duration-200"
                     onClick={() => setIsQuestionsModalOpen(false)}
                 >
-                    <div
-                        className="bg-white dark:bg-gray-800 w-full max-w-6xl max-h-[85vh] flex animate-in zoom-in-95 duration-300 overflow-hidden rounded-2xl shadow-2xl"
+                    <div 
+                        className="bg-white dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] flex animate-in zoom-in-95 duration-300 overflow-hidden rounded-2xl shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="w-full lg:w-2/3 bg-white dark:bg-gray-800 overflow-hidden flex flex-col">
+                        {/* Left Side - 2 Column Grid Menu (65-70%) */}
+                        <div className="w-full lg:w-2/3 bg-white dark:bg-gray-800 overflow-y-auto flex flex-col">
                             {/* Header */}
-                            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Pusula</h2>
+                            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6 flex items-center justify-between">
+                                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Keşfet</h2>
                                 <button
                                     onClick={() => setIsQuestionsModalOpen(false)}
-                                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors lg:hidden"
                                 >
-                                    <FaClose className="text-lg text-gray-600 dark:text-gray-400" />
+                                    <FaClose className="text-xl text-gray-600 dark:text-gray-400" />
                                 </button>
                             </div>
 
                             {/* Menu Grid */}
-                            <div className="flex-1 px-6 py-4 overflow-y-auto min-h-0">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            <div className="flex-1 px-8 py-10">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Keşfet */}
-                                    <div
+                                    <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
-                                            navigate('/questions');
+                                            navigate('/');
                                         }}
-                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-3">
-                                            <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
+                                        <div className="flex gap-4">
+                                            <div className="text-4xl text-purple-600 flex-shrink-0">
                                                 <FaCompass />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Pusula</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">HerkeslerSoruyor'da şu an neler oluyor, hemen gör.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Popüler */}
-                                    <div
-                                        onClick={() => {
-                                            setIsQuestionsModalOpen(false);
-                                            navigate('/questions?sort=popular');
-                                        }}
-                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
-                                    >
-                                        <div className="flex gap-3">
-                                            <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
-                                                <FaFire />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Gündem</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Günün çok konuşulanlarına göz at.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Yardım Bekleyenler */}
-                                    <div
-                                        onClick={() => {
-                                            setIsQuestionsModalOpen(false);
-                                            navigate('/questions?no_comments=1&sort=newest');
-                                        }}
-                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
-                                    >
-                                        <div className="flex gap-3">
-                                            <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
-                                                <FaLifeRing />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Dayanışma</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Desteğini bekleyen sorular, yardımcı cevaplar.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* BiBilenler */}
-                                    <div
-                                        onClick={() => {
-                                            setIsQuestionsModalOpen(false);
-                                            navigate('/leaderboard');
-                                        }}
-                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
-                                    >
-                                        <div className="flex gap-3">
-                                            <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
-                                                <FaStar />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Üstatlar</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Alanında uzman profesyonel Üstatlara danış.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-purple-600 transition-colors">Keşfet</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">KızlarSoruyor'da şu an neler oluyor, hemen gör.</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Yapay Zeka */}
-                                    <div
+                                    <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
-                                            navigate('/ask');
+                                            navigate('/questions/yapay-zeka');
                                         }}
-                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-3">
-                                            <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
+                                        <div className="flex gap-4">
+                                            <div className="text-4xl text-blue-600 flex-shrink-0">
                                                 <FaRobot />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Akıl Küpü</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Yapay zeka fenomenleri sorularını cevaplıyor, hemen sor!</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-blue-600 transition-colors">Yapay Zeka</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Yapay zeka fenomenleri sorularını cevaplıyor, hemen sor!</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div
+                                    {/* Popüler */}
+                                    <div 
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions/populer');
+                                        }}
+                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-orange-50 hover:to-red-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                    >
+                                        <div className="flex gap-4">
+                                            <div className="text-4xl text-orange-600 flex-shrink-0">
+                                                <FaFire />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-orange-600 transition-colors">Popüler</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Günün çok konuşulanlarına göz at.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Sorular - Active */}
+                                    <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
                                             navigate('/questions');
                                         }}
-                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                        className="group p-6 rounded-xl bg-gradient-to-br from-coral/10 to-orange-100/50 dark:from-coral/20 dark:to-orange-900/20 border-2 border-coral cursor-pointer transition-all hover:shadow-lg hover:border-coral/80"
                                     >
-                                        <div className="flex gap-3">
-                                            <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
+                                        <div className="flex gap-4">
+                                            <div className="text-4xl text-coral flex-shrink-0">
                                                 <FaQuestionCircle />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Sorular</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">İlgini çekebilecek sorulara cevap paylaş.</p>
+                                                <h3 className="font-bold text-coral text-xl">Sorular</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">İlgini çekebilecek sorulara cevap paylaş.</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Görüşler */}
-                                    <div
+                                    {/* Yardım Bekleyenler */}
+                                    <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
-                                            navigate('/opinions');
+                                            navigate('/questions/yardim-bekleyenler');
                                         }}
-                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-3">
-                                            <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
+                                        <div className="flex gap-4">
+                                            <div className="text-4xl text-green-600 flex-shrink-0">
+                                                <FaLifeRing />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-green-600 transition-colors">Yardım Bekleyenler</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Desteğini bekleyen sorular, yardımcı cevaplar.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Benceler */}
+                                    <div 
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions/benceler');
+                                        }}
+                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-pink-50 hover:to-rose-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                    >
+                                        <div className="flex gap-4">
+                                            <div className="text-4xl text-pink-600 flex-shrink-0">
                                                 <FaComment />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Benceler</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Konular hakkında yazılar oku, kendi görüşünü paylaş.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-pink-600 transition-colors">Benceler</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">İlgini çekebilecek Bence'leri keşfet.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* BiBilenler */}
+                                    <div 
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions/bibilenler');
+                                        }}
+                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-yellow-50 hover:to-amber-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                    >
+                                        <div className="flex gap-4">
+                                            <div className="text-4xl text-yellow-600 flex-shrink-0">
+                                                <FaStar />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-yellow-600 transition-colors">BiBilenler</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Alanında uzman profesyonel BiBilenlere danış.</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Anketler */}
-                                    <div
+                                    <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
-                                            navigate('/questions?has_poll=1');
+                                            navigate('/questions/anketler');
                                         }}
-                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all"
+                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-indigo-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-3">
-                                            <div className="text-2xl text-gray-600 dark:text-gray-400 flex-shrink-0">
+                                        <div className="flex gap-4">
+                                            <div className="text-4xl text-indigo-600 flex-shrink-0">
                                                 <FaPoll />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base">Nabız</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">İlgi çekici anketlere oy ver, gündemi belirle.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-indigo-600 transition-colors">Anketler</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">İlgi çekici anketlere oy ver, gündemi belirle.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Zirvedekiler */}
+                                    <div 
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions/zirvedekiler');
+                                        }}
+                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-red-50 hover:to-rose-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                    >
+                                        <div className="flex gap-4">
+                                            <div className="text-4xl text-red-600 flex-shrink-0">
+                                                <FaCrown />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-red-600 transition-colors">Zirvedekiler</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Zirvede kimler var? Toplulukla tanış!</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Footer - Links & Social Media */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-3 bg-white dark:bg-gray-800 shrink-0">
-                                {/* Footer Links */}
-                                <div className="flex flex-wrap gap-2 mb-2">
-                                    <Link to="/iletisim" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        İletişim
-                                    </Link>
-                                    <span className="text-xs text-gray-400">•</span>
-                                    <Link to="/yayin-ilkeleri" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        Yayın İlkeleri
-                                    </Link>
-                                    <span className="text-xs text-gray-400">•</span>
-                                    <Link to="/site-sozlesmesi" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        Site Sözleşmesi
-                                    </Link>
-                                    <span className="text-xs text-gray-400">•</span>
-                                    <Link to="/kvkk-aydinlatma" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        KVKK Aydınlatma
-                                    </Link>
-                                    <span className="text-xs text-gray-400">•</span>
-                                    <Link to="/etiketler" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        Etiketler
-                                    </Link>
-                                    <span className="text-xs text-gray-400">•</span>
-                                    <Link to="/opinions" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        Görüşler
-                                    </Link>
-                                    <span className="text-xs text-gray-400">•</span>
-                                    <Link to="/questions" onClick={() => setIsQuestionsModalOpen(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        Tüm Sorular
-                                    </Link>
-                                </div>
-                                <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
+                            {/* Footer - Social & Download */}
+                            <div className="border-t border-gray-200 dark:border-gray-700 px-6 sm:px-8 py-5 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/70 dark:to-gray-800">
+                                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                                     {/* Social Media Icons */}
-                                    <div className="flex gap-1.5 items-center flex-wrap">
-                                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mr-1">Bizi Takip Et:</span>
-                                        <div className="flex gap-1.5">
-                                            <a href="https://twitter.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-1.5 bg-gradient-to-br from-sky-400 to-blue-500 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="X (Twitter)">
-                                                <FaTwitter className="text-xs" />
+                                    <div className="flex gap-2 items-center">
+                                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Bizi Takip Et:</span>
+                                        <div className="flex gap-2">
+                                            <a href="https://twitter.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-gradient-to-br from-sky-400 to-blue-500 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="X (Twitter)">
+                                                <FaTwitter className="text-lg" />
                                             </a>
-                                            <a href="https://facebook.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-1.5 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="Facebook">
-                                                <FaFacebook className="text-xs" />
+                                            <a href="https://facebook.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="Facebook">
+                                                <FaFacebook className="text-lg" />
                                             </a>
-                                            <a href="https://instagram.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-1.5 bg-gradient-to-br from-pink-500 via-red-500 to-orange-400 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="Instagram">
-                                                <FaInstagram className="text-xs" />
+                                            <a href="https://instagram.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-gradient-to-br from-pink-500 via-red-500 to-orange-400 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="Instagram">
+                                                <FaInstagram className="text-lg" />
                                             </a>
-                                            <a href="https://youtube.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-1.5 bg-gradient-to-br from-red-600 to-red-700 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="YouTube">
-                                                <FaYoutube className="text-xs" />
+                                            <a href="https://youtube.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-gradient-to-br from-red-600 to-red-700 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="YouTube">
+                                                <FaYoutube className="text-lg" />
                                             </a>
                                         </div>
                                     </div>
-                                    {/* App Store Button */}
+                                    {/* App Store Buttons */}
                                     <div className="flex gap-2">
-                                        <a href="https://play.google.com/store/apps/details?id=com.herkeslersoruyor.app" target="_blank" rel="noopener noreferrer" className="px-2.5 py-1.5 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-xs font-bold rounded-lg hover:shadow-lg hover:from-gray-800 hover:to-gray-900 transition-all flex items-center gap-1.5 whitespace-nowrap">
-                                            <FaGooglePlay className="text-xs" /> Google Play
+                                        <a href="https://play.google.com/store/apps/details?id=com.kizlarsoruyor.app" target="_blank" rel="noopener noreferrer" className="px-3.5 py-2 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-xs font-bold rounded-lg hover:shadow-lg hover:from-gray-800 hover:to-gray-900 transition-all flex items-center gap-2 whitespace-nowrap">
+                                            <FaGooglePlay className="text-sm" /> Google Play
+                                        </a>
+                                        <a href="https://apps.apple.com/app/id123456789" target="_blank" rel="noopener noreferrer" className="px-3.5 py-2 bg-gradient-to-r from-gray-900 to-black text-white text-xs font-bold rounded-lg hover:shadow-lg hover:from-gray-800 hover:to-gray-900 transition-all flex items-center gap-2 whitespace-nowrap">
+                                            <FaApple className="text-sm" /> App Store
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right Side - Categories List */}
+                        {/* Right Side - Categories List (30-35%) - Desktop Only */}
                         <div className="hidden lg:flex lg:w-1/3 flex-col bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700">
                             {/* Categories Header */}
-                            <div className="sticky top-0 border-b border-gray-200 dark:border-gray-700 px-5 py-3 bg-gray-50 dark:bg-gray-900">
+                            <div className="sticky top-0 border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="font-bold text-gray-900 dark:text-white text-lg">
-                                        Konular <span className="font-normal text-gray-600 dark:text-gray-400">({categories.length})</span>
+                                    <h3 className="font-bold text-gray-900 dark:text-white">
+                                        Konular <span className="text-coral">({categories.length})</span>
                                     </h3>
-                                    <Link
-                                        to="/questions"
-                                        onClick={() => setIsQuestionsModalOpen(false)}
-                                        className="px-2.5 py-1 rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                    >
+                                    <Link to="/questions" onClick={() => setIsQuestionsModalOpen(false)} className="text-coral font-semibold text-sm hover:underline">
                                         Tümü
                                     </Link>
                                 </div>
                             </div>
 
                             {/* Categories List */}
-                            <div className="px-5 py-4 space-y-2.5 overflow-y-auto flex-1 max-h-[calc(70vh-120px)]">
+                            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
                                 {loadingCategories ? (
                                     <div className="flex justify-center items-center py-12">
-                                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-400 border-t-transparent"></div>
+                                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-coral border-t-transparent"></div>
                                     </div>
                                 ) : (
-                                    categories.map((cat) => {
-                                        const CategoryIcon = getCategoryIcon(cat.name);
-                                        return (
-                                            <button
-                                                key={cat.id}
-                                                onClick={() => handleCategorySelect(cat.slug)}
-                                                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group"
+                                    categories.map((cat) => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => handleCategorySelect(cat.slug)}
+                                            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-all group"
+                                        >
+                                            {/* Category Icon/Color */}
+                                            <div 
+                                                style={{ backgroundColor: cat.color || '#6B7280' }}
+                                                className="w-8 h-8 rounded-md flex-shrink-0 flex items-center justify-center text-white text-xs font-bold"
                                             >
-                                                {/* Category Icon */}
-                                                <div
-                                                    style={{ backgroundColor: cat.color || '#6B7280' }}
-                                                    className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center text-white"
-                                                >
-                                                    <CategoryIcon className="text-base" />
-                                                </div>
-                                                {/* Category Name */}
-                                                <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                                    {cat.name}
-                                                </span>
-                                            </button>
-                                        );
-                                    })
+                                                {cat.name.charAt(0)}
+                                            </div>
+                                            {/* Category Name */}
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-coral transition-colors truncate">
+                                                {cat.name}
+                                            </span>
+                                        </button>
+                                    ))
                                 )}
                             </div>
                         </div>

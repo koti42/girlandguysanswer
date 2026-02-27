@@ -1,24 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import QuestionCard from '../components/QuestionCard';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { questionsAPI, categoriesAPI } from '../services/api';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
-import { FaArrowLeft, FaGoogle, FaFacebook, FaInstagram, FaTwitter, FaDownload, FaCommentSlash, FaPoll } from 'react-icons/fa';
+import { FaArrowLeft, FaGoogle, FaFacebook, FaInstagram, FaTwitter, FaDownload } from 'react-icons/fa';
 import SEO from '../components/SEO';
 
 const CategoryPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const hasPollFilter = searchParams.get('has_poll') === '1' || searchParams.get('has_poll') === 'true';
 
     const [category, setCategory] = useState(null);
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('popular');
-    const [noCommentsFilter, setNoCommentsFilter] = useState(false);
+    const [activeTab, setActiveTab] = useState('popular'); // popular, newest, unanswered
     const [loadingMore, setLoadingMore] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
@@ -51,14 +48,14 @@ const CategoryPage = () => {
                 category: slug,
                 limit: 10,
                 page: pageNum,
-                ...(noCommentsFilter ? { no_comments: 1 } : {}),
-                ...(hasPollFilter ? { has_poll: 1 } : {}),
             };
 
             // Aktif tab'a göre sıralama
             if (activeTab === 'newest') {
                 params.sort = 'newest';
             } else if (activeTab === 'unanswered') {
+                // Cevapsız sorular - bunu backend'deki endpoint'ten kontrol etmen lazım
+                // Eğer answers_count parametresi yoksa, ekle
                 params.hasAnswers = false;
             } else {
                 params.sort = 'popular';
@@ -82,20 +79,13 @@ const CategoryPage = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [slug, activeTab, noCommentsFilter, hasPollFilter]);
+    }, [slug, activeTab]);
 
     useEffect(() => {
         setPage(1);
         setQuestions([]);
         fetchQuestions(1, false);
-    }, [activeTab, hasPollFilter, fetchQuestions]);
-
-    const toggleHasPollFilter = () => {
-        const next = new URLSearchParams(searchParams);
-        if (hasPollFilter) next.delete('has_poll');
-        else next.set('has_poll', '1');
-        setSearchParams(next);
-    };
+    }, [activeTab, fetchQuestions]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -119,7 +109,6 @@ const CategoryPage = () => {
             <TrendsWidget />
             <TopUsersWidget />
             <AnnouncementsWidget />
-            <PopularQuestionsWidget />
         </>
     );
 
@@ -156,7 +145,7 @@ const CategoryPage = () => {
                     {/* Menü Butonları - Google Play, Sosyal Medya */}
                     <div className="flex flex-wrap gap-3 items-center">
                         <a
-                            href="https://play.google.com/store/apps/details?id=com.herkeslersoruyor.app"
+                            href="https://play.google.com/store/apps/details?id=com.kizlarsoruyor.app"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 bg-white text-gray-900 font-semibold px-6 py-3 rounded-xl hover:shadow-xl transition-all transform hover:scale-105"
@@ -165,13 +154,13 @@ const CategoryPage = () => {
                         </a>
 
                         <div className="flex gap-2">
-                            <a href="https://instagram.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
+                            <a href="https://instagram.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
                                 <FaInstagram className="text-2xl" />
                             </a>
-                            <a href="https://facebook.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
+                            <a href="https://facebook.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
                                 <FaFacebook className="text-2xl" />
                             </a>
-                            <a href="https://twitter.com/herkeslersoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
+                            <a href="https://twitter.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors">
                                 <FaTwitter className="text-2xl" />
                             </a>
                         </div>
@@ -209,28 +198,6 @@ const CategoryPage = () => {
                         }`}
                     >
                         Cevapsız Sorular
-                    </button>
-                    <button
-                        onClick={() => setNoCommentsFilter(prev => !prev)}
-                        className={`flex items-center gap-2 px-4 py-3 font-semibold whitespace-nowrap border-b-2 transition-colors ${
-                            noCommentsFilter
-                                ? 'border-coral text-coral'
-                                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                        }`}
-                    >
-                        <FaCommentSlash />
-                        Hiç yorum almamış
-                    </button>
-                    <button
-                        onClick={toggleHasPollFilter}
-                        className={`flex items-center gap-2 px-4 py-3 font-semibold whitespace-nowrap border-b-2 transition-colors ${
-                            hasPollFilter
-                                ? 'border-coral text-coral'
-                                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                        }`}
-                    >
-                        <FaPoll />
-                        Sadece anketli
                     </button>
                 </div>
 

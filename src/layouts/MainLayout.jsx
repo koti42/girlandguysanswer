@@ -51,6 +51,7 @@ const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false, full
                                 <li><Link to="/gizlilik-politikasi" className="hover:text-coral transition-colors">Gizlilik Politikası</Link></li>
                                 <li><Link to="/site-sozlesmesi" className="hover:text-coral transition-colors">Kullanım Şartları</Link></li>
                                 <li><Link to="/cerez-politikasi" className="hover:text-coral transition-colors">Çerez Politikası</Link></li>
+                                <li><Link to="/cocuk-guvenligi" className="hover:text-coral transition-colors font-semibold text-green-400">🛡️ Çocuk Güvenliği</Link></li>
                             </ul>
                         </div>
                         <div>
