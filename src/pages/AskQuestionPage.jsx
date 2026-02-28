@@ -590,7 +590,7 @@ const AskQuestionPage = () => {
                                 placeholder="Sorunuzla ilgili daha fazla detay paylaşabilirsiniz..."
                                 uploadImage={uploadImage}
                             />
-                            <span className="text-gray-400 dark:text-gray-500 text-sm block mt-2">Metin editörü ile zengin içerik oluşturabilirsiniz</span>
+                            <span className="text-gray-400 dark:text-gray-500 text-sm block mt-2">Metin editörü ile zengin içerik oluşturabilirsiniz. Kullanıcı etiketlemek için @kullanıcıadı yazın.</span>
                         </div>
 
                         {/* GIF */}

@@ -106,6 +106,7 @@ export const usersAPI = {
     updatePrivacy: (isPrivate) => api.post('/user/me/settings/privacy', { is_private: isPrivate }),
     updateMessaging: (settings) => api.post('/user/me/settings/messaging', settings),
     updateFollowing: (allowFollowing) => api.post('/user/me/settings/following', { allow_following: allowFollowing }),
+    updateMention: (allowMentionNotifications) => api.post('/user/me/settings/mentions', { allow_mention_notifications: allowMentionNotifications }),
     uploadAvatar: (formData) => api.post('/user/me/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),

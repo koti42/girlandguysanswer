@@ -13,6 +13,9 @@ const DomainRedirect = ({ children }) => {
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
             return;
         }
+        if (hostname === 'pages.dev' || hostname.endsWith('.pages.dev')) {
+            return;
+        }
 
         const canonicalHost = getCanonicalHost();
         if (currentHost !== canonicalHost) {

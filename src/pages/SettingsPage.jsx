@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash, FaUser } from 'react-icons/fa';
+import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash, FaUser, FaAt } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI } from '../services/api';
@@ -34,8 +34,9 @@ const SettingsPage = () => {
     const [settings, setSettings] = useState({
         is_private: false,
         allow_messaging: true,
-        messaging_mode: 'everyone', // everyone, followers
-        allow_following: true
+        messaging_mode: 'everyone',
+        allow_following: true,
+        allow_mention_notifications: true
     });
     const [deletePassword, setDeletePassword] = useState('');
     const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
@@ -93,7 +94,8 @@ const SettingsPage = () => {
                     is_private: detail.is_private || false,
                     allow_messaging: detail.allow_messaging !== undefined ? detail.allow_messaging : true,
                     messaging_mode: detail.messaging_mode || 'everyone',
-                    allow_following: detail.allow_following !== undefined ? detail.allow_following : true
+                    allow_following: detail.allow_following !== undefined ? detail.allow_following : true,
+                    allow_mention_notifications: detail.allow_mention_notifications !== undefined ? detail.allow_mention_notifications : true
                 });
             } catch (error) {
             } finally {
@@ -120,7 +122,8 @@ const SettingsPage = () => {
                     is_private: backendSettings.is_private,
                     allow_messaging: backendSettings.allow_messaging,
                     messaging_mode: backendSettings.messaging_mode,
-                    allow_following: backendSettings.allow_following
+                    allow_following: backendSettings.allow_following,
+                    allow_mention_notifications: backendSettings.allow_mention_notifications
                 });
             }
 
@@ -130,7 +133,7 @@ const SettingsPage = () => {
 
             showSuccess(response.data.message || `Hesap ${newValue ? 'gizli' : 'herkese açık'} olarak güncellendi.`);
         } catch (error) {
-            setSettings(prev => ({ ...prev, is_private: !newValue })); // Revert
+            setSettings(prev => ({ ...prev, is_private: !newValue }));
 
             const errorMsg = error.response?.data?.message || 'Gizlilik ayarı güncellenemedi. Lütfen tekrar deneyin.';
             showToast(errorMsg, 'error');
@@ -213,6 +216,25 @@ const SettingsPage = () => {
             showToast(msg, 'error');
         } finally {
             setUsernameSubmitting(false);
+        }
+    };
+
+    const handleMentionToggle = async (newValue) => {
+        try {
+            setSettings(prev => ({ ...prev, allow_mention_notifications: newValue }));
+            const response = await usersAPI.updateMention(newValue);
+
+            if (response.data.data?.settings) {
+                const backendSettings = response.data.data.settings;
+                setSettings(prev => ({
+                    ...prev,
+                    allow_mention_notifications: backendSettings.allow_mention_notifications
+                }));
+            }
+            showSuccess(response.data.message || 'Etiketleme ayarı güncellendi.');
+        } catch (error) {
+            setSettings(prev => ({ ...prev, allow_mention_notifications: !newValue }));
+            showToast(error.response?.data?.message || 'Etiketleme ayarı güncellenemedi.', 'error');
         }
     };
 
@@ -403,6 +425,26 @@ const SettingsPage = () => {
                             description="Kullanıcıların sizi takip etmesine veya takip isteği göndermesine izin verin."
                             enabled={settings.allow_following}
                             onChange={handleFollowingToggle}
+                        />
+                    </div>
+
+                    {/* Etiketleme Section */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                                <FaAt className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Etiketleme</h2>
+                                <p className="text-xs text-gray-500">@ ile etiketlendiğinizde bildirim alın</p>
+                            </div>
+                        </div>
+
+                        <Toggle
+                            label="Etiketleme Bildirimleri"
+                            description="Soru veya bencede @kullanıcıadı ile etiketlendiğinizde bildirim alırsınız. Kapalıysa etiket bildirimleri gelmez."
+                            enabled={settings.allow_mention_notifications}
+                            onChange={handleMentionToggle}
                         />
                     </div>
 

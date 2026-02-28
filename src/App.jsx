@@ -27,6 +27,8 @@ import GoogleCallback from './pages/GoogleCallback';
 import CompleteProfilePage from './pages/CompleteProfilePage';
 import ErrorPage from './pages/ErrorPage';
 import CategoryPage from './pages/CategoryPage';
+import OpinionsPage from './pages/OpinionsPage';
+import OpinionDetailPage from './pages/OpinionDetailPage';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
@@ -73,6 +75,8 @@ function App() {
                   <Route path="/messages/:username" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
                   <Route path="/search" element={<ProtectedRoute><QuestionsPage /></ProtectedRoute>} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
+                  <Route path="/opinions" element={<OpinionsPage />} />
+                  <Route path="/opinion/:slugOrId" element={<OpinionDetailPage />} />
                   <Route path="/communities" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
                   <Route path="/community/:uuid" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
                   <Route path="/community-invitations" element={<ProtectedRoute><CommunityInvitationsPage /></ProtectedRoute>} />

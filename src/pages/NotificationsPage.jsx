@@ -85,6 +85,14 @@ const NotificationsPage = () => {
                     navigate('/community-invitations');
                 }
                 break;
+            case 'mention':
+                if (notification.data?.question_slug) {
+                    const ansId = notification.data?.answer_id;
+                    navigate(ansId ? `/question/${notification.data.question_slug}#answer-${ansId}` : `/question/${notification.data.question_slug}`);
+                } else if (notification.data?.opinion_slug) {
+                    navigate(`/opinion/${notification.data.opinion_slug}`);
+                }
+                break;
             default:
                 break;
         }

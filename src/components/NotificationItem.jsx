@@ -1,7 +1,7 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaComment, FaReply, FaUserPlus, FaCheckCircle, FaTimes, FaEnvelope } from 'react-icons/fa';
+import { FaComment, FaReply, FaUserPlus, FaCheckCircle, FaTimes, FaEnvelope, FaAt } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 
 const formatDate = (dateString) => {
@@ -29,6 +29,8 @@ const getNotificationIcon = (type) => {
             return <FaEnvelope className="text-blue-500" />;
         case 'community_invitation':
             return <FaUserPlus className="text-green-500" />;
+        case 'mention':
+            return <FaAt className="text-indigo-500" />;
         default:
             return <FaComment className="text-gray-500" />;
     }

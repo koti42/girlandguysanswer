@@ -164,6 +164,10 @@ const CreateOpinionPage = () => {
                     <span className="text-xl">📸</span>
                     <span>Görsel materyaller kullanın</span>
                 </li>
+                <li className="flex gap-3 items-start p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-100 dark:border-purple-800/30">
+                    <span className="text-xl">@</span>
+                    <span>Kullanıcı etiketlemek için @kullanıcıadı yazın</span>
+                </li>
             </ul>
         </div>
     );
