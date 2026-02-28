@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import Toast from './Toast';
 import UserAvatar from './UserAvatar';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
+import { getProfileColor, getViewerPrefs } from '../utils/userColor';
 import { textWithMentions } from '../utils/parseMentions';
 
 const formatDate = (dateString) => {
@@ -19,15 +20,16 @@ const formatDate = (dateString) => {
     }
 };
 
-const AnswerCard = ({ answer, profileGender }) => {
+const AnswerCard = ({ answer, profileGender, profileUser }) => {
     const { user: currentUser } = useAuth();
     const [isLiked, setIsLiked] = useState(answer.is_liked || false);
     const [likesCount, setLikesCount] = useState(answer.likes_count || 0);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [loading, setLoading] = useState(false);
 
-    const isFemale = profileGender === 'female' || profileGender === 'kiz' || profileGender === 'kadın' || profileGender === 'woman';
-    const isMale = profileGender === 'male' || profileGender === 'erkek' || profileGender === 'man';
+    const userForColor = profileUser || { gender: profileGender };
+    const viewerPrefs = getViewerPrefs(currentUser);
+    const accentColor = getProfileColor(userForColor, viewerPrefs);
 
     useEffect(() => {
         setIsLiked(answer.is_liked || false);
@@ -80,24 +82,14 @@ const AnswerCard = ({ answer, profileGender }) => {
         }
     };
 
-    const accentColor = isFemale ? '#EC4899' : isMale ? '#3B82F6' : '#FF6B6B';
-    const accentBg = isFemale ? 'bg-pink-50 dark:bg-pink-900/15' : isMale ? 'bg-blue-50 dark:bg-blue-900/15' : 'bg-coral/5 dark:bg-coral/10';
-    const accentBorder = isFemale ? 'border-pink-100 dark:border-pink-800/30' : isMale ? 'border-blue-100 dark:border-blue-800/30' : 'border-gray-100 dark:border-gray-700';
-    const accentText = isFemale ? 'text-pink-500' : isMale ? 'text-blue-500' : 'text-coral';
-    const accentGradient = isFemale
-        ? 'from-pink-500 to-rose-400'
-        : isMale
-            ? 'from-blue-500 to-indigo-400'
-            : 'from-coral to-orange-400';
+    const accentBg = { backgroundColor: `${accentColor}15` };
+    const accentBorder = { borderColor: `${accentColor}40` };
 
     const questionCategory = answer.question?.category;
     const categoryColor = questionCategory ? getCategoryColor(questionCategory) : null;
 
     return (
-        <div className={`group relative bg-white dark:bg-gray-800 rounded-2xl shadow-soft hover:shadow-lg transition-all duration-300 overflow-hidden border ${answer.is_accepted
-            ? 'border-emerald-200 dark:border-emerald-800/40 ring-1 ring-emerald-100 dark:ring-emerald-900/30'
-            : accentBorder
-            }`}>
+        <div className={`group relative bg-white dark:bg-gray-800 rounded-2xl shadow-soft hover:shadow-lg transition-all duration-300 overflow-hidden border ${answer.is_accepted ? 'border-emerald-200 dark:border-emerald-800/40 ring-1 ring-emerald-100 dark:ring-emerald-900/30' : ''}`} style={!answer.is_accepted ? accentBorder : undefined}>
             {toast.show && (
                 <Toast
                     message={toast.message}
@@ -107,7 +99,7 @@ const AnswerCard = ({ answer, profileGender }) => {
             )}
 
             {/* Top accent line */}
-            <div className={`h-1 w-full bg-gradient-to-r ${answer.is_accepted ? 'from-emerald-400 to-teal-400' : accentGradient}`}></div>
+            <div className={`h-1 w-full ${answer.is_accepted ? 'bg-gradient-to-r from-emerald-400 to-teal-400' : ''}`} style={!answer.is_accepted ? { backgroundColor: accentColor } : undefined}></div>
 
             <div className="p-5">
                 {/* Question Reference */}
@@ -115,14 +107,14 @@ const AnswerCard = ({ answer, profileGender }) => {
                     to={`/question/${answer.question?.slug || answer.question?.id}`}
                     className="block mb-4"
                 >
-                    <div className={`${accentBg} rounded-xl p-4 border ${accentBorder} group-hover:border-opacity-60 transition-all`}>
+                    <div className="rounded-xl p-4 border group-hover:border-opacity-60 transition-all" style={{ ...accentBg, ...accentBorder }}>
                         <div className="flex items-start gap-3">
-                            <div className={`flex-shrink-0 mt-0.5 ${accentText} opacity-40`}>
+                            <div className="flex-shrink-0 mt-0.5 opacity-40" style={{ color: accentColor }}>
                                 <FaQuoteLeft className="text-lg" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                    <span className={`text-xs font-bold uppercase tracking-wider ${accentText}`}>Soru</span>
+                                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: accentColor }}>Soru</span>
                                     {questionCategory && (
                                         <span
                                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
@@ -145,11 +137,10 @@ const AnswerCard = ({ answer, profileGender }) => {
                                         <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                                             {answer.question.is_anonymous ? 'Gizli Üye' : answer.question.user?.username}
                                         </span>
-                                        {answer.question.user?.gender === 'female' && !answer.question.is_anonymous && (
-                                            <FaVenus className="text-pink-400 text-[10px]" />
-                                        )}
-                                        {answer.question.user?.gender === 'male' && !answer.question.is_anonymous && (
-                                            <FaMars className="text-blue-400 text-[10px]" />
+                                        {!answer.question.is_anonymous && answer.question.user?.gender && (
+                                            <span className="text-[10px]" style={{ color: getProfileColor(answer.question.user, viewerPrefs) }}>
+                                                {answer.question.user.gender === 'female' ? <FaVenus /> : <FaMars />}
+                                            </span>
                                         )}
                                     </div>
                                 )}
@@ -176,10 +167,8 @@ const AnswerCard = ({ answer, profileGender }) => {
                         <button
                             onClick={handleLike}
                             disabled={loading}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${isLiked
-                                ? `bg-gradient-to-r ${accentGradient} text-white shadow-sm`
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                }`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${!isLiked ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600' : 'text-white shadow-sm'}`}
+                            style={isLiked ? { backgroundColor: accentColor } : undefined}
                         >
                             <FaHeart className={`text-xs ${isLiked ? 'animate-pulse' : ''}`} />
                             <span>{likesCount}</span>
@@ -203,7 +192,7 @@ const AnswerCard = ({ answer, profileGender }) => {
 
                         {/* Owner Badge */}
                         {answer.isOwner && (
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${isFemale ? 'bg-pink-100 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400' : isMale ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'bg-coral/10 text-coral'}`}>
+                            <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: `${accentColor}20`, color: accentColor }}>
                                 Senin Cevabın
                             </span>
                         )}

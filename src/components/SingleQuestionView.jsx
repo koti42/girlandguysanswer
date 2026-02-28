@@ -18,6 +18,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import PollWidget from '../components/PollWidget';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 import { processHtmlWithMentions, textWithMentions } from '../utils/parseMentions';
+import { getProfileColor, getProfileColorStyle, getProfileGradientStyle, getViewerPrefs } from '../utils/userColor';
 import DOMPurify from 'dompurify';
 
 const formatDate = (dateString) => {
@@ -31,6 +32,7 @@ const formatDate = (dateString) => {
 
 const SingleQuestionView = ({ initialQuestion, slug }) => {
     const { user: currentUser, canModerate } = useAuth();
+    const viewerPrefs = getViewerPrefs(currentUser);
     const navigate = useNavigate();
     const [question, setQuestion] = useState(initialQuestion || null);
     const [answers, setAnswers] = useState(initialQuestion?.answers || []);
@@ -603,9 +605,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
     const renderComment = (comment, type, targetId, level = 0, mainCommentId = null) => {
         const currentMainCommentId = mainCommentId || comment.id;
-        const commentGradientClass = comment.user?.gender === 'female'
-            ? 'bg-gradient-to-br from-pink-100 to-pink-50 dark:from-pink-900/30 dark:to-pink-900/20 border-pink-400 dark:border-pink-600'
-            : 'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-900/30 dark:to-cyan-900/20 border-cyan-400 dark:border-cyan-600';
+        const commentColorStyle = getProfileGradientStyle(comment.user, viewerPrefs, 0.12);
         const marginClasses = ['ml-0', 'ml-3 md:ml-6', 'ml-6 md:ml-10', 'ml-8 md:ml-12'];
         const marginLeft = marginClasses[Math.min(level, 3)];
         const isReplyingToThis = replyingTo?.commentId === comment.id;
@@ -620,7 +620,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
         return (
             <div key={comment.id} className="space-y-3">
-                <div id={`comment-${comment.id}`} className={`${commentGradientClass} rounded-xl p-4 ${marginLeft} border-l-4 shadow-sm hover:shadow-md transition-all scroll-mt-20`}>
+                <div id={`comment-${comment.id}`} className={`rounded-xl p-4 ${marginLeft} border-l-4 shadow-sm hover:shadow-md transition-all scroll-mt-20`} style={commentColorStyle}>
                     <div className="flex gap-3">
                         {comment.user?.username === 'anonim' ? (
                             <div className="cursor-default">
@@ -638,7 +638,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 ) : (
                                     <Link to={`/profile/${comment.user?.username}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">{comment.user?.username}</Link>
                                 )}
-                                {comment.user?.gender === 'female' ? <FaVenus className="text-pink-600 text-xs" /> : <FaMars className="text-cyan-600 text-xs" />}
+                                <span className="text-xs" style={{ color: getProfileColor(comment.user, viewerPrefs) }}>{comment.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                 <span className="text-gray-500 text-xs">• {formatDate(comment.created_at)}</span>
                             </div>
                             {comment.content && <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2 whitespace-pre-wrap">{textWithMentions(comment.content)}</p>}
@@ -834,7 +834,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
             <div className="flex flex-col gap-6">
                 {/* Question Card */}
-                <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft border-l-4 ${question.user?.gender === 'female' ? 'border-pink-400 dark:border-pink-500' : 'border-blue-400 dark:border-blue-500'}`}>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft border-l-4" style={getProfileColorStyle(question.user, viewerPrefs)}>
                     <div className="flex items-center gap-3 mb-4">
                         {question.user.username === 'anonim' ? (
                             <>
@@ -842,7 +842,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
-                                        {question.user.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
+                                        <span style={{ color: getProfileColor(question.user, viewerPrefs) }}>{question.user.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                                         {question.category?.name && (() => {
@@ -874,7 +874,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
                                                 <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{question.user.username}</Link>
-                                                {question.user.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
+                                                <span style={{ color: getProfileColor(question.user, viewerPrefs) }}>{question.user.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                                                 {question.category?.name && (() => {
@@ -1149,20 +1149,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
                                 const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
 
-                                const isFemaleAnswer = answer.user?.gender === 'female';
-                                const genderBorderClass = isBestAnswer
-                                    ? 'border-green-200 dark:border-green-800'
-                                    : isFemaleAnswer
-                                        ? 'border-pink-200 dark:border-pink-800/50'
-                                        : 'border-blue-200 dark:border-blue-800/50';
-                                const genderBgClass = isBestAnswer
-                                    ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900'
-                                    : isFemaleAnswer
-                                        ? 'bg-gradient-to-br from-pink-50 to-white dark:from-pink-900/20 dark:to-gray-800/60'
-                                        : 'bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800/60';
+                                const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
+                                const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
+                                const answerBgClass = isBestAnswer ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900' : '';
 
                                 return (
-                                    <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${genderBgClass} ${genderBorderClass}`}>
+                                    <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}`} style={answerColorStyle}>
                                         <div className="flex gap-4">
                                             {answer.user?.username === 'anonim' ? (
                                                 <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
@@ -1178,7 +1170,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             ) : (
                                                                 <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
                                                             )}
-                                                            {answer.user?.gender === 'female' ? <FaVenus className="text-pink-500" /> : <FaMars className="text-blue-500" />}
+                                                            <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                         </div>
                                                         <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
 

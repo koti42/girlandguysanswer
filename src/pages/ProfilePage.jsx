@@ -17,6 +17,7 @@ import ProfileTabContent from '../components/Profile/ProfileTabContent';
 import ModerationActionsPanel from '../components/Moderation/ModerationActionsPanel';
 import AccountStatusBanner from '../components/AccountStatusBanner';
 import SEO from '../components/SEO';
+import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
 const ProfilePage = () => {
     const { username } = useParams();
@@ -427,14 +428,9 @@ const ProfilePage = () => {
     };
 
     const gender = profileData.gender;
-    const isFemale = gender === 'female' || gender === 'kiz' || gender === 'kadın' || gender === 'woman';
-    const isMale = gender === 'male' || gender === 'erkek' || gender === 'man';
-
-    const headerShellClasses = isFemale
-        ? 'bg-gradient-to-br from-pink-50 via-rose-50 to-fuchsia-50 dark:from-pink-900/20 dark:via-rose-900/10 dark:to-fuchsia-900/20 border border-pink-100 dark:border-pink-800'
-        : isMale
-            ? 'bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 dark:from-sky-900/20 dark:via-blue-900/10 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800'
-            : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700';
+    const contentCreator = { gender };
+    const viewerPrefs = getViewerPrefs(currentUser);
+    const themeStyles = getThemeStyles(contentCreator, viewerPrefs);
 
     return (
         <>
@@ -464,7 +460,7 @@ const ProfilePage = () => {
                     {!(!isOwnProfile && (profileData.isBlocked || profileData.hasBlocked)) && (
                         <>
                             {/* Profile Header */}
-                            <div className={`${headerShellClasses} rounded-2xl shadow-soft overflow-hidden`}>
+                            <div className="rounded-2xl shadow-soft overflow-hidden border" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}50` }}>
                                 <ProfileCover
                                     coverPhoto={profileData.coverPhoto}
                                     onCoverUpload={isOwnProfile ? handleCoverUpload : null}
@@ -506,6 +502,7 @@ const ProfilePage = () => {
                                                 profileData={profileData}
                                                 isVIP={isVIP}
                                                 gender={gender}
+                                                viewerPrefs={viewerPrefs}
                                             />
                                         )}
 
@@ -634,6 +631,7 @@ const ProfilePage = () => {
                                     loading={tabLoading}
                                     isOwnProfile={isOwnProfile}
                                     isVIP={isVIP}
+                                    viewerPrefs={viewerPrefs}
                                 />
                             </div>
                         </>

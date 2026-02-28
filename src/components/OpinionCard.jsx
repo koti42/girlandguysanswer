@@ -6,10 +6,11 @@ import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import DOMPurify from 'dompurify';
 import { buildOpinionPath } from '../utils/opinionUrl';
+import { getProfileColor } from '../utils/userColor';
 
 const stripHtml = (html) => (html ? DOMPurify.sanitize(html, { ALLOWED_TAGS: [] }) : '');
 
-const OpinionCard = ({ opinion }) => {
+const OpinionCard = ({ opinion, viewerPrefs }) => {
     const excerpt = stripHtml(opinion.content).slice(0, 160);
     const imageUrl = opinion.images?.[0];
     const ensureHttps = (url) => {
@@ -36,7 +37,8 @@ const OpinionCard = ({ opinion }) => {
     return (
         <Link
             to={buildOpinionPath(opinion)}
-            className="block bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-soft hover:shadow-md transition-all"
+            className="block bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-soft hover:shadow-md transition-all border-l-4"
+            style={{ borderLeftColor: opinion.user ? getProfileColor(opinion.user, viewerPrefs) : undefined }}
         >
             <div className="p-5 md:p-6">
                 <div className="flex items-center gap-3 mb-3">

@@ -36,7 +36,10 @@ const SettingsPage = () => {
         allow_messaging: true,
         messaging_mode: 'everyone',
         allow_following: true,
-        allow_mention_notifications: true
+        allow_mention_notifications: true,
+        profile_color: null,
+        profile_color_female: null,
+        profile_color_male: null
     });
     const [deletePassword, setDeletePassword] = useState('');
     const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
@@ -95,7 +98,10 @@ const SettingsPage = () => {
                     allow_messaging: detail.allow_messaging !== undefined ? detail.allow_messaging : true,
                     messaging_mode: detail.messaging_mode || 'everyone',
                     allow_following: detail.allow_following !== undefined ? detail.allow_following : true,
-                    allow_mention_notifications: detail.allow_mention_notifications !== undefined ? detail.allow_mention_notifications : true
+                    allow_mention_notifications: detail.allow_mention_notifications !== undefined ? detail.allow_mention_notifications : true,
+                    profile_color: detail.profile_color || null,
+                    profile_color_female: detail.profile_color_female || null,
+                    profile_color_male: detail.profile_color_male || null
                 });
             } catch (error) {
             } finally {
@@ -266,6 +272,22 @@ const SettingsPage = () => {
         }
     };
 
+    const handleProfileColorChange = async (gender, color) => {
+        const key = gender === 'female' ? 'profile_color_female' : 'profile_color_male';
+        try {
+            setSettings(prev => ({ ...prev, [key]: color }));
+            const payload = { [key]: color || null };
+            await usersAPI.updateProfileColor(payload);
+            if (user) {
+                updateUser({ detail: { ...user.detail, [key]: color } });
+            }
+            showSuccess('Profil rengi güncellendi.');
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || 'Profil rengi güncellenemedi.';
+            showToast(errorMsg, 'error');
+        }
+    };
+
     if (loading) return (
         <MainLayout>
             <div className="flex justify-center p-10">
@@ -336,6 +358,64 @@ const SettingsPage = () => {
                                 <p className="text-sm text-amber-600 dark:text-amber-400">Kullanıcı adı değiştirme hakkınız kalmadı.</p>
                             )}
                         </div>
+                    </div>
+
+                    {/* Profile Color Section - Kadın ve Erkek ayrı */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mb-6">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                                <FaUser className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Profil Renkleri</h2>
+                                <p className="text-xs text-gray-500">Sitedeki tüm sorular, cevaplar, yorumlar, benceler, mesajlar ve profiller senin ekranında bu renklerle görünür (sadece sen görürsün)</p>
+                            </div>
+                        </div>
+                        {[
+                            { gender: 'female', label: 'Kadın rengi', defaultHex: '#EC4899', settingsKey: 'profile_color_female' },
+                            { gender: 'male', label: 'Erkek rengi', defaultHex: '#3B82F6', settingsKey: 'profile_color_male' },
+                        ].map(({ gender, label, defaultHex, settingsKey }) => (
+                            <div key={gender} className="mb-6 last:mb-0">
+                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{label}</h3>
+                                <p className="text-xs text-gray-500 mb-2">Seçmezsen varsayılan ({gender === 'female' ? 'pembe' : 'mavi'}) kullanılır</p>
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                    {[
+                                        { hex: '#EC4899', label: 'Pembe' },
+                                        { hex: '#3B82F6', label: 'Mavi' },
+                                        { hex: '#FF6F61', label: 'Coral' },
+                                        { hex: '#22C55E', label: 'Yeşil' },
+                                        { hex: '#A855F7', label: 'Mor' },
+                                        { hex: '#F59E0B', label: 'Turuncu' },
+                                        { hex: '#06B6D4', label: 'Cyan' },
+                                        { hex: '#EF4444', label: 'Kırmızı' },
+                                    ].map(({ hex, label: l }) => (
+                                        <button
+                                            key={hex}
+                                            type="button"
+                                            onClick={() => handleProfileColorChange(gender, hex)}
+                                            title={l}
+                                            className={`w-10 h-10 rounded-full border-2 transition-all hover:scale-110 ${settings[settingsKey] === hex ? 'border-gray-900 dark:border-white ring-2 ring-offset-2 ring-gray-400' : 'border-gray-200 dark:border-gray-600'}`}
+                                            style={{ backgroundColor: hex }}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="color"
+                                        value={settings[settingsKey] || defaultHex}
+                                        onChange={(e) => handleProfileColorChange(gender, e.target.value)}
+                                        className="w-12 h-12 rounded-lg cursor-pointer border border-gray-200 dark:border-gray-600 bg-transparent"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => handleProfileColorChange(gender, null)}
+                                        className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-400 underline"
+                                    >
+                                        Varsayılana dön
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Privacy Section */}

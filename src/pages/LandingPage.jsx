@@ -9,6 +9,7 @@ import { questionsAPI } from '../services/api';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
+import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
 const formatDate = (dateString) => {
     if (!dateString) return 'Az önce';
@@ -21,6 +22,7 @@ const formatDate = (dateString) => {
 
 const LandingPage = () => {
     const { user } = useAuth();
+    const viewerPrefs = getViewerPrefs(user);
     const [popularQuestions, setPopularQuestions] = useState([]);
     const [loadingPopular, setLoadingPopular] = useState(true);
 
@@ -40,28 +42,10 @@ const LandingPage = () => {
         fetchPopular();
     }, []);
 
-    const QuestionShowcaseCard = ({ question }) => {
-        const isFemale = question.user?.gender === 'female';
-        const isMale = question.user?.gender === 'male';
+    const QuestionShowcaseCard = ({ question, viewerPrefs }) => {
+        const contentCreator = question.user || {};
+        const themeStyles = getThemeStyles(contentCreator, viewerPrefs);
         const isAnon = !question.user?.username || question.user?.username === 'anonim' || question.is_anonymous;
-
-        const borderColor = isFemale
-            ? 'border-pink-200 dark:border-pink-800/30 hover:border-pink-300'
-            : isMale
-                ? 'border-blue-200 dark:border-blue-800/30 hover:border-blue-300'
-                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300';
-
-        const accentLine = isFemale
-            ? 'bg-gradient-to-r from-pink-400 to-rose-400'
-            : isMale
-                ? 'bg-gradient-to-r from-blue-400 to-indigo-400'
-                : 'bg-gradient-to-r from-gray-400 to-gray-500';
-
-        const genderBadgeBg = isFemale
-            ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400'
-            : isMale
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400';
 
         const categoryColor = question.category?.color ? getCategoryColor(question.category.color) : null;
         const CategoryIcon = question.category?.name ? getCategoryIcon(question.category.name) : null;
@@ -69,9 +53,10 @@ const LandingPage = () => {
         return (
             <Link
                 to={`/question/${question.slug || question.id}`}
-                className={`group relative bg-white dark:bg-gray-800 rounded-2xl border ${borderColor} shadow-soft hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col`}
+                className="group relative bg-white dark:bg-gray-800 rounded-2xl border shadow-soft hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col"
+                style={{ borderColor: `${themeStyles.accentColor}50` }}
             >
-                <div className={`h-1 w-full ${accentLine}`}></div>
+                <div className="h-1 w-full" style={{ background: themeStyles.headerBg }}></div>
                 <div className="p-4 md:p-5 flex-1 flex flex-col">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
@@ -88,8 +73,8 @@ const LandingPage = () => {
                                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                                         {isAnon ? 'Gizli Üye' : question.user?.username}
                                     </span>
-                                    {isFemale && <FaVenus className="text-pink-500 text-xs" />}
-                                    {isMale && <FaMars className="text-blue-500 text-xs" />}
+                                    {question.user?.gender === 'female' && <FaVenus className="text-xs" style={{ color: themeStyles.accentColor }} />}
+                                    {question.user?.gender === 'male' && <FaMars className="text-xs" style={{ color: themeStyles.accentColor }} />}
                                 </div>
                                 <span className="text-[10px] text-gray-400 dark:text-gray-500">{formatDate(question.created_at)}</span>
                             </div>
@@ -116,7 +101,7 @@ const LandingPage = () => {
                             {question.tags.slice(0, 3).map((tag, idx) => {
                                 const displayTag = tag.startsWith('#') ? tag : `#${tag}`;
                                 return (
-                                    <span key={idx} className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${genderBadgeBg}`}>
+                                    <span key={idx} className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: themeStyles.bgColorStrong, color: themeStyles.accentColor }}>
                                         {displayTag}
                                     </span>
                                 );
@@ -255,7 +240,7 @@ const LandingPage = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                         {loadingPopular
                             ? [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
-                            : popularQuestions.map(q => <QuestionShowcaseCard key={q.id} question={q} />)
+                            : popularQuestions.map(q => <QuestionShowcaseCard key={q.id} question={q} viewerPrefs={viewerPrefs} />)
                         }
                     </div>
 

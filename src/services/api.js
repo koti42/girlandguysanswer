@@ -107,6 +107,7 @@ export const usersAPI = {
     updateMessaging: (settings) => api.post('/user/me/settings/messaging', settings),
     updateFollowing: (allowFollowing) => api.post('/user/me/settings/following', { allow_following: allowFollowing }),
     updateMention: (allowMentionNotifications) => api.post('/user/me/settings/mentions', { allow_mention_notifications: allowMentionNotifications }),
+    updateProfileColor: (data) => api.post('/user/me/settings/profile-color', data),
     uploadAvatar: (formData) => api.post('/user/me/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),

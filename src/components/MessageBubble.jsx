@@ -5,6 +5,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause, FaEdit, FaTrash, FaSmile } from 'react-icons/fa';
 import { messagesAPI } from '../services/api';
+import { getProfileColor } from '../utils/userColor';
 import LinkRedirectModal from './LinkRedirectModal';
 
 const EPHEMERAL_DURATION = 10; // seconds
@@ -132,7 +133,7 @@ function isEphemeralExpiredFromBackend(message, isMine) {
     return (Date.now() - viewedAt) >= EPHEMERAL_DURATION * 1000;
 }
 
-const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, onEdit, onDelete, onReaction, isHighlighted = false, onScrollToMessage }) => {
+const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserId, viewerPrefs, onReply, onEdit, onDelete, onReaction, isHighlighted = false, onScrollToMessage }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -628,19 +629,10 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
         }
     };
 
-    // Check for female gender (supports both English and Turkish)
-    const isFemale = senderGender === 'female' ||
-        senderGender === 'kiz' ||
-        senderGender === 'woman' ||
-        senderGender === 'kadın';
-
-    const bubbleClass = isMine
-        ? (isFemale
-            ? 'bg-gradient-to-br from-pink-400 to-rose-400 text-white'
-            : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white')
-        : (isFemale
-            ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white'
-            : 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white');
+    const senderForColor = senderUser || { gender: senderGender };
+    const bubbleColor = getProfileColor(senderForColor, viewerPrefs);
+    const bubbleClass = 'text-white';
+    const bubbleStyle = { background: `linear-gradient(to bottom right, ${bubbleColor}, ${bubbleColor}dd)` };
 
     const formatMessageDateTime = (dateString) => {
         if (!dateString) return '';
@@ -777,7 +769,8 @@ const MessageBubble = ({ message, isMine, senderGender, currentUserId, onReply, 
                     </div>
                 )}
                 <div
-                    className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative transition-all duration-300 ${isHighlighted ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''} ${isMine ? 'order-2' : 'order-1'}`}
+                    className={`max-w-[85%] sm:max-w-[75%] min-w-0 px-4 py-3 rounded-lg shadow-sm overflow-hidden ${bubbleClass} relative transition-all duration-300 ${isHighlighted ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-900' : ''} ${isMine ? 'order-2' : 'order-1'}`}
+                    style={{ ...bubbleStyle, ...(isHighlighted ? { '--tw-ring-color': bubbleColor } : {}) }}
                 >
                     {message.user_deleted_at ? (
                         <>

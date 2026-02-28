@@ -4,13 +4,12 @@ import ProfileStats from '../ProfileStats';
 import QuestionCard from '../QuestionCard';
 import AnswerCard from '../AnswerCard';
 import FollowersList from '../FollowersList';
+import { getThemeStyles, getViewerPrefs } from '../../utils/userColor';
 
-const TabSkeleton = ({ type, isFemale, isMale }) => {
-    const pulseAccent = isFemale
-        ? 'bg-pink-100 dark:bg-pink-900/20'
-        : isMale
-            ? 'bg-blue-100 dark:bg-blue-900/20'
-            : 'bg-gray-100 dark:bg-gray-700';
+const TabSkeleton = ({ type, contentCreator, viewerPrefs }) => {
+    const themeStyles = contentCreator ? getThemeStyles(contentCreator, viewerPrefs) : null;
+    const pulseAccentStyle = themeStyles ? { backgroundColor: themeStyles.bgColorStrong } : {};
+    const pulseAccentClass = !themeStyles ? 'bg-gray-100 dark:bg-gray-700' : '';
     const pulseLight = 'bg-gray-200 dark:bg-gray-700';
 
     if (type === 'answers') {
@@ -20,7 +19,7 @@ const TabSkeleton = ({ type, isFemale, isMale }) => {
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700">
                     <div className="grid grid-cols-3 gap-4">
                         {[...Array(3)].map((_, i) => (
-                            <div key={i} className={`flex items-center gap-3 p-3 rounded-xl ${pulseAccent}`}>
+                            <div key={i} className={`flex items-center gap-3 p-3 rounded-xl ${pulseAccentClass}`} style={pulseAccentStyle}>
                                 <div className={`w-10 h-10 rounded-xl ${pulseLight}`}></div>
                                 <div className="flex-1">
                                     <div className={`h-5 w-10 ${pulseLight} rounded mb-1.5`}></div>
@@ -33,7 +32,7 @@ const TabSkeleton = ({ type, isFemale, isMale }) => {
                 {/* Card skeletons */}
                 {[...Array(3)].map((_, i) => (
                     <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700">
-                        <div className={`${pulseAccent} rounded-xl p-4 mb-4`}>
+                        <div className={`${pulseAccentClass} rounded-xl p-4 mb-4`} style={pulseAccentStyle}>
                             <div className={`h-3 w-12 ${pulseLight} rounded mb-2`}></div>
                             <div className={`h-4 w-3/4 ${pulseLight} rounded mb-2`}></div>
                             <div className={`h-4 w-1/2 ${pulseLight} rounded`}></div>
@@ -117,14 +116,13 @@ const TabSkeleton = ({ type, isFemale, isMale }) => {
     return null;
 };
 
-const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, followers, following, loading, isOwnProfile, isVIP }) => {
+const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, followers, following, loading, isOwnProfile, isVIP, viewerPrefs }) => {
 
-    const gender = profileData?.gender;
-    const isFemale = gender === 'female' || gender === 'kiz' || gender === 'kadın' || gender === 'woman';
-    const isMale = gender === 'male' || gender === 'erkek' || gender === 'man';
+    const contentCreator = { gender: profileData?.gender };
+    const themeStyles = getThemeStyles(contentCreator, viewerPrefs);
 
     if (loading) {
-        return <TabSkeleton type={activeTab} isFemale={isFemale} isMale={isMale} />;
+        return <TabSkeleton type={activeTab} contentCreator={contentCreator} viewerPrefs={viewerPrefs} />;
     }
 
     if (profileData.isPrivate && !profileData.isFollowing && !isOwnProfile) {
@@ -174,46 +172,20 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
         const acceptedAnswers = answers.filter(a => a.is_accepted).length;
         const totalLikes = answers.reduce((sum, a) => sum + (a.likes_count || 0), 0);
 
-        const accentGradient = isFemale
-            ? 'from-pink-500 via-rose-400 to-fuchsia-500'
-            : isMale
-                ? 'from-blue-500 via-indigo-400 to-cyan-500'
-                : 'from-coral via-orange-400 to-pink-400';
-
-        const statCardBg = isFemale
-            ? 'bg-pink-50 dark:bg-pink-900/15 border-pink-100 dark:border-pink-800/30'
-            : isMale
-                ? 'bg-blue-50 dark:bg-blue-900/15 border-blue-100 dark:border-blue-800/30'
-                : 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-700';
-
-        const statIconBg = isFemale
-            ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-500'
-            : isMale
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-500'
-                : 'bg-coral/10 text-coral';
-
-        const emptyIconBg = isFemale
-            ? 'bg-pink-50 dark:bg-pink-900/20'
-            : isMale
-                ? 'bg-blue-50 dark:bg-blue-900/20'
-                : 'bg-gray-100 dark:bg-gray-700';
-
-        const emptyIconColor = isFemale
-            ? 'text-pink-300 dark:text-pink-600'
-            : isMale
-                ? 'text-blue-300 dark:text-blue-600'
-                : 'text-gray-300 dark:text-gray-600';
+        const statCardStyle = { backgroundColor: themeStyles.bgColor, borderColor: `${themeStyles.accentColor}40` };
+        const statIconStyle = { backgroundColor: themeStyles.bgColorStrong, color: themeStyles.accentColor };
+        const emptyIconStyle = { backgroundColor: themeStyles.bgColor };
 
         return (
             <>
                 {/* Answer Stats Summary */}
                 {totalAnswers > 0 && (
                     <div className="relative overflow-hidden rounded-2xl shadow-soft">
-                        <div className={`absolute inset-0 bg-gradient-to-r ${accentGradient} opacity-[0.07]`}></div>
+                        <div className="absolute inset-0 opacity-[0.07]" style={{ background: `linear-gradient(to right, ${themeStyles.accentColor}, ${themeStyles.accentColor}aa)` }}></div>
                         <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-5 border border-gray-100 dark:border-gray-700 rounded-2xl">
                             <div className="grid grid-cols-3 gap-4">
-                                <div className={`flex items-center gap-3 p-3 rounded-xl border ${statCardBg}`}>
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${statIconBg}`}>
+                                <div className="flex items-center gap-3 p-3 rounded-xl border" style={statCardStyle}>
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={statIconStyle}>
                                         <FaComment className="text-sm" />
                                     </div>
                                     <div>
@@ -221,8 +193,8 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
                                         <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Toplam Cevap</p>
                                     </div>
                                 </div>
-                                <div className={`flex items-center gap-3 p-3 rounded-xl border ${statCardBg}`}>
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500`}>
+                                <div className="flex items-center gap-3 p-3 rounded-xl border" style={statCardStyle}>
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500">
                                         <FaMedal className="text-sm" />
                                     </div>
                                     <div>
@@ -230,8 +202,8 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
                                         <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">En İyi Seçilen</p>
                                     </div>
                                 </div>
-                                <div className={`flex items-center gap-3 p-3 rounded-xl border ${statCardBg}`}>
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${statIconBg}`}>
+                                <div className="flex items-center gap-3 p-3 rounded-xl border" style={statCardStyle}>
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={statIconStyle}>
                                         <FaHeart className="text-sm" />
                                     </div>
                                     <div>
@@ -248,13 +220,13 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
                 {totalAnswers > 0 ? (
                     <div className="flex flex-col gap-4">
                         {answers.map(answer => (
-                            <AnswerCard key={answer.id} answer={answer} profileGender={gender} />
+                            <AnswerCard key={answer.id} answer={answer} profileGender={gender} profileUser={{ gender }} profileGender={gender} />
                         ))}
                     </div>
                 ) : (
                     <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700">
-                        <div className={`w-20 h-20 ${emptyIconBg} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                            <FaComment className={`text-3xl ${emptyIconColor}`} />
+                        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={emptyIconStyle}>
+                            <FaComment className="text-3xl" style={{ color: themeStyles.accentColor }} />
                         </div>
                         <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-1">Henüz cevap yok</h3>
                         <p className="text-gray-500 dark:text-gray-400 text-sm">Bu kullanıcı henüz hiç cevap vermemiş.</p>

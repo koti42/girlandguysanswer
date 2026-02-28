@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import OpinionCard from '../components/OpinionCard';
+import { getViewerPrefs } from '../utils/userColor';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
 import { opinionsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +11,7 @@ import SEO from '../components/SEO';
 
 const OpinionsPage = () => {
     const { user } = useAuth();
+    const viewerPrefs = getViewerPrefs(user);
     const [searchParams, setSearchParams] = useSearchParams();
     const initialSearch = searchParams.get('search') || '';
     const [opinions, setOpinions] = useState([]);
@@ -126,7 +128,7 @@ const OpinionsPage = () => {
                     <>
                         <div className="flex flex-col gap-4">
                             {opinions.map((op) => (
-                                <OpinionCard key={op.id} opinion={op} />
+                                <OpinionCard key={op.id} opinion={op} viewerPrefs={viewerPrefs} />
                             ))}
                         </div>
                         <div ref={observerTarget} className="py-6">

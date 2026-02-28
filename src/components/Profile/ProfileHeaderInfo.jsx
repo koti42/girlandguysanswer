@@ -1,8 +1,11 @@
 import React from 'react';
 import { FaCrown, FaStar, FaMapMarkerAlt, FaCalendarAlt, FaTrophy } from 'react-icons/fa';
 import ProfileBadges from '../ProfileBadges';
+import { getProfileColor, getViewerPrefs } from '../../utils/userColor';
 
-const ProfileHeaderInfo = ({ profileData, isVIP, gender }) => {
+const ProfileHeaderInfo = ({ profileData, isVIP, gender, viewerPrefs }) => {
+    const contentCreator = { gender };
+    const accentColor = getProfileColor(contentCreator, viewerPrefs);
     const isFemale = gender === 'female' || gender === 'kiz' || gender === 'kadın' || gender === 'woman';
     const isMale = gender === 'male' || gender === 'erkek' || gender === 'man';
 
@@ -74,12 +77,8 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender }) => {
                 {/* Gender & Rank Badge */}
                 {gender && (
                     <span
-                        className={`px-3 py-1 text-[11px] font-semibold rounded-full shadow-sm border flex items-center gap-1 ${isFemale
-                            ? 'bg-pink-50 text-pink-600 border-pink-200 dark:bg-pink-900/40 dark:text-pink-200 dark:border-pink-700'
-                            : isMale
-                                ? 'bg-sky-50 text-sky-600 border-sky-200 dark:bg-sky-900/40 dark:text-sky-200 dark:border-sky-700'
-                                : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
-                            }`}
+                        className="px-3 py-1 text-[11px] font-semibold rounded-full shadow-sm border flex items-center gap-1"
+                        style={{ backgroundColor: `${accentColor}15`, color: accentColor, borderColor: `${accentColor}50` }}
                     >
                         {isFemale ? 'Kadın Profil' : isMale ? 'Erkek Profil' : 'Profil'}
                         {profileData.ranks?.gender && profileData.ranks.gender > 0 && (

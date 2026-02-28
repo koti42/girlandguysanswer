@@ -8,6 +8,7 @@ import ConfirmationModal from './ConfirmationModal';
 import { messagesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
+import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
 const TYPING_RESET_MS = 3000;
 
@@ -629,13 +630,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         });
     }, []);
 
-    const otherGender = conversation?.other_user?.gender;
-    const isFemale = otherGender === 'female' || otherGender === 'kiz' || otherGender === 'kadın' || otherGender === 'woman';
-
-    const themeHeaderClass = isFemale ? 'bg-gradient-to-r from-pink-500 to-rose-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600';
-    const themeBorderClass = isFemale ? 'border-pink-400 dark:border-pink-500' : 'border-blue-400 dark:border-blue-500';
-    const themeBgClass = isFemale ? 'bg-pink-50/30 dark:bg-pink-900/10' : 'bg-blue-50/30 dark:bg-blue-900/10';
-    const themeSpinnerClass = isFemale ? 'border-pink-500' : 'border-blue-500';
+    const otherUserForTheme = conversation?.other_user || {};
+    const viewerPrefs = getViewerPrefs(user);
+    const themeStyles = getThemeStyles(otherUserForTheme, viewerPrefs);
 
     const filteredMessages = useMemo(() => {
         if (!searchQuery.trim()) return messages;
@@ -716,7 +713,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     return (
         <div className="flex flex-col h-full relative w-full overflow-x-hidden bg-white dark:bg-gray-900">
             {/* Header - cinsiyete göre renk (kadın: pembe, erkek: mavi) */}
-            <div className={`flex-shrink-0 ${themeHeaderClass} p-3 sm:p-4 w-full z-10 sticky top-0`}>
+            <div className="flex-shrink-0 p-3 sm:p-4 w-full z-10 sticky top-0" style={{ background: themeStyles.headerBg }}>
                 <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
                     <button
                         onClick={onBack}
@@ -1141,12 +1138,12 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
             {/* Süreli mesaj banner - kalan süre anlık geri sayım */}
             {ephemeralTtlSeconds > 0 && (
-                <div className={`flex-shrink-0 px-4 py-2.5 flex items-center justify-center gap-2 text-sm flex-wrap ${isFemale ? 'bg-pink-50 dark:bg-pink-950/30 border-b border-pink-200/60 dark:border-pink-800/50' : 'bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200/60 dark:border-blue-800/50'}`}>
-                    <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isFemale ? 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'}`}>
+                <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-center gap-2 text-sm flex-wrap border-b" style={{ backgroundColor: themeStyles.bgColorStrong, borderColor: `${themeStyles.accentColor}40` }}>
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ backgroundColor: themeStyles.bgColorStrong, color: themeStyles.accentColor }}>
                         <FaClock className="text-xs opacity-90" />
                         <span className="font-medium">{ephemeralTtlLabel || 'Süreli'}</span>
                     </span>
-                    <span className={`font-medium tabular-nums ${isFemale ? 'text-pink-700 dark:text-pink-300' : 'text-blue-700 dark:text-blue-300'}`}>
+                    <span className="font-medium tabular-nums" style={{ color: themeStyles.accentColor }}>
                         {countdownText ?? `Yeni mesajlar ${ephemeralTtlLabel || 'seçilen süre'} sonra silinecek`}
                     </span>
                 </div>
@@ -1165,7 +1162,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             >
                 {loading ? (
                     <div className="flex justify-center items-center h-full">
-                        <div className={`animate-spin rounded-full h-16 w-16 border-b-4 ${themeSpinnerClass}`}></div>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4" style={{ borderColor: themeStyles.accentColor }}></div>
                     </div>
                 ) : messages.length === 0 ? (
                     <div className="flex justify-center items-center h-full px-4">
@@ -1182,7 +1179,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     <div className="py-4 w-full min-w-0 max-w-full">
                         {loadingOlder && (
                             <div className="flex justify-center py-3">
-                                <div className={`animate-spin rounded-full h-8 w-8 border-2 border-t-transparent ${themeSpinnerClass}`} />
+                                <div className="animate-spin rounded-full h-8 w-8 border-2 border-t-transparent" style={{ borderColor: themeStyles.accentColor }} />
                             </div>
                         )}
                         {!hasMoreOlder && messages.length > 0 && (
@@ -1195,6 +1192,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                     isMine={message.sender_id === user.id}
                                     currentUserId={user?.id}
                                     senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
+                                    senderUser={message.sender_id === user.id ? user : conversation.other_user}
+                                    viewerPrefs={viewerPrefs}
                                     onReply={(msg) => setReplyingTo(msg)}
                                     onEdit={handleEditMessage}
                                     onDelete={handleDeleteMessage}
@@ -1210,11 +1209,11 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             </div>
 
             {/* Mesaj kutusu - karşı tarafın cinsiyetine göre renk teması */}
-            <div className={`flex-shrink-0 w-full min-w-0 z-20 border-t-2 ${themeBorderClass} ${themeBgClass}`}>
+            <div className="flex-shrink-0 w-full min-w-0 z-20 border-t-2" style={{ borderColor: themeStyles.borderColor, backgroundColor: themeStyles.bgColor }}>
                 {/* Süreli mesaj - sohbet temasına uyumlu pill seçici (mobilde dikey & kaydırılabilir) */}
                 {conversation?.id && (
-                    <div className={`px-2 sm:px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2 ${isFemale ? 'border-b border-pink-200/50 dark:border-pink-800/40' : 'border-b border-blue-200/50 dark:border-blue-800/40'}`}>
-                        <span className={`flex items-center gap-1.5 text-[11px] sm:text-xs font-medium flex-shrink-0 ${isFemale ? 'text-pink-600 dark:text-pink-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                    <div className="px-2 sm:px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2 border-b" style={{ borderColor: `${themeStyles.accentColor}40` }}>
+                        <span className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium flex-shrink-0" style={{ color: themeStyles.accentColor }}>
                             <FaClock className="text-[10px] opacity-80" />
                             Süreli mesaj
                         </span>
@@ -1231,14 +1230,11 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                             handleEphemeralChange(fakeEvent);
                                         }}
                                         disabled={ephemeralSettingLoading}
-                                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 ${isActive
-                                            ? isFemale
-                                                ? 'bg-pink-500 text-white shadow-sm'
-                                                : 'bg-blue-500 text-white shadow-sm'
-                                            : isFemale
-                                                ? 'bg-pink-100/70 dark:bg-pink-900/30 text-pink-600 dark:text-pink-300 hover:bg-pink-200/70 dark:hover:bg-pink-800/40'
-                                                : 'bg-blue-100/70 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 hover:bg-blue-200/70 dark:hover:bg-blue-800/40'
-                                            }`}
+                                        className="px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 shadow-sm"
+                                            style={isActive
+                                                ? { backgroundColor: themeStyles.accentColor, color: 'white' }
+                                                : { backgroundColor: themeStyles.bgColorStrong, color: themeStyles.accentColor }
+                                            }
                                     >
                                         {opt.label}
                                     </button>
@@ -1246,7 +1242,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                             })}
                         </div>
                         {ephemeralSettingLoading && (
-                            <span className={`text-[10px] ${isFemale ? 'text-pink-500' : 'text-blue-500'}`}>Kaydediliyor...</span>
+                            <span className="text-[10px]" style={{ color: themeStyles.accentColor }}>Kaydediliyor...</span>
                         )}
                     </div>
                 )}

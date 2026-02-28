@@ -11,6 +11,7 @@ import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/push
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import OnlineIndicator from '../components/OnlineIndicator';
+import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
 const DEFAULT_PAGE_TITLE = 'Herkesler Soruyor';
 const NEW_MESSAGE_TITLE = 'Yeni mesajınız var - Herkesler Soruyor';
@@ -415,17 +416,16 @@ const MessagesPage = () => {
                                 </div>
                             ) : (
                                 filteredConversations.map((conversation) => {
-                                    const otherGender = conversation.other_user?.gender;
-                                    const isFemale = otherGender === 'female' || otherGender === 'kiz' || otherGender === 'kadın' || otherGender === 'woman';
-                                    const rowAccentClass = isFemale
-                                        ? 'border-l-4 border-l-pink-400 dark:border-l-pink-500'
-                                        : 'border-l-4 border-l-blue-400 dark:border-l-blue-500';
+                                    const otherUser = conversation.other_user || {};
+                                    const viewerPrefs = getViewerPrefs(user);
+                                    const themeStyles = getThemeStyles(otherUser, viewerPrefs);
                                     return (
                                     <div
                                         key={conversation.id}
                                         onClick={() => handleConversationClick(conversation)}
-                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer border-b border-gray-100 dark:border-gray-800 transition-colors group ${rowAccentClass} ${activeConversation?.id === conversation.id ? 'bg-gray-50 dark:bg-gray-800' : ''
+                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer border-b border-l-4 border-gray-100 dark:border-gray-800 transition-colors group ${activeConversation?.id === conversation.id ? 'bg-gray-50 dark:bg-gray-800' : ''
                                             }`}
+                                        style={{ borderLeftColor: themeStyles.accentColor }}
                                     >
                                         <div className="relative">
                                             <img

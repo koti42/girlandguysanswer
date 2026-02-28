@@ -9,6 +9,7 @@ import QuestionActionsMenu from './QuestionActionsMenu';
 import ReportModal from './ReportModal';
 import QuestionModerationMenu from './Moderation/QuestionModerationMenu';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
+import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
 import { questionsAPI, commentsAPI } from '../services/api';
 
@@ -115,38 +116,14 @@ const QuestionCard = ({ question, onModerationAction }) => {
         }
     };
 
-    const getCardStyle = () => {
-        const gender = question.user?.gender;
-        if (gender === 'female') {
-            return {
-                container: 'bg-gradient-to-br from-rose-50 via-white to-pink-50 border-pink-100 hover:border-pink-200 shadow-sm hover:shadow-pink-100/50 dark:from-pink-900/10 dark:via-gray-800 dark:to-rose-900/10 dark:border-pink-900/30',
-                badge: 'bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300',
-                icon: 'text-pink-500',
-                button: 'from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-pink-200'
-            };
-        } else if (gender === 'male') {
-            return {
-                container: 'bg-gradient-to-br from-blue-50 via-white to-sky-50 border-blue-100 hover:border-blue-200 shadow-sm hover:shadow-blue-100/50 dark:from-blue-900/10 dark:via-gray-800 dark:to-indigo-900/10 dark:border-blue-900/30',
-                badge: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300',
-                icon: 'text-blue-500',
-                button: 'from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-blue-200'
-            };
-        } else {
-            return {
-                container: 'bg-gradient-to-br from-gray-50 via-white to-gray-50 border-gray-100 hover:border-gray-200 shadow-sm dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:border-gray-700',
-                badge: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
-                icon: 'text-gray-500',
-                button: 'from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black shadow-gray-200 dark:from-gray-700 dark:to-gray-600'
-            };
-        }
-    };
-
-    const styles = getCardStyle();
+    const userForTheme = question.user || {};
+    const viewerPrefs = getViewerPrefs(currentUser);
+    const themeStyles = getThemeStyles(userForTheme, viewerPrefs);
     const isOwnerAnonymous = !question.user?.username || question.user?.username === 'anonim';
     const displayName = isOwnerAnonymous ? 'Gizli Üye' : question.user.username;
 
     return (
-        <div className={`rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 ${styles.container}`}>
+        <div className="rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}40` }}>
             {/* Header */}
             <div className="flex justify-between items-start">
                 <UserHoverCard
@@ -169,9 +146,9 @@ const QuestionCard = ({ question, onModerationAction }) => {
                                     {displayName}
                                 </span>
                                 {question.user?.gender === 'female' ? (
-                                    <FaVenus className={`text-base md:text-lg ${styles.icon}`} />
+                                    <FaVenus className="text-base md:text-lg" style={{ color: themeStyles.accentColor }} />
                                 ) : (
-                                    <FaMars className={`text-base md:text-lg ${styles.icon}`} />
+                                    <FaMars className="text-base md:text-lg" style={{ color: themeStyles.accentColor }} />
                                 )}
                             </div>
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500 dark:text-gray-400 text-[10px] md:text-xs">
@@ -240,7 +217,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
                     {question.tags.map((tag, idx) => {
                         const displayTag = tag.startsWith('#') ? tag : `#${tag}`;
                         return (
-                            <span key={idx} className={`px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold transition-colors ${styles.badge}`}>
+                            <span key={idx} className="px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold transition-colors" style={{ backgroundColor: themeStyles.bgColorStrong, color: themeStyles.accentColor }}>
                                 {displayTag}
                             </span>
                         );
@@ -286,7 +263,8 @@ const QuestionCard = ({ question, onModerationAction }) => {
                 {!question.isOwner && (
                     <button
                         onClick={() => setShowReplyBox(!showReplyBox)}
-                        className={`w-full py-2.5 md:py-3 px-4 rounded-xl bg-gradient-to-r text-white font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2 text-sm md:text-base ${styles.button}`}
+                        className="w-full py-2.5 md:py-3 px-4 rounded-xl text-white font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2 text-sm md:text-base"
+                                        style={{ background: `linear-gradient(to right, ${themeStyles.accentColor}, ${themeStyles.accentColor}dd)` }}
                     >
                         <FaComment />
                         {showReplyBox ? 'Vazgeç' : 'Cevapla'}
