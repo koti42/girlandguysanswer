@@ -22,7 +22,7 @@ function canEditOrDeleteMessage(message, isMine) {
 const YOUTUBE_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})/gi;
 const INSTAGRAM_URL_REGEX = /https?:\/\/(?:www\.)?instagram\.com\/[^\s]+/gi;
 const GENERAL_URL_REGEX = /https?:\/\/[^\s<>"']+|www\.[^\s<>"']+/gi;
-const MENTION_REGEX = /@([a-zA-Z0-9_]+)/g;
+const MENTION_REGEX = /@([\p{L}\p{N}_]+)/gu;
 
 function linkifyText(text, onLinkClick) {
     if (!text) return text;
@@ -32,7 +32,7 @@ function linkifyText(text, onLinkClick) {
     while ((m = urlRe.exec(text)) !== null) {
         tokens.push({ type: 'url', start: m.index, end: m.index + m[0].length, value: m[0] });
     }
-    const mentionRe = new RegExp(MENTION_REGEX.source, 'g');
+    const mentionRe = new RegExp(MENTION_REGEX.source, 'gu');
     while ((m = mentionRe.exec(text)) !== null) {
         tokens.push({ type: 'mention', start: m.index, end: m.index + m[0].length, value: m[0], username: m[1] });
     }

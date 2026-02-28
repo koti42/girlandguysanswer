@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const MENTION_REGEX = /@([a-zA-Z0-9_]+)/g;
+const MENTION_REGEX = /@([\p{L}\p{N}_]+)/gu;
 
 export function processHtmlWithMentions(html) {
     if (!html || typeof html !== 'string') return html;
@@ -15,7 +15,7 @@ export function textWithMentions(text, className = '') {
     const parts = [];
     let lastIndex = 0;
     let match;
-    const re = new RegExp(MENTION_REGEX.source, 'g');
+    const re = new RegExp(MENTION_REGEX.source, 'gu');
     while ((match = re.exec(text)) !== null) {
         if (match.index > lastIndex) {
             parts.push(
