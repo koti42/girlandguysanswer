@@ -477,8 +477,30 @@ const Header = ({ onSearch }) => {
                             }}
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
                         >
-                            <FaHome className="text-xl text-coral flex-shrink-0" />
+                            <FaQuestionCircle className="text-xl text-coral flex-shrink-0" />
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Sorular</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/questions?has_poll=1');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaPoll className="text-xl text-coral flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Nabız</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/opinions');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaComment className="text-xl text-coral flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Benceler</span>
                         </button>
 
                         <Link
