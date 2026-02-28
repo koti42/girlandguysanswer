@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause, FaEdit, FaTrash, FaSmile } from 'react-icons/fa';
@@ -21,30 +22,53 @@ function canEditOrDeleteMessage(message, isMine) {
 const YOUTUBE_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})/gi;
 const INSTAGRAM_URL_REGEX = /https?:\/\/(?:www\.)?instagram\.com\/[^\s]+/gi;
 const GENERAL_URL_REGEX = /https?:\/\/[^\s<>"']+|www\.[^\s<>"']+/gi;
+const MENTION_REGEX = /@([a-zA-Z0-9_]+)/g;
 
 function linkifyText(text, onLinkClick) {
     if (!text) return text;
+    const tokens = [];
+    let m;
+    const urlRe = new RegExp(GENERAL_URL_REGEX.source, 'gi');
+    while ((m = urlRe.exec(text)) !== null) {
+        tokens.push({ type: 'url', start: m.index, end: m.index + m[0].length, value: m[0] });
+    }
+    const mentionRe = new RegExp(MENTION_REGEX.source, 'g');
+    while ((m = mentionRe.exec(text)) !== null) {
+        tokens.push({ type: 'mention', start: m.index, end: m.index + m[0].length, value: m[0], username: m[1] });
+    }
+    tokens.sort((a, b) => a.start - b.start);
+    const filtered = tokens.filter((t, i) => i === 0 || t.start >= tokens[i - 1].end);
     const parts = [];
     let lastIndex = 0;
-    const re = new RegExp(GENERAL_URL_REGEX.source, 'gi');
-    let match;
-    while ((match = re.exec(text)) !== null) {
-        if (match.index > lastIndex) {
-            parts.push(text.slice(lastIndex, match.index));
+    for (const token of filtered) {
+        if (token.start > lastIndex) {
+            parts.push(text.slice(lastIndex, token.start));
         }
-        const url = match[0];
-        const fullUrl = url.startsWith('http') ? url : `https://${url}`;
-        parts.push(
-            <button
-                key={match.index}
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onLinkClick(fullUrl); }}
-                className="underline underline-offset-2 opacity-90 hover:opacity-100 break-all text-left"
-            >
-                {url}
-            </button>
-        );
-        lastIndex = match.index + url.length;
+        if (token.type === 'url') {
+            const fullUrl = token.value.startsWith('http') ? token.value : `https://${token.value}`;
+            parts.push(
+                <button
+                    key={`url-${token.start}`}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onLinkClick(fullUrl); }}
+                    className="underline underline-offset-2 opacity-90 hover:opacity-100 break-all text-left"
+                >
+                    {token.value}
+                </button>
+            );
+        } else {
+            parts.push(
+                <Link
+                    key={`mention-${token.start}`}
+                    to={`/profile/${token.username}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="underline underline-offset-2 opacity-90 hover:opacity-100 font-semibold"
+                >
+                    {token.value}
+                </Link>
+            );
+        }
+        lastIndex = token.end;
     }
     if (lastIndex < text.length) parts.push(text.slice(lastIndex));
     return parts.length > 0 ? parts : text;

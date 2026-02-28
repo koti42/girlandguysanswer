@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import Toast from './Toast';
 import UserAvatar from './UserAvatar';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
+import { textWithMentions } from '../utils/parseMentions';
 
 const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
@@ -160,8 +161,8 @@ const AnswerCard = ({ answer, profileGender }) => {
 
                 {/* Answer Content */}
                 <div className="mb-4 pl-1">
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-[15px]">
-                        {answer.content}
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-[15px] whitespace-pre-wrap">
+                        {textWithMentions(answer.content)}
                     </p>
                     {answer.gif_url && (
                         <img src={answer.gif_url} alt="GIF" className="mt-3 rounded-xl max-w-[200px] shadow-sm" />

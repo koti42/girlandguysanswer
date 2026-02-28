@@ -17,6 +17,7 @@ import QuestionModerationMenu from '../components/Moderation/QuestionModerationM
 import ConfirmationModal from '../components/ConfirmationModal';
 import PollWidget from '../components/PollWidget';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
+import { processHtmlWithMentions, textWithMentions } from '../utils/parseMentions';
 import DOMPurify from 'dompurify';
 
 const formatDate = (dateString) => {
@@ -640,7 +641,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 {comment.user?.gender === 'female' ? <FaVenus className="text-pink-600 text-xs" /> : <FaMars className="text-cyan-600 text-xs" />}
                                 <span className="text-gray-500 text-xs">• {formatDate(comment.created_at)}</span>
                             </div>
-                            {comment.content && <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2">{comment.content}</p>}
+                            {comment.content && <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2 whitespace-pre-wrap">{textWithMentions(comment.content)}</p>}
                             {comment.gif_url && (
                                 <div className="mb-2 rounded-lg overflow-hidden">
                                     <img
@@ -917,8 +918,15 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 leading-snug">{question.title}</h1>
                     {question.description && (
                         <div
-                            className="text-gray-700 dark:text-gray-300 mb-4 break-words [&>div]:mb-2 [&>div:last-child]:mb-0 [&_b]:font-semibold [&_strong]:font-semibold [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-2"
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.description, { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span', 'img'], ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'class', 'style'] }) }}
+                            className="text-gray-700 dark:text-gray-300 mb-4 break-words [&>div]:mb-2 [&>div:last-child]:mb-0 [&_b]:font-semibold [&_strong]:font-semibold [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-2 [&_.mention-link]:font-semibold [&_.mention-link]:text-coral [&_.mention-link]:hover:text-coral-dark [&_.mention-link]:hover:underline [&_.mention-link]:cursor-pointer"
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processHtmlWithMentions(question.description), { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span', 'img'], ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'class', 'style'] }) }}
+                            onClick={(e) => {
+                                const a = e.target.closest('a[href^="/profile/"]');
+                                if (a) {
+                                    e.preventDefault();
+                                    navigate(a.getAttribute('href'));
+                                }
+                            }}
                         />
                     )}
 
@@ -1196,7 +1204,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         </button>
                                                     )}
                                                 </div>
-                                                {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{answer.content}</div>}
+                                                {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{textWithMentions(answer.content)}</div>}
                                                 {answer.gif_url && (
                                                     <div className="mt-3 rounded-lg overflow-hidden">
                                                         <img

@@ -8,6 +8,7 @@ import { FaHeart, FaComment, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icon
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import DOMPurify from 'dompurify';
+import { processHtmlWithMentions } from '../utils/parseMentions';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, PopularQuestionsWidget } from '../components/Widgets';
 import { notificationToast } from '../utils/notificationToast';
 import SEO from '../components/SEO';
@@ -237,8 +238,15 @@ const OpinionDetailPage = () => {
                             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">{opinion.title}</h1>
 
                             <div
-                                className="prose prose-gray dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-6 break-words [&>div]:mb-2 [&_b]:font-semibold [&_strong]:font-semibold"
-                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(opinion.content || '', { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span', 'img'] }) }}
+                                className="prose prose-gray dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-6 break-words [&>div]:mb-2 [&_b]:font-semibold [&_strong]:font-semibold [&_.mention-link]:font-semibold [&_.mention-link]:text-coral [&_.mention-link]:hover:text-coral-dark [&_.mention-link]:hover:underline [&_.mention-link]:cursor-pointer"
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processHtmlWithMentions(opinion.content || ''), { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span', 'img'], ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'class', 'style'] }) }}
+                                onClick={(e) => {
+                                    const a = e.target.closest('a[href^="/profile/"]');
+                                    if (a) {
+                                        e.preventDefault();
+                                        navigate(a.getAttribute('href'));
+                                    }
+                                }}
                             />
 
                             {opinion.images?.length > 0 && (
