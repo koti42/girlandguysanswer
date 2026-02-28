@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft, FaClock } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
@@ -37,6 +37,7 @@ const AskQuestionPage = () => {
     const [showPreview, setShowPreview] = useState(false);
 
     const [addPoll, setAddPoll] = useState(false);
+    const [expiresInHours, setExpiresInHours] = useState(null);
     const [pollTitle, setPollTitle] = useState('');
     const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
     const [pollEndsAt, setPollEndsAt] = useState('');
@@ -183,6 +184,9 @@ const AskQuestionPage = () => {
                 is_anonymous: isAnonymous,
                 gif_url: gifUrl || null
             };
+            if (expiresInHours) {
+                payload.expires_in_hours = expiresInHours;
+            }
 
             if (addPoll) {
                 const filledOptions = pollOptions.filter(o => o.text.trim()).map((o, i) => ({ text: o.text.trim(), sort_order: i }));
@@ -386,6 +390,13 @@ const AskQuestionPage = () => {
                             </div>
                         );
                     })()}
+                    {expiresInHours && (
+                        <div className="pt-2 border-t border-gray-100 dark:border-gray-600 mt-2">
+                            <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                                <FaClock /> Süreli soru: {expiresInHours < 24 ? `${expiresInHours} saat` : `${Math.floor(expiresInHours / 24)} gün`} sonra siteden kaldırılacak
+                            </p>
+                        </div>
+                    )}
                 </div>
                 <div className="px-4 md:px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-600 flex flex-wrap items-center gap-2">
                     <span className="text-xs text-gray-500 dark:text-gray-400">0 beğeni · 0 cevap</span>
@@ -672,6 +683,28 @@ const AskQuestionPage = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Süreli soru */}
+                        <div className="mb-6">
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                <FaClock className="inline mr-2" /> Süreli soru (opsiyonel)
+                            </label>
+                            <select
+                                value={expiresInHours ?? ''}
+                                onChange={(e) => setExpiresInHours(e.target.value ? parseInt(e.target.value, 10) : null)}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20"
+                            >
+                                <option value="">Süre yok</option>
+                                <option value="1">1 saat</option>
+                                <option value="3">3 saat</option>
+                                <option value="6">6 saat</option>
+                                <option value="12">12 saat</option>
+                                <option value="24">24 saat (1 gün)</option>
+                                <option value="72">3 gün</option>
+                                <option value="168">7 gün</option>
+                            </select>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Süre dolunca soru siteden kaldırılır</p>
                         </div>
 
                         {/* Anonymous Toggle */}
