@@ -556,7 +556,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             const response = await questionsAPI.getQuestionComments(question.id, { page: questionCommentsPage + 1, per_page: 8 });
             const newComments = response.data.data.comments || [];
             const pagination = response.data.data.pagination;
-            setQuestion(prev => ({ ...prev, comments: [...(prev.comments || []), ...newComments] }));
+            setQuestion(prev => {
+                const existingIds = new Set((prev.comments || []).map(c => c.id));
+                const uniqueNew = newComments.filter(c => c.id && !existingIds.has(c.id));
+                return { ...prev, comments: [...(prev.comments || []), ...uniqueNew] };
+            });
             setQuestionCommentsPage(pagination.currentPage);
             setQuestionCommentsHasMore(pagination.hasNextPage);
         } catch (err) { displayToast('Yorumlar yüklenirken hata oluştu', 'error'); }
@@ -571,7 +575,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             const response = await questionsAPI.getAnswerComments(answerId, { page: paginationState.page + 1, per_page: 8 });
             const newComments = response.data.data.comments || [];
             const pagination = response.data.data.pagination;
-            setAnswers(prev => prev.map(a => a.id === answerId ? { ...a, comments: [...(a.comments || []), ...newComments] } : a));
+            setAnswers(prev => prev.map(a => {
+                if (a.id !== answerId) return a;
+                const existingIds = new Set((a.comments || []).map(c => c.id));
+                const uniqueNew = newComments.filter(c => c.id && !existingIds.has(c.id));
+                return { ...a, comments: [...(a.comments || []), ...uniqueNew] };
+            }));
             setAnswerCommentsPagination(prev => ({ ...prev, [answerId]: { page: pagination.currentPage, hasMore: pagination.hasNextPage, loading: false } }));
         } catch (err) {
             displayToast('Yorumlar yüklenirken hata oluştu', 'error');
@@ -589,7 +598,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             const pagination = response.data.data.pagination;
             const appendRepliesToComment = (comments) => {
                 return comments.map(c => {
-                    if (c.id === commentId) return { ...c, replies: [...(c.replies || []), ...newReplies] };
+                    if (c.id === commentId) {
+                        const existingIds = new Set((c.replies || []).map(r => r.id));
+                        const uniqueNew = newReplies.filter(r => r.id && !existingIds.has(r.id));
+                        return { ...c, replies: [...(c.replies || []), ...uniqueNew] };
+                    }
                     if (c.replies?.length > 0) return { ...c, replies: appendRepliesToComment(c.replies) };
                     return c;
                 });
