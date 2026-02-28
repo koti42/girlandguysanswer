@@ -290,32 +290,62 @@ const Header = ({ onSearch }) => {
                                 </button>
 
                                 {/* Dropdown Menu */}
-                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform group-hover:translate-y-0 translate-y-2">
-                                    <div className="p-3 border-b border-gray-100 dark:border-gray-700">
-                                        <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{user.name || user.username}</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-                                        {user.levelProgress && (
-                                            <div className="mt-2">
-                                                <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">
-                                                    <span>Seviye</span>
-                                                    {user.levelProgress.next_level_name ? (
-                                                        <span className="truncate">
-                                                            %{Math.round((user.levelProgress.progress || 0) * 100)} • Sonraki: {user.levelProgress.next_level_name}
-                                                        </span>
-                                                    ) : (
-                                                        <span>Maks</span>
+                                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform group-hover:translate-y-0 translate-y-2 overflow-hidden">
+                                    {/* Profile Header */}
+                                    <div className="relative px-4 pt-4 pb-3 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-700/60 dark:to-gray-800/60 border-b border-gray-100 dark:border-gray-700/60">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <UserAvatar user={user} size="md" className="w-10 h-10 text-sm ring-2 ring-white dark:ring-gray-600 shadow-sm flex-shrink-0" />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-bold text-gray-900 dark:text-white truncate leading-tight">{user.name || user.username}</p>
+                                                <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">@{user.username}</p>
+                                            </div>
+                                        </div>
+                                        {user.levelProgress && (() => {
+                                            const pct = Math.min(100, Math.max(0, (user.levelProgress.progress || 0) * 100));
+                                            const isMax = !user.levelProgress.next_level_name;
+                                            return (
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-base leading-none">
+                                                                {user.levelProgress.current_level_icon || '⭐'}
+                                                            </span>
+                                                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                                                                {user.levelProgress.current_level_name || 'Seviye'}
+                                                            </span>
+                                                        </div>
+                                                        {isMax ? (
+                                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-sm">
+                                                                MAX ✨
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                                                                %{Math.round(pct)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {/* Progress Bar */}
+                                                    <div className="relative w-full h-2 rounded-full bg-gray-200/80 dark:bg-gray-600/60 overflow-hidden">
+                                                        <div
+                                                            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 transition-all duration-700"
+                                                            style={{ width: `${pct}%` }}
+                                                        />
+                                                        {/* Shimmer */}
+                                                        <div
+                                                            className="absolute inset-y-0 left-0 rounded-full overflow-hidden"
+                                                            style={{ width: `${pct}%` }}
+                                                        >
+                                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+                                                        </div>
+                                                    </div>
+                                                    {!isMax && (
+                                                        <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                                                            Sonraki: <span className="font-medium text-purple-500 dark:text-purple-400">{user.levelProgress.next_level_name}</span>
+                                                        </p>
                                                     )}
                                                 </div>
-                                                <div className="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
-                                                    <div
-                                                        className="h-full rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"
-                                                        style={{
-                                                            width: `${Math.min(100, Math.max(0, (user.levelProgress.progress || 0) * 100))}%`,
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
+                                            );
+                                        })()}
                                     </div>
                                     <div className="p-2">
                                         <Link
