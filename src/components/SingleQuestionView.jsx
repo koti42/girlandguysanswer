@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -66,6 +66,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const [questionCommentsPage, setQuestionCommentsPage] = useState(1);
     const [questionCommentsHasMore, setQuestionCommentsHasMore] = useState(false);
     const [loadingQuestionComments, setLoadingQuestionComments] = useState(false);
+    const loadingQuestionCommentsRef = useRef(false);
     const [answerCommentsPagination, setAnswerCommentsPagination] = useState({});
     const [repliesPagination, setRepliesPagination] = useState({});
 
@@ -550,21 +551,25 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     };
 
     const loadMoreQuestionComments = async () => {
-        if (!question?.id || loadingQuestionComments) return;
+        if (!question?.id || loadingQuestionComments || loadingQuestionCommentsRef.current) return;
+        loadingQuestionCommentsRef.current = true;
         setLoadingQuestionComments(true);
         try {
             const response = await questionsAPI.getQuestionComments(question.id, { page: questionCommentsPage + 1, per_page: 8 });
             const newComments = response.data.data.comments || [];
             const pagination = response.data.data.pagination;
             setQuestion(prev => {
-                const existingIds = new Set((prev.comments || []).map(c => c.id));
-                const uniqueNew = newComments.filter(c => c.id && !existingIds.has(c.id));
+                const existingIds = new Set((prev.comments || []).map(c => String(c.id)));
+                const uniqueNew = newComments.filter(c => c.id != null && !existingIds.has(String(c.id)));
                 return { ...prev, comments: [...(prev.comments || []), ...uniqueNew] };
             });
             setQuestionCommentsPage(pagination.currentPage);
             setQuestionCommentsHasMore(pagination.hasNextPage);
         } catch (err) { displayToast('Yorumlar yüklenirken hata oluştu', 'error'); }
-        finally { setLoadingQuestionComments(false); }
+        finally {
+            loadingQuestionCommentsRef.current = false;
+            setLoadingQuestionComments(false);
+        }
     };
 
     const loadMoreAnswerComments = async (answerId) => {
@@ -577,8 +582,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             const pagination = response.data.data.pagination;
             setAnswers(prev => prev.map(a => {
                 if (a.id !== answerId) return a;
-                const existingIds = new Set((a.comments || []).map(c => c.id));
-                const uniqueNew = newComments.filter(c => c.id && !existingIds.has(c.id));
+                const existingIds = new Set((a.comments || []).map(c => String(c.id)));
+                const uniqueNew = newComments.filter(c => c.id != null && !existingIds.has(String(c.id)));
                 return { ...a, comments: [...(a.comments || []), ...uniqueNew] };
             }));
             setAnswerCommentsPagination(prev => ({ ...prev, [answerId]: { page: pagination.currentPage, hasMore: pagination.hasNextPage, loading: false } }));
@@ -599,8 +604,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             const appendRepliesToComment = (comments) => {
                 return comments.map(c => {
                     if (c.id === commentId) {
-                        const existingIds = new Set((c.replies || []).map(r => r.id));
-                        const uniqueNew = newReplies.filter(r => r.id && !existingIds.has(r.id));
+                        const existingIds = new Set((c.replies || []).map(r => String(r.id)));
+                        const uniqueNew = newReplies.filter(r => r.id != null && !existingIds.has(String(r.id)));
                         return { ...c, replies: [...(c.replies || []), ...uniqueNew] };
                     }
                     if (c.replies?.length > 0) return { ...c, replies: appendRepliesToComment(c.replies) };
