@@ -177,7 +177,7 @@ const CategoryPage = () => {
                                 : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                         }`}
                     >
-                        Keşfet (Popüler)
+                        Gündem
                     </button>
                     <button
                         onClick={() => setActiveTab('newest')}

@@ -14,7 +14,7 @@ const BottomNav = () => {
         { icon: FaPlus, label: 'Sor Gitsin', path: '/ask' },
         { icon: FaUsers, label: 'Meydan', path: '/communities' },
         { icon: FaSearch, label: 'Bul', path: '/search' },
-        { icon: FaUser, label: 'Ben', path: user ? `/profile/${user.username}` : '/login' }
+        { icon: FaUser, label: 'Profil', path: user ? `/profile/${user.username}` : '/login' }
     ];
 
     return (

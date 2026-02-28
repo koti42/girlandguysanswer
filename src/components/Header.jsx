@@ -473,6 +473,17 @@ const Header = ({ onSearch }) => {
                         <button
                             onClick={() => {
                                 closeMobileMenu();
+                                navigate('/');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaHome className="text-xl text-coral flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Vitrin</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
                                 navigate('/questions');
                             }}
                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
@@ -509,7 +520,16 @@ const Header = ({ onSearch }) => {
                             className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                         >
                             <FaUsers className="text-xl text-coral" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">Topluluk</span>
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Meydan</span>
+                        </Link>
+
+                        <Link
+                            to="/search"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                        >
+                            <FaSearch className="text-xl text-coral" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Bul</span>
                         </Link>
 
                         {isAuthenticated ? (
@@ -520,7 +540,7 @@ const Header = ({ onSearch }) => {
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                                 >
                                     <FaQuestionCircle className="text-xl text-coral" />
-                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Soru Sor</span>
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Sor Gitsin</span>
                                 </Link>
                                 <Link
                                     to="/messages"
@@ -544,7 +564,7 @@ const Header = ({ onSearch }) => {
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                                 >
                                     <FaUser className="text-xl text-coral" />
-                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Profilim</span>
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Profil</span>
                                 </Link>
                                 <Link
                                     to="/settings"
@@ -605,116 +625,135 @@ const Header = ({ onSearch }) => {
                     onClick={() => setIsQuestionsModalOpen(false)}
                 >
                     <div 
-                        className="bg-white dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] flex animate-in zoom-in-95 duration-300 overflow-hidden rounded-2xl shadow-2xl"
+                        className="bg-white dark:bg-gray-800 w-full max-w-6xl max-h-[85vh] flex animate-in zoom-in-95 duration-300 overflow-hidden rounded-2xl shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Left Side - 2 Column Grid Menu (65-70%) */}
                         <div className="w-full lg:w-2/3 bg-white dark:bg-gray-800 overflow-y-auto flex flex-col">
                             {/* Header */}
-                            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6 flex items-center justify-between">
-                                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Keşfet</h2>
+                            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Pusula</h2>
                                 <button
                                     onClick={() => setIsQuestionsModalOpen(false)}
-                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors lg:hidden"
+                                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                 >
-                                    <FaClose className="text-xl text-gray-600 dark:text-gray-400" />
+                                    <FaClose className="text-lg text-gray-600 dark:text-gray-400" />
                                 </button>
                             </div>
 
                             {/* Menu Grid */}
-                            <div className="flex-1 px-8 py-10">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {/* Keşfet */}
+                            <div className="flex-1 px-6 py-4 overflow-y-auto min-h-0">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                    {/* Pusula */}
                                     <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
                                             navigate('/');
                                         }}
-                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-purple-50 hover:to-indigo-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-4">
-                                            <div className="text-4xl text-purple-600 flex-shrink-0">
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-coral flex-shrink-0">
                                                 <FaCompass />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-purple-600 transition-colors">Keşfet</h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">KızlarSoruyor'da şu an neler oluyor, hemen gör.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-coral transition-colors">Pusula</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Herkesler Soruyor'da şu an neler oluyor, hemen gör.</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Yapay Zeka */}
-                                    <div 
-                                        onClick={() => {
-                                            setIsQuestionsModalOpen(false);
-                                            navigate('/questions/yapay-zeka');
-                                        }}
-                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
-                                    >
-                                        <div className="flex gap-4">
-                                            <div className="text-4xl text-blue-600 flex-shrink-0">
-                                                <FaRobot />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-blue-600 transition-colors">Yapay Zeka</h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Yapay zeka fenomenleri sorularını cevaplıyor, hemen sor!</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Popüler */}
+                                    {/* Gündem */}
                                     <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
                                             navigate('/questions/populer');
                                         }}
-                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-orange-50 hover:to-red-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-orange-50 hover:to-red-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-4">
-                                            <div className="text-4xl text-orange-600 flex-shrink-0">
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-orange-600 dark:text-orange-400 flex-shrink-0">
                                                 <FaFire />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-orange-600 transition-colors">Popüler</h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Günün çok konuşulanlarına göz at.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-orange-600 transition-colors">Gündem</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Günün çok konuşulanlarına göz at.</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Sorular - Active */}
-                                    <div 
-                                        onClick={() => {
-                                            setIsQuestionsModalOpen(false);
-                                            navigate('/questions');
-                                        }}
-                                        className="group p-6 rounded-xl bg-gradient-to-br from-coral/10 to-orange-100/50 dark:from-coral/20 dark:to-orange-900/20 border-2 border-coral cursor-pointer transition-all hover:shadow-lg hover:border-coral/80"
-                                    >
-                                        <div className="flex gap-4">
-                                            <div className="text-4xl text-coral flex-shrink-0">
-                                                <FaQuestionCircle />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-coral text-xl">Sorular</h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">İlgini çekebilecek sorulara cevap paylaş.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Yardım Bekleyenler */}
+                                    {/* Dayanışma */}
                                     <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
                                             navigate('/questions/yardim-bekleyenler');
                                         }}
-                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-4">
-                                            <div className="text-4xl text-green-600 flex-shrink-0">
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-green-600 dark:text-green-400 flex-shrink-0">
                                                 <FaLifeRing />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-green-600 transition-colors">Yardım Bekleyenler</h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Desteğini bekleyen sorular, yardımcı cevaplar.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-green-600 transition-colors">Dayanışma</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Desteğini bekleyen sorular, yardımcı cevaplar.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Üstatlar */}
+                                    <div 
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/leaderboard');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-purple-50 hover:to-indigo-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
+                                    >
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-purple-600 dark:text-purple-400 flex-shrink-0">
+                                                <FaStar />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-purple-600 transition-colors">Üstatlar</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Alanında uzman profesyonel Üstatlara danış.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Akıl Küpü */}
+                                    <div 
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions/yapay-zeka');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
+                                    >
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                                                <FaRobot />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-indigo-600 transition-colors">Akıl Küpü</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Yapay zeka fenomenleri sorularını cevaplıyor, hemen sor!</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Sorular */}
+                                    <div 
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/questions');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-coral/10 hover:to-orange-100/50 dark:hover:from-coral/20 dark:hover:to-orange-900/20 border border-coral/30 cursor-pointer transition-all"
+                                    >
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-coral flex-shrink-0">
+                                                <FaQuestionCircle />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-coral transition-colors">Sorular</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">İlgini çekebilecek sorulara cevap paylaş.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -723,110 +762,68 @@ const Header = ({ onSearch }) => {
                                     <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
-                                            navigate('/questions/benceler');
+                                            navigate('/opinions');
                                         }}
-                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-pink-50 hover:to-rose-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-pink-50 hover:to-rose-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-4">
-                                            <div className="text-4xl text-pink-600 flex-shrink-0">
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-pink-600 dark:text-pink-400 flex-shrink-0">
                                                 <FaComment />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-pink-600 transition-colors">Benceler</h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">İlgini çekebilecek Bence'leri keşfet.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-pink-600 transition-colors">Benceler</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Konular hakkında yazılar oku, görüşünü paylaş.</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* BiBilenler */}
+                                    {/* Nabız */}
                                     <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
-                                            navigate('/questions/bibilenler');
+                                            navigate('/questions?has_poll=1');
                                         }}
-                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-yellow-50 hover:to-amber-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-cyan-50 hover:to-blue-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-4">
-                                            <div className="text-4xl text-yellow-600 flex-shrink-0">
-                                                <FaStar />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-yellow-600 transition-colors">BiBilenler</h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Alanında uzman profesyonel BiBilenlere danış.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Anketler */}
-                                    <div 
-                                        onClick={() => {
-                                            setIsQuestionsModalOpen(false);
-                                            navigate('/questions/anketler');
-                                        }}
-                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-indigo-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
-                                    >
-                                        <div className="flex gap-4">
-                                            <div className="text-4xl text-indigo-600 flex-shrink-0">
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-cyan-600 dark:text-cyan-400 flex-shrink-0">
                                                 <FaPoll />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-indigo-600 transition-colors">Anketler</h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">İlgi çekici anketlere oy ver, gündemi belirle.</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-cyan-600 transition-colors">Nabız</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">İlgi çekici anketlere oy ver, gündemi belirle.</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Zirvedekiler */}
+                                    {/* Meydan */}
                                     <div 
                                         onClick={() => {
                                             setIsQuestionsModalOpen(false);
-                                            navigate('/questions/zirvedekiler');
+                                            navigate('/communities');
                                         }}
-                                        className="group p-6 rounded-xl hover:bg-gradient-to-br hover:from-red-50 hover:to-rose-50 dark:hover:from-gray-700 dark:hover:to-gray-700/50 cursor-pointer transition-all"
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-orange-50 hover:to-amber-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
                                     >
-                                        <div className="flex gap-4">
-                                            <div className="text-4xl text-red-600 flex-shrink-0">
-                                                <FaCrown />
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-orange-600 dark:text-orange-400 flex-shrink-0">
+                                                <FaUsers />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-red-600 transition-colors">Zirvedekiler</h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Zirvede kimler var? Toplulukla tanış!</p>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-orange-600 transition-colors">Meydan</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Topluluklara katıl, sohbete başla.</p>
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
 
-                            {/* Footer - Social & Download */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 px-6 sm:px-8 py-5 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/70 dark:to-gray-800">
-                                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                                    {/* Social Media Icons */}
-                                    <div className="flex gap-2 items-center">
-                                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Bizi Takip Et:</span>
-                                        <div className="flex gap-2">
-                                            <a href="https://twitter.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-gradient-to-br from-sky-400 to-blue-500 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="X (Twitter)">
-                                                <FaTwitter className="text-lg" />
-                                            </a>
-                                            <a href="https://facebook.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="Facebook">
-                                                <FaFacebook className="text-lg" />
-                                            </a>
-                                            <a href="https://instagram.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-gradient-to-br from-pink-500 via-red-500 to-orange-400 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="Instagram">
-                                                <FaInstagram className="text-lg" />
-                                            </a>
-                                            <a href="https://youtube.com/kizlarsoruyor" target="_blank" rel="noopener noreferrer" className="p-2.5 bg-gradient-to-br from-red-600 to-red-700 text-white rounded-lg hover:shadow-md hover:scale-110 transition-all" title="YouTube">
-                                                <FaYoutube className="text-lg" />
-                                            </a>
-                                        </div>
-                                    </div>
-                                    {/* App Store Buttons */}
-                                    <div className="flex gap-2">
-                                        <a href="https://play.google.com/store/apps/details?id=com.kizlarsoruyor.app" target="_blank" rel="noopener noreferrer" className="px-3.5 py-2 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-xs font-bold rounded-lg hover:shadow-lg hover:from-gray-800 hover:to-gray-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                                            <FaGooglePlay className="text-sm" /> Google Play
-                                        </a>
-                                        <a href="https://apps.apple.com/app/id123456789" target="_blank" rel="noopener noreferrer" className="px-3.5 py-2 bg-gradient-to-r from-gray-900 to-black text-white text-xs font-bold rounded-lg hover:shadow-lg hover:from-gray-800 hover:to-gray-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                                            <FaApple className="text-sm" /> App Store
-                                        </a>
-                                    </div>
+                            {/* Footer - Google Play */}
+                            <div className="border-t border-gray-200 dark:border-gray-700 px-6 sm:px-8 py-5 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/70 dark:to-gray-800 shrink-0">
+                                <div className="flex justify-center">
+                                    <a href="https://play.google.com/store/apps/details?id=com.herkeslersoruyor.mobile" target="_blank" rel="noopener noreferrer" className="px-3.5 py-2 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-xs font-bold rounded-lg hover:shadow-lg hover:from-gray-800 hover:to-gray-900 transition-all flex items-center gap-2 whitespace-nowrap">
+                                        <FaGooglePlay className="text-sm" /> Google Play
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -834,7 +831,7 @@ const Header = ({ onSearch }) => {
                         {/* Right Side - Categories List (30-35%) - Desktop Only */}
                         <div className="hidden lg:flex lg:w-1/3 flex-col bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700">
                             {/* Categories Header */}
-                            <div className="sticky top-0 border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900">
+                            <div className="sticky top-0 border-b border-gray-200 dark:border-gray-700 px-5 py-3 bg-gray-50 dark:bg-gray-900">
                                 <div className="flex items-center justify-between">
                                     <h3 className="font-bold text-gray-900 dark:text-white">
                                         Konular <span className="text-coral">({categories.length})</span>
@@ -846,7 +843,7 @@ const Header = ({ onSearch }) => {
                             </div>
 
                             {/* Categories List */}
-                            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+                            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2.5">
                                 {loadingCategories ? (
                                     <div className="flex justify-center items-center py-12">
                                         <div className="animate-spin rounded-full h-8 w-8 border-2 border-coral border-t-transparent"></div>
