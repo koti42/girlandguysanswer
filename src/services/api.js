@@ -92,6 +92,7 @@ export const usersAPI = {
     getMe: () => api.get('/user/me'),
     getProfile: (username) => api.get(`/users/${username}`),
     updateProfile: (data) => api.put('/user/me', data),
+    changeUsername: (username) => api.patch('/user/me/username', { username }),
     getFollowers: (username) => api.get(`/users/${username}/followers`),
     getFollowing: (username) => api.get(`/users/${username}/following`),
     getUserAnswers: (username) => api.get(`/users/${username}/answers`),

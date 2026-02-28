@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash } from 'react-icons/fa';
+import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash, FaUser } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI } from '../services/api';
@@ -42,6 +42,9 @@ const SettingsPage = () => {
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [usernameChangesRemaining, setUsernameChangesRemaining] = useState(null);
+    const [newUsername, setNewUsername] = useState('');
+    const [usernameSubmitting, setUsernameSubmitting] = useState(false);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -83,6 +86,8 @@ const SettingsPage = () => {
 
                 const userData = response.data.data.user;
                 const detail = userData.detail;
+                const remaining = response.data.data.username_changes_remaining;
+                setUsernameChangesRemaining(remaining !== undefined ? remaining : 3);
 
                 setSettings({
                     is_private: detail.is_private || false,
@@ -179,6 +184,38 @@ const SettingsPage = () => {
         }
     };
 
+    const handleUsernameChange = async () => {
+        const value = (newUsername || '').trim();
+        if (value.length < 2) {
+            showToast('Kullanıcı adı en az 2 karakter olmalıdır.', 'error');
+            return;
+        }
+        if (value === user?.username) {
+            showToast('Yeni kullanıcı adı mevcut adınızdan farklı olmalıdır.', 'error');
+            return;
+        }
+        if (usernameChangesRemaining !== null && usernameChangesRemaining <= 0) {
+            showToast('Kullanıcı adı değiştirme hakkınız kalmadı.', 'error');
+            return;
+        }
+        setUsernameSubmitting(true);
+        try {
+            const res = await usersAPI.changeUsername(value);
+            const updatedUser = res.data?.data?.user;
+            if (updatedUser?.username) {
+                updateUser({ username: updatedUser.username });
+            }
+            setNewUsername('');
+            setUsernameChangesRemaining(prev => (prev != null ? prev - 1 : 0));
+            showSuccess(res.data?.message || 'Kullanıcı adı güncellendi.');
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Kullanıcı adı güncellenemedi.';
+            showToast(msg, 'error');
+        } finally {
+            setUsernameSubmitting(false);
+        }
+    };
+
     const handleFollowingToggle = async (newValue) => {
         try {
             setSettings(prev => ({ ...prev, allow_following: newValue }));
@@ -234,6 +271,50 @@ const SettingsPage = () => {
                             {successMessage}
                         </div>
                     )}
+
+                    {/* Username Section */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mb-6">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                                <FaUser className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Kullanıcı Adı</h2>
+                                <p className="text-xs text-gray-500">Kullanıcı adınızı değiştirin (en fazla 3 kez)</p>
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Mevcut kullanıcı adınız: <span className="font-semibold text-gray-800 dark:text-white">@{user?.username}</span>
+                            </p>
+                            {usernameChangesRemaining !== null && usernameChangesRemaining > 0 ? (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Yeni kullanıcı adı</label>
+                                        <input
+                                            type="text"
+                                            value={newUsername}
+                                            onChange={(e) => setNewUsername(e.target.value)}
+                                            placeholder="Yeni kullanıcı adı (2-30 karakter)"
+                                            className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20"
+                                            maxLength={30}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500">{usernameChangesRemaining}/3 değişiklik hakkınız kaldı.</p>
+                                    <button
+                                        type="button"
+                                        onClick={handleUsernameChange}
+                                        disabled={usernameSubmitting || !newUsername.trim() || newUsername.trim().length < 2}
+                                        className="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {usernameSubmitting ? 'Güncelleniyor...' : 'Kullanıcı Adını Değiştir'}
+                                    </button>
+                                </>
+                            ) : (
+                                <p className="text-sm text-amber-600 dark:text-amber-400">Kullanıcı adı değiştirme hakkınız kalmadı.</p>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Privacy Section */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mb-6">

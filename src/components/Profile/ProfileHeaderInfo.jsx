@@ -25,6 +25,11 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender }) => {
 
             <div className="flex flex-wrap items-center gap-2 mt-1">
                 <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>
+                {profileData.previous_usernames && profileData.previous_usernames.length > 0 && (
+                    <span className="text-xs text-gray-400 dark:text-gray-500" title={profileData.previous_usernames.join(', ')}>
+                        (Eski: {profileData.previous_usernames.join(', ')})
+                    </span>
+                )}
 
                 {/* Admin / Super Admin Badge */}
                 {profileData.roles && Array.isArray(profileData.roles) && profileData.roles.length > 0 && (
