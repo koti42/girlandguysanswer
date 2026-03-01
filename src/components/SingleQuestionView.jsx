@@ -1366,15 +1366,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         <div className="flex items-center gap-2 mb-4">
                                                             <FaComment className="text-coral text-sm" /><span className="text-sm font-semibold text-gray-600 dark:text-gray-400">{answer.comments.length} Yorum</span>
                                                         </div>
-                                                        <div className="space-y-4">{answer.comments.map(comment => renderComment(comment, 'answer', answer.id, 0, null))}</div>
-                                                        {/* Infinite Scroll Sentinel for Answer Comments */}
-                                                        {answerCommentsPagination[answer.id]?.hasMore && (
-                                                            <div className="mt-4 text-center">
-                                                                <button onClick={() => loadMoreAnswerComments(answer.id)} disabled={answerCommentsPagination[answer.id]?.loading} className="px-6 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all disabled:opacity-50">
-                                                                    {answerCommentsPagination[answer.id]?.loading ? <span className="flex items-center gap-2"><div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 dark:border-gray-400 border-t-transparent"></div> Yükleniyor...</span> : 'Daha fazla göster'}
-                                                                </button>
-                                                            </div>
-                                                        )}
+                                                        <div className="space-y-4">{answer.comments.map(comment => renderComment(comment, 'answer', answer.id, 0, null))}</div>                                                
                                                     </div>
                                                 )}
                                             </div>
