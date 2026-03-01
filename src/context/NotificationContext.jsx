@@ -12,33 +12,31 @@ export const NotificationProvider = ({ children }) => {
     const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
     useEffect(() => {
-        if (isAuthenticated && user?.id) {
-            console.log('🔌 NotificationService: Connecting to private channel...', user.id);
+        if (!isAuthenticated || !user?.id) return;
 
+        const channelName = `user.${user.id}`;
 
-            echo.private(`user.${user.id}`)
-                .listen('.notification.sent', (data) => {
-                    console.log('🔔 Yeni Bildirim Geldi:', data);
+        const showToastAndRefresh = (message) => {
+            setToast({ show: true, message, type: 'info' });
+            window.dispatchEvent(new Event('notification:refresh'));
+        };
 
-                    const message = data.message || data.data?.message || 'Yeni bir bildiriminiz var';
+        const privateChannel = echo.private(channelName);
+        privateChannel.listen('.notification.sent', (data) => {
+            const msg = data?.message ?? data?.data?.message ?? 'Yeni bir bildiriminiz var';
+            showToastAndRefresh(msg);
+        });
+        privateChannel.listen('notification', (data) => {
+            const msg = data?.type === 'new_message' && data?.title
+                ? `${data.title}: ${data.message || 'Yeni mesaj'}`
+                : (data?.message || 'Yeni mesaj');
+            showToastAndRefresh(msg);
+        });
 
-                    setToast({
-                        show: true,
-                        message: message,
-                        type: 'info' 
-                    });
-
-                    window.dispatchEvent(new Event('notification:refresh'));
-
-
-                });
-
-            return () => {
-                console.log('🔌 NotificationService: Disconnecting...');
-                echo.leave(`user.${user.id}`);
-            };
-        }
-    }, [isAuthenticated, user]);
+        return () => {
+            echo.leave(channelName);
+        };
+    }, [isAuthenticated, user?.id]);
 
     return (
         <NotificationContext.Provider value={{}}>

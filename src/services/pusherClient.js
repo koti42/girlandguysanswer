@@ -48,6 +48,10 @@ export const subscribeToUserChannel = (userId, callbacks) => {
         channel.bind('screenshot-taken', callbacks.onScreenshotTaken);
     }
 
+    if (callbacks.onNotification) {
+        channel.bind('notification', callbacks.onNotification);
+    }
+
     return channel;
 };
 
