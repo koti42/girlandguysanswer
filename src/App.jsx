@@ -29,6 +29,7 @@ import ErrorPage from './pages/ErrorPage';
 import CategoryPage from './pages/CategoryPage';
 import OpinionsPage from './pages/OpinionsPage';
 import OpinionDetailPage from './pages/OpinionDetailPage';
+import CreateOpinionPage from './pages/CreateOpinionPage';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
@@ -78,6 +79,7 @@ function App() {
                   <Route path="/search" element={<ProtectedRoute><QuestionsPage /></ProtectedRoute>} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="/opinions" element={<OpinionsPage />} />
+                  <Route path="/opinions/yaz" element={<ProtectedRoute><CreateOpinionPage /></ProtectedRoute>} />
                   <Route path="/opinion/:slugOrId" element={<OpinionDetailPage />} />
                   <Route path="/communities" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
                   <Route path="/community/:uuid" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
