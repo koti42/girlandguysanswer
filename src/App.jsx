@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage';
 import QuestionsPage from './pages/QuestionsPage';
 import ProfilePage from './pages/ProfilePage';
 import AskQuestionPage from './pages/AskQuestionPage';
+import QuestionSubmittedPage from './pages/QuestionSubmittedPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import FollowersPage from './pages/FollowersPage';
@@ -98,6 +99,7 @@ function App() {
                   <Route path="/profile/:username/followers" element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
                   <Route path="/profile/:username/following" element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
                   <Route path="/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
+                  <Route path="/question-submitted" element={<ProtectedRoute><QuestionSubmittedPage /></ProtectedRoute>} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/signup" element={<SignupPage />} />
                   <Route path="/auth/google/callback" element={<GoogleCallback />} />
