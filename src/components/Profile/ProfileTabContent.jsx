@@ -118,7 +118,8 @@ const TabSkeleton = ({ type, contentCreator, viewerPrefs }) => {
 
 const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, followers, following, loading, isOwnProfile, isVIP, viewerPrefs }) => {
 
-    const contentCreator = { gender: profileData?.gender };
+    const gender = profileData?.gender;
+    const contentCreator = { gender };
     const themeStyles = getThemeStyles(contentCreator, viewerPrefs);
 
     if (loading) {
@@ -220,7 +221,7 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
                 {totalAnswers > 0 ? (
                     <div className="flex flex-col gap-4">
                         {answers.map(answer => (
-                            <AnswerCard key={answer.id} answer={answer} profileGender={gender} profileUser={{ gender }} profileGender={gender} />
+                            <AnswerCard key={answer.id} answer={answer} profileGender={gender} profileUser={{ gender }} />
                         ))}
                     </div>
                 ) : (
