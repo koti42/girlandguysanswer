@@ -41,6 +41,7 @@ const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false, full
                             <h4 className="font-bold text-white mb-4">Topluluk</h4>
                             <ul className="space-y-2 text-sm">
                                 <li><Link to="/kullanim-kurallari" className="hover:text-coral transition-colors">Kullanım Kuralları</Link></li>
+                                <li><Link to="/kullanim-kilavuzu" className="hover:text-coral transition-colors">Kullanım Kılavuzu</Link></li>
                                 <li><Link to="/yardim-merkezi" className="hover:text-coral transition-colors">Yardım Merkezi</Link></li>
                                 <li><Link to="/blog" className="hover:text-coral transition-colors">Blog</Link></li>
                             </ul>

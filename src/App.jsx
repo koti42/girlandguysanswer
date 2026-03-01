@@ -18,6 +18,7 @@ import FollowRequestsPage from './pages/FollowRequestsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PusherTestPage from './pages/PusherTestPage';
 import CocukGuvenligiPage from './pages/CocukGuvenligiPage';
+import YardimMerkeziPage from './pages/YardimMerkeziPage';
 import CommunityPage from './pages/CommunityPage';
 import RoomPage from './pages/RoomPage';
 import CommunityInvitationsPage from './pages/CommunityInvitationsPage';
@@ -30,6 +31,8 @@ import CategoryPage from './pages/CategoryPage';
 import OpinionsPage from './pages/OpinionsPage';
 import OpinionDetailPage from './pages/OpinionDetailPage';
 import CreateOpinionPage from './pages/CreateOpinionPage';
+import KullanimKilavuzuPage from './pages/KullanimKilavuzuPage';
+import WelcomeGuideModal from './components/WelcomeGuideModal';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
@@ -47,6 +50,31 @@ const GenderCheck = ({ children }) => {
   }, [user, loading, location.pathname, navigate]);
 
   return children;
+};
+
+const WelcomeGuideGate = () => {
+  const { user, loading, markWelcomeGuideSeen } = useAuth();
+  const navigate = useNavigate();
+  const showModal = Boolean(
+    user && !loading && !(user.has_seen_welcome_guide === true || localStorage.getItem('has_seen_welcome_guide'))
+  );
+
+  const handleClose = () => {
+    markWelcomeGuideSeen();
+  };
+
+  const handleGoToGuide = () => {
+    navigate('/kullanim-kilavuzu');
+    markWelcomeGuideSeen();
+  };
+
+  return (
+    <WelcomeGuideModal
+      isOpen={showModal}
+      onClose={handleClose}
+      onGoToGuide={handleGoToGuide}
+    />
+  );
 };
 
 import { NotificationProvider } from './context/NotificationContext';
@@ -89,9 +117,12 @@ function App() {
                   <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
                   <Route path="/pusher-test" element={<PusherTestPage />} />
                   <Route path="/cocuk-guvenligi" element={<CocukGuvenligiPage />} />
+                  <Route path="/yardim-merkezi" element={<YardimMerkeziPage />} />
+                  <Route path="/kullanim-kilavuzu" element={<KullanimKilavuzuPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
                 </Routes>
+                <WelcomeGuideGate />
               </div>
             </GenderCheck>
             </DomainRedirect>

@@ -194,6 +194,14 @@ export const AuthProvider = ({ children }) => {
         setPermissions(updated);
     };
 
+    const markWelcomeGuideSeen = async () => {
+        localStorage.setItem('has_seen_welcome_guide', '1');
+        updateUser({ has_seen_welcome_guide: true });
+        try {
+            await authAPI.markWelcomeGuideSeen();
+        } catch (_) {}
+    };
+
     const value = {
         user,
         permissions,
@@ -205,6 +213,7 @@ export const AuthProvider = ({ children }) => {
         updateUser,
         updatePermissions,
         getCurrentUser,
+        markWelcomeGuideSeen,
         isAuthenticated: !!user,
         canModerate: permissions.can_moderate
     };

@@ -624,7 +624,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const renderComment = (comment, type, targetId, level = 0, mainCommentId = null) => {
         const currentMainCommentId = mainCommentId || comment.id;
         const commentColorStyle = getProfileGradientStyle(comment.user, viewerPrefs, 0.12);
-        const marginClasses = ['ml-0', 'ml-3 md:ml-6', 'ml-6 md:ml-10', 'ml-8 md:ml-12'];
+        const marginClasses = ['ml-0', 'ml-0', 'ml-0', 'ml-0'];
         const marginLeft = marginClasses[Math.min(level, 3)];
         const isReplyingToThis = replyingTo?.commentId === comment.id;
 
@@ -713,57 +713,81 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                         </div>
                     </div>
                     {isReplyingToThis && (
-                        <div className="mt-3 pl-12 border-l-2 border-coral dark:border-coral/50">
-                            <form onSubmit={handleSubmitReply}>
+                        <div className="mt-3 pt-3 border-t border-coral/20">
+                            {/* Replying to badge */}
+                            <div className="flex items-center gap-1.5 mb-2 ml-0 sm:ml-10">
+                                <FaReply className="text-coral text-[10px]" />
+                                <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                                    <span className="font-semibold text-coral">@{comment.user?.username === 'anonim' ? 'Gizli Üye' : comment.user?.username}</span>'ya yanıtlanıyor
+                                </span>
+                            </div>
+                            <form onSubmit={handleSubmitReply} className="sm:ml-10">
                                 {replyGifUrls[comment.id] && (
                                     <div className="mb-2 relative inline-block">
-                                        <img src={replyGifUrls[comment.id]} alt="GIF" className="max-w-xs h-auto rounded-lg" />
+                                        <img src={replyGifUrls[comment.id]} alt="GIF" className="max-w-[160px] sm:max-w-xs h-auto rounded-xl shadow-sm" />
                                         <button
                                             type="button"
                                             onClick={() => clearReplyGif(comment.id)}
-                                            className="absolute top-1 right-1 bg-black/60 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
+                                            className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
                                         >
-                                            <FaTimes className="text-xs" />
+                                            <FaTimes className="text-[10px]" />
                                         </button>
                                     </div>
                                 )}
                                 <textarea
                                     value={replyTexts[comment.id] || ''}
                                     onChange={(e) => setReplyTexts(prev => ({ ...prev, [comment.id]: e.target.value }))}
-                                    placeholder={`@${comment.user?.username === 'anonim' ? 'Gizli Üye' : comment.user?.username} kullanıcısına cevap yazın...`}
-                                    rows={3}
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-2 text-sm"
+                                    placeholder="Yanıtınızı yazın..."
+                                    rows={2}
+                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/80 dark:text-white focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/20 transition-all resize-none text-sm"
                                     autoFocus
                                 />
-                                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 sm:gap-0">
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => openGifPicker('reply', comment.id)}
-                                            className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:text-coral hover:bg-gray-200 transition-colors flex-shrink-0"
-                                            title="GIF Ekle"
-                                        >
-                                            <FaImage className="text-xs" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setReplyAnonymous(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
-                                            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg font-medium transition-all text-xs whitespace-nowrap ${replyAnonymous[comment.id] ? 'bg-purple-100 text-purple-700 border-2 border-purple-300' : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:border-gray-300'}`}
-                                        >
-                                            <FaUserSecret className="flex-shrink-0" /> <span className="hidden sm:inline">{replyAnonymous[comment.id] ? 'Gizli' : 'Gizli Üye'}</span>
-                                        </button>
-                                    </div>
-                                    <button type="submit" disabled={!replyTexts[comment.id]?.trim() && !replyGifUrls[comment.id]} className="bg-coral text-white font-semibold py-1.5 px-4 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs w-full sm:w-auto">Yanıtla</button>
+                                <div className="flex items-center gap-1.5 mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => openGifPicker('reply', comment.id)}
+                                        className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-coral dark:hover:text-coral hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
+                                        title="GIF Ekle"
+                                    >
+                                        <FaImage className="text-xs" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setReplyAnonymous(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
+                                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg font-medium transition-all text-xs flex-shrink-0 ${
+                                            replyAnonymous[comment.id]
+                                                ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700'
+                                                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        }`}
+                                    >
+                                        <FaUserSecret className="text-[11px]" />
+                                        <span>{replyAnonymous[comment.id] ? 'Gizli' : 'Gizli'}</span>
+                                    </button>
+                                    <div className="flex-1" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setReplyingTo(null)}
+                                        className="px-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors font-medium"
+                                    >
+                                        İptal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={!replyTexts[comment.id]?.trim() && !replyGifUrls[comment.id]}
+                                        className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-coral text-white hover:bg-coral/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                                    >
+                                        Yanıtla
+                                    </button>
                                 </div>
                             </form>
                         </div>
                     )}
                 </div>
                 {comment.replies && comment.replies.length > 0 && (
-                    <div className="space-y-3">
+                    <div className="ml-1 pl-3 border-l-2 border-coral/40 dark:border-coral/25 space-y-3">
                         {comment.replies.map(reply => renderComment(reply, type, targetId, level + 1, currentMainCommentId))}
                         {(repliesPagination[comment.id]?.hasMore || (!repliesPagination[comment.id] && comment.replies.length >= 5)) && (
-                            <div className={`ml-3 md:ml-6 pt-1`}>
+                            <div className="pt-1">
                                 <button onClick={() => loadMoreReplies(comment.id)} disabled={repliesPagination[comment.id]?.loading} className="text-xs font-semibold text-coral hover:text-coral-dark flex items-center gap-1 transition-colors">
                                     {repliesPagination[comment.id]?.loading ? (
                                         <><div className="animate-spin rounded-full h-3 w-3 border-2 border-coral border-t-transparent"></div> Yükleniyor...</>
@@ -1266,51 +1290,75 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                 </div>
 
                                                 {commentingOn?.type === 'answer' && commentingOn?.id === answer.id && (
-                                                    <form onSubmit={handleSubmitComment} className="mt-4">
-                                                        {commentGifUrls[answerCommentKey] && (
-                                                            <div className="mb-3 relative inline-block">
-                                                                <img src={commentGifUrls[answerCommentKey]} alt="GIF" className="max-w-xs rounded-xl shadow-sm" />
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => clearCommentGif(answerCommentKey)}
-                                                                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-                                                                >
-                                                                    <FaTimes className="text-xs" />
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                        <textarea
-                                                            value={commentTexts[answerCommentKey] || ''}
-                                                            onChange={(e) => setCommentTexts(prev => ({ ...prev, [answerCommentKey]: e.target.value }))}
-                                                            placeholder="Cevaba yorum yazın..."
-                                                            rows={3}
-                                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all resize-none mb-3"
-                                                            autoFocus
-                                                        />
-                                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-2">
-                                                            <div className="flex items-center gap-2">
+                                                    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                                        {/* Comment header */}
+                                                        <div className="flex items-center gap-2 mb-3">
+                                                            <UserAvatar user={currentUser} size="xs" className="w-6 h-6 flex-shrink-0" />
+                                                            <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 truncate">
+                                                                {currentUser?.username}
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-400">• yorum yazıyor</span>
+                                                        </div>
+                                                        <form onSubmit={handleSubmitComment}>
+                                                            {commentGifUrls[answerCommentKey] && (
+                                                                <div className="mb-2 relative inline-block">
+                                                                    <img src={commentGifUrls[answerCommentKey]} alt="GIF" className="max-w-[160px] sm:max-w-xs rounded-xl shadow-sm" />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => clearCommentGif(answerCommentKey)}
+                                                                        className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                                                                    >
+                                                                        <FaTimes className="text-[10px]" />
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                            <textarea
+                                                                value={commentTexts[answerCommentKey] || ''}
+                                                                onChange={(e) => setCommentTexts(prev => ({ ...prev, [answerCommentKey]: e.target.value }))}
+                                                                placeholder="Yorumunuzu yazın..."
+                                                                rows={2}
+                                                                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/20 transition-all resize-none text-sm"
+                                                                autoFocus
+                                                            />
+                                                            <div className="flex items-center gap-1.5 mt-2">
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => openGifPicker('comment', answerCommentKey)}
-                                                                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-coral transition-colors flex-shrink-0"
+                                                                    className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 hover:text-coral dark:hover:text-coral hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors flex-shrink-0"
                                                                     title="GIF Ekle"
                                                                 >
-                                                                    <FaImage className="text-sm" />
+                                                                    <FaImage className="text-xs" />
                                                                 </button>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setCommentAnonymous(prev => ({ ...prev, [answerCommentKey]: !prev[answerCommentKey] }))}
-                                                                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg font-medium transition-all text-xs ${commentAnonymous[answerCommentKey] ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                                                    className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
+                                                                        commentAnonymous[answerCommentKey]
+                                                                            ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700'
+                                                                            : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500'
+                                                                    }`}
                                                                 >
-                                                                    <FaUserSecret className="flex-shrink-0" /><span className="sm:hidden">Gizli</span><span className="hidden sm:inline">{commentAnonymous[answerCommentKey] ? 'Gizli yorum' : 'Gizli Üye'}</span>
+                                                                    <FaUserSecret className="text-[11px]" />
+                                                                    <span className="hidden xs:inline">{commentAnonymous[answerCommentKey] ? 'Gizli' : 'Gizli'}</span>
+                                                                </button>
+                                                                <div className="flex-1" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setCommentingOn(null)}
+                                                                    className="px-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors font-medium"
+                                                                >
+                                                                    İptal
+                                                                </button>
+                                                                <button
+                                                                    type="submit"
+                                                                    disabled={!commentTexts[answerCommentKey]?.trim() && !commentGifUrls[answerCommentKey]}
+                                                                    className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-coral text-white hover:bg-coral/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                                                                >
+                                                                    Gönder
                                                                 </button>
                                                             </div>
-                                                            <div className="flex gap-2">
-                                                                <button type="button" onClick={() => setCommentingOn(null)} className="py-2 px-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm flex-1 sm:flex-none">İptal</button>
-                                                                <button type="submit" disabled={!commentTexts[answerCommentKey]?.trim() && !commentGifUrls[answerCommentKey]} className="bg-coral text-white font-semibold py-1.5 px-4 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm flex-1 sm:flex-none">Gönder</button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
+                                                        </form>
+                                                    </div>
                                                 )}
 
                                                 {answer.comments && answer.comments.length > 0 && (

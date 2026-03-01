@@ -52,6 +52,7 @@ export const authAPI = {
     logout: () => api.post('/auth/logout'),
     getCurrentUser: () => api.get('/user/me'),
     getGoogleAuthUrl: (redirect_uri) => api.get('/auth/google', { params: { redirect_uri } }),
+    markWelcomeGuideSeen: () => api.patch('/user/me', { has_seen_welcome_guide: true }),
 };
 
 export const categoriesAPI = {
