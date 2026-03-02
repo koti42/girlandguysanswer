@@ -111,7 +111,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     }
                     try {
                         const nickRes = await messagesAPI.getNickname(convId);
-                        setNickname(nickRes.data?.data?.nickname || '');
+                        const payload = nickRes.data?.data || {};
+                        // Backend: { my_nickname_for_other, other_nickname_for_me }
+                        setNickname(payload.my_nickname_for_other || '');
                     } catch (e) {
                         console.log('getNickname error:', e);
                     }
