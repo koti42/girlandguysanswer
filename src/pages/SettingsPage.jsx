@@ -42,6 +42,10 @@ const SettingsPage = () => {
         profile_color_male: null
     });
     const [deletePassword, setDeletePassword] = useState('');
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -78,6 +82,23 @@ const SettingsPage = () => {
             showToast(msg, 'error');
         } finally {
             setIsDeletingAccount(false);
+        }
+    };
+
+    const handleChangePassword = async () => {
+        if (!currentPassword || !newPassword || newPassword !== newPasswordConfirm) return;
+        setIsChangingPassword(true);
+        try {
+            await usersAPI.changePassword(currentPassword, newPassword, newPasswordConfirm);
+            showToast('Şifreniz başarıyla güncellendi.', 'success');
+            setCurrentPassword('');
+            setNewPassword('');
+            setNewPasswordConfirm('');
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Şifre güncellenirken bir hata oluştu.';
+            showToast(msg, 'error');
+        } finally {
+            setIsChangingPassword(false);
         }
     };
 
@@ -526,6 +547,72 @@ const SettingsPage = () => {
                             enabled={settings.allow_mention_notifications}
                             onChange={handleMentionToggle}
                         />
+                    </div>
+
+                    {/* Change Password */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mt-6 border border-gray-100 dark:border-gray-700/60">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                <FaLock className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Şifreyi Değiştir</h2>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Mevcut şifreni doğrulayarak yeni bir şifre belirle.</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="md:col-span-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Mevcut Şifre
+                                </label>
+                                <input
+                                    type="password"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    placeholder="Mevcut şifren"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Yeni Şifre
+                                </label>
+                                <input
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="En az 8 karakter"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Yeni Şifre (Tekrar)
+                                </label>
+                                <input
+                                    type="password"
+                                    value={newPasswordConfirm}
+                                    onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                                    placeholder="Yeni şifreni tekrar gir"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={handleChangePassword}
+                                disabled={isChangingPassword || !currentPassword || !newPassword || newPassword !== newPasswordConfirm}
+                                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white text-sm font-semibold hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isChangingPassword ? 'Kaydediliyor...' : 'Şifreyi Güncelle'}
+                            </button>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Güçlü bir şifre kullan: en az 8 karakter, harf ve rakam karışımı.
+                            </p>
+                        </div>
                     </div>
 
                     {/* Delete Account */}

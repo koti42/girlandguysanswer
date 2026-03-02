@@ -8,6 +8,8 @@ import ProfilePage from './pages/ProfilePage';
 import AskQuestionPage from './pages/AskQuestionPage';
 import QuestionSubmittedPage from './pages/QuestionSubmittedPage';
 import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import SignupPage from './pages/SignupPage';
 import FollowersPage from './pages/FollowersPage';
 import FollowingPage from './pages/FollowingPage';
@@ -101,6 +103,8 @@ function App() {
                   <Route path="/ask" element={<ProtectedRoute><AskQuestionPage /></ProtectedRoute>} />
                   <Route path="/question-submitted" element={<ProtectedRoute><QuestionSubmittedPage /></ProtectedRoute>} />
                   <Route path="/login" element={<LoginPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
                   <Route path="/signup" element={<SignupPage />} />
                   <Route path="/auth/google/callback" element={<GoogleCallback />} />
                   <Route path="/complete-profile" element={<CompleteProfilePage />} />

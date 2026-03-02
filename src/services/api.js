@@ -53,6 +53,8 @@ export const authAPI = {
     getCurrentUser: () => api.get('/user/me'),
     getGoogleAuthUrl: (redirect_uri) => api.get('/auth/google', { params: { redirect_uri } }),
     markWelcomeGuideSeen: () => api.patch('/user/me', { has_seen_welcome_guide: true }),
+    forgotPassword: (email) => api.post('/auth/password/forgot', { email }),
+    resetPassword: (data) => api.post('/auth/password/reset', data),
 };
 
 export const categoriesAPI = {
@@ -118,6 +120,11 @@ export const usersAPI = {
     deleteAvatar: () => api.delete('/user/me/avatar'),
     deleteCoverImage: () => api.delete('/user/me/cover-image'),
     requestAccountDeletion: (password) => api.post('/user/me/delete', { password }),
+    changePassword: (currentPassword, newPassword, confirmPassword) => api.post('/user/me/password', {
+        current_password: currentPassword,
+        password: newPassword,
+        password_confirmation: confirmPassword,
+    }),
     heartbeat: () => api.post('/user/me/heartbeat'),
 };
 
