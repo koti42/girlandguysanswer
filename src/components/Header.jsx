@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ import useNotifications from '../hooks/useNotifications';
 
 const Header = ({ onSearch }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
     const [searchResults, setSearchResults] = useState([]);
@@ -138,13 +139,26 @@ const Header = ({ onSearch }) => {
                     </button>
 
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity min-w-0">
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            // Bazı ortamlarda MessagesPage takılı kalabildiği için,
+                            // /messages yolundan geliyorsak tam sayfa yenileme yapıyoruz.
+                            if (location.pathname.startsWith('/messages')) {
+                                window.location.href = '/';
+                            } else {
+                                navigate('/');
+                            }
+                        }}
+                        className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity min-w-0"
+                    >
                         <img src="/logo.png" alt="Herkesler Soruyor Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
                         <span className="font-script text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl text-coral font-bold leading-none select-none truncate">
                             <span className="hidden sm:inline">Herkesler Soruyor</span>
                             <span className="sm:hidden">HS</span>
                         </span>
-                    </Link>
+                    </button>
 
                     {/* Desktop Search Bar */}
                     <div className="hidden md:flex flex-1 max-w-xl relative" ref={searchRef}>
