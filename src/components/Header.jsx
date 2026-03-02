@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
 import { categoriesAPI, questionsAPI } from '../services/api';
-import useNotifications from '../hooks/useNotifications';
 
 const Header = ({ onSearch }) => {
     const navigate = useNavigate();
@@ -28,11 +27,6 @@ const Header = ({ onSearch }) => {
     const [modalActiveTab, setModalActiveTab] = useState('tum-sorular'); // tum-sorular, populer, cevapsiz
     const { isDark, toggleTheme } = useTheme();
     const { user, isAuthenticated, logout } = useAuth();
-    const { notifications } = useNotifications(false, 10000, false);
-
-    const hasUnreadMessageNotification = notifications.some(
-        (n) => !n.is_read && n.type === 'new_message'
-    );
 
     const handleLogout = async () => {
         try {
@@ -293,12 +287,7 @@ const Header = ({ onSearch }) => {
                             className="hidden md:block p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
                             title="Mesajlar"
                         >
-                            <div className="relative">
-                                <FaEnvelope className="text-base sm:text-lg" />
-                                {hasUnreadMessageNotification && (
-                                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-coral shadow-sm" />
-                                )}
-                            </div>
+                            <FaEnvelope className="text-base sm:text-lg" />
                         </Link>
 
                         {/* Notifications */}
@@ -384,12 +373,7 @@ const Header = ({ onSearch }) => {
                                             to="/messages"
                                             className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors md:hidden"
                                         >
-                                            <div className="relative">
-                                                <FaEnvelope className="text-gray-400" />
-                                                {hasUnreadMessageNotification && (
-                                                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-coral shadow-sm" />
-                                                )}
-                                            </div>
+                                            <FaEnvelope className="text-gray-400" />
                                             Mesajlar
                                         </Link>
                                         <Link
