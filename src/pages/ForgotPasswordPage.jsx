@@ -55,14 +55,6 @@ const ForgotPasswordPage = () => {
                                 Eğer <span className="font-semibold">{successData.email}</span> adresi ile kayıtlı bir hesabın varsa,
                                 şifre sıfırlama bağlantısı e-posta kutuna gönderildi.
                             </p>
-                            {resetLink && (
-                                <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
-                                    Geliştirme ortamında test için doğrudan&nbsp;
-                                    <Link to={resetLink} className="text-coral font-semibold hover:underline">
-                                        şifre sıfırlama sayfasına git
-                                    </Link>.
-                                </p>
-                            )}
                             <Link
                                 to="/login"
                                 className="inline-flex items-center gap-2 text-coral hover:text-orange-500 transition-colors text-sm"
