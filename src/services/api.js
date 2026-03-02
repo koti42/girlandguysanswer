@@ -16,15 +16,70 @@ function generateIdempotencyKey() {
     return `idempo_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
+const IDEMP_TTL_MS = 15000;
+const idempotencyCache = new Map();
+
+function getRequestFingerprint(config) {
+    const method = (config.method || 'get').toLowerCase();
+    const url = config.url || '';
+
+    let body = config.data;
+    if (body instanceof FormData) {
+        body = 'form-data';
+    } else if (typeof body === 'string') {
+        body = body;
+    } else if (body != null) {
+        try {
+            body = JSON.stringify(body);
+        } catch {
+            body = String(body);
+        }
+    } else {
+        body = '';
+    }
+
+    return `${method}|${url}|${body}`;
+}
+
+function getOrCreateIdempotencyKey(config) {
+    const method = (config.method || 'get').toLowerCase();
+    if (!['post', 'put', 'patch', 'delete'].includes(method)) {
+        return null;
+    }
+
+    const fingerprint = getRequestFingerprint(config);
+    const now = Date.now();
+    const existing = idempotencyCache.get(fingerprint);
+
+    if (existing && now - existing.createdAt < IDEMP_TTL_MS) {
+        return existing.key;
+    }
+
+    const key = generateIdempotencyKey();
+    idempotencyCache.set(fingerprint, { key, createdAt: now });
+
+    if (idempotencyCache.size > 500) {
+        for (const [fp, entry] of idempotencyCache.entries()) {
+            if (now - entry.createdAt > IDEMP_TTL_MS) {
+                idempotencyCache.delete(fp);
+            }
+        }
+    }
+
+    return key;
+}
+
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        const method = (config.method || 'get').toLowerCase();
-        if (['post', 'put', 'patch', 'delete'].includes(method) && !config.headers['Idempotency-Key']) {
-            config.headers['Idempotency-Key'] = generateIdempotencyKey();
+        if (!config.headers['Idempotency-Key']) {
+            const key = getOrCreateIdempotencyKey(config);
+            if (key) {
+                config.headers['Idempotency-Key'] = key;
+            }
         }
         return config;
     },
