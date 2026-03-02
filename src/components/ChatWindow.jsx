@@ -566,8 +566,10 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     }, [conversation?.id]);
 
     useEffect(() => {
-        if (showNotebook && conversation?.id) fetchNotes();
-    }, [showNotebook, conversation?.id, fetchNotes]);
+        if (conversation?.id) {
+            fetchNotes();
+        }
+    }, [conversation?.id, fetchNotes]);
 
     const handleAddNote = useCallback(async () => {
         const content = noteContent.trim();
@@ -645,6 +647,26 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             return content.includes(q) || senderName.includes(q);
         });
     }, [messages, searchQuery]);
+
+    const visibleSharedNotes = useMemo(() => {
+        if (!notes || notes.length === 0) return [];
+        return [...notes].filter((n) => n && n.is_visible_to_other);
+    }, [notes]);
+
+    const timelineItems = useMemo(() => {
+        const baseMessages = (searchQuery ? filteredMessages : messages) || [];
+        const messageItems = baseMessages.map((m) => ({
+            kind: 'message',
+            sort: m.created_at ? new Date(m.created_at).getTime() : 0,
+            message: m,
+        }));
+        const noteItems = visibleSharedNotes.map((n) => ({
+            kind: 'note',
+            sort: n.created_at ? new Date(n.created_at).getTime() : 0,
+            note: n,
+        }));
+        return [...messageItems, ...noteItems].sort((a, b) => a.sort - b.sort);
+    }, [messages, filteredMessages, visibleSharedNotes, searchQuery]);
 
     if (!conversation) {
         return (
@@ -1166,7 +1188,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     <div className="flex justify-center items-center h-full">
                         <div className="animate-spin rounded-full h-16 w-16 border-b-4" style={{ borderColor: themeStyles.accentColor }}></div>
                     </div>
-                ) : messages.length === 0 ? (
+                ) : messages.length === 0 && visibleSharedNotes.length === 0 ? (
                     <div className="flex justify-center items-center h-full px-4">
                         <div className="text-center">
                             <p className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">
@@ -1187,24 +1209,45 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         {!hasMoreOlder && messages.length > 0 && (
                             <p className="text-center text-xs text-gray-400 dark:text-gray-500 py-2">En eski mesajlar</p>
                         )}
-                        {(searchQuery ? filteredMessages : messages).map((message) => (
-                            <div key={message.id} data-message-id={String(message.id)}>
-                                <MessageBubble
-                                    message={message}
-                                    isMine={message.sender_id === user.id}
-                                    currentUserId={user?.id}
-                                    senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
-                                    senderUser={message.sender_id === user.id ? user : conversation.other_user}
-                                    viewerPrefs={viewerPrefs}
-                                    onReply={(msg) => setReplyingTo(msg)}
-                                    onEdit={handleEditMessage}
-                                    onDelete={handleDeleteMessage}
-                                    onReaction={handleReaction}
-                                    isHighlighted={highlightedMessageId === message.id}
-                                    onScrollToMessage={scrollToMessageId}
-                                />
-                            </div>
-                        ))}
+                        {timelineItems.map((item, idx) => {
+                            if (item.kind === 'message') {
+                                const message = item.message;
+                                return (
+                                    <div key={`msg-${message.id}-${idx}`} data-message-id={String(message.id)}>
+                                        <MessageBubble
+                                            message={message}
+                                            isMine={message.sender_id === user.id}
+                                            currentUserId={user?.id}
+                                            senderGender={message.sender_id === user.id ? user.gender : conversation.other_user.gender}
+                                            senderUser={message.sender_id === user.id ? user : conversation.other_user}
+                                            viewerPrefs={viewerPrefs}
+                                            onReply={(msg) => setReplyingTo(msg)}
+                                            onEdit={handleEditMessage}
+                                            onDelete={handleDeleteMessage}
+                                            onReaction={handleReaction}
+                                            isHighlighted={highlightedMessageId === message.id}
+                                            onScrollToMessage={scrollToMessageId}
+                                        />
+                                    </div>
+                                );
+                            }
+                            const note = item.note;
+                            return (
+                                <div key={`note-${note.id}-${idx}`} className="flex justify-center px-4 pb-2">
+                                    <div className="inline-flex items-start gap-1.5 max-w-full text-xs text-gray-700 dark:text-gray-100 bg-gray-100 dark:bg-gray-800/90 px-3 py-2 rounded-2xl shadow-sm">
+                                        <span className="font-semibold">Sohbet notu:</span>
+                                        <span className="whitespace-pre-wrap break-words">
+                                            {note.content}
+                                        </span>
+                                        {note.user?.username && (
+                                            <span className="ml-1 text-[11px] text-gray-500 dark:text-gray-300">
+                                                (@{note.user.username})
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                         <div ref={messagesEndRef} />
                     </div>
                 )}
