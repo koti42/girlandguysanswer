@@ -240,9 +240,11 @@ const MessagesPage = () => {
     };
 
     const handleBack = () => {
-        setActiveConversation(null);
-        setShowMobileChat(false);
-        navigate('/messages');
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate('/messages');
+        }
     };
 
     const handleNewMessage = (newMessage, conversationData) => {
