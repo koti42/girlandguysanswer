@@ -9,11 +9,22 @@ const api = axios.create({
     },
 });
 
+function generateIdempotencyKey() {
+    if (window.crypto?.randomUUID) {
+        return window.crypto.randomUUID();
+    }
+    return `idempo_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+        }
+        const method = (config.method || 'get').toLowerCase();
+        if (['post', 'put', 'patch', 'delete'].includes(method) && !config.headers['Idempotency-Key']) {
+            config.headers['Idempotency-Key'] = generateIdempotencyKey();
         }
         return config;
     },
