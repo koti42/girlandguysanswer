@@ -34,6 +34,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [loadingNotes, setLoadingNotes] = useState(false);
     const [noteContent, setNoteContent] = useState('');
     const [noteVisibleToOther, setNoteVisibleToOther] = useState(false);
+    const [noteSaving, setNoteSaving] = useState(false);
     const [editingNoteId, setEditingNoteId] = useState(null);
     const [editContent, setEditContent] = useState('');
     const [editVisibleToOther, setEditVisibleToOther] = useState(false);
@@ -573,7 +574,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
     const handleAddNote = useCallback(async () => {
         const content = noteContent.trim();
-        if (!content || !conversation?.id) return;
+        if (!content || !conversation?.id || noteSaving) return;
+        setNoteSaving(true);
         try {
             const res = await messagesAPI.createNote(conversation.id, { content, is_visible_to_other: noteVisibleToOther });
             setNotes(prev => [res.data?.data?.note, ...prev]);
@@ -582,8 +584,10 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             notificationToast.success('Not eklendi.');
         } catch (err) {
             notificationToast.error(err.response?.data?.message || 'Not eklenemedi.');
+        } finally {
+            setNoteSaving(false);
         }
-    }, [conversation?.id, noteContent, noteVisibleToOther]);
+    }, [conversation?.id, noteContent, noteVisibleToOther, noteSaving]);
 
     const handleUpdateNote = useCallback(async () => {
         if (editingNoteId == null || !editContent.trim()) return;
@@ -606,6 +610,12 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             if (editingNoteId === noteId) setEditingNoteId(null);
             notificationToast.success('Not silindi.');
         } catch (err) {
+            const status = err.response?.status;
+            if (status === 404) {
+                setNotes(prev => prev.filter(n => n.id !== noteId));
+                if (editingNoteId === noteId) setEditingNoteId(null);
+                return;
+            }
             notificationToast.error(err.response?.data?.message || 'Not silinemedi.');
         }
     }, [editingNoteId]);
@@ -1112,7 +1122,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                         <input type="checkbox" checked={noteVisibleToOther} onChange={e => setNoteVisibleToOther(e.target.checked)} className="rounded border-amber-400 text-amber-600 focus:ring-amber-500" />
                                         Karşı tarafa göster
                                     </label>
-                                    <button type="button" onClick={handleAddNote} disabled={!noteContent.trim() || loadingNotes} className="mt-2 px-4 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 disabled:opacity-50">Ekle</button>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddNote}
+                                        disabled={!noteContent.trim() || loadingNotes || noteSaving}
+                                        className="mt-2 px-4 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 disabled:opacity-50"
+                                    >
+                                        {noteSaving ? 'Ekleniyor...' : 'Ekle'}
+                                    </button>
                                 </div>
                                 {loadingNotes ? (
                                     <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-400 border-t-transparent" /></div>
