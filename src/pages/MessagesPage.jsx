@@ -64,12 +64,6 @@ const MessagesPage = () => {
             if (conversation) {
                 setActiveConversation(conversation);
                 setShowMobileChat(true);
-                // Bu konuşmanın içindeyken sol listedeki okunmamış rozetini de temizle
-                setConversations(prev =>
-                    prev.map(conv =>
-                        conv.id === conversation.id ? { ...conv, unread_count: 0 } : conv
-                    )
-                );
             } else {
                 fetchUserForNewConversation(username);
             }

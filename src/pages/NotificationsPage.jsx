@@ -59,16 +59,6 @@ const NotificationsPage = () => {
                     navigate(`/question/${questionSlug}#answer-${answerId}`);
                 }
                 break;
-            case 'new_message': {
-                const senderUsername =
-                    notification.data?.sender_username ||
-                    notification.data?.user?.username ||
-                    notification.data?.sender?.username;
-                if (senderUsername) {
-                    navigate(`/messages/${senderUsername}`);
-                }
-                break;
-            }
             case 'comment_reply':
                 if (questionSlug) {
                     const commentId = notification.data?.comment_id || notification.data?.id;
