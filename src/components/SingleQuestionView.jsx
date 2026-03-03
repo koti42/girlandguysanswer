@@ -1512,6 +1512,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
                                     const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
                                     const answerBgClass = isBestAnswer ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900' : '';
+                                    const youtubeLinks = getYoutubeVideoLinks(answer.content);
 
                                     return (
                                         <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}`} style={answerColorStyle}>
@@ -1557,6 +1558,45 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         )}
                                                     </div>
                                                     {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{textWithMentions(answer.content)}</div>}
+                                                    {youtubeLinks.length > 0 && (
+                                                        <div className="space-y-3 mt-2">
+                                                            {youtubeLinks.map(({ videoId, isMusic, url }) => (
+                                                                <div
+                                                                    key={videoId}
+                                                                    className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5 dark:bg-gray-900/60"
+                                                                >
+                                                                    <div className="relative w-full pb-[56.25%] bg-black">
+                                                                        <iframe
+                                                                            src={`https://www.youtube.com/embed/${videoId}`}
+                                                                            title="YouTube video"
+                                                                            className="absolute inset-0 w-full h-full"
+                                                                            frameBorder="0"
+                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                            allowFullScreen
+                                                                        />
+                                                                    </div>
+                                                                    <div className="px-3 py-2 flex items-center justify-between gap-2 bg-white/80 dark:bg-gray-900/80">
+                                                                        <div className="flex flex-col min-w-0">
+                                                                            <span className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+                                                                                {isMusic ? 'YouTube Music' : 'YouTube'}
+                                                                            </span>
+                                                                            <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                                                                Videoyu cevap içinden oynat
+                                                                            </span>
+                                                                        </div>
+                                                                        <a
+                                                                            href={url}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="text-[11px] font-semibold text-coral hover:text-coral-dark whitespace-nowrap"
+                                                                        >
+                                                                            YouTube’da aç
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                     {answer.gif_url && (
                                                         <div className="mt-3 rounded-lg overflow-hidden">
                                                             <img
@@ -1683,18 +1723,19 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     Erkeklerin Yorumu
                                 </h3>
                                 {maleAnswers.map((answer) => {
-                                const answerCommentKey = `answer_${answer.id}`;
-                                const isBestAnswer = answer.is_accepted;
-                                const hasBestAnswer = answers.some(a => a.is_accepted);
-                                const isOwner = question.isOwner;
-                                const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
-                                const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
+                                    const answerCommentKey = `answer_${answer.id}`;
+                                    const isBestAnswer = answer.is_accepted;
+                                    const hasBestAnswer = answers.some(a => a.is_accepted);
+                                    const isOwner = question.isOwner;
+                                    const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
+                                    const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
 
-                                const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
-                                const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
-                                const answerBgClass = isBestAnswer ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900' : '';
+                                    const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
+                                    const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
+                                    const answerBgClass = isBestAnswer ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900' : '';
+                                    const youtubeLinks = getYoutubeVideoLinks(answer.content);
 
-                                return (
+                                    return (
                                     <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}`} style={answerColorStyle}>
                                         <div className="flex gap-4">
                                             {answer.user?.username === 'anonim' ? (
@@ -1738,6 +1779,45 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                     )}
                                                 </div>
                                                 {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{textWithMentions(answer.content)}</div>}
+                                                {youtubeLinks.length > 0 && (
+                                                    <div className="space-y-3 mt-2">
+                                                        {youtubeLinks.map(({ videoId, isMusic, url }) => (
+                                                            <div
+                                                                key={videoId}
+                                                                className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5 dark:bg-gray-900/60"
+                                                            >
+                                                                <div className="relative w-full pb-[56.25%] bg-black">
+                                                                    <iframe
+                                                                        src={`https://www.youtube.com/embed/${videoId}`}
+                                                                        title="YouTube video"
+                                                                        className="absolute inset-0 w-full h-full"
+                                                                        frameBorder="0"
+                                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                        allowFullScreen
+                                                                    />
+                                                                </div>
+                                                                <div className="px-3 py-2 flex items-center justify-between gap-2 bg-white/80 dark:bg-gray-900/80">
+                                                                    <div className="flex flex-col min-w-0">
+                                                                        <span className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+                                                                            {isMusic ? 'YouTube Music' : 'YouTube'}
+                                                                        </span>
+                                                                        <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                                                            Videoyu cevap içinden oynat
+                                                                        </span>
+                                                                    </div>
+                                                                    <a
+                                                                        href={url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-[11px] font-semibold text-coral hover:text-coral-dark whitespace-nowrap"
+                                                                    >
+                                                                        YouTube’da aç
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                                 {answer.gif_url && (
                                                     <div className="mt-3 rounded-lg overflow-hidden">
                                                         <img
@@ -1892,6 +1972,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
                                     const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
                                     const answerBgClass = isBestAnswer ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900' : '';
+                                    const youtubeLinks = getYoutubeVideoLinks(answer.content);
 
                                     return (
                                         <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}`} style={answerColorStyle}>
@@ -1935,6 +2016,45 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         )}
                                                     </div>
                                                     {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{textWithMentions(answer.content)}</div>}
+                                                    {youtubeLinks.length > 0 && (
+                                                        <div className="space-y-3 mt-2">
+                                                            {youtubeLinks.map(({ videoId, isMusic, url }) => (
+                                                                <div
+                                                                    key={videoId}
+                                                                    className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5 dark:bg-gray-900/60"
+                                                                >
+                                                                    <div className="relative w-full pb-[56.25%] bg-black">
+                                                                        <iframe
+                                                                            src={`https://www.youtube.com/embed/${videoId}`}
+                                                                            title="YouTube video"
+                                                                            className="absolute inset-0 w-full h-full"
+                                                                            frameBorder="0"
+                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                            allowFullScreen
+                                                                        />
+                                                                    </div>
+                                                                    <div className="px-3 py-2 flex items-center justify-between gap-2 bg-white/80 dark:bg-gray-900/80">
+                                                                        <div className="flex flex-col min-w-0">
+                                                                            <span className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+                                                                                {isMusic ? 'YouTube Music' : 'YouTube'}
+                                                                            </span>
+                                                                            <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                                                                Videoyu cevap içinden oynat
+                                                                            </span>
+                                                                        </div>
+                                                                        <a
+                                                                            href={url}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="text-[11px] font-semibold text-coral hover:text-coral-dark whitespace-nowrap"
+                                                                        >
+                                                                            YouTube’da aç
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                     {answer.gif_url && (
                                                         <div className="mt-3 rounded-lg overflow-hidden">
                                                             <img

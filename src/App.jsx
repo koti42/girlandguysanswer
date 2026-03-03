@@ -84,12 +84,17 @@ const WelcomeGuideGate = () => {
 import { NotificationProvider } from './context/NotificationContext';
 import DomainRedirect from './components/DomainRedirect';
 
-function App() {
+const PresenceHeartbeat = () => {
   usePresence();
+  return null;
+};
+
+function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <NotificationProvider>
+          <PresenceHeartbeat />
           <Router>
             <DomainRedirect>
               <GenderCheck>
