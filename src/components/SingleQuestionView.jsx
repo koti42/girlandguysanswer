@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icons/fa';
@@ -34,6 +34,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const { user: currentUser, canModerate } = useAuth();
     const viewerPrefs = getViewerPrefs(currentUser);
     const navigate = useNavigate();
+    const location = useLocation();
     const [question, setQuestion] = useState(initialQuestion || null);
     const [answers, setAnswers] = useState(initialQuestion?.answers || []);
     const [loading, setLoading] = useState(!initialQuestion);
@@ -62,6 +63,10 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
     const [genderFilter, setGenderFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
+
+    const [highlightedAnswerId, setHighlightedAnswerId] = useState(null);
+    const [highlightedCommentId, setHighlightedCommentId] = useState(null);
+    const [isFromNotification, setIsFromNotification] = useState(false);
 
     const [questionCommentsPage, setQuestionCommentsPage] = useState(1);
     const [questionCommentsHasMore, setQuestionCommentsHasMore] = useState(false);
@@ -264,6 +269,36 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             return next;
         });
     };
+
+    useEffect(() => {
+        const { hash } = location;
+        if (!hash) {
+            setHighlightedAnswerId(null);
+            setHighlightedCommentId(null);
+            setIsFromNotification(false);
+            return;
+        }
+
+        let matched = false;
+
+        if (hash.startsWith('#answer-')) {
+            const id = parseInt(hash.replace('#answer-', ''), 10);
+            if (!isNaN(id)) {
+                setHighlightedAnswerId(id);
+                matched = true;
+            }
+        }
+
+        if (hash.startsWith('#comment-')) {
+            const id = parseInt(hash.replace('#comment-', ''), 10);
+            if (!isNaN(id)) {
+                setHighlightedCommentId(id);
+                matched = true;
+            }
+        }
+
+        setIsFromNotification(matched);
+    }, [location]);
 
     useEffect(() => {
         if (initialQuestion) {
@@ -628,6 +663,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         const marginLeft = marginClasses[Math.min(level, 3)];
         const isReplyingToThis = replyingTo?.commentId === comment.id;
 
+        const isHighlighted = highlightedCommentId && comment.id === highlightedCommentId;
+        const commentHighlightClasses = isHighlighted
+            ? ' ring-2 ring-amber-400 border-amber-300 bg-amber-50/80 dark:bg-amber-900/30'
+            : '';
+
         const isMainComment = level === 0;
         const commentUserId = comment.user_id || comment.user?.id;
         const isCommentOwner = currentUser?.id === commentUserId;
@@ -638,7 +678,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
         return (
             <div key={comment.id} className="space-y-3">
-                <div id={`comment-${comment.id}`} className={`rounded-xl p-4 ${marginLeft} border-l-4 shadow-sm hover:shadow-md transition-all scroll-mt-20`} style={commentColorStyle}>
+                <div
+                    id={`comment-${comment.id}`}
+                    className={`rounded-xl p-4 ${marginLeft} border-l-4 shadow-sm hover:shadow-md transition-all scroll-mt-20${commentHighlightClasses}`}
+                    style={commentColorStyle}
+                >
                     <div className="flex gap-3">
                         {comment.user?.username === 'anonim' ? (
                             <div className="cursor-default">
@@ -803,9 +847,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         );
     };
 
-    const getFilteredAndSortedAnswers = () => {
-        let filtered = answers.filter(answer => genderFilter === 'all' || answer.user?.gender === genderFilter);
-        return filtered.sort((a, b) => {
+    const getSortedAnswers = () => {
+        return [...answers].sort((a, b) => {
             switch (sortBy) {
                 case 'newest': return new Date(b.created_at) - new Date(a.created_at);
                 case 'oldest': return new Date(a.created_at) - new Date(b.created_at);
@@ -816,7 +859,21 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         });
     };
 
-    const filteredAnswers = getFilteredAndSortedAnswers();
+    const sortedAnswers = getSortedAnswers();
+
+    const highlightedAnswer = highlightedAnswerId
+        ? sortedAnswers.find((a) => a.id === highlightedAnswerId)
+        : null;
+
+    const remainingAnswers = highlightedAnswer
+        ? sortedAnswers.filter((a) => a.id !== highlightedAnswerId)
+        : sortedAnswers;
+
+    const maleAnswers = remainingAnswers.filter((answer) => answer.user?.gender === 'male');
+    const femaleAnswers = remainingAnswers.filter((answer) => answer.user?.gender === 'female');
+    const otherAnswers = remainingAnswers.filter(
+        (answer) => !answer.user?.gender || (answer.user.gender !== 'male' && answer.user.gender !== 'female')
+    );
 
     if (loading) return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div></div>;
 
@@ -1181,9 +1238,198 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                         </div>
                     </div>
 
-                    <div className="space-y-6">
-                        {filteredAnswers.length > 0 ? (
-                            filteredAnswers.map((answer) => {
+                    {/* Highlighted answer from notification */}
+                    {isFromNotification && highlightedAnswer && (
+                        <div className="mb-8 rounded-2xl border-2 border-amber-300 bg-amber-50/70 dark:bg-amber-900/20 p-4 md:p-5 shadow-sm">
+                            <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-3 uppercase tracking-wide">
+                                Bildirimden Gelen Cevap
+                            </h3>
+                            <div className="space-y-4">
+                                {/* Render single highlighted answer card */}
+                                {(() => {
+                                    const answer = highlightedAnswer;
+                                    const answerCommentKey = `answer_${answer.id}`;
+                                    const isBestAnswer = answer.is_accepted;
+                                    const hasBestAnswer = answers.some(a => a.is_accepted);
+                                    const isOwner = question.isOwner;
+                                    const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
+                                    const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
+
+                                    const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
+                                    const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
+                                    const answerBgClass = isBestAnswer ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900' : '';
+                                    const highlightClasses = ' ring-2 ring-amber-400';
+
+                                    return (
+                                        <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}${highlightClasses}`} style={answerColorStyle}>
+                                            <div className="flex gap-4">
+                                                {answer.user?.username === 'anonim' ? (
+                                                    <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
+                                                ) : (
+                                                    <Link to={`/profile/${answer.user?.username}`}><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
+                                                )}
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                {answer.user?.username === 'anonim' ? (
+                                                                    <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
+                                                                ) : (
+                                                                    <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
+                                                                )}
+                                                                <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
+                                                            </div>
+                                                            <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
+
+                                                            {/* Select Best Answer Button - Mobile */}
+                                                            {canSelectBestAnswer && (
+                                                                <button
+                                                                    onClick={() => handleBestAnswer(answer.id)}
+                                                                    className="lg:hidden mt-2 text-xs font-semibold text-green-600 hover:bg-green-50 px-2 py-1 rounded-lg border border-green-200 transition-colors flex items-center gap-1"
+                                                                >
+                                                                    <FaCheckCircle /> EİG Seç
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Select Best Answer Button - Desktop */}
+                                                        {canSelectBestAnswer && (
+                                                            <button
+                                                                onClick={() => handleBestAnswer(answer.id)}
+                                                                className="hidden lg:flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-green-600 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-xl hover:border-green-300 transition-all shadow-sm"
+                                                                title="En İyi Görüş Seç"
+                                                            >
+                                                                <FaCheck /> Seç
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{textWithMentions(answer.content)}</div>}
+                                                    {answer.gif_url && (
+                                                        <div className="mt-3 rounded-lg overflow-hidden">
+                                                            <img
+                                                                src={answer.gif_url}
+                                                                alt="GIF"
+                                                                className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                                                onClick={() => window.open(answer.gif_url, '_blank')}
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={(e) => handleLike(e, 'answer', answer.id)}
+                                                                className={`flex items-center gap-1 transition-colors ${answer.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                                                            >
+                                                                <FaHeart />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => openLikersModal('answer', answer.id)}
+                                                                className="font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline cursor-pointer"
+                                                            >
+                                                                {answer.likes_count || 0}
+                                                            </button>
+                                                        </div>
+                                                        <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+                                                            <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
+                                                        </button>
+                                                    </div>
+
+                                                    {commentingOn?.type === 'answer' && commentingOn?.id === answer.id && (
+                                                        <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                                            <div className="flex items-center gap-2 mb-3">
+                                                                <UserAvatar user={currentUser} size="xs" className="w-6 h-6 flex-shrink-0" />
+                                                                <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 truncate">
+                                                                    {currentUser?.username}
+                                                                </span>
+                                                                <span className="text-[10px] text-gray-400">• yorum yazıyor</span>
+                                                            </div>
+                                                            <form onSubmit={handleSubmitComment}>
+                                                                {commentGifUrls[answerCommentKey] && (
+                                                                    <div className="mb-2 relative inline-block">
+                                                                        <img src={commentGifUrls[answerCommentKey]} alt="GIF" className="max-w-[160px] sm:max-w-xs rounded-xl shadow-sm" />
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => clearCommentGif(answerCommentKey)}
+                                                                            className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                                                                        >
+                                                                            <FaTimes className="text-[10px]" />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                                <textarea
+                                                                    value={commentTexts[answerCommentKey] || ''}
+                                                                    onChange={(e) => setCommentTexts(prev => ({ ...prev, [answerCommentKey]: e.target.value }))}
+                                                                    placeholder="Yorumunuzu yazın..."
+                                                                    rows={2}
+                                                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/20 transition-all resize-none text-sm"
+                                                                    autoFocus
+                                                                />
+                                                                <div className="flex items-center gap-1.5 mt-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openGifPicker('comment', answerCommentKey)}
+                                                                        className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 hover:text-coral dark:hover:text-coral hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors flex-shrink-0"
+                                                                        title="GIF Ekle"
+                                                                    >
+                                                                        <FaImage className="text-xs" />
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCommentAnonymous(prev => ({ ...prev, [answerCommentKey]: !prev[answerCommentKey] }))}
+                                                                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
+                                                                            commentAnonymous[answerCommentKey]
+                                                                                ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700'
+                                                                                : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500'
+                                                                        }`}
+                                                                    >
+                                                                        <FaUserSecret className="text-[11px]" />
+                                                                        <span className="hidden xs:inline">{commentAnonymous[answerCommentKey] ? 'Gizli' : 'Gizli'}</span>
+                                                                    </button>
+                                                                    <div className="flex-1" />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCommentingOn(null)}
+                                                                        className="px-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors font-medium"
+                                                                    >
+                                                                        İptal
+                                                                    </button>
+                                                                    <button
+                                                                        type="submit"
+                                                                        disabled={!commentTexts[answerCommentKey]?.trim() && !commentGifUrls[answerCommentKey]}
+                                                                        className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-coral text-white hover:bg-coral/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                                                                    >
+                                                                        Gönder
+                                                                    </button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    )}
+
+                                                    {answer.comments && answer.comments.length > 0 && (
+                                                        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                                            <div className="flex items-center gap-2 mb-4">
+                                                                <FaComment className="text-coral text-sm" /><span className="text-sm font-semibold text-gray-600 dark:text-gray-400">{answer.comments.length} Yorum</span>
+                                                            </div>
+                                                            <div className="space-y-4">{answer.comments.map(comment => renderComment(comment, 'answer', answer.id, 0, null))}</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-8">
+                        {maleAnswers.length > 0 && (
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                                    Erkeklerin Yorumu
+                                </h3>
+                                {maleAnswers.map((answer) => {
                                 const answerCommentKey = `answer_${answer.id}`;
                                 const isBestAnswer = answer.is_accepted;
                                 const hasBestAnswer = answers.some(a => a.is_accepted);
@@ -1373,8 +1619,188 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         </div>
                                     </div>
                                 );
-                            })
-                        ) : (
+                            })}
+                            </div>
+                        )}
+
+                        {femaleAnswers.length > 0 && (
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                                    Kadınların Yorumu
+                                </h3>
+                                {femaleAnswers.map((answer) => {
+                                    const answerCommentKey = `answer_${answer.id}`;
+                                    const isBestAnswer = answer.is_accepted;
+                                    const hasBestAnswer = answers.some(a => a.is_accepted);
+                                    const isOwner = question.isOwner;
+                                    const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
+                                    const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
+
+                                    const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
+                                    const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
+                                    const answerBgClass = isBestAnswer ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900' : '';
+
+                                    return (
+                                        <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}`} style={answerColorStyle}>
+                                            <div className="flex gap-4">
+                                                {answer.user?.username === 'anonim' ? (
+                                                    <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
+                                                ) : (
+                                                    <Link to={`/profile/${answer.user?.username}`}><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
+                                                )}
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                {answer.user?.username === 'anonim' ? (
+                                                                    <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
+                                                                ) : (
+                                                                    <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
+                                                                )}
+                                                                <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
+                                                            </div>
+                                                            <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
+
+                                                            {canSelectBestAnswer && (
+                                                                <button
+                                                                    onClick={() => handleBestAnswer(answer.id)}
+                                                                    className="lg:hidden mt-2 text-xs font-semibold text-green-600 hover:bg-green-50 px-2 py-1 rounded-lg border border-green-200 transition-colors flex items-center gap-1"
+                                                                >
+                                                                    <FaCheckCircle /> EİG Seç
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        {canSelectBestAnswer && (
+                                                            <button
+                                                                onClick={() => handleBestAnswer(answer.id)}
+                                                                className="hidden lg:flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-green-600 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-xl hover:border-green-300 transition-all shadow-sm"
+                                                                title="En İyi Görüş Seç"
+                                                            >
+                                                                <FaCheck /> Seç
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{textWithMentions(answer.content)}</div>}
+                                                    {answer.gif_url && (
+                                                        <div className="mt-3 rounded-lg overflow-hidden">
+                                                            <img
+                                                                src={answer.gif_url}
+                                                                alt="GIF"
+                                                                className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                                                onClick={() => window.open(answer.gif_url, '_blank')}
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={(e) => handleLike(e, 'answer', answer.id)}
+                                                                className={`flex items-center gap-1 transition-colors ${answer.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                                                            >
+                                                                <FaHeart />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => openLikersModal('answer', answer.id)}
+                                                                className="font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline cursor-pointer"
+                                                            >
+                                                                {answer.likes_count || 0}
+                                                            </button>
+                                                        </div>
+                                                        <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+                                                            <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
+                                                        </button>
+                                                    </div>
+
+                                                    {commentingOn?.type === 'answer' && commentingOn?.id === answer.id && (
+                                                        <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                                            <div className="flex items-center gap-2 mb-3">
+                                                                <UserAvatar user={currentUser} size="xs" className="w-6 h-6 flex-shrink-0" />
+                                                                <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 truncate">
+                                                                    {currentUser?.username}
+                                                                </span>
+                                                                <span className="text-[10px] text-gray-400">• yorum yazıyor</span>
+                                                            </div>
+                                                            <form onSubmit={handleSubmitComment}>
+                                                                {commentGifUrls[answerCommentKey] && (
+                                                                    <div className="mb-2 relative inline-block">
+                                                                        <img src={commentGifUrls[answerCommentKey]} alt="GIF" className="max-w-[160px] sm:max-w-xs rounded-xl shadow-sm" />
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => clearCommentGif(answerCommentKey)}
+                                                                            className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                                                                        >
+                                                                            <FaTimes className="text-[10px]" />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                                <textarea
+                                                                    value={commentTexts[answerCommentKey] || ''}
+                                                                    onChange={(e) => setCommentTexts(prev => ({ ...prev, [answerCommentKey]: e.target.value }))}
+                                                                    placeholder="Yorumunuzu yazın..."
+                                                                    rows={2}
+                                                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/20 transition-all resize-none text-sm"
+                                                                    autoFocus
+                                                                />
+                                                                <div className="flex items-center gap-1.5 mt-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openGifPicker('comment', answerCommentKey)}
+                                                                        className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 hover:text-coral dark:hover:text-coral hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors flex-shrink-0"
+                                                                        title="GIF Ekle"
+                                                                    >
+                                                                        <FaImage className="text-xs" />
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCommentAnonymous(prev => ({ ...prev, [answerCommentKey]: !prev[answerCommentKey] }))}
+                                                                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
+                                                                            commentAnonymous[answerCommentKey]
+                                                                                ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700'
+                                                                                : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500'
+                                                                        }`}
+                                                                    >
+                                                                        <FaUserSecret className="text-[11px]" />
+                                                                        <span className="hidden xs:inline">{commentAnonymous[answerCommentKey] ? 'Gizli' : 'Gizli'}</span>
+                                                                    </button>
+                                                                    <div className="flex-1" />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCommentingOn(null)}
+                                                                        className="px-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors font-medium"
+                                                                    >
+                                                                        İptal
+                                                                    </button>
+                                                                    <button
+                                                                        type="submit"
+                                                                        disabled={!commentTexts[answerCommentKey]?.trim() && !commentGifUrls[answerCommentKey]}
+                                                                        className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-coral text-white hover:bg-coral/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                                                                    >
+                                                                        Gönder
+                                                                    </button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    )}
+
+                                                    {answer.comments && answer.comments.length > 0 && (
+                                                        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                                            <div className="flex items-center gap-2 mb-4">
+                                                                <FaComment className="text-coral text-sm" /><span className="text-sm font-semibold text-gray-600 dark:text-gray-400">{answer.comments.length} Yorum</span>
+                                                            </div>
+                                                            <div className="space-y-4">{answer.comments.map(comment => renderComment(comment, 'answer', answer.id, 0, null))}</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {otherAnswers.length === 0 && maleAnswers.length === 0 && femaleAnswers.length === 0 && !highlightedAnswer && (
                             <div className="text-center py-10 text-gray-500">Henüz cevap yok. İlk cevabı sen yaz!</div>
                         )}
                     </div>

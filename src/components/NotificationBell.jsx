@@ -52,7 +52,8 @@ const NotificationBell = () => {
         switch (notification.type) {
             case 'answer_created':
                 if (questionSlug) {
-                    navigate(`/question/${questionSlug}`);
+                    const answerId = notification.data?.answer_id;
+                    navigate(answerId ? `/question/${questionSlug}#answer-${answerId}` : `/question/${questionSlug}`);
                 }
                 break;
             case 'answer_comment_created':
