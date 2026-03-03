@@ -21,6 +21,27 @@ import { processHtmlWithMentions, textWithMentions } from '../utils/parseMention
 import { getProfileColor, getProfileColorStyle, getProfileGradientStyle, getViewerPrefs } from '../utils/userColor';
 import DOMPurify from 'dompurify';
 
+const YOUTUBE_URL_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})/gi;
+
+const getYoutubeVideoLinks = (content) => {
+    if (!content || typeof content !== 'string') return [];
+    const seen = new Set();
+    const result = [];
+    let m;
+    const re = new RegExp(YOUTUBE_URL_REGEX.source, 'gi');
+    while ((m = re.exec(content)) !== null) {
+        const videoId = m[1];
+        const raw = m[0];
+        const fullUrl = raw.startsWith('http') ? raw : `https://${raw}`;
+        const isMusic = /music\.youtube\.com/i.test(raw);
+        if (!seen.has(videoId)) {
+            seen.add(videoId);
+            result.push({ url: fullUrl, videoId, isMusic });
+        }
+    }
+    return result;
+};
+
 const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
     try {
@@ -668,6 +689,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             ? ' ring-2 ring-amber-400 border-amber-300 bg-amber-50/80 dark:bg-amber-900/30'
             : '';
 
+        const youtubeLinks = getYoutubeVideoLinks(comment.content);
+
         const isMainComment = level === 0;
         const commentUserId = comment.user_id || comment.user?.id;
         const isCommentOwner = currentUser?.id === commentUserId;
@@ -704,6 +727,45 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 <span className="text-gray-500 text-xs">• {formatDate(comment.created_at)}</span>
                             </div>
                             {comment.content && <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2 whitespace-pre-wrap">{textWithMentions(comment.content)}</p>}
+                            {youtubeLinks.length > 0 && (
+                                <div className="space-y-3 mb-2">
+                                    {youtubeLinks.map(({ videoId, isMusic, url }) => (
+                                        <div
+                                            key={videoId}
+                                            className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5 dark:bg-gray-900/60"
+                                        >
+                                            <div className="relative w-full pb-[56.25%] bg-black">
+                                                <iframe
+                                                    src={`https://www.youtube.com/embed/${videoId}`}
+                                                    title="YouTube video"
+                                                    className="absolute inset-0 w-full h-full"
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                    allowFullScreen
+                                                />
+                                            </div>
+                                            <div className="px-3 py-2 flex items-center justify-between gap-2 bg-white/80 dark:bg-gray-900/80">
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+                                                        {isMusic ? 'YouTube Music' : 'YouTube'}
+                                                    </span>
+                                                    <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                                        Videoyu yorumdan oynat
+                                                    </span>
+                                                </div>
+                                                <a
+                                                    href={url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-[11px] font-semibold text-coral hover:text-coral-dark whitespace-nowrap"
+                                                >
+                                                    YouTube’da aç
+                                                </a>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                             {comment.gif_url && (
                                 <div className="mb-2 rounded-lg overflow-hidden">
                                     <img
