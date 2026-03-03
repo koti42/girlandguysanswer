@@ -38,6 +38,7 @@ import KullanimKilavuzuPage from './pages/KullanimKilavuzuPage';
 import WelcomeGuideModal from './components/WelcomeGuideModal';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import usePresence from './hooks/usePresence';
 
 const GenderCheck = ({ children }) => {
   const { user, loading } = useAuth();
@@ -84,6 +85,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import DomainRedirect from './components/DomainRedirect';
 
 function App() {
+  usePresence();
   return (
     <ThemeProvider>
       <AuthProvider>
