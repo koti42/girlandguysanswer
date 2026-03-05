@@ -515,16 +515,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         if (!commentText?.trim() && !gifUrl) return;
 
         try {
+            const isOwnerAnonQuestion = question?.is_anonymous && question?.isOwner;
+            const isAnon = isOwnerAnonQuestion ? true : (commentAnonymous[commentKey] || false);
             const response = await commentsAPI.create({
                 content: commentText || '',
                 commentable_type: commentingOn.type,
                 commentable_id: commentingOn.id,
                 parent_id: null,
-                is_anonymous: commentAnonymous[commentKey] || false,
+                is_anonymous: isAnon,
                 gif_url: gifUrl || null
             });
             let newComment = response.data.data.comment;
-            if (commentAnonymous[commentKey]) {
+            if (isAnon) {
                 newComment = { ...newComment, user: { name: 'Gizli Üye', username: 'anonim', avatar: null, gender: newComment.user?.gender } };
             }
 
@@ -551,16 +553,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         if (!replyText?.trim() && !gifUrl) return;
 
         try {
+            const isOwnerAnonQuestion = question?.is_anonymous && question?.isOwner;
+            const isAnon = isOwnerAnonQuestion ? true : (replyAnonymous[replyingTo.commentId] || false);
             const response = await commentsAPI.create({
                 content: replyText || '',
                 commentable_type: replyingTo.type,
                 commentable_id: replyingTo.targetId,
                 parent_id: replyingTo.mainCommentId,
-                is_anonymous: replyAnonymous[replyingTo.commentId] || false,
+                is_anonymous: isAnon,
                 gif_url: gifUrl || null
             });
             let newReply = response.data.data.comment;
-            if (replyAnonymous[replyingTo.commentId]) {
+            if (isAnon) {
                 newReply = { ...newReply, user: { name: 'Gizli Üye', username: 'anonim', avatar: null, gender: newReply.user?.gender } };
             }
 
@@ -803,7 +807,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     </button>
                                 </div>
                                 <button
-                                    onClick={() => setReplyingTo(isReplyingToThis ? null : { commentId: comment.id, mainCommentId: currentMainCommentId, type, targetId })}
+                                    onClick={() => {
+                                        if (question.is_anonymous && question.isOwner) {
+                                            setReplyAnonymous(prev => ({ ...prev, [comment.id]: true }));
+                                        }
+                                        setReplyingTo(isReplyingToThis ? null : { commentId: comment.id, mainCommentId: currentMainCommentId, type, targetId });
+                                    }}
                                     className="text-xs text-gray-600 dark:text-gray-400 hover:text-coral transition-colors flex items-center gap-1"
                                 >
                                     <FaReply className="text-xs" /> <span>{isReplyingToThis ? 'İptal' : 'Cevapla'}</span>
@@ -1021,8 +1030,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                             <>
                                 <div className="cursor-default"><UserAvatar user={question.user} size="lg" className="border-2 border-white" /></div>
                                 <div className="flex-1">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
+                                        {question.isOwner && question.is_anonymous && (
+                                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Soru sahibi)</span>
+                                        )}
                                         <span style={{ color: getProfileColor(question.user, viewerPrefs) }}>{question.user.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
@@ -1053,8 +1065,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     <div className="flex items-center gap-3">
                                         <Link to={`/profile/${question.user.username}`}><UserAvatar user={question.user} size="lg" className="hover:border-coral transition-colors" /></Link>
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 flex-wrap">
                                                 <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{question.user.username}</Link>
+                                                {question.isOwner && question.is_anonymous && (
+                                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Soru sahibi)</span>
+                                                )}
                                                 <span style={{ color: getProfileColor(question.user, viewerPrefs) }}>{question.user.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
@@ -1417,7 +1432,16 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 {answer.likes_count || 0}
                                                             </button>
                                                         </div>
-                                                        <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+                                                        <button
+                                                            onClick={() => {
+                                                                const key = `answer_${answer.id}`;
+                                                                if (question.is_anonymous && question.isOwner) {
+                                                                    setCommentAnonymous(prev => ({ ...prev, [key]: true }));
+                                                                }
+                                                                setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id });
+                                                            }}
+                                                            className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
+                                                        >
                                                             <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
                                                         </button>
                                                     </div>
@@ -1644,7 +1668,16 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 {answer.likes_count || 0}
                                                             </button>
                                                         </div>
-                                                        <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+                                                        <button
+                                                            onClick={() => {
+                                                                const key = `answer_${answer.id}`;
+                                                                if (question.is_anonymous && question.isOwner) {
+                                                                    setCommentAnonymous(prev => ({ ...prev, [key]: true }));
+                                                                }
+                                                                setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id });
+                                                            }}
+                                                            className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors"
+                                                        >
                                                             <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
                                                         </button>
                                                     </div>
