@@ -355,6 +355,12 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         }
     }, [slug, initialQuestion]);
 
+    useEffect(() => {
+        if (question?.isOwner && question?.is_anonymous) {
+            setIsAnswerAnonymous(true);
+        }
+    }, [question?.id]);
+
     const checkInitialPagination = (data) => {
         const questionTotalComments = data.stats?.comments || data.comments_count || 0;
         const questionLoadedComments = data.comments?.length || 0;
@@ -722,6 +728,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     <span className="font-bold text-sm text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                 ) : (
                                     <Link to={`/profile/${comment.user?.username}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">{comment.user?.username}</Link>
+                                )}
+                                {comment.is_question_owner && (
+                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(comment.user, viewerPrefs) + '20', color: getProfileColor(comment.user, viewerPrefs) }}>
+                                        {comment.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
+                                    </span>
                                 )}
                                 <span className="text-xs" style={{ color: getProfileColor(comment.user, viewerPrefs) }}>{comment.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                 <span className="text-gray-500 text-xs">• {formatDate(comment.created_at)}</span>
@@ -1348,6 +1359,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 ) : (
                                                                     <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
                                                                 )}
+                                                                {answer.is_question_owner && (
+                                                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
+                                                                        {answer.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
+                                                                    </span>
+                                                                )}
                                                                 <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                             </div>
                                                             <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
@@ -1530,6 +1546,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                     <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                                                 ) : (
                                                                     <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
+                                                                )}
+                                                                {answer.is_question_owner && (
+                                                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
+                                                                        {answer.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
+                                                                    </span>
                                                                 )}
                                                                 <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                             </div>
@@ -1752,6 +1773,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             ) : (
                                                                 <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
                                                             )}
+                                                            {answer.is_question_owner && (
+                                                                <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
+                                                                    {answer.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
+                                                                </span>
+                                                            )}
                                                             <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                         </div>
                                                         <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
@@ -1767,7 +1793,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         )}
                                                     </div>
 
-                                                    {/* Select Best Answer Button - Desktop */}
                                                     {canSelectBestAnswer && (
                                                         <button
                                                             onClick={() => handleBestAnswer(answer.id)}
@@ -1990,6 +2015,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                     <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                                                 ) : (
                                                                     <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
+                                                                )}
+                                                                {answer.is_question_owner && (
+                                                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
+                                                                        {answer.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
+                                                                    </span>
                                                                 )}
                                                                 <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                             </div>
