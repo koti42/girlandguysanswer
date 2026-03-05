@@ -735,7 +735,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 )}
                                 {comment.is_question_owner && (
                                     <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(comment.user, viewerPrefs) + '20', color: getProfileColor(comment.user, viewerPrefs) }}>
-                                        {comment.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
+                                        {comment.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                     </span>
                                 )}
                                 <span className="text-xs" style={{ color: getProfileColor(comment.user, viewerPrefs) }}>{comment.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
@@ -1376,7 +1376,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 )}
                                                                 {answer.is_question_owner && (
                                                                     <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
-                                                                        {answer.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
+                                                                        {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                                                     </span>
                                                                 )}
                                                                 <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
@@ -1808,7 +1808,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             )}
                                                             {answer.is_question_owner && (
                                                                 <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
-                                                                    {answer.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
+                                                                    {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                                                 </span>
                                                             )}
                                                             <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
@@ -2051,7 +2051,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 )}
                                                                 {answer.is_question_owner && (
                                                                     <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
-                                                                        {answer.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
+                                                                        {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                                                     </span>
                                                                 )}
                                                                 <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
