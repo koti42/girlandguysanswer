@@ -736,24 +736,24 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 </div>
                             </Link>
                         )}
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap mb-1">
                                 {comment.user?.username === 'anonim' ? (
                                     <span className="font-bold text-sm text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                 ) : (
-                                    <Link to={`/profile/${comment.user?.username}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline">{comment.user?.username}</Link>
+                                    <Link to={`/profile/${comment.user?.username}`} className="font-bold text-sm text-gray-800 dark:text-white hover:underline truncate max-w-[120px]">{comment.user?.username}</Link>
                                 )}
                                 {comment.is_question_owner && (
-                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(comment.user, viewerPrefs) + '20', color: getProfileColor(comment.user, viewerPrefs) }}>
+                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: getProfileColor(comment.user, viewerPrefs) + '20', color: getProfileColor(comment.user, viewerPrefs) }}>
                                         {comment.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                     </span>
                                 )}
                                 {comment.user?.age_range && (
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {comment.user.age_range})</span>
+                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0">(Yaş: {comment.user.age_range})</span>
                                 )}
                                 {comment.user?.level && (
                                     <span
-                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 shrink-0"
                                         style={comment.user?.level_color ? { color: comment.user.level_color, backgroundColor: `${comment.user.level_color}20` } : {}}
                                     >
                                         {typeof comment.user.level === 'object' ? comment.user.level?.name : comment.user.level}
@@ -761,7 +761,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 )}
                                 {comment.user?.feature_tag && (
                                     <span
-                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md border"
+                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md border shrink-0"
                                         style={{
                                             color: comment.user.feature_tag.color || '#FACC15',
                                             borderColor: comment.user.feature_tag.color || '#FACC15',
@@ -771,8 +771,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         {comment.user.feature_tag.name}
                                     </span>
                                 )}
-                                <span className="text-xs" style={{ color: getProfileColor(comment.user, viewerPrefs) }}>{comment.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
-                                <span className="text-gray-500 text-xs">• {formatDate(comment.created_at)}</span>
+                                <span className="text-xs shrink-0" style={{ color: getProfileColor(comment.user, viewerPrefs) }}>{comment.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
+                                <span className="text-gray-400 text-xs shrink-0">• {formatDate(comment.created_at)}</span>
                             </div>
                             {comment.content && (
                                 <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words">
@@ -1446,32 +1446,32 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
                                     return (
                                         <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}${highlightClasses}`} style={answerColorStyle}>
-                                            <div className="flex gap-4">
+                                            <div className="flex gap-3 min-w-0">
                                                 {answer.user?.username === 'anonim' ? (
-                                                    <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
+                                                    <div className="cursor-default shrink-0"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
                                                 ) : (
-                                                    <Link to={`/profile/${answer.user?.username}`}><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
+                                                    <Link to={`/profile/${answer.user?.username}`} className="shrink-0"><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
                                                 )}
-                                                <div className="flex-1">
-                                                            <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
                                                                 {answer.user?.username === 'anonim' ? (
                                                                     <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                                                 ) : (
                                                                     <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
                                                                 )}
                                                                 {answer.is_question_owner && (
-                                                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
+                                                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
                                                                         {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                                                     </span>
                                                                 )}
                                                                 {answer.user?.age_range && (
-                                                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {answer.user.age_range})</span>
+                                                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0">(Yaş: {answer.user.age_range})</span>
                                                                 )}
                                                                 {answer.user?.level && (
                                                                     <span
-                                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 shrink-0"
                                                                         style={answer.user?.level_color ? { color: answer.user.level_color, backgroundColor: `${answer.user.level_color}20` } : {}}
                                                                     >
                                                                         {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
@@ -1479,7 +1479,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 )}
                                                                 {answer.user?.feature_tag && (
                                                                     <span
-                                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md border"
+                                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md border shrink-0"
                                                                         style={{
                                                                             color: answer.user.feature_tag.color || '#FACC15',
                                                                             borderColor: answer.user.feature_tag.color || '#FACC15',
@@ -1489,7 +1489,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                         {answer.user.feature_tag.name}
                                                                     </span>
                                                                 )}
-                                                                <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
+                                                                <span className="shrink-0" style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                             </div>
                                                             <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
 
@@ -1515,7 +1515,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             </button>
                                                         )}
                                                     </div>
-                                                    {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{textWithMentions(answer.content)}</div>}
+                                                    {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap break-words">{textWithMentions(answer.content)}</div>}
                                                     {answer.gif_url && (
                                                         <div className="mt-3 rounded-lg overflow-hidden">
                                                             <img
@@ -1666,23 +1666,23 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
                                     return (
                                         <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}`} style={answerColorStyle}>
-                                            <div className="flex gap-4">
+                                            <div className="flex gap-3 min-w-0">
                                                 {answer.user?.username === 'anonim' ? (
-                                                    <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
+                                                    <div className="cursor-default shrink-0"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
                                                 ) : (
-                                                    <Link to={`/profile/${answer.user?.username}`}><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
+                                                    <Link to={`/profile/${answer.user?.username}`} className="shrink-0"><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
                                                 )}
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
                                                                 {answer.user?.username === 'anonim' ? (
                                                                     <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                                                 ) : (
                                                                     <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
                                                                 )}
                                                                 {answer.is_question_owner && (
-                                                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
+                                                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
                                                                         {answer.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
                                                                     </span>
                                                                 )}
@@ -1912,38 +1912,38 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
                                     return (
                                     <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}`} style={answerColorStyle}>
-                                        <div className="flex gap-4">
+                                        <div className="flex gap-3 min-w-0">
                                             {answer.user?.username === 'anonim' ? (
-                                                <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
+                                                <div className="cursor-default shrink-0"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
                                             ) : (
-                                                <Link to={`/profile/${answer.user?.username}`}><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
+                                                <Link to={`/profile/${answer.user?.username}`} className="shrink-0"><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
                                             )}
-                                            <div className="flex-1">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-start gap-2">
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
                                                             {answer.user?.username === 'anonim' ? (
                                                                 <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                                             ) : (
                                                                 <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
                                                             )}
                                                             {answer.is_question_owner && (
-                                                                <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
+                                                                <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
                                                                     {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                                                 </span>
                                                             )}
                                                             {answer.user?.age_range && (
-                                                                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {answer.user.age_range})</span>
+                                                                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0">(Yaş: {answer.user.age_range})</span>
                                                             )}
                                                             {answer.user?.level && (
                                                                 <span
-                                                                    className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                                    className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 shrink-0"
                                                                     style={answer.user?.level_color ? { color: answer.user.level_color, backgroundColor: `${answer.user.level_color}20` } : {}}
                                                                 >
                                                                     {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
                                                                 </span>
                                                             )}
-                                                            <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
+                                                            <span className="shrink-0" style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                         </div>
                                                         <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
 
@@ -1968,7 +1968,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         </button>
                                                     )}
                                                 </div>
-                                                {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{textWithMentions(answer.content)}</div>}
+                                                {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap break-words">{textWithMentions(answer.content)}</div>}
                                                 {youtubeLinks.length > 0 && (
                                                     <div className="space-y-3 mt-2">
                                                         {youtubeLinks.map(({ videoId, isMusic, url }) => (
@@ -2168,36 +2168,36 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-6 rounded-2xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}`} style={answerColorStyle}>
                                             <div className="flex gap-4">
                                                 {answer.user?.username === 'anonim' ? (
-                                                    <div className="cursor-default"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
+                                                    <div className="cursor-default shrink-0"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
                                                 ) : (
-                                                    <Link to={`/profile/${answer.user?.username}`}><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
+                                                    <Link to={`/profile/${answer.user?.username}`} className="shrink-0"><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
                                                 )}
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
                                                                 {answer.user?.username === 'anonim' ? (
                                                                     <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                                                 ) : (
                                                                     <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
                                                                 )}
                                                                 {answer.is_question_owner && (
-                                                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
+                                                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
                                                                         {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                                                     </span>
                                                                 )}
                                                                 {answer.user?.age_range && (
-                                                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {answer.user.age_range})</span>
+                                                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0">(Yaş: {answer.user.age_range})</span>
                                                                 )}
                                                                 {answer.user?.level && (
                                                                     <span
-                                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 shrink-0"
                                                                         style={answer.user?.level_color ? { color: answer.user.level_color, backgroundColor: `${answer.user.level_color}20` } : {}}
                                                                     >
                                                                         {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
                                                                     </span>
                                                                 )}
-                                                                <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
+                                                                <span className="shrink-0" style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                             </div>
                                                             <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
 
@@ -2221,7 +2221,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             </button>
                                                         )}
                                                     </div>
-                                                    {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">{textWithMentions(answer.content)}</div>}
+                                                    {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap break-words">{textWithMentions(answer.content)}</div>}
                                                     {youtubeLinks.length > 0 && (
                                                         <div className="space-y-3 mt-2">
                                                             {youtubeLinks.map(({ videoId, isMusic, url }) => (
