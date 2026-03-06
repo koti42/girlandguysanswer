@@ -54,6 +54,12 @@ const NotificationsPage = () => {
                     navigate(answerId ? `/question/${questionSlug}#answer-${answerId}` : `/question/${questionSlug}`);
                 }
                 break;
+            case 'best_answer_selected':
+                if (questionSlug) {
+                    const answerId = notification.data?.answer_id;
+                    navigate(answerId ? `/question/${questionSlug}#answer-${answerId}` : `/question/${questionSlug}`);
+                }
+                break;
             case 'answer_comment_created':
                 if (questionSlug) {
                     const answerId = notification.data?.answer_id;
