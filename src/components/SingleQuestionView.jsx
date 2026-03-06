@@ -515,8 +515,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         if (!commentText?.trim() && !gifUrl) return;
 
         try {
-            const isOwnerAnonQuestion = question?.is_anonymous && question?.isOwner;
-            const isAnon = isOwnerAnonQuestion ? true : (commentAnonymous[commentKey] || false);
+            const isAnon = commentAnonymous[commentKey] || false;
             const response = await commentsAPI.create({
                 content: commentText || '',
                 commentable_type: commentingOn.type,
@@ -553,8 +552,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         if (!replyText?.trim() && !gifUrl) return;
 
         try {
-            const isOwnerAnonQuestion = question?.is_anonymous && question?.isOwner;
-            const isAnon = isOwnerAnonQuestion ? true : (replyAnonymous[replyingTo.commentId] || false);
+            const isAnon = replyAnonymous[replyingTo.commentId] || false;
             const response = await commentsAPI.create({
                 content: replyText || '',
                 commentable_type: replyingTo.type,

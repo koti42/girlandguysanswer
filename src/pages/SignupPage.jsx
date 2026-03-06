@@ -14,6 +14,7 @@ const SignupPage = () => {
         password: '',
         confirmPassword: '',
         gender: '', // 'male' or 'female'
+        birthDate: '',
         agreeTerms: false,
         isHuman: false,
     });
@@ -85,6 +86,19 @@ const SignupPage = () => {
             newErrors.gender = 'Cinsiyet seçimi zorunludur';
         }
 
+        if (!formData.birthDate) {
+            newErrors.birthDate = 'Doğum tarihi zorunludur';
+        } else {
+            const birth = new Date(formData.birthDate);
+            const today = new Date();
+            const min = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+            if (Number.isNaN(birth.getTime())) {
+                newErrors.birthDate = 'Geçerli bir doğum tarihi girin';
+            } else if (birth > min) {
+                newErrors.birthDate = 'Kayıt olmak için en az 18 yaşında olmalısınız';
+            }
+        }
+
         if (!formData.agreeTerms) {
             newErrors.agreeTerms = 'Kullanım şartlarını kabul etmelisiniz';
         }
@@ -124,6 +138,7 @@ const SignupPage = () => {
             email: formData.email,
             password: formData.password,
             gender: formData.gender,
+            birth_date: formData.birthDate,
             terms_accepted: formData.agreeTerms,
             recaptcha_token: recaptchaToken,
             recaptcha_action: 'signup',
@@ -275,6 +290,23 @@ const SignupPage = () => {
                                 </label>
                             </div>
                             {errors.gender && <span className="text-red-500 text-sm mt-1 block">{errors.gender}</span>}
+                        </div>
+
+                        {/* Birth Date */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Doğum Tarihi <span className="text-coral">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                name="birthDate"
+                                value={formData.birthDate}
+                                onChange={handleInputChange}
+                                className={`w-full px-4 py-3 rounded-xl border ${
+                                    errors.birthDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
+                            />
+                            {errors.birthDate && <span className="text-red-500 text-sm mt-1 block">{errors.birthDate}</span>}
                         </div>
 
                         {/* Terms Agreement */}

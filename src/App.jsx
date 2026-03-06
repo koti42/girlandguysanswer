@@ -39,6 +39,7 @@ import WelcomeGuideModal from './components/WelcomeGuideModal';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import usePresence from './hooks/usePresence';
+import { usersAPI } from './services/api';
 
 const GenderCheck = ({ children }) => {
   const { user, loading } = useAuth();
@@ -54,6 +55,95 @@ const GenderCheck = ({ children }) => {
   }, [user, loading, location.pathname, navigate]);
 
   return children;
+};
+
+const AgeGate = () => {
+  const { user, loading, updateUser } = useAuth();
+  const [birthDate, setBirthDate] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  const shouldShow = Boolean(user && !loading && !user.birth_date);
+
+  const validate = (value) => {
+    if (!value) return 'Doğum tarihi zorunludur.';
+    const birth = new Date(value);
+    if (Number.isNaN(birth.getTime())) return 'Geçerli bir doğum tarihi girin.';
+    const today = new Date();
+    const min = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    if (birth > min) return 'Kayıt olmak için en az 18 yaşında olmalısınız.';
+    return '';
+  };
+
+  const handleSave = async () => {
+    const msg = validate(birthDate);
+    setError(msg);
+    if (msg) return;
+
+    setSubmitting(true);
+    try {
+      const res = await usersAPI.updateProfile({ birth_date: birthDate });
+      const updated = res.data?.data?.user || res.data?.user || null;
+      updateUser(updated ? updated : { birth_date: birthDate });
+    } catch (e) {
+      const apiMsg =
+        e.response?.data?.message ||
+        e.response?.data?.errors?.birth_date?.[0] ||
+        'Yaş bilgisi kaydedilemedi.';
+      setError(apiMsg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!shouldShow) {
+      setBirthDate('');
+      setError('');
+      setSubmitting(false);
+    }
+  }, [shouldShow]);
+
+  if (!shouldShow) return null;
+
+  return (
+    <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="p-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Yaş Doğrulaması</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">
+            Platformu kullanabilmek için doğum tarihini girmen gerekiyor. Bu bilgi daha sonra değiştirilemez.
+          </p>
+
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            Doğum Tarihi
+          </label>
+          <input
+            type="date"
+            value={birthDate}
+            onChange={(e) => {
+              setBirthDate(e.target.value);
+              if (error) setError('');
+            }}
+            className={`w-full px-4 py-3 rounded-xl border ${
+              error ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+            } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
+          />
+
+          {error && <div className="mt-3 text-sm text-red-500">{error}</div>}
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={submitting}
+            className="mt-5 w-full py-3 px-6 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const WelcomeGuideGate = () => {
@@ -135,6 +225,7 @@ function App() {
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
                 </Routes>
+                <AgeGate />
                 <WelcomeGuideGate />
               </div>
             </GenderCheck>
