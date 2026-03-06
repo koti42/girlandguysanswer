@@ -736,6 +736,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         {comment.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                     </span>
                                 )}
+                                {comment.user?.age_range && (
+                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {comment.user.age_range})</span>
+                                )}
+                                {comment.user?.level && (
+                                    <span
+                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                        style={comment.user?.level_color ? { color: comment.user.level_color, backgroundColor: `${comment.user.level_color}20` } : {}}
+                                    >
+                                        {typeof comment.user.level === 'object' ? comment.user.level?.name : comment.user.level}
+                                    </span>
+                                )}
                                 <span className="text-xs" style={{ color: getProfileColor(comment.user, viewerPrefs) }}>{comment.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                 <span className="text-gray-500 text-xs">• {formatDate(comment.created_at)}</span>
                             </div>
@@ -1033,6 +1044,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         {question.isOwner && question.is_anonymous && (
                                             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Soru sahibi)</span>
                                         )}
+                                        {question.user?.age_range && (
+                                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {question.user.age_range})</span>
+                                        )}
+                                        {question.user?.level && (
+                                            <span
+                                                className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                style={question.user?.level_color ? { color: question.user.level_color, backgroundColor: `${question.user.level_color}20` } : {}}
+                                            >
+                                                {typeof question.user.level === 'object' ? question.user.level?.name : question.user.level}
+                                            </span>
+                                        )}
                                         <span style={{ color: getProfileColor(question.user, viewerPrefs) }}>{question.user.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
@@ -1067,6 +1089,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                 <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{question.user.username}</Link>
                                                 {question.isOwner && question.is_anonymous && (
                                                     <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Soru sahibi)</span>
+                                                )}
+                                                {question.user?.age_range && (
+                                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {question.user.age_range})</span>
+                                                )}
+                                                {question.user?.level && (
+                                                    <span
+                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                        style={question.user?.level_color ? { color: question.user.level_color, backgroundColor: `${question.user.level_color}20` } : {}}
+                                                    >
+                                                        {typeof question.user.level === 'object' ? question.user.level?.name : question.user.level}
+                                                    </span>
                                                 )}
                                                 <span style={{ color: getProfileColor(question.user, viewerPrefs) }}>{question.user.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                             </div>
@@ -1377,6 +1410,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                         {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
                                                                     </span>
                                                                 )}
+                                                                {answer.user?.age_range && (
+                                                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {answer.user.age_range})</span>
+                                                                )}
+                                                                {answer.user?.level && (
+                                                                    <span
+                                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                                        style={answer.user?.level_color ? { color: answer.user.level_color, backgroundColor: `${answer.user.level_color}20` } : {}}
+                                                                    >
+                                                                        {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
+                                                                    </span>
+                                                                )}
                                                                 <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                             </div>
                                                             <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
@@ -1574,6 +1618,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                         {answer.user?.username === 'anonim' ? 'Gizli (Soru Sahibi)' : 'Soru Sahibi'}
                                                                     </span>
                                                                 )}
+                                                            {answer.user?.age_range && (
+                                                                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {answer.user.age_range})</span>
+                                                            )}
+                                                            {answer.user?.level && (
+                                                                <span
+                                                                    className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                                    style={answer.user?.level_color ? { color: answer.user.level_color, backgroundColor: `${answer.user.level_color}20` } : {}}
+                                                                >
+                                                                    {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
+                                                                </span>
+                                                            )}
                                                                 <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                                             </div>
                                                             <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
@@ -1807,6 +1862,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             {answer.is_question_owner && (
                                                                 <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
                                                                     {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
+                                                                </span>
+                                                            )}
+                                                            {answer.user?.age_range && (
+                                                                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {answer.user.age_range})</span>
+                                                            )}
+                                                            {answer.user?.level && (
+                                                                <span
+                                                                    className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                                    style={answer.user?.level_color ? { color: answer.user.level_color, backgroundColor: `${answer.user.level_color}20` } : {}}
+                                                                >
+                                                                    {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
                                                                 </span>
                                                             )}
                                                             <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
@@ -2050,6 +2116,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 {answer.is_question_owner && (
                                                                     <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
                                                                         {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
+                                                                    </span>
+                                                                )}
+                                                                {answer.user?.age_range && (
+                                                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Yaş: {answer.user.age_range})</span>
+                                                                )}
+                                                                {answer.user?.level && (
+                                                                    <span
+                                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                                        style={answer.user?.level_color ? { color: answer.user.level_color, backgroundColor: `${answer.user.level_color}20` } : {}}
+                                                                    >
+                                                                        {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
                                                                     </span>
                                                                 )}
                                                                 <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>

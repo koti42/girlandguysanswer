@@ -147,6 +147,7 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
     const stats = displayProfile?.stats || {};
     const followers = stats.followers ?? displayProfile?.followers_count ?? 0;
     const following = stats.following ?? displayProfile?.following_count ?? 0;
+    const ageRange = displayProfile?.age_range;
     const level = displayProfile?.level;
     const levelName = typeof level === 'object' ? level?.name : level;
     const levelColor = typeof level === 'object' ? level?.color : '#6B7280';
@@ -230,13 +231,22 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
                                     {displayProfile?.username || username}
                                     {displayProfile?.is_verified && <FaCheckCircle className="text-blue-500 text-sm" />}
                                 </h3>
-                                {levelName && (
-                                    <span
-                                        className="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-                                        style={levelColor ? { color: levelColor, backgroundColor: `${levelColor}20` } : {}}
-                                    >
-                                        {levelName}
-                                    </span>
+                                {(ageRange || levelName) && (
+                                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                        {ageRange && (
+                                            <span className="inline-flex text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                                Yaş: {ageRange}
+                                            </span>
+                                        )}
+                                        {levelName && (
+                                            <span
+                                                className="inline-flex text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                style={levelColor ? { color: levelColor, backgroundColor: `${levelColor}20` } : {}}
+                                            >
+                                                {levelName}
+                                            </span>
+                                        )}
+                                    </div>
                                 )}
                             </Link>
                         </div>

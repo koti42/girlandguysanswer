@@ -13,6 +13,10 @@ const stripHtml = (html) => (html ? DOMPurify.sanitize(html, { ALLOWED_TAGS: [] 
 const OpinionCard = ({ opinion, viewerPrefs }) => {
     const excerpt = stripHtml(opinion.content).slice(0, 160);
     const imageUrl = opinion.images?.[0];
+    const ageRange = opinion.user?.age_range;
+    const rawLevel = opinion.user?.level;
+    const levelName = typeof rawLevel === 'object' ? rawLevel?.name : rawLevel;
+    const levelColor = typeof rawLevel === 'object' ? rawLevel?.color : (opinion.user?.level_color || '#6B7280');
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -44,7 +48,22 @@ const OpinionCard = ({ opinion, viewerPrefs }) => {
                 <div className="flex items-center gap-3 mb-3">
                     <UserAvatar user={opinion.user} size="md" className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-sm" />
                     <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gray-900 dark:text-white truncate">{opinion.user?.username || 'Kullanıcı'}</p>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <p className="font-bold text-gray-900 dark:text-white truncate">{opinion.user?.username || 'Kullanıcı'}</p>
+                            {ageRange && (
+                                <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                                    (Yaş: {ageRange})
+                                </span>
+                            )}
+                            {levelName && (
+                                <span
+                                    className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                    style={levelColor ? { color: levelColor, backgroundColor: `${levelColor}20` } : {}}
+                                >
+                                    {levelName}
+                                </span>
+                            )}
+                        </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                             {opinion.created_at ? formatDistanceToNow(new Date(opinion.created_at), { addSuffix: true, locale: tr }) : ''}
                         </p>

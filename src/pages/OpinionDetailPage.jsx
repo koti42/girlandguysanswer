@@ -229,6 +229,19 @@ const OpinionDetailPage = () => {
                                     <Link to={`/profile/${opinion.user?.username}`} className="font-bold text-gray-900 dark:text-white hover:underline">
                                         {opinion.user?.username || 'Kullanıcı'}
                                     </Link>
+                                    {opinion.user?.age_range && (
+                                        <span className="ml-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                            (Yaş: {opinion.user.age_range})
+                                        </span>
+                                    )}
+                                    {opinion.user?.level && (
+                                        <span
+                                            className="ml-2 inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                            style={opinion.user?.level_color ? { color: opinion.user.level_color, backgroundColor: `${opinion.user.level_color}20` } : {}}
+                                        >
+                                            {typeof opinion.user.level === 'object' ? opinion.user.level?.name : opinion.user.level}
+                                        </span>
+                                    )}
                                     <p className="text-xs text-gray-500 dark:text-gray-400">
                                         {opinion.created_at ? formatDistanceToNow(new Date(opinion.created_at), { addSuffix: true, locale: tr }) : ''}
                                     </p>
@@ -305,6 +318,19 @@ const OpinionDetailPage = () => {
                                                         <Link to={`/profile/${c.user?.username}`} className="font-bold text-gray-900 dark:text-white hover:underline">
                                                             {c.user?.username || 'Kullanıcı'}
                                                         </Link>
+                                                    {c.user?.age_range && (
+                                                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                                                            (Yaş: {c.user.age_range})
+                                                        </span>
+                                                    )}
+                                                    {c.user?.level && (
+                                                        <span
+                                                            className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                                            style={c.user?.level_color ? { color: c.user.level_color, backgroundColor: `${c.user.level_color}20` } : {}}
+                                                        >
+                                                            {typeof c.user.level === 'object' ? c.user.level?.name : c.user.level}
+                                                        </span>
+                                                    )}
                                                         <span className="text-gray-500 text-xs">
                                                             {c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: tr }) : ''}
                                                         </span>

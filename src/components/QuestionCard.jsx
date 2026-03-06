@@ -121,6 +121,10 @@ const QuestionCard = ({ question, onModerationAction }) => {
     const themeStyles = getThemeStyles(userForTheme, viewerPrefs);
     const isOwnerAnonymous = !question.user?.username || question.user?.username === 'anonim';
     const displayName = isOwnerAnonymous ? 'Gizli Üye' : question.user.username;
+    const ageRange = question.user?.age_range;
+    const rawLevel = question.user?.level;
+    const levelName = typeof rawLevel === 'object' ? rawLevel?.name : rawLevel;
+    const levelColor = typeof rawLevel === 'object' ? rawLevel?.color : (question.user?.level_color || '#6B7280');
 
     return (
         <div className="rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}40` }}>
@@ -151,6 +155,23 @@ const QuestionCard = ({ question, onModerationAction }) => {
                                     <FaMars className="text-base md:text-lg" style={{ color: themeStyles.accentColor }} />
                                 )}
                             </div>
+                            {(ageRange || levelName) && (
+                                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                    {ageRange && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                            Yaş: {ageRange}
+                                        </span>
+                                    )}
+                                    {levelName && (
+                                        <span
+                                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                            style={levelColor ? { color: levelColor, backgroundColor: `${levelColor}20` } : {}}
+                                        >
+                                            {levelName}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500 dark:text-gray-400 text-[10px] md:text-xs">
                                 {question.category?.name && (() => {
                                     const categoryName = question.category.name;
