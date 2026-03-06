@@ -84,7 +84,10 @@ const AgeGate = () => {
     try {
       const res = await usersAPI.updateProfile({ birth_date: birthDate });
       const updated = res.data?.data?.user || res.data?.user || null;
-      updateUser(updated ? updated : { birth_date: birthDate });
+      updateUser({
+        ...(updated || {}),
+        birth_date: updated?.birth_date ?? birthDate,
+      });
     } catch (e) {
       const apiMsg =
         e.response?.data?.message ||
