@@ -774,7 +774,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 <span className="text-xs" style={{ color: getProfileColor(comment.user, viewerPrefs) }}>{comment.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
                                 <span className="text-gray-500 text-xs">• {formatDate(comment.created_at)}</span>
                             </div>
-                            {comment.content && <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2 whitespace-pre-wrap">{textWithMentions(comment.content)}</p>}
+                            {comment.content && (
+                                <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words">
+                                    {textWithMentions(comment.content)}
+                                </p>
+                            )}
                             {youtubeLinks.length > 0 && (
                                 <div className="space-y-3 mb-2">
                                     {youtubeLinks.map(({ videoId, isMusic, url }) => (

@@ -104,28 +104,11 @@
 /* Feature tag avatar ring */
 @keyframes feature-tag-ring-orbit {
   0% {
-    transform: rotate(0deg) scale(1);
-    box-shadow: 0 0 8px currentColor;
-  }
-
-  25% {
-    transform: rotate(90deg) scale(1.05);
-    box-shadow: 0 0 12px currentColor, 0 0 0 2px currentColor;
-  }
-
-  50% {
-    transform: rotate(180deg) scale(1.08);
-    box-shadow: 0 0 16px currentColor, 0 0 0 3px currentColor;
-  }
-
-  75% {
-    transform: rotate(270deg) scale(1.05);
-    box-shadow: 0 0 12px currentColor, 0 0 0 2px currentColor;
+    transform: rotate(0deg);
   }
 
   100% {
-    transform: rotate(360deg) scale(1);
-    box-shadow: 0 0 8px currentColor;
+    transform: rotate(360deg);
   }
 }
 
@@ -136,7 +119,7 @@
   border-width: 2px;
   border-style: solid;
   opacity: 0.9;
-  animation: feature-tag-ring-orbit 2.4s ease-in-out infinite;
+  animation: feature-tag-ring-orbit 2.2s linear infinite;
   pointer-events: none;
 }
 
