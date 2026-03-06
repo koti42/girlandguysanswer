@@ -8,6 +8,8 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender, viewerPrefs }) => {
     const accentColor = getProfileColor(contentCreator, viewerPrefs);
     const isFemale = gender === 'female' || gender === 'kiz' || gender === 'kadın' || gender === 'woman';
     const isMale = gender === 'male' || gender === 'erkek' || gender === 'man';
+    const featureTag = profileData.feature_tag;
+    const featureColor = featureTag?.color || '#FACC15';
 
     return (
         <div className="flex-1">
@@ -94,6 +96,19 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender, viewerPrefs }) => {
                     <span className="px-3 py-1 text-[11px] font-semibold rounded-full shadow-sm border bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
                         <FaTrophy className="text-xs" />
                         <span>Genel: #{profileData.ranks.general}</span>
+                    </span>
+                )}
+                {/* Feature Tag Badge */}
+                {featureTag && (
+                    <span
+                        className="px-3 py-1 text-[11px] font-semibold rounded-full shadow-sm border flex items-center gap-1"
+                        style={{
+                            backgroundColor: `${featureColor}20`,
+                            color: featureColor,
+                            borderColor: `${featureColor}80`,
+                        }}
+                    >
+                        {featureTag.name}
                     </span>
                 )}
                 {isVIP && (

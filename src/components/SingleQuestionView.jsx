@@ -721,7 +721,19 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                             </div>
                         ) : (
                             <Link to={`/profile/${comment.user?.username}`}>
-                                <UserAvatar user={comment.user} size="sm" className="w-10 h-10 border-2 border-white dark:border-gray-600 shadow-sm hover:border-coral transition-colors" />
+                                <div className="relative inline-flex">
+                                    {comment.user?.feature_tag && comment.user.feature_tag.color && (
+                                        <div
+                                            className="feature-tag-ring"
+                                            style={{ borderColor: comment.user.feature_tag.color, boxShadow: `${comment.user.feature_tag.color}66 0 0 18px` }}
+                                        />
+                                    )}
+                                    <UserAvatar
+                                        user={comment.user}
+                                        size="sm"
+                                        className="w-10 h-10 border-2 border-white dark:border-gray-600 shadow-sm hover:border-coral transition-colors relative"
+                                    />
+                                </div>
                             </Link>
                         )}
                         <div className="flex-1">
@@ -745,6 +757,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         style={comment.user?.level_color ? { color: comment.user.level_color, backgroundColor: `${comment.user.level_color}20` } : {}}
                                     >
                                         {typeof comment.user.level === 'object' ? comment.user.level?.name : comment.user.level}
+                                    </span>
+                                )}
+                                {comment.user?.feature_tag && (
+                                    <span
+                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md border"
+                                        style={{
+                                            color: comment.user.feature_tag.color || '#FACC15',
+                                            borderColor: comment.user.feature_tag.color || '#FACC15',
+                                            backgroundColor: `${(comment.user.feature_tag.color || '#FACC15')}14`,
+                                        }}
+                                    >
+                                        {comment.user.feature_tag.name}
                                     </span>
                                 )}
                                 <span className="text-xs" style={{ color: getProfileColor(comment.user, viewerPrefs) }}>{comment.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
@@ -1037,7 +1061,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     <div className="flex items-center gap-3 mb-4">
                         {question.user.username === 'anonim' ? (
                             <>
-                                <div className="cursor-default"><UserAvatar user={question.user} size="lg" className="border-2 border-white" /></div>
+                                <div className="cursor-default">
+                                    <UserAvatar user={question.user} size="lg" className="border-2 border-white" />
+                                </div>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
@@ -1083,7 +1109,21 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     user={question.user}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <Link to={`/profile/${question.user.username}`}><UserAvatar user={question.user} size="lg" className="hover:border-coral transition-colors" /></Link>
+                                        <Link to={`/profile/${question.user.username}`}>
+                                            <div className="relative inline-flex">
+                                                {question.user?.feature_tag && question.user.feature_tag.color && (
+                                                    <div
+                                                        className="feature-tag-ring"
+                                                        style={{ borderColor: question.user.feature_tag.color, boxShadow: `${question.user.feature_tag.color}66 0 0 24px` }}
+                                                    />
+                                                )}
+                                                <UserAvatar
+                                                    user={question.user}
+                                                    size="lg"
+                                                    className="hover:border-coral transition-colors relative"
+                                                />
+                                            </div>
+                                        </Link>
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{question.user.username}</Link>
@@ -1099,6 +1139,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         style={question.user?.level_color ? { color: question.user.level_color, backgroundColor: `${question.user.level_color}20` } : {}}
                                                     >
                                                         {typeof question.user.level === 'object' ? question.user.level?.name : question.user.level}
+                                                    </span>
+                                                )}
+                                                {question.user?.feature_tag && (
+                                                    <span
+                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md border"
+                                                        style={{
+                                                            color: question.user.feature_tag.color || '#FACC15',
+                                                            borderColor: question.user.feature_tag.color || '#FACC15',
+                                                            backgroundColor: `${(question.user.feature_tag.color || '#FACC15')}14`,
+                                                        }}
+                                                    >
+                                                        {question.user.feature_tag.name}
                                                     </span>
                                                 )}
                                                 <span style={{ color: getProfileColor(question.user, viewerPrefs) }}>{question.user.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
@@ -1397,9 +1449,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                     <Link to={`/profile/${answer.user?.username}`}><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
                                                 )}
                                                 <div className="flex-1">
-                                                    <div className="flex justify-between items-start">
+                                                            <div className="flex justify-between items-start">
                                                         <div>
-                                                            <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-2 flex-wrap">
                                                                 {answer.user?.username === 'anonim' ? (
                                                                     <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                                                 ) : (
@@ -1419,6 +1471,18 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                         style={answer.user?.level_color ? { color: answer.user.level_color, backgroundColor: `${answer.user.level_color}20` } : {}}
                                                                     >
                                                                         {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
+                                                                    </span>
+                                                                )}
+                                                                {answer.user?.feature_tag && (
+                                                                    <span
+                                                                        className="text-xs font-semibold px-1.5 py-0.5 rounded-md border"
+                                                                        style={{
+                                                                            color: answer.user.feature_tag.color || '#FACC15',
+                                                                            borderColor: answer.user.feature_tag.color || '#FACC15',
+                                                                            backgroundColor: `${(answer.user.feature_tag.color || '#FACC15')}14`,
+                                                                        }}
+                                                                    >
+                                                                        {answer.user.feature_tag.name}
                                                                     </span>
                                                                 )}
                                                                 <span style={{ color: getProfileColor(answer.user, viewerPrefs) }}>{answer.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>

@@ -192,6 +192,9 @@ export const usersAPI = {
         password_confirmation: confirmPassword,
     }),
     heartbeat: () => api.post('/user/me/heartbeat'),
+    assignFeatureTag: (userId, featureTagSlug) => api.put(`/admin/users/${userId}/feature-tag`, {
+        feature_tag_slug: featureTagSlug || null,
+    }),
 };
 
 export const gifsAPI = {

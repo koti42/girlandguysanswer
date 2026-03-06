@@ -3,7 +3,7 @@ import { FaCamera, FaTimes } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 import ImageLightbox from './ImageLightbox';
 
-const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => {
+const ProfileAvatar = ({ avatar, username, featureTag, onAvatarUpload, onAvatarRemove }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
@@ -59,12 +59,21 @@ const ProfileAvatar = ({ avatar, username, onAvatarUpload, onAvatarRemove }) => 
                     tabIndex={0}
                     onClick={() => avatar && setIsLightboxOpen(true)}
                     onKeyDown={(e) => e.key === 'Enter' && avatar && setIsLightboxOpen(true)}
-                    className="cursor-pointer w-32 h-32 rounded-full overflow-hidden flex shrink-0"
+                    className="cursor-pointer w-32 h-32 rounded-full flex shrink-0 relative items-center justify-center"
                 >
+                    {featureTag?.color && (
+                        <div
+                            className="feature-tag-ring"
+                            style={{
+                                color: featureTag.color,
+                                borderColor: featureTag.color,
+                            }}
+                        />
+                    )}
                     <UserAvatar
                         user={{ avatar, username }}
                         size="3xl"
-                        className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
+                        className="w-32 h-32 rounded-full border-4 border-white shadow-lg relative"
                     />
                 </div>
                 {onAvatarUpload && (

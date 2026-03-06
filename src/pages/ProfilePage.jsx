@@ -22,7 +22,7 @@ import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 const ProfilePage = () => {
     const { username } = useParams();
     const navigate = useNavigate();
-    const { user: currentUser, updateUser, canModerate } = useAuth();
+    const { user: currentUser, updateUser, permissions, canModerate } = useAuth();
     const isOwnProfile = !username || (currentUser && currentUser.username === username);
 
     const DEFAULT_COVER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop';
@@ -61,6 +61,9 @@ const ProfilePage = () => {
     const [following, setFollowing] = useState([]);
     const [answers, setAnswers] = useState([]);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [featureTagSaving, setFeatureTagSaving] = useState(false);
+    const [featureTagModalOpen, setFeatureTagModalOpen] = useState(false);
+    const [featureTagDraft, setFeatureTagDraft] = useState('');
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -432,6 +435,37 @@ const ProfilePage = () => {
     const viewerPrefs = getViewerPrefs(currentUser);
     const themeStyles = getThemeStyles(contentCreator, viewerPrefs);
 
+    const isCurrentUserSuperAdmin = !!permissions?.is_super_admin;
+
+    const handleFeatureTagChange = async (slug) => {
+        if (!profileData || !isCurrentUserSuperAdmin) return;
+        const value = slug;
+        setFeatureTagSaving(true);
+        try {
+            const res = await usersAPI.assignFeatureTag(profileData.id, value || null);
+            const data = res.data?.data?.user || res.data?.user || null;
+            if (data) {
+                setProfileData(prev => ({ ...prev, ...data }));
+            } else {
+                setProfileData(prev => ({
+                    ...prev,
+                    feature_tag: value
+                        ? {
+                            ...(prev.feature_tag || {}),
+                            slug: value,
+                        }
+                        : null,
+                }));
+            }
+            showToast('Fenomen etiketi güncellendi.', 'success');
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Fenomen etiketi güncellenemedi.';
+            showToast(msg, 'error');
+        } finally {
+            setFeatureTagSaving(false);
+        }
+    };
+
     return (
         <>
             <SEO
@@ -472,6 +506,7 @@ const ProfilePage = () => {
                                         <ProfileAvatar
                                             avatar={profileData.avatar}
                                             username={profileData.username}
+                                            featureTag={profileData.feature_tag}
                                             onAvatarUpload={isOwnProfile ? handleAvatarUpload : null}
                                             onAvatarRemove={isOwnProfile ? handleAvatarRemove : null}
                                         />
@@ -580,45 +615,62 @@ const ProfilePage = () => {
 
                                 {/* Moderation Panel for Moderators */}
                                 {(canModerate || profileData?.canModerate) && !isOwnProfile && (
-                                    <ModerationActionsPanel
-                                        targetUser={profileData}
-                                        onActionComplete={async (action, message) => {
-                                            showToast(message, 'success');
-                                            try {
-                                                const res = await usersAPI.getProfile(profileData.username);
-                                                const responseData = res.data.data;
-                                                // Backend'den gelen response yapısı: { success: true, data: { user: {...}, ... } } veya { success: true, data: {...} }
-                                                const userData = responseData.user || responseData;
+                                    <div className="flex flex-col gap-3">
+                                        <ModerationActionsPanel
+                                            targetUser={profileData}
+                                            onActionComplete={async (action, message) => {
+                                                showToast(message, 'success');
+                                                try {
+                                                    const res = await usersAPI.getProfile(profileData.username);
+                                                    const responseData = res.data.data;
+                                                    // Backend'den gelen response yapısı: { success: true, data: { user: {...}, ... } } veya { success: true, data: {...} }
+                                                    const userData = responseData.user || responseData;
 
-                                                setProfileData(prev => ({
-                                                    ...prev,
-                                                    ...userData,
-                                                    accountStatus: responseData.accountStatus || userData.accountStatus || null,
-                                                    // Fallback için eski alanları da güncelle
-                                                    banned_at: userData.banned_at || null,
-                                                    banned_until: userData.banned_until || (responseData.accountStatus?.status === 'banned' ? responseData.accountStatus?.until : null) || null,
-                                                    banned_reason: userData.banned_reason || (responseData.accountStatus?.status === 'banned' ? responseData.accountStatus?.reason : null) || null,
-                                                    frozen_at: userData.frozen_at || null,
-                                                    frozen_until: userData.frozen_until || (responseData.accountStatus?.status === 'frozen' ? responseData.accountStatus?.until : null) || null,
-                                                    frozen_reason: userData.frozen_reason || (responseData.accountStatus?.status === 'frozen' ? responseData.accountStatus?.reason : null) || null,
-                                                    // Stats objesini koru veya güncelle
-                                                    stats: {
-                                                        questions: userData.stats?.questions ?? prev.stats?.questions ?? 0,
-                                                        followers: userData.stats?.followers ?? prev.stats?.followers ?? 0,
-                                                        following: userData.stats?.following ?? prev.stats?.following ?? 0,
-                                                        answers: userData.stats?.answers ?? prev.stats?.answers ?? 0,
-                                                        likes: userData.stats?.likes ?? prev.stats?.likes ?? 0,
-                                                        badges: userData.badges?.length ?? prev.badges?.length ?? 0,
-                                                        xperPoints: userData.xp ?? prev.xp ?? 0,
-                                                        generalRank: userData.ranks?.general ?? prev.ranks?.general ?? '-',
-                                                        categoryRank: userData.ranks?.gender ?? prev.ranks?.gender ?? '-'
-                                                    }
-                                                }));
-                                            } catch (err) {
-                                                console.error('Profile refresh error:', err);
-                                            }
-                                        }}
-                                    />
+                                                    setProfileData(prev => ({
+                                                        ...prev,
+                                                        ...userData,
+                                                        accountStatus: responseData.accountStatus || userData.accountStatus || null,
+                                                        // Fallback için eski alanları da güncelle
+                                                        banned_at: userData.banned_at || null,
+                                                        banned_until: userData.banned_until || (responseData.accountStatus?.status === 'banned' ? responseData.accountStatus?.until : null) || null,
+                                                        banned_reason: userData.banned_reason || (responseData.accountStatus?.status === 'banned' ? responseData.accountStatus?.reason : null) || null,
+                                                        frozen_at: userData.frozen_at || null,
+                                                        frozen_until: userData.frozen_until || (responseData.accountStatus?.status === 'frozen' ? responseData.accountStatus?.until : null) || null,
+                                                        frozen_reason: userData.frozen_reason || (responseData.accountStatus?.status === 'frozen' ? responseData.accountStatus?.reason : null) || null,
+                                                        // Stats objesini koru veya güncelle
+                                                        stats: {
+                                                            questions: userData.stats?.questions ?? prev.stats?.questions ?? 0,
+                                                            followers: userData.stats?.followers ?? prev.stats?.followers ?? 0,
+                                                            following: userData.stats?.following ?? prev.stats?.following ?? 0,
+                                                            answers: userData.stats?.answers ?? prev.stats?.answers ?? 0,
+                                                            likes: userData.stats?.likes ?? prev.stats?.likes ?? 0,
+                                                            badges: userData.badges?.length ?? prev.badges?.length ?? 0,
+                                                            xperPoints: userData.xp ?? prev.xp ?? 0,
+                                                            generalRank: userData.ranks?.general ?? prev.ranks?.general ?? '-',
+                                                            categoryRank: userData.ranks?.gender ?? prev.ranks?.gender ?? '-'
+                                                        }
+                                                    }));
+                                                } catch (err) {
+                                                    console.error('Profile refresh error:', err);
+                                                }
+                                            }}
+                                        />
+
+                                        {isCurrentUserSuperAdmin && (
+                                            <div className="flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setFeatureTagDraft(profileData.feature_tag?.slug || '');
+                                                        setFeatureTagModalOpen(true);
+                                                    }}
+                                                    className="px-4 py-2 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm hover:shadow-md hover:opacity-95 active:scale-95 transition-all"
+                                                >
+                                                    Fenomen Etiketi Ata
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
 
                                 <ProfileTabContent
@@ -660,6 +712,92 @@ const ProfilePage = () => {
                             <div className="flex gap-3 justify-end">
                                 <button onClick={() => setShowUnblockModal(false)} className="px-4 py-2 text-gray-600 dark:text-gray-300">İptal</button>
                                 <button onClick={confirmUnblock} className="px-4 py-2 bg-green-500 text-white rounded-lg">Kaldır</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Feature Tag Modal */}
+                {featureTagModalOpen && isCurrentUserSuperAdmin && !isOwnProfile && (
+                    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-xl w-full p-6 md:p-7">
+                            <h3 className="text-lg md:text-xl font-bold mb-1 text-gray-900 dark:text-white">
+                                Fenomen Etiketi Seç
+                            </h3>
+                            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                Bu kullanıcı için öne çıkarmak istediğin fenomentagını seç. İstemezsen &quot;Yok&quot; seçeneği ile kaldırabilirsin.
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                {[
+                                    { slug: '', name: 'Yok', desc: 'Hiçbir fenomen etiketi atama.', color: '#6B7280' },
+                                    { slug: 'akimbukucu', name: 'Akımbükücü', desc: 'Trendlerin yönünü değiştiren.', color: '#FACC15' },
+                                    { slug: 'algi-mimari', name: 'Algı Mimarı', desc: 'Algıyı baştan inşa eden.', color: '#6366F1' },
+                                    { slug: 'nadirat', name: 'Nadirat', desc: 'Az bulunan, özel içerik üreten.', color: '#EC4899' },
+                                    { slug: 'zihin-tetikleyici', name: 'Zihin Tetikleyici', desc: 'Düşünce ve aksiyon başlatan.', color: '#22C55E' },
+                                    { slug: 'kultur-kodlayici', name: 'Kültür Kodlayıcı', desc: 'Kültürel kodları yeniden yazan.', color: '#F97316' },
+                                    { slug: 'imza-karakter', name: 'İmza Karakter', desc: 'Taklit edilemez üslup sahibi.', color: '#0EA5E9' },
+                                    { slug: 'vizyon-kasifi', name: 'Vizyon Kaşifi', desc: 'Kimsenin görmediğini gören.', color: '#A855F7' },
+                                    { slug: 'yanki-ustasi', name: 'Yankı Ustası', desc: 'Sözleri uzun süre rezonans yaratan.', color: '#E11D48' },
+                                    { slug: 'modern-bilge', name: 'Modern Bilge', desc: 'Teknoloji + bilgelik karması.', color: '#14B8A6' },
+                                    { slug: 'oncul-izlek', name: 'Öncül İzlek', desc: 'Yolu ilk açan, iz bırakan.', color: '#4B5563' },
+                                ].map((tag) => {
+                                    const isSelected = featureTagDraft === tag.slug;
+                                    return (
+                                        <button
+                                            key={tag.slug || 'none'}
+                                            type="button"
+                                            onClick={() => setFeatureTagDraft(tag.slug)}
+                                            className={`text-left rounded-xl border px-3 py-2.5 text-xs md:text-sm transition-all ${
+                                                isSelected
+                                                    ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-900'
+                                                    : 'hover:shadow-sm'
+                                            }`}
+                                            style={{
+                                                borderColor: `${tag.color}55`,
+                                                backgroundColor: isSelected ? `${tag.color}15` : 'transparent',
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span
+                                                    className="w-2 h-2 rounded-full"
+                                                    style={{ backgroundColor: tag.color }}
+                                                />
+                                                <span
+                                                    className="font-semibold"
+                                                    style={{ color: tag.color }}
+                                                >
+                                                    {tag.name}
+                                                </span>
+                                            </div>
+                                            <p className="text-[11px] text-gray-600 dark:text-gray-400">
+                                                {tag.desc}
+                                            </p>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-2">
+                                <button
+                                    type="button"
+                                    className="px-3 py-1.5 text-xs md:text-sm rounded-lg border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                    onClick={() => setFeatureTagModalOpen(false)}
+                                    disabled={featureTagSaving}
+                                >
+                                    İptal
+                                </button>
+                                <button
+                                    type="button"
+                                    className="px-4 py-1.5 text-xs md:text-sm rounded-lg bg-coral text-white font-semibold hover:opacity-95 active:scale-95 transition-all disabled:opacity-70"
+                                    onClick={() => {
+                                        handleFeatureTagChange(featureTagDraft);
+                                        setFeatureTagModalOpen(false);
+                                    }}
+                                    disabled={featureTagSaving}
+                                >
+                                    Kaydet
+                                </button>
                             </div>
                         </div>
                     </div>

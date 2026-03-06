@@ -17,6 +17,8 @@ const OpinionCard = ({ opinion, viewerPrefs }) => {
     const rawLevel = opinion.user?.level;
     const levelName = typeof rawLevel === 'object' ? rawLevel?.name : rawLevel;
     const levelColor = typeof rawLevel === 'object' ? rawLevel?.color : (opinion.user?.level_color || '#6B7280');
+    const featureTag = opinion.user?.feature_tag;
+    const featureColor = featureTag?.color || '#FACC15';
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -46,7 +48,19 @@ const OpinionCard = ({ opinion, viewerPrefs }) => {
         >
             <div className="p-5 md:p-6">
                 <div className="flex items-center gap-3 mb-3">
-                    <UserAvatar user={opinion.user} size="md" className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-sm" />
+                    <div className="relative inline-flex">
+                        {featureTag && (
+                            <div
+                                className="feature-tag-ring"
+                                style={{ borderColor: featureColor, boxShadow: `${featureColor}66 0 0 18px` }}
+                            />
+                        )}
+                        <UserAvatar
+                            user={opinion.user}
+                            size="md"
+                            className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-sm relative"
+                        />
+                    </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">
                             <p className="font-bold text-gray-900 dark:text-white truncate">{opinion.user?.username || 'Kullanıcı'}</p>
@@ -61,6 +75,14 @@ const OpinionCard = ({ opinion, viewerPrefs }) => {
                                     style={levelColor ? { color: levelColor, backgroundColor: `${levelColor}20` } : {}}
                                 >
                                     {levelName}
+                                </span>
+                            )}
+                            {featureTag && (
+                                <span
+                                    className="text-[11px] font-semibold px-2 py-0.5 rounded-md border"
+                                    style={{ color: featureColor, borderColor: featureColor, backgroundColor: `${featureColor}14` }}
+                                >
+                                    {featureTag.name}
                                 </span>
                             )}
                         </div>

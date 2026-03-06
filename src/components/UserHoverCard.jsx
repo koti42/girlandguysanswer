@@ -151,6 +151,8 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
     const level = displayProfile?.level;
     const levelName = typeof level === 'object' ? level?.name : level;
     const levelColor = typeof level === 'object' ? level?.color : '#6B7280';
+    const featureTag = displayProfile?.feature_tag;
+    const featureColor = featureTag?.color || '#FACC15';
     const badgesCount = (displayProfile?.badges || [])?.length ?? stats.badges ?? 0;
     const xp = displayProfile?.xp ?? stats.xperPoints ?? 0;
     const hexColor = categoryName ? getCategoryColor(categoryColor) : '#8B5CF6';
@@ -186,11 +188,17 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
                     <div className="px-5 pb-5 relative">
                         {/* Avatar */}
                         <div className="absolute -top-12 left-5">
-                            <div className="w-24 h-24 rounded-full border-[5px] border-white dark:border-gray-800 shadow-md overflow-hidden bg-white">
+                            <div className="w-24 h-24 rounded-full border-[5px] border-white dark:border-gray-800 shadow-md overflow-hidden bg-white relative flex items-center justify-center">
+                                {featureTag && (
+                                    <div
+                                        className="feature-tag-ring"
+                                        style={{ borderColor: featureColor, boxShadow: `${featureColor}66 0 0 28px` }}
+                                    />
+                                )}
                                 <UserAvatar
                                     user={{ avatar: ensureHttps(displayProfile?.avatar), username: displayProfile?.username || username }}
                                     size="2xl"
-                                    className="w-full h-full"
+                                    className="w-full h-full relative"
                                 />
                             </div>
                         </div>
@@ -227,11 +235,11 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
                                 className="block group"
                                 onClick={() => setVisible(false)}
                             >
-                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-coral transition-colors flex items-center gap-2">
+                                <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-coral transition-colors flex items-center gap-2 flex-wrap">
                                     {displayProfile?.username || username}
                                     {displayProfile?.is_verified && <FaCheckCircle className="text-blue-500 text-sm" />}
                                 </h3>
-                                {(ageRange || levelName) && (
+                                {(ageRange || levelName || featureTag) && (
                                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
                                         {ageRange && (
                                             <span className="inline-flex text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
@@ -244,6 +252,14 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
                                                 style={levelColor ? { color: levelColor, backgroundColor: `${levelColor}20` } : {}}
                                             >
                                                 {levelName}
+                                            </span>
+                                        )}
+                                        {featureTag && (
+                                            <span
+                                                className="inline-flex text-xs font-semibold px-2 py-0.5 rounded-md border"
+                                                style={{ color: featureColor, borderColor: featureColor, backgroundColor: `${featureColor}14` }}
+                                            >
+                                                {featureTag.name}
                                             </span>
                                         )}
                                     </div>

@@ -125,6 +125,8 @@ const QuestionCard = ({ question, onModerationAction }) => {
     const rawLevel = question.user?.level;
     const levelName = typeof rawLevel === 'object' ? rawLevel?.name : rawLevel;
     const levelColor = typeof rawLevel === 'object' ? rawLevel?.color : (question.user?.level_color || '#6B7280');
+    const featureTag = question.user?.feature_tag;
+    const featureColor = featureTag?.color || '#FACC15';
 
     return (
         <div className="rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}40` }}>
@@ -138,14 +140,22 @@ const QuestionCard = ({ question, onModerationAction }) => {
                 >
                     <div className="flex items-center gap-3">
                         <Link to={isOwnerAnonymous ? '#' : `/profile/${question.user?.username}`} className={isOwnerAnonymous ? 'cursor-default' : ''}>
-                            <UserAvatar
-                                user={question.user}
-                                size="md"
-                                className="shadow-sm border-2 border-white md:w-12 md:h-12 w-10 h-10"
-                            />
+                            <div className="relative inline-flex">
+                                {featureTag && (
+                                    <div
+                                        className="feature-tag-ring"
+                                        style={{ borderColor: featureColor, boxShadow: `${featureColor}66 0 0 18px` }}
+                                    />
+                                )}
+                                <UserAvatar
+                                    user={question.user}
+                                    size="md"
+                                    className="shadow-sm border-2 border-white md:w-12 md:h-12 w-10 h-10 relative"
+                                />
+                            </div>
                         </Link>
                         <div>
-                            <div className="flex items-center gap-1.5 md:gap-2">
+                            <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
                                 <span className="font-bold text-gray-900 dark:text-white text-base md:text-lg line-clamp-1">
                                     {displayName}
                                 </span>
@@ -155,7 +165,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
                                     <FaMars className="text-base md:text-lg" style={{ color: themeStyles.accentColor }} />
                                 )}
                             </div>
-                            {(ageRange || levelName) && (
+                            {(ageRange || levelName || featureTag) && (
                                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
                                     {ageRange && (
                                         <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
@@ -168,6 +178,14 @@ const QuestionCard = ({ question, onModerationAction }) => {
                                             style={levelColor ? { color: levelColor, backgroundColor: `${levelColor}20` } : {}}
                                         >
                                             {levelName}
+                                        </span>
+                                    )}
+                                    {featureTag && (
+                                        <span
+                                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border"
+                                            style={{ color: featureColor, borderColor: `${featureColor}`, backgroundColor: `${featureColor}14` }}
+                                        >
+                                            {featureTag.name}
                                         </span>
                                     )}
                                 </div>
