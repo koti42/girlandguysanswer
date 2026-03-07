@@ -190,7 +190,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
                                     )}
                                 </div>
                             )}
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500 dark:text-gray-400 text-[10px] md:text-xs">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500 dark:text-gray-400 text-[10px] md:text-xs mt-1.5">
                                 {question.category?.name && (() => {
                                     const categoryName = question.category.name;
                                     const categoryColor = question.category.color;
