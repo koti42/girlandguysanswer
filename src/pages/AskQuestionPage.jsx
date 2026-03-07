@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft, FaClock } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft, FaClock, FaFolderOpen, FaEdit, FaPaperPlane } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
@@ -45,6 +45,28 @@ const AskQuestionPage = () => {
 
     const [popularTags, setPopularTags] = useState([]);
     const [loadingPopularTags, setLoadingPopularTags] = useState(false);
+
+    const [drafts, setDrafts] = useState([]);
+    const [loadingDrafts, setLoadingDrafts] = useState(false);
+    const [showDraftsModal, setShowDraftsModal] = useState(false);
+    const [editingDraftId, setEditingDraftId] = useState(null);
+    const [publishingDraftId, setPublishingDraftId] = useState(null);
+
+    const loadDrafts = async () => {
+        try {
+            setLoadingDrafts(true);
+            const res = await questionsAPI.getDrafts();
+            setDrafts(res.data?.data?.drafts || []);
+        } catch (err) {
+            console.error('Taslaklar yüklenemedi:', err);
+        } finally {
+            setLoadingDrafts(false);
+        }
+    };
+
+    useEffect(() => {
+        loadDrafts();
+    }, []);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -130,13 +152,78 @@ const AskQuestionPage = () => {
         }
     };
 
-    const handleSaveDraft = () => {
+    const handleSaveDraft = async () => {
         if (!formData.title.trim()) {
             showToast('warning', 'Taslağı kaydetmek için en azından bir başlık girin');
             return;
         }
-        localStorage.setItem('questionDraft', JSON.stringify(formData));
-        showToast('success', 'Taslak başarıyla kaydedildi!');
+        try {
+            setIsSubmitting(true);
+            const payload = {
+                title: formData.title.trim(),
+                category: formData.category || undefined,
+                description: formData.description || null,
+                tags: formData.tags,
+                is_anonymous: isAnonymous,
+                gif_url: gifUrl || null,
+                is_draft: true,
+            };
+            if (editingDraftId) {
+                await questionsAPI.updateDraft(editingDraftId, payload);
+                showToast('success', 'Taslak güncellendi.');
+                setEditingDraftId(null);
+            } else {
+                await questionsAPI.create(payload);
+                showToast('success', 'Taslak kaydedildi.');
+            }
+            await loadDrafts();
+        } catch (err) {
+            showToast('error', err.response?.data?.message || 'Taslak kaydedilemedi.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const loadDraftIntoForm = (draft) => {
+        setFormData({
+            title: draft.title || '',
+            category: draft.category?.name || draft.category || '',
+            description: draft.description || '',
+            tags: Array.isArray(draft.tags) ? draft.tags : [],
+        });
+        setIsAnonymous(!!draft.is_anonymous);
+        setGifUrl(draft.gif_url || null);
+        setShowDraftsModal(false);
+        setEditingDraftId(draft.id);
+    };
+
+    const handlePublishDraft = async (draft) => {
+        try {
+            setPublishingDraftId(draft.id);
+            const response = await questionsAPI.publishDraft(draft.id);
+            const questionResponse = response.data.data?.question || response.data.data;
+            const slug = questionResponse?.slug || questionResponse?.id;
+            const gamification = response.data?.gamification || response.data.data?.gamification;
+            setShowDraftsModal(false);
+            setDrafts(prev => prev.filter(d => d.id !== draft.id));
+            navigate('/question-submitted', {
+                state: {
+                    question: {
+                        title: questionResponse?.title || draft.title,
+                        category: questionResponse?.category?.name || draft.category?.name || draft.category,
+                        tags: questionResponse?.tags || draft.tags || [],
+                        is_anonymous: questionResponse?.is_anonymous ?? draft.is_anonymous,
+                    },
+                    gamification: gamification || null,
+                    slug: slug,
+                },
+                replace: true,
+            });
+        } catch (err) {
+            showToast('error', err.response?.data?.message || 'Soru yayınlanamadı.');
+        } finally {
+            setPublishingDraftId(null);
+        }
     };
 
     const validateForm = () => {
@@ -207,7 +294,7 @@ const AskQuestionPage = () => {
 
             const gamification = response.data.data?.gamification;
 
-            localStorage.removeItem('questionDraft');
+            setEditingDraftId(null);
 
             const questionResponse = response.data.data?.question || response.data.data;
             const slug = questionResponse?.slug || questionResponse?.id;
@@ -735,13 +822,24 @@ const AskQuestionPage = () => {
                             >
                                 İptal
                             </button>
+                            {drafts.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDraftsModal(true)}
+                                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-indigo-300 dark:border-indigo-600 text-indigo-600 dark:text-indigo-400 font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
+                                >
+                                    <FaFolderOpen />
+                                    Kayıtlı taslaklar ({drafts.length})
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 onClick={handleSaveDraft}
-                                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-coral text-coral font-semibold hover:bg-coral/10 dark:hover:bg-coral/20 transition-all"
+                                disabled={isSubmitting}
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-coral text-coral font-semibold hover:bg-coral/10 dark:hover:bg-coral/20 transition-all disabled:opacity-50"
                             >
                                 <FaSave />
-                                Taslak Kaydet
+                                {editingDraftId ? 'Taslağı Güncelle' : 'Taslak Kaydet'}
                             </button>
                             <button
                                 type="submit"
@@ -780,6 +878,89 @@ const AskQuestionPage = () => {
                     }}
                     title="Soru için GIF seç"
                 />
+
+                {showDraftsModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowDraftsModal(false)}>
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-gray-200 dark:border-gray-700" onClick={e => e.stopPropagation()}>
+                            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <FaFolderOpen className="text-indigo-500" />
+                                    Kayıtlı taslaklar
+                                </h2>
+                                <button type="button" onClick={() => setShowDraftsModal(false)} className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <FaTimes />
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto flex-1">
+                                {loadingDrafts ? (
+                                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">Yükleniyor...</p>
+                                ) : drafts.length === 0 ? (
+                                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">Kayıtlı taslak yok.</p>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {drafts.map((draft) => {
+                                            const categoryName = draft.category?.name || draft.category || '';
+                                            const categoryColor = categoryName && categories.find(c => c.name === categoryName) ? getCategoryHexColor(categoryName) : '#6B7280';
+                                            return (
+                                                <div
+                                                    key={draft.id}
+                                                    className="rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 p-4 hover:border-indigo-300 dark:hover:border-indigo-500 transition-colors"
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0 flex-1">
+                                                            <h3 className="font-bold text-gray-900 dark:text-white truncate">{draft.title}</h3>
+                                                            {categoryName && (
+                                                                <span
+                                                                    className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                                                                    style={{ backgroundColor: categoryColor }}
+                                                                >
+                                                                    {categoryName}
+                                                                </span>
+                                                            )}
+                                                            {draft.updated_at && (
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                    Son düzenleme: {new Date(draft.updated_at).toLocaleDateString('tr-TR')}
+                                                                </p>
+                                                            )}
+                                                            {draft.description && (
+                                                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                                                                    {DOMPurify.sanitize(String(draft.description), { ALLOWED_TAGS: [] }).slice(0, 120)}
+                                                                    {String(draft.description).length > 120 ? '…' : ''}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => loadDraftIntoForm(draft)}
+                                                                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                            >
+                                                                <FaEdit /> Düzenle
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handlePublishDraft(draft)}
+                                                                disabled={publishingDraftId === draft.id || (draft.title?.length || 0) < 10 || !(draft.category || draft.category_id)}
+                                                                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-coral to-orange-400 text-white text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            >
+                                                                {publishingDraftId === draft.id ? (
+                                                                    <FaCheckCircle className="animate-spin" />
+                                                                ) : (
+                                                                    <FaPaperPlane />
+                                                                )}
+                                                                Bu soruyu sor
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Gamification Feedback */}
                 {gamificationFeedback && (
