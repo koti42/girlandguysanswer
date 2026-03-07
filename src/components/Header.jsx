@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
+import QuickAskModal from './QuickAskModal';
 import { categoriesAPI, questionsAPI } from '../services/api';
 
 const Header = ({ onSearch }) => {
@@ -20,6 +21,7 @@ const Header = ({ onSearch }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [isQuestionsModalOpen, setIsQuestionsModalOpen] = useState(false);
+    const [showQuickAskModal, setShowQuickAskModal] = useState(false);
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [selectedModalCategory, setSelectedModalCategory] = useState(null);
@@ -256,13 +258,13 @@ const Header = ({ onSearch }) => {
                         </Link>
 
                         {/* Ask Question Button */}
-                        <Link
-                            to="/ask"
+                        <button
+                            onClick={() => setShowQuickAskModal(true)}
                             className="bg-gradient-to-r from-coral to-orange-400 text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 rounded-full font-semibold hover:shadow-lg transition-all duration-300 text-xs sm:text-sm md:text-base whitespace-nowrap"
                         >
                             <span className="hidden sm:inline">Soru Sor</span>
                             <span className="sm:hidden">+</span>
-                        </Link>
+                        </button>
 
                         {/* Desktop Auth Buttons - Only show if NOT authenticated */}
 
@@ -873,6 +875,11 @@ const Header = ({ onSearch }) => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Quick Ask Modal */}
+            {showQuickAskModal && (
+                <QuickAskModal onClose={() => setShowQuickAskModal(false)} />
             )}
         </>
     );

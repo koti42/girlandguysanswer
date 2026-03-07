@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft, FaClock, FaFolderOpen, FaEdit, FaPaperPlane } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
@@ -16,12 +16,14 @@ import DOMPurify from 'dompurify';
 
 const AskQuestionPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user: currentUser } = useAuth();
+    const prefill = location.state?.prefill || {};
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(true);
     const [formData, setFormData] = useState({
-        title: '',
-        category: '',
+        title: prefill.title || '',
+        category: prefill.category || '',
         description: '',
         tags: []
     });
