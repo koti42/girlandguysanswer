@@ -4,6 +4,7 @@ import ProfileStats from '../ProfileStats';
 import QuestionCard from '../QuestionCard';
 import AnswerCard from '../AnswerCard';
 import FollowersList from '../FollowersList';
+import OpinionCard from '../OpinionCard';
 import { getThemeStyles, getViewerPrefs } from '../../utils/userColor';
 
 const TabSkeleton = ({ type, contentCreator, viewerPrefs }) => {
@@ -54,7 +55,7 @@ const TabSkeleton = ({ type, contentCreator, viewerPrefs }) => {
         );
     }
 
-    if (type === 'questions') {
+    if (type === 'questions' || type === 'opinions') {
         return (
             <div className="flex flex-col gap-6 animate-pulse">
                 {[...Array(3)].map((_, i) => (
@@ -116,7 +117,7 @@ const TabSkeleton = ({ type, contentCreator, viewerPrefs }) => {
     return null;
 };
 
-const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, followers, following, loading, isOwnProfile, isVIP, viewerPrefs }) => {
+const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, opinions, followers, following, loading, isOwnProfile, isVIP, viewerPrefs }) => {
 
     const gender = profileData?.gender;
     const contentCreator = { gender };
@@ -280,6 +281,21 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, fol
             <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl shadow-soft">
                 <FaInbox className="text-4xl text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400">Beğenilen içerik yok.</p>
+            </div>
+        );
+    }
+
+    if (activeTab === 'opinions') {
+        return opinions && opinions.length > 0 ? (
+            <div className="flex flex-col gap-4">
+                {opinions.map((opinion) => (
+                    <OpinionCard key={opinion.id} opinion={opinion} viewerPrefs={viewerPrefs} />
+                ))}
+            </div>
+        ) : (
+            <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl shadow-soft">
+                <FaInbox className="text-4xl text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400">Henüz hiç bence yazmamış.</p>
             </div>
         );
     }

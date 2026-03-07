@@ -5,7 +5,7 @@ import MainLayout from '../layouts/MainLayout';
 import ProfileCover from '../components/ProfileCover';
 import ProfileAvatar from '../components/ProfileAvatar';
 import { useAuth } from '../context/AuthContext';
-import { usersAPI, questionsAPI } from '../services/api';
+import { usersAPI, questionsAPI, opinionsAPI } from '../services/api';
 import Toast from '../components/Toast';
 import ErrorPage from './ErrorPage';
 
@@ -60,6 +60,7 @@ const ProfilePage = () => {
     const [followers, setFollowers] = useState([]);
     const [following, setFollowing] = useState([]);
     const [answers, setAnswers] = useState([]);
+    const [opinions, setOpinions] = useState([]);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [featureTagSaving, setFeatureTagSaving] = useState(false);
     const [featureTagModalOpen, setFeatureTagModalOpen] = useState(false);
@@ -197,7 +198,8 @@ const ProfilePage = () => {
                         badges: (data.badges || [])?.length || 0,
                         xperPoints: data.xp || 0,
                         generalRank: (data.ranks || {})?.general || '-',
-                        categoryRank: (data.ranks || {})?.gender || '-'
+                        categoryRank: (data.ranks || {})?.gender || '-',
+                        opinions: data.stats?.opinions ?? 0,
                     }
                 });
                 setUserQuestions(questionsData);
@@ -243,11 +245,17 @@ const ProfilePage = () => {
                     } else {
                         setAnswers([]);
                     }
+                } else if (activeTab === 'opinions') {
+                    const res = await opinionsAPI.getAll({ page: 1, per_page: 15, user: profileData.username });
+                    const data = res.data?.data;
+                    const list = data?.opinions || (Array.isArray(data) ? data : (res.data?.opinions || []));
+                    setOpinions(list);
                 }
             } catch (error) {
                 if (activeTab === 'followers') setFollowers([]);
                 if (activeTab === 'following') setFollowing([]);
                 if (activeTab === 'answers') setAnswers([]);
+                if (activeTab === 'opinions') setOpinions([]);
             } finally {
                 setTabLoading(false);
             }
@@ -678,6 +686,7 @@ const ProfilePage = () => {
                                     profileData={profileData}
                                     userQuestions={userQuestions}
                                     answers={answers}
+                                    opinions={opinions}
                                     followers={followers}
                                     following={following}
                                     loading={tabLoading}

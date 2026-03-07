@@ -214,7 +214,14 @@ export const tagsAPI = {
 };
 
 export const opinionsAPI = {
-    getAll: (params) => api.get('/opinions', { params: { page: params?.page ?? 1, per_page: params?.per_page ?? 15, search: params?.search } }),
+    getAll: (params = {}) => api.get('/opinions', {
+        params: {
+            page: params.page ?? 1,
+            per_page: params.per_page ?? 15,
+            search: params.search,
+            user: params.user,
+        },
+    }),
     getById: (id) => api.get(`/opinions/${id}`),
     create: (data) => api.post('/opinions', data),
     update: (id, data) => api.put(`/opinions/${id}`, data),

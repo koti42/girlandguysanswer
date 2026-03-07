@@ -44,7 +44,7 @@ const ProfileTabs = ({ activeTab, setActiveTab, stats, isVIP, privacy, isOwnProf
     };
 
     return (
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-6">
+        <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 mt-6">
             <TabButton
                 id="questions"
                 label="Sorular"
@@ -56,6 +56,13 @@ const ProfileTabs = ({ activeTab, setActiveTab, stats, isVIP, privacy, isOwnProf
                 count={stats.answers}
                 vipColorClass="from-purple-100 to-pink-100"
                 vipBorderClass="border-purple-400"
+            />
+            <TabButton
+                id="opinions"
+                label="Benceler"
+                count={stats.opinions ?? 0}
+                vipColorClass="from-indigo-100 to-blue-100"
+                vipBorderClass="border-indigo-400"
             />
             <TabButton
                 id="followers"
