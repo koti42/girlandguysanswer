@@ -116,16 +116,16 @@
   position: absolute;
   inset: -6px;
   border-radius: 9999px;
-  border-width: 2px;
-  border-style: solid;
-  opacity: 0.9;
-  animation: feature-tag-ring-orbit 2.2s linear infinite;
+  border-width: 3px;
+  border-style: dashed;
+  opacity: 0.85;
+  animation: feature-tag-ring-orbit 3s linear infinite;
   pointer-events: none;
 }
 
 @media (max-width: 768px) {
   .feature-tag-ring {
     inset: -4px;
-    border-width: 1.5px;
+    border-width: 2px;
   }
 }
