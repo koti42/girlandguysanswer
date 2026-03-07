@@ -21,6 +21,7 @@ import FollowRequestsPage from './pages/FollowRequestsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PusherTestPage from './pages/PusherTestPage';
 import CocukGuvenligiPage from './pages/CocukGuvenligiPage';
+import SSSPage from './pages/SSSPage';
 import YardimMerkeziPage from './pages/YardimMerkeziPage';
 import CommunityPage from './pages/CommunityPage';
 import RoomPage from './pages/RoomPage';
@@ -35,6 +36,17 @@ import OpinionsPage from './pages/OpinionsPage';
 import OpinionDetailPage from './pages/OpinionDetailPage';
 import CreateOpinionPage from './pages/CreateOpinionPage';
 import KullanimKilavuzuPage from './pages/KullanimKilavuzuPage';
+import GizlilikPolitikasiPage from './pages/GizlilikPolitikasiPage';
+import CerezPolitikasiPage from './pages/CerezPolitikasiPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import KullanimKurallariPage from './pages/KullanimKurallariPage';
+import TagsPage from './pages/TagsPage';
+import ContactPage from './pages/ContactPage';
+import ReklamPage from './pages/ReklamPage';
+import OrtaklikPage from './pages/OrtaklikPage';
+import BlogPage from './pages/BlogPage';
+import XperPuanPage from './pages/XperPuanPage';
+import FeatureTagsPage from './pages/FeatureTagsPage';
 import WelcomeGuideModal from './components/WelcomeGuideModal';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -223,8 +235,20 @@ function App() {
                   <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
                   <Route path="/pusher-test" element={<PusherTestPage />} />
                   <Route path="/cocuk-guvenligi" element={<CocukGuvenligiPage />} />
+                  <Route path="/sss" element={<SSSPage />} />
                   <Route path="/yardim-merkezi" element={<YardimMerkeziPage />} />
                   <Route path="/kullanim-kilavuzu" element={<KullanimKilavuzuPage />} />
+                  <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasiPage />} />
+                  <Route path="/cerez-politikasi" element={<CerezPolitikasiPage />} />
+                  <Route path="/site-sozlesmesi" element={<TermsOfServicePage />} />
+                  <Route path="/kullanim-kurallari" element={<KullanimKurallariPage />} />
+                  <Route path="/etiketler" element={<TagsPage />} />
+                  <Route path="/iletisim" element={<ContactPage />} />
+                  <Route path="/reklam" element={<ReklamPage />} />
+                  <Route path="/ortaklik" element={<OrtaklikPage />} />
+                  <Route path="/blog" element={<BlogPage />} />
+                  <Route path="/xper-puan" element={<XperPuanPage />} />
+                  <Route path="/feature-tags" element={<FeatureTagsPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
                 </Routes>

@@ -30,11 +30,12 @@ const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false, full
                 <div className="max-w-7xl mx-auto px-4 md:px-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                         <div>
-                            <h4 className="font-bold text-white mb-4">Hakkımızda</h4>
+                            <h4 className="font-bold text-white mb-4">Keşfet</h4>
                             <ul className="space-y-2 text-sm">
                                 <li><Link to="/questions" className="hover:text-coral transition-colors">Ana Sayfa</Link></li>
                                 <li><Link to="/leaderboard" className="hover:text-coral transition-colors">Liderlik Tablosu</Link></li>
                                 <li><Link to="/etiketler" className="hover:text-coral transition-colors">Etiketler</Link></li>
+                                <li><Link to="/blog" className="hover:text-coral transition-colors">Blog</Link></li>
                             </ul>
                         </div>
                         <div>
@@ -43,7 +44,7 @@ const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false, full
                                 <li><Link to="/kullanim-kurallari" className="hover:text-coral transition-colors">Kullanım Kuralları</Link></li>
                                 <li><Link to="/kullanim-kilavuzu" className="hover:text-coral transition-colors">Kullanım Kılavuzu</Link></li>
                                 <li><Link to="/yardim-merkezi" className="hover:text-coral transition-colors">Yardım Merkezi</Link></li>
-                                <li><Link to="/blog" className="hover:text-coral transition-colors">Blog</Link></li>
+                                <li><Link to="/sss" className="hover:text-coral transition-colors">SSS &amp; Xper Puanları</Link></li>
                             </ul>
                         </div>
                         <div>
@@ -52,6 +53,7 @@ const MainLayout = ({ children, sidebar, onSearch, noMobilePadding = false, full
                                 <li><Link to="/gizlilik-politikasi" className="hover:text-coral transition-colors">Gizlilik Politikası</Link></li>
                                 <li><Link to="/site-sozlesmesi" className="hover:text-coral transition-colors">Kullanım Şartları</Link></li>
                                 <li><Link to="/cerez-politikasi" className="hover:text-coral transition-colors">Çerez Politikası</Link></li>
+                                <li><Link to="/kullanim-kurallari" className="hover:text-coral transition-colors">Kullanım Kuralları</Link></li>
                                 <li><Link to="/cocuk-guvenligi" className="hover:text-coral transition-colors font-semibold text-green-400">🛡️ Çocuk Güvenliği</Link></li>
                             </ul>
                         </div>
