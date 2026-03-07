@@ -72,11 +72,13 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
 
     if (hasAvatar) {
         return (
-            <img
-                src={normalizeAvatarUrl(user.avatar)}
-                alt={displayName}
-                className={`${currentSizeClass} rounded-full object-cover border border-gray-100 dark:border-gray-700 ${className}`}
-            />
+            <div className={`${currentSizeClass} rounded-full overflow-hidden border border-gray-100 dark:border-gray-700 flex-shrink-0 ${className}`}>
+                <img
+                    src={normalizeAvatarUrl(user.avatar)}
+                    alt={displayName}
+                    className="w-full h-full object-cover rounded-full"
+                />
+            </div>
         );
     }
 
