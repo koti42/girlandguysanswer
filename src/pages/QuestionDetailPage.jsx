@@ -247,9 +247,13 @@ const QuestionDetailPage = () => {
                                 "text": stripHtml(currentQuestion.description) || currentQuestion.title,
                                 "answerCount": currentQuestion.answer_count || 0,
                                 "upvoteCount": currentQuestion.likes_count || 0,
+                                "datePublished": currentQuestion.created_at || currentQuestion.updated_at,
                                 "author": {
                                     "@type": "Person",
-                                    "name": currentQuestion.is_anonymous ? "Gizli Kullanıcı" : (currentQuestion.user?.username || "Kullanıcı")
+                                    "name": currentQuestion.is_anonymous ? "Gizli Kullanıcı" : (currentQuestion.user?.username || "Kullanıcı"),
+                                    "url": currentQuestion.user?.username
+                                        ? `${window.location.origin}/profile/${currentQuestion.user.username}`
+                                        : window.location.origin
                                 }
                             }
                         },
