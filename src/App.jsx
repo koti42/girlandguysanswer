@@ -187,7 +187,6 @@ const WelcomeGuideGate = () => {
 };
 
 import { NotificationProvider } from './context/NotificationContext';
-import DomainRedirect from './components/DomainRedirect';
 
 const PresenceHeartbeat = () => {
   usePresence();
@@ -201,10 +200,9 @@ function App() {
         <NotificationProvider>
           <PresenceHeartbeat />
           <Router>
-            <DomainRedirect>
-              <GenderCheck>
-                <div className="overflow-x-hidden">
-                <Routes>
+            <GenderCheck>
+              <div className="overflow-x-hidden">
+              <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/questions" element={<QuestionsPage />} />
                   <Route path="/questions/:slug" element={<CategoryPage />} />
@@ -251,12 +249,11 @@ function App() {
                   <Route path="/feature-tags" element={<FeatureTagsPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
-                </Routes>
-                <AgeGate />
-                <WelcomeGuideGate />
-              </div>
-            </GenderCheck>
-            </DomainRedirect>
+              </Routes>
+              <AgeGate />
+              <WelcomeGuideGate />
+            </div>
+          </GenderCheck>
           </Router>
         </NotificationProvider>
       </AuthProvider>
