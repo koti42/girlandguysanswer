@@ -312,7 +312,7 @@ const OpinionDetailPage = () => {
                                 <div className="space-y-4">
                                     {comments.map((c) => (
                                         <div
-                                            className={`flex gap-3 p-4 rounded-xl ${c.user?.is_ai ? 'bg-gradient-to-r from-indigo-50 via-sky-50 to-cyan-50 dark:from-indigo-950/40 dark:via-sky-950/30 dark:to-cyan-950/40' : 'bg-gray-50 dark:bg-gray-700/50'}`}
+                                            className={`flex gap-3 p-4 rounded-xl ${(c.user?.is_ai || c.user?.is_bot) ? 'bg-gradient-to-r from-indigo-50 via-sky-50 to-cyan-50 dark:from-indigo-950/40 dark:via-sky-950/30 dark:to-cyan-950/40' : 'bg-gray-50 dark:bg-gray-700/50'}`}
                                         >
                                             <UserAvatar user={c.user} size="sm" className="w-10 h-10 rounded-full flex-shrink-0" />
                                             <div className="flex-1">
@@ -334,7 +334,7 @@ const OpinionDetailPage = () => {
                                                             {typeof c.user.level === 'object' ? c.user.level?.name : c.user.level}
                                                         </span>
                                                     )}
-                                                    {c.user?.is_ai && (
+                                                    {(c.user?.is_ai || c.user?.is_bot) && (
                                                         <AiBadge />
                                                     )}
                                                         <span className="text-gray-500 text-xs">
