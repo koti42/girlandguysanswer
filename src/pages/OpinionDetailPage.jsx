@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import UserAvatar from '../components/UserAvatar';
+import AiBadge from '../components/common/AiBadge';
 import { opinionsAPI, questionsAPI, commentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { FaHeart, FaComment, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icons/fa';
@@ -310,7 +311,9 @@ const OpinionDetailPage = () => {
                                 )}
                                 <div className="space-y-4">
                                     {comments.map((c) => (
-                                        <div className="flex gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
+                                        <div
+                                            className={`flex gap-3 p-4 rounded-xl ${c.user?.is_ai ? 'bg-gradient-to-r from-indigo-50 via-sky-50 to-cyan-50 dark:from-indigo-950/40 dark:via-sky-950/30 dark:to-cyan-950/40' : 'bg-gray-50 dark:bg-gray-700/50'}`}
+                                        >
                                             <UserAvatar user={c.user} size="sm" className="w-10 h-10 rounded-full flex-shrink-0" />
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between">
@@ -330,6 +333,9 @@ const OpinionDetailPage = () => {
                                                         >
                                                             {typeof c.user.level === 'object' ? c.user.level?.name : c.user.level}
                                                         </span>
+                                                    )}
+                                                    {c.user?.is_ai && (
+                                                        <AiBadge />
                                                     )}
                                                         <span className="text-gray-500 text-xs">
                                                             {c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: tr }) : ''}

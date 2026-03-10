@@ -7,6 +7,7 @@ import { questionsAPI, commentsAPI, answersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
 import UserHoverCard from '../components/UserHoverCard';
+import AiBadge from '../components/common/AiBadge';
 import Toast from '../components/Toast';
 import LikersModal from '../components/LikersModal';
 import GifPickerModal from '../components/GifPickerModal';
@@ -711,7 +712,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             <div key={comment.id} className="space-y-3">
                 <div
                     id={`comment-${comment.id}`}
-                    className={`rounded-xl p-4 ${marginLeft} border-l-4 shadow-sm hover:shadow-md transition-all scroll-mt-20${commentHighlightClasses}`}
+                    className={`rounded-xl p-4 ${marginLeft} border-l-4 shadow-sm hover:shadow-md transition-all scroll-mt-20${commentHighlightClasses}${comment.user?.is_ai ? ' bg-gradient-to-r from-indigo-50 via-sky-50 to-cyan-50 dark:from-indigo-950/40 dark:via-sky-950/30 dark:to-cyan-950/40 border-indigo-300/70' : ''}`}
                     style={commentColorStyle}
                 >
                     <div className="flex gap-3">
@@ -758,6 +759,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     >
                                         {typeof comment.user.level === 'object' ? comment.user.level?.name : comment.user.level}
                                     </span>
+                                )}
+                                {comment.user?.is_ai && (
+                                    <AiBadge />
                                 )}
                                 {comment.user?.feature_tag && (
                                     <span
