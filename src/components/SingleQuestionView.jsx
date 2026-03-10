@@ -1471,6 +1471,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 {(answer.user?.is_ai || answer.user?.is_bot) && (
                                                                     <AiBadge />
                                                                 )}
+                                                                {(answer.user?.is_ai || answer.user?.is_bot) && (
+                                                                    <AiBadge />
+                                                                )}
                                                                 {answer.is_question_owner && (
                                                                     <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
                                                                         {answer.user?.username === 'anonim' ? '(Soru Sahibi)' : 'Soru Sahibi'}
@@ -1486,6 +1489,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                     >
                                                                         {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
                                                                     </span>
+                                                                )}
+                                                                {(answer.user?.is_ai || answer.user?.is_bot) && (
+                                                                    <AiBadge />
                                                                 )}
                                                                 {answer.user?.feature_tag && (
                                                                     <span
