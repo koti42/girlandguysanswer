@@ -1135,6 +1135,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <Link to={`/profile/${question.user.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{question.user.username}</Link>
+                                                {(question.user?.is_ai || question.user?.is_bot) && (
+                                                    <AiBadge />
+                                                )}
                                                 {question.isOwner && question.is_anonymous && (
                                                     <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">(Soru sahibi)</span>
                                                 )}
@@ -1464,6 +1467,9 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                     <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                                                 ) : (
                                                                     <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
+                                                                )}
+                                                                {(answer.user?.is_ai || answer.user?.is_bot) && (
+                                                                    <AiBadge />
                                                                 )}
                                                                 {answer.is_question_owner && (
                                                                     <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: getProfileColor(answer.user, viewerPrefs) + '20', color: getProfileColor(answer.user, viewerPrefs) }}>
