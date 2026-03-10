@@ -8,7 +8,10 @@ const SITEMAP_URL = 'https://herkeslersoruyor.panalix.com.tr/api/sitemap.xml';
 const CANONICAL_ORIGIN = process.env.CANONICAL_ORIGIN || process.env.VITE_CANONICAL_ORIGIN || 'https://herkeslersoruyor.com.tr';
 
 function ensureCanonicalDomain(xmlContent) {
-    return xmlContent.replace(/https:\/\/herkeslersoruyor\.com(?=\/|"|>|$)/g, CANONICAL_ORIGIN.replace(/\/$/, ''));
+    const origin = CANONICAL_ORIGIN.replace(/\/$/, '');
+    return xmlContent
+        .replace(/https:\/\/herkeslersoruyor\.panalix\.com\.tr(?=\/|"|>|$)/g, origin)
+        .replace(/https:\/\/herkeslersoruyor\.com(?=\/|"|>|$)/g, origin);
 }
 
 async function fetchAndSaveSitemap() {
