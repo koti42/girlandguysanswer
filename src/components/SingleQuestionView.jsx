@@ -737,8 +737,8 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 </div>
                             </Link>
                         )}
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                            <div className="flex items-center gap-1 flex-wrap mb-1">
                                 {comment.user?.username === 'anonim' ? (
                                     <span className="font-bold text-sm text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
                                 ) : (
@@ -776,7 +776,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     </span>
                                 )}
                                 <span className="text-xs shrink-0" style={{ color: getProfileColor(comment.user, viewerPrefs) }}>{comment.user?.gender === 'female' ? <FaVenus /> : <FaMars />}</span>
-                                <span className="text-gray-400 text-xs shrink-0">• {formatDate(comment.created_at)}</span>
+                                <span className="text-gray-400 text-xs shrink-0 truncate max-w-[160px] sm:max-w-none">• {formatDate(comment.created_at)}</span>
                             </div>
                             {comment.content && (
                                 <p className="text-gray-800 dark:text-gray-100 text-sm leading-relaxed mb-2 whitespace-pre-wrap break-words">

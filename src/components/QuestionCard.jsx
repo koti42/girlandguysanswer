@@ -154,7 +154,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
                                 />
                             </div>
                         </Link>
-                        <div>
+                        <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
                                 <span className="font-bold text-gray-900 dark:text-white text-base md:text-lg line-clamp-1">
                                     {displayName}
