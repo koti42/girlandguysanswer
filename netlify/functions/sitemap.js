@@ -4,8 +4,8 @@ const CANONICAL_ORIGIN = process.env.CANONICAL_ORIGIN || process.env.VITE_CANONI
 function ensureCanonicalDomain(xmlContent) {
     const origin = CANONICAL_ORIGIN.replace(/\/$/, '');
     return xmlContent
-        .replace(/https:\/\/herkeslersoruyor\.panalix\.com\.tr(?=\/|"|>|$)/g, origin)
-        .replace(/https:\/\/herkeslersoruyor\.com(?=\/|"|>|$)/g, origin);
+        .replace(/https:\/\/herkeslersoruyor\.panalix\.com\.tr(?=\/|"|>|<|$)/g, origin)
+        .replace(/https:\/\/herkeslersoruyor\.com(?=\/|"|>|<|$)/g, origin);
 }
 
 function stripScriptTags(xmlContent) {
