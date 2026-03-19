@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { format, isToday, isYesterday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause, FaEdit, FaTrash, FaSmile } from 'react-icons/fa';
+import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicrophone, FaTimes, FaPlay, FaPause, FaEdit, FaTrash, FaSmile, FaDownload } from 'react-icons/fa';
 import { messagesAPI } from '../services/api';
 import { getProfileColor } from '../utils/userColor';
 import LinkRedirectModal from './LinkRedirectModal';
