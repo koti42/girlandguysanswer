@@ -228,8 +228,8 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
         }
     }, [message.id, message.is_ephemeral, message.ephemeral_first_viewed_at, message.ephemeral_view_count, message.ephemeral_max_views, isMine]);
 
-    // Sender: load ephemeral image once so they can see it (with auth)
     useEffect(() => {
+        if (message.is_ephemeral && message.type === 'image') return;
         if (!message.is_ephemeral || !isMine || message.type !== 'image') return;
         if (!message.id || String(message.id).startsWith('temp-')) return;
         let revoked = false;
@@ -252,7 +252,6 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
         return () => { revoked = true; };
     }, [message.id, message.is_ephemeral, isMine, message.type]);
 
-    // Cleanup blob URL on unmount
     useEffect(() => {
         return () => {
             if (blobUrlRef.current) {
@@ -262,7 +261,6 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
         };
     }, []);
 
-    // Countdown timer when viewer is open
     useEffect(() => {
         if (!showEphemeralViewer || ephemeralLoading || ephemeralError) return;
 
@@ -291,6 +289,9 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
     }, [showEphemeralViewer, ephemeralLoading, ephemeralError]);
 
     const loadEphemeralBlob = useCallback(async () => {
+        if (message.is_ephemeral && message.type === 'image') {
+            throw new Error('Ephemeral image viewing is disabled on web.');
+        }
         setEphemeralLoading(true);
         setEphemeralError(null);
         try {
@@ -313,6 +314,7 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
     }, [message.id]);
 
     const handleOpenEphemeral = useCallback(async () => {
+        if (message.is_ephemeral && message.type === 'image') return;
         if (expired) return;
 
         if (ephemeralBlobUrl) {
@@ -348,56 +350,27 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
         switch (message.type) {
             case 'image':
                 if (message.is_ephemeral) {
+                    const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.herkeslersoruyor.mobile';
                     return (
-                        <div
-                            className="relative cursor-pointer select-none"
-                            onClick={handleOpenEphemeral}
-                        >
-                            {expired ? (
-                                // Expired state
-                                <div className="w-48 h-32 rounded-lg flex flex-col items-center justify-center bg-gray-800/60 gap-2">
-                                    <FaLock className="text-white/60 text-2xl" />
-                                    <span className="text-[11px] text-white/60 font-medium">Süresi doldu</span>
-                                </div>
-                            ) : isMine ? (
-                                <>
-                                    {ephemeralBlobUrl ? (
-                                        <img
-                                            src={ephemeralBlobUrl}
-                                            alt="Gizli fotoğraf"
-                                            className="max-w-full rounded-lg pointer-events-none"
-                                            style={{ maxHeight: '300px' }}
-                                            draggable={false}
-                                            onContextMenu={(e) => e.preventDefault()}
-                                        />
-                                    ) : (
-                                        <div className="w-48 h-32 rounded-lg flex flex-col items-center justify-center bg-white/10 gap-2">
-                                            {ephemeralLoading ? (
-                                                <span className="text-[11px] text-white/70">Yükleniyor...</span>
-                                            ) : (
-                                                <>
-                                                    <FaEye className="text-white/70 text-xl" />
-                                                    <span className="text-[10px] text-white/70">Görüntülemek için dokun</span>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <span className="px-2 py-1 text-[10px] font-semibold bg-black/60 text-white rounded-full">
-                                            {getEphemeralLabel()}
-                                        </span>
-                                    </div>
-                                </>
-                            ) : (
-                                // Receiver sees a blurred placeholder
-                                <div className="w-48 h-32 rounded-lg flex flex-col items-center justify-center bg-gradient-to-br from-purple-600/40 to-pink-500/40 gap-2 backdrop-blur-sm">
-                                    <FaEye className="text-white text-2xl drop-shadow" />
-                                    <span className="px-2 py-1 text-[10px] font-semibold bg-black/60 text-white rounded-full">
-                                        {getEphemeralLabel()}
-                                    </span>
-                                    <span className="text-[10px] text-white/70">Görüntülemek için dokun</span>
-                                </div>
-                            )}
+                        <div className="w-64 rounded-lg border border-white/10 bg-white/5 px-4 py-3">
+                            <div className="flex items-center gap-2 text-white/80">
+                                <FaLock className="text-white/60" />
+                                <span className="text-xs font-semibold">{getEphemeralLabel()}</span>
+                            </div>
+                            <p className="mt-2 text-[11px] leading-4 text-white/70">
+                                Bu fotoğrafa bakmak için Herkesler Soruyor Mobil uygulamasını indirmeniz gerekmektedir.
+                            </p>
+                            <div className="mt-3 flex">
+                                <a
+                                    href={playStoreUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-[11px] font-semibold text-white/90 hover:bg-white/15 transition-colors"
+                                >
+                                    <FaDownload className="text-[12px]" />
+                                    Google Play’den indir
+                                </a>
+                            </div>
                         </div>
                     );
                 }
@@ -660,8 +633,8 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
 
     return (
         <>
-            {/* Ephemeral Photo Viewer Overlay */}
-            {showEphemeralViewer && message.type === 'image' && message.is_ephemeral && (
+            {/* Ephemeral Photo Viewer Overlay (web'de devre dışı) */}
+            {false && showEphemeralViewer && message.type === 'image' && message.is_ephemeral && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
                     onClick={handleCloseEphemeral}
