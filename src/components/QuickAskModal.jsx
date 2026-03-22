@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes, FaUserSecret, FaChevronRight, FaPaperPlane, FaLightbulb } from 'react-icons/fa';
+import { FaTimes, FaUserSecret, FaChevronRight, FaPaperPlane, FaLightbulb, FaRobot } from 'react-icons/fa';
 import { questionsAPI, categoriesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
@@ -14,6 +14,7 @@ const QuickAskModal = ({ onClose }) => {
     const [title, setTitle] = useState('');
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [isAnonymous, setIsAnonymous] = useState(user?.last_action_is_anonymous || false);
+    const [noAiAnswer, setNoAiAnswer] = useState(false);
     const [categories, setCategories] = useState([]);
     const [loadingCats, setLoadingCats] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,6 +81,7 @@ const QuickAskModal = ({ onClose }) => {
                 title: title.trim(),
                 category: selectedCategory.name,
                 is_anonymous: isAnonymous,
+                allow_ai_answer: !noAiAnswer,
             });
             const questionResponse = response.data.data?.question || response.data.data;
             const slug = questionResponse?.slug || questionResponse?.id;
@@ -180,6 +182,21 @@ const QuickAskModal = ({ onClose }) => {
                                     >
                                         <FaUserSecret className="text-[11px]" />
                                         <span>{isAnonymous ? 'Gizli' : 'Anonim Değil'}</span>
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                    <span className="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">Yapay zeka cevabı</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setNoAiAnswer((p) => !p)}
+                                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                                            noAiAnswer
+                                                ? 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 ring-1 ring-slate-400'
+                                                : 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 ring-1 ring-sky-300/50'
+                                        }`}
+                                    >
+                                        <FaRobot className="text-[11px]" />
+                                        <span>{noAiAnswer ? 'Kapalı' : 'Açık'}</span>
                                     </button>
                                 </div>
                             </div>

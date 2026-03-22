@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft, FaClock, FaFolderOpen, FaEdit, FaPaperPlane } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft, FaClock, FaFolderOpen, FaEdit, FaPaperPlane, FaRobot } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
@@ -32,6 +32,7 @@ const AskQuestionPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
     const [isAnonymous, setIsAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
+    const [noAiAnswer, setNoAiAnswer] = useState(false);
     const [gifUrl, setGifUrl] = useState(null);
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gamificationFeedback, setGamificationFeedback] = useState(null);
@@ -167,6 +168,7 @@ const AskQuestionPage = () => {
                 description: formData.description || null,
                 tags: formData.tags,
                 is_anonymous: isAnonymous,
+                allow_ai_answer: !noAiAnswer,
                 gif_url: gifUrl || null,
                 is_draft: true,
             };
@@ -194,6 +196,7 @@ const AskQuestionPage = () => {
             tags: Array.isArray(draft.tags) ? draft.tags : [],
         });
         setIsAnonymous(!!draft.is_anonymous);
+        setNoAiAnswer(draft.allow_ai_answer === false);
         setGifUrl(draft.gif_url || null);
         setShowDraftsModal(false);
         setEditingDraftId(draft.id);
@@ -271,6 +274,7 @@ const AskQuestionPage = () => {
                 description: formData.description || null,
                 tags: formData.tags,
                 is_anonymous: isAnonymous,
+                allow_ai_answer: !noAiAnswer,
                 gif_url: gifUrl || null
             };
             if (expiresInHours) {
@@ -812,6 +816,27 @@ const AskQuestionPage = () => {
                             </button>
                             <p className="text-sm text-purple-700 dark:text-purple-300 text-center sm:text-right">
                                 {isAnonymous ? '🎭 Kimliğiniz gizli kalacak' : '👤 Herkese açık olarak sorulacak'}
+                            </p>
+                        </div>
+
+                        {/* Yapay zeka cevabı */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-sky-50 dark:bg-sky-950/30 rounded-xl border border-sky-200 dark:border-sky-800/40">
+                            <button
+                                type="button"
+                                onClick={() => setNoAiAnswer(!noAiAnswer)}
+                                disabled={isSubmitting}
+                                className={`w-full sm:w-auto flex items-center justify-center sm:justify-start gap-3 px-5 py-3 rounded-xl font-semibold transition-all ${noAiAnswer
+                                    ? 'bg-gradient-to-r from-slate-500 to-slate-700 text-white shadow-lg'
+                                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-sky-300 dark:border-sky-600 hover:border-sky-400'
+                                    }`}
+                            >
+                                <FaRobot className="text-xl" />
+                                <span>{noAiAnswer ? 'YZ cevabı kapalı' : 'YZ otomatik cevap'}</span>
+                            </button>
+                            <p className="text-sm text-sky-800 dark:text-sky-200/90 text-center sm:text-right leading-snug">
+                                {noAiAnswer
+                                    ? '🤖 Bu soruya yapay zeka cevabı yazılmayacak; sadece topluluk cevaplayabilir.'
+                                    : '🤖 Yayınlandıktan kısa süre sonra yapay zeka bir cevap önerisi ekleyebilir (isteğe bağlı kapatabilirsiniz).'}
                             </p>
                         </div>
 
