@@ -35,6 +35,8 @@ const SettingsPage = () => {
         is_private: false,
         allow_messaging: true,
         messaging_mode: 'everyone',
+        privacy_hide_online_from_others: false,
+        privacy_hide_read_receipts_from_others: false,
         allow_following: true,
         allow_mention_notifications: true,
         profile_color: null,
@@ -118,6 +120,8 @@ const SettingsPage = () => {
                     is_private: detail.is_private || false,
                     allow_messaging: detail.allow_messaging !== undefined ? detail.allow_messaging : true,
                     messaging_mode: detail.messaging_mode || 'everyone',
+                    privacy_hide_online_from_others: !!detail.privacy_hide_online_from_others,
+                    privacy_hide_read_receipts_from_others: !!detail.privacy_hide_read_receipts_from_others,
                     allow_following: detail.allow_following !== undefined ? detail.allow_following : true,
                     allow_mention_notifications: detail.allow_mention_notifications !== undefined ? detail.allow_mention_notifications : true,
                     profile_color: detail.profile_color || null,
@@ -172,7 +176,9 @@ const SettingsPage = () => {
             setSettings(prev => ({ ...prev, allow_messaging: newValue }));
             const response = await usersAPI.updateMessaging({
                 allow_messaging: newValue,
-                messaging_mode: settings.messaging_mode
+                messaging_mode: settings.messaging_mode,
+                privacy_hide_online_from_others: settings.privacy_hide_online_from_others,
+                privacy_hide_read_receipts_from_others: settings.privacy_hide_read_receipts_from_others,
             });
 
             if (response.data.data?.settings) {
@@ -204,13 +210,34 @@ const SettingsPage = () => {
             setSettings(prev => ({ ...prev, messaging_mode: mode }));
             await usersAPI.updateMessaging({
                 allow_messaging: settings.allow_messaging,
-                messaging_mode: mode
+                messaging_mode: mode,
+                privacy_hide_online_from_others: settings.privacy_hide_online_from_others,
+                privacy_hide_read_receipts_from_others: settings.privacy_hide_read_receipts_from_others,
             });
             showSuccess(`Mesaj tercihiniz güncellendi.`);
         } catch (error) {
             setSettings(prev => ({ ...prev, messaging_mode: settings.messaging_mode }));
             const errorMsg = error.response?.data?.message || 'Mesaj modu güncellenemedi. Lütfen tekrar deneyin.';
             showToast(errorMsg, 'error');
+        }
+    };
+
+    const handleMessagingPrivacyToggle = async (key, newValue) => {
+        if (settings[key] === newValue) return;
+        const prev = settings;
+        const next = { ...settings, [key]: newValue };
+        try {
+            setSettings(next);
+            await usersAPI.updateMessaging({
+                allow_messaging: next.allow_messaging,
+                messaging_mode: next.messaging_mode,
+                privacy_hide_online_from_others: next.privacy_hide_online_from_others,
+                privacy_hide_read_receipts_from_others: next.privacy_hide_read_receipts_from_others,
+            });
+            showSuccess('Mesajlaşma gizliliği güncellendi.');
+        } catch (error) {
+            setSettings(prev);
+            showToast(error.response?.data?.message || 'Ayar güncellenemedi.', 'error');
         }
     };
 
@@ -507,6 +534,22 @@ const SettingsPage = () => {
                                 </div>
                             </div>
                         )}
+
+                        <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Mesajlaşma gizliliği</p>
+                            <Toggle
+                                label="Çevrimiçi durumunu gizle"
+                                description="Açıkken karşı taraf sizin çevrimiçi ve son görülme bilginizi görmez."
+                                enabled={settings.privacy_hide_online_from_others}
+                                onChange={(v) => handleMessagingPrivacyToggle('privacy_hide_online_from_others', v)}
+                            />
+                            <Toggle
+                                label="Okundu bilgisini gönderme"
+                                description="Açıkken gönderdiğiniz mesajlarda karşı taraf okundu tiklerini görmez."
+                                enabled={settings.privacy_hide_read_receipts_from_others}
+                                onChange={(v) => handleMessagingPrivacyToggle('privacy_hide_read_receipts_from_others', v)}
+                            />
+                        </div>
                     </div>
 
                     {/* Following Section */}

@@ -135,6 +135,7 @@ export const questionsAPI = {
     getDrafts: () => api.get('/questions/drafts'),
     updateDraft: (id, data) => api.put(`/questions/${id}/draft`, data),
     publishDraft: (id) => api.post(`/questions/${id}/publish`),
+    updatePublished: (id, data) => api.put(`/questions/${id}`, data),
     createAnswer: (questionId, data) => api.post(`/questions/${questionId}/answers`, data),
     getMyQuestions: () => api.get('/user/me/questions'),
     getQuestionComments: (questionId, params) => api.get(`/questions/${questionId}/comments`, { params }),

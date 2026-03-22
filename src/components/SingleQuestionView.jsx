@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft, FaTrash, FaEyeSlash, FaEdit } from 'react-icons/fa';
 import { questionsAPI, commentsAPI, answersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
@@ -101,18 +102,60 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('success');
 
-    const displayToast = (message, type = 'success') => {
-        setToastMessage(message);
-        setToastType(type);
-        setShowToast(true);
-    };
-
     const [likersModal, setLikersModal] = useState({ isOpen: false, type: null, id: null });
     const [showReportModal, setShowReportModal] = useState(false);
     const [deleteCommentModal, setDeleteCommentModal] = useState({ isOpen: false, commentId: null, type: null, targetId: null });
     const [hideCommentModal, setHideCommentModal] = useState({ isOpen: false, commentId: null, type: null, targetId: null });
     const [deleteAnswerModal, setDeleteAnswerModal] = useState({ isOpen: false, answerId: null });
     const [hideAnswerModal, setHideAnswerModal] = useState({ isOpen: false, answerId: null });
+
+    const [showEditQuestionModal, setShowEditQuestionModal] = useState(false);
+    const [editQuestionTitle, setEditQuestionTitle] = useState('');
+    const [editQuestionDescription, setEditQuestionDescription] = useState('');
+    const [savingQuestionEdit, setSavingQuestionEdit] = useState(false);
+
+    const displayToast = (message, type = 'success') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast(true);
+    };
+
+    useEffect(() => {
+        if (showEditQuestionModal && question) {
+            setEditQuestionTitle(question.title || '');
+            setEditQuestionDescription(question.description || '');
+        }
+    }, [showEditQuestionModal, question?.id]);
+
+    const handleSaveQuestionEdit = async () => {
+        if (!question?.id) return;
+        const t = editQuestionTitle.trim();
+        if (t.length < 10) {
+            displayToast('Başlık en az 10 karakter olmalıdır.', 'error');
+            return;
+        }
+        setSavingQuestionEdit(true);
+        try {
+            const res = await questionsAPI.updatePublished(question.id, {
+                title: t,
+                description: editQuestionDescription || null,
+            });
+            const updated = res.data?.data?.question;
+            if (updated) {
+                setQuestion(prev => (prev ? { ...prev, ...updated } : updated));
+                setAnswers(updated.answers || []);
+            }
+            setShowEditQuestionModal(false);
+            displayToast('Soru güncellendi.');
+            if (updated?.slug && slug && updated.slug !== slug) {
+                navigate(`/question/${updated.slug}`, { replace: true });
+            }
+        } catch (err) {
+            displayToast(err.response?.data?.message || 'Güncelleme başarısız.', 'error');
+        } finally {
+            setSavingQuestionEdit(false);
+        }
+    };
 
     const openLikersModal = (type, id) => {
         if (!currentUser) {
@@ -1205,7 +1248,27 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                         )}
                     </div>
 
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 leading-snug">{question.title}</h1>
+                    <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                        <h1 className="text-2xl font-bold text-gray-800 dark:text-white leading-snug flex-1 min-w-0">{question.title}</h1>
+                        {question.canEdit && (
+                            <button
+                                type="button"
+                                onClick={() => setShowEditQuestionModal(true)}
+                                className="flex-shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                <FaEdit /> Düzenle
+                            </button>
+                        )}
+                    </div>
+                    {question.canEdit && question.can_edit_published_until && (
+                        <p className="text-xs text-amber-700 dark:text-amber-400/90 -mt-2 mb-4">
+                            Başlık ve detayı düzenleme süreniz{' '}
+                            {formatDistanceToNow(new Date(question.can_edit_published_until), { addSuffix: true, locale: tr })} doluyor.
+                            {typeof question.published_edits_remaining === 'number' && (
+                                <> Yayın sonrası en fazla 2 düzenleme; kalan hakkınız: <strong>{question.published_edits_remaining}</strong>.</>
+                            )}
+                        </p>
+                    )}
                     {question.description && (
                         <div
                             className="text-gray-700 dark:text-gray-300 mb-4 break-words [&>div]:mb-2 [&>div:last-child]:mb-0 [&_b]:font-semibold [&_strong]:font-semibold [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-2 [&_.mention-link]:font-semibold [&_.mention-link]:text-coral [&_.mention-link]:hover:text-coral-dark [&_.mention-link]:hover:underline [&_.mention-link]:cursor-pointer"
@@ -2401,6 +2464,133 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     </div>
                 </div>
             </div>
+
+            {showEditQuestionModal && createPortal(
+                <div
+                    className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-4"
+                    onClick={() => !savingQuestionEdit && setShowEditQuestionModal(false)}
+                >
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+                    {/* Modal card */}
+                    <div
+                        className="relative w-full sm:max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200"
+                        role="dialog"
+                        aria-modal="true"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Gradient header */}
+                        <div className="relative bg-gradient-to-r from-coral to-orange-400 px-6 pt-5 pb-6 flex-shrink-0">
+                            <button
+                                onClick={() => !savingQuestionEdit && setShowEditQuestionModal(false)}
+                                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center text-white"
+                                disabled={savingQuestionEdit}
+                            >
+                                <FaTimes className="text-sm" />
+                            </button>
+                            <div className="flex items-center gap-3 pr-10">
+                                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                                    <FaEdit className="text-white text-lg" />
+                                </div>
+                                <div>
+                                    <h2 className="text-white font-bold text-lg leading-tight">Soruyu Düzenle</h2>
+                                    <p className="text-white/80 text-xs mt-0.5 leading-snug">
+                                        Yayın sonrası 30 dk ve en fazla 2 düzenleme hakkı
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Scrollable body — negatif margin yok; turuncu başlık ile form net ayrılır */}
+                        <div className="relative z-10 overflow-y-auto flex-1 px-6 pt-6 pb-6 flex flex-col gap-4 bg-white dark:bg-gray-900">
+                            {typeof question?.published_edits_remaining === 'number' && question.published_edits_remaining > 0 && (
+                                <div className="flex justify-center -mb-1">
+                                    <span className="inline-flex items-center rounded-full bg-gradient-to-r from-coral/15 to-orange-400/15 dark:from-coral/25 dark:to-orange-500/20 text-coral dark:text-orange-300 text-xs font-semibold px-4 py-1.5 border border-coral/20 dark:border-orange-500/30">
+                                        Kalan düzenleme hakkı: {question.published_edits_remaining} / 2
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Floating inner card */}
+                            <div className="bg-gray-50 dark:bg-gray-800/80 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 p-4 sm:p-5 space-y-5">
+
+                                {/* Title field */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Başlık</label>
+                                        <span className={`text-xs font-medium ${editQuestionTitle.trim().length < 10 ? 'text-orange-400' : 'text-green-500'}`}>
+                                            {editQuestionTitle.length}/500
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={editQuestionTitle}
+                                        onChange={(e) => setEditQuestionTitle(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/60 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral/40 focus:border-coral transition text-sm"
+                                        maxLength={500}
+                                        disabled={savingQuestionEdit}
+                                        placeholder="Sorunuzu kısaca yazın…"
+                                    />
+                                    {editQuestionTitle.trim().length > 0 && editQuestionTitle.trim().length < 10 && (
+                                        <p className="text-xs text-orange-400 mt-1.5">{10 - editQuestionTitle.trim().length} karakter daha gerekli</p>
+                                    )}
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-gray-100 dark:border-gray-700" />
+
+                                {/* Description field */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Detay <span className="normal-case font-normal text-gray-400">(isteğe bağlı)</span></label>
+                                    </div>
+                                    <textarea
+                                        value={editQuestionDescription}
+                                        onChange={(e) => setEditQuestionDescription(e.target.value)}
+                                        rows={8}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/60 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral/40 focus:border-coral transition text-sm resize-none leading-relaxed"
+                                        disabled={savingQuestionEdit}
+                                        placeholder="Sorunuzu daha ayrıntılı açıklayın…"
+                                    />
+                                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5">Not: detay alanındaki görseller ve biçimlendirme korunur.</p>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => !savingQuestionEdit && setShowEditQuestionModal(false)}
+                                    disabled={savingQuestionEdit}
+                                    className="flex-1 py-3 px-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                                >
+                                    İptal
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSaveQuestionEdit}
+                                    disabled={savingQuestionEdit || editQuestionTitle.trim().length < 10}
+                                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-coral to-orange-400 text-white font-bold text-sm hover:shadow-lg hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none transition-all"
+                                >
+                                    {savingQuestionEdit ? (
+                                        <>
+                                            <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                                            Kaydediliyor…
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaCheck className="text-xs" />
+                                            Kaydet
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
 
             <LikersModal
                 isOpen={likersModal.isOpen}
