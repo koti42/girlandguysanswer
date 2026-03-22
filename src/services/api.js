@@ -134,6 +134,7 @@ export const questionsAPI = {
     create: (data) => api.post('/questions', data),
     getDrafts: () => api.get('/questions/drafts'),
     updateDraft: (id, data) => api.put(`/questions/${id}/draft`, data),
+    deleteDraft: (id) => api.delete(`/questions/${id}/draft`),
     publishDraft: (id) => api.post(`/questions/${id}/publish`),
     updatePublished: (id, data) => api.put(`/questions/${id}`, data),
     createAnswer: (questionId, data) => api.post(`/questions/${questionId}/answers`, data),

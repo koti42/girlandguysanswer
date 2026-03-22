@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft, FaClock, FaFolderOpen, FaEdit, FaPaperPlane, FaRobot } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaCheckCircle, FaLightbulb, FaExclamationTriangle, FaSave, FaUserSecret, FaImage, FaPoll, FaArrowUp, FaArrowDown, FaMinus, FaChevronDown, FaArrowLeft, FaClock, FaFolderOpen, FaEdit, FaPaperPlane, FaRobot, FaTrash } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import Toast from '../components/Toast';
 import GifPickerModal from '../components/GifPickerModal';
-import { questionsAPI, categoriesAPI, tagsAPI } from '../services/api';
+import { questionsAPI, categoriesAPI, tagsAPI, pollsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import XPToast from '../components/Gamification/XPToast';
 import LevelUpModal from '../components/Gamification/LevelUpModal';
@@ -13,6 +13,7 @@ import SEO from '../components/SEO';
 import { getCategoryIcon, getCategoryColor, getCategoryHexColor } from '../utils/categoryIcons';
 import UserAvatar from '../components/UserAvatar';
 import DOMPurify from 'dompurify';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const AskQuestionPage = () => {
     const navigate = useNavigate();
@@ -54,6 +55,8 @@ const AskQuestionPage = () => {
     const [showDraftsModal, setShowDraftsModal] = useState(false);
     const [editingDraftId, setEditingDraftId] = useState(null);
     const [publishingDraftId, setPublishingDraftId] = useState(null);
+    const [deleteDraftModal, setDeleteDraftModal] = useState(null);
+    const [deletingDraftId, setDeletingDraftId] = useState(null);
 
     const loadDrafts = async () => {
         try {
@@ -202,6 +205,26 @@ const AskQuestionPage = () => {
         setEditingDraftId(draft.id);
     };
 
+    const handleConfirmDeleteDraft = () => {
+        const id = deleteDraftModal?.id;
+        if (!id) return;
+        (async () => {
+            try {
+                setDeletingDraftId(id);
+                await questionsAPI.deleteDraft(id);
+                setDrafts(prev => prev.filter(d => d.id !== id));
+                if (editingDraftId === id) {
+                    setEditingDraftId(null);
+                }
+                showToast('success', 'Taslak silindi.');
+            } catch (err) {
+                showToast('error', err.response?.data?.message || 'Taslak silinemedi.');
+            } finally {
+                setDeletingDraftId(null);
+            }
+        })();
+    };
+
     const handlePublishDraft = async (draft) => {
         try {
             setPublishingDraftId(draft.id);
@@ -281,22 +304,63 @@ const AskQuestionPage = () => {
                 payload.expires_in_hours = expiresInHours;
             }
 
+            let pollPayload = null;
             if (addPoll) {
                 const filledOptions = pollOptions.filter(o => o.text.trim()).map((o, i) => ({ text: o.text.trim(), sort_order: i }));
                 if (filledOptions.length >= 2) {
-                    payload.poll = {
+                    pollPayload = {
                         title: pollTitle.trim() || null,
                         allow_multiple: pollAllowMultiple,
                         options: filledOptions
                     };
                     if (pollEndsAt.trim()) {
                         const endDate = new Date(pollEndsAt);
-                        if (!isNaN(endDate.getTime())) payload.poll.ends_at = endDate.toISOString();
+                        if (!isNaN(endDate.getTime())) pollPayload.ends_at = endDate.toISOString();
                     }
                 }
             }
 
-            const response = await questionsAPI.create(payload);
+            const draftId = editingDraftId;
+            if (draftId) {
+                await questionsAPI.updateDraft(draftId, payload);
+                const publishRes = await questionsAPI.publishDraft(draftId);
+                const gamification = publishRes.data.data?.gamification;
+                const questionResponse = publishRes.data.data?.question || publishRes.data.data;
+                const slug = questionResponse?.slug || questionResponse?.id;
+
+                if (pollPayload && slug) {
+                    try {
+                        await pollsAPI.create(slug, pollPayload);
+                    } catch (pollErr) {
+                        showToast('error', pollErr.response?.data?.message || 'Soru yayınlandı ancak anket eklenemedi.');
+                    }
+                }
+
+                setEditingDraftId(null);
+                setDrafts(prev => prev.filter(d => d.id !== draftId));
+
+                navigate('/question-submitted', {
+                    state: {
+                        question: {
+                            title: formData.title,
+                            category: formData.category,
+                            tags: formData.tags,
+                            is_anonymous: isAnonymous,
+                        },
+                        gamification: gamification || null,
+                        slug: slug,
+                    },
+                    replace: true,
+                });
+                return;
+            }
+
+            const createPayload = { ...payload };
+            if (pollPayload) {
+                createPayload.poll = pollPayload;
+            }
+
+            const response = await questionsAPI.create(createPayload);
 
             const gamification = response.data.data?.gamification;
 
@@ -906,6 +970,16 @@ const AskQuestionPage = () => {
                     title="Soru için GIF seç"
                 />
 
+                <ConfirmationModal
+                    isOpen={!!deleteDraftModal}
+                    onClose={() => setDeleteDraftModal(null)}
+                    onConfirm={handleConfirmDeleteDraft}
+                    title="Taslağı sil"
+                    message={deleteDraftModal ? `"${(deleteDraftModal.title || 'Taslak').slice(0, 80)}${(deleteDraftModal.title || '').length > 80 ? '…' : ''}" kalıcı olarak silinecek. Emin misiniz?` : ''}
+                    confirmText="Sil"
+                    isDangerous
+                />
+
                 {showDraftsModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowDraftsModal(false)}>
                         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-gray-200 dark:border-gray-700" onClick={e => e.stopPropagation()}>
@@ -963,6 +1037,14 @@ const AskQuestionPage = () => {
                                                                 className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                                                             >
                                                                 <FaEdit /> Düzenle
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setDeleteDraftModal({ id: draft.id, title: draft.title || '' })}
+                                                                disabled={deletingDraftId === draft.id}
+                                                                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors disabled:opacity-50"
+                                                            >
+                                                                <FaTrash /> Sil
                                                             </button>
                                                             <button
                                                                 type="button"
