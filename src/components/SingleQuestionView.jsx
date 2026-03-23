@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft, FaTrash, FaEyeSlash, FaEdit } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft, FaTrash, FaEyeSlash, FaEdit, FaRobot } from 'react-icons/fa';
 import { questionsAPI, commentsAPI, answersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
@@ -1044,10 +1044,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
     const remainingAnswers = sortedAnswers.filter((answer) => !idsToExclude.has(answer.id));
 
-    const maleAnswers = remainingAnswers.filter((answer) => answer.user?.gender === 'male');
-    const femaleAnswers = remainingAnswers.filter((answer) => answer.user?.gender === 'female');
+    const aiAnswers = remainingAnswers.filter((answer) => answer.user?.is_ai || answer.user?.is_bot);
+    const maleAnswers = remainingAnswers.filter((answer) => !answer.user?.is_ai && !answer.user?.is_bot && answer.user?.gender === 'male');
+    const femaleAnswers = remainingAnswers.filter((answer) => !answer.user?.is_ai && !answer.user?.is_bot && answer.user?.gender === 'female');
     const otherAnswers = remainingAnswers.filter(
-        (answer) => !answer.user?.gender || (answer.user.gender !== 'male' && answer.user.gender !== 'female')
+        (answer) => !answer.user?.is_ai && !answer.user?.is_bot && (!answer.user?.gender || (answer.user.gender !== 'male' && answer.user.gender !== 'female'))
     );
 
     if (loading) return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral"></div></div>;
@@ -1965,11 +1966,170 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                     )}
 
                     <div className="space-y-8">
+                        {aiAnswers.length > 0 && (
+                            <div className="rounded-2xl overflow-hidden border border-indigo-200/70 dark:border-indigo-700/40 shadow-md">
+                                <div className="flex items-center gap-3 px-5 py-3.5 bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-400">
+                                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/20 shrink-0">
+                                        <FaRobot className="text-white text-base" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-white font-bold text-sm leading-tight">Yapay Zeka Yorumcusu Cevapladı</p>
+                                        <p className="text-white/75 text-xs mt-0.5">Herkesler Soruyor AI tarafından oluşturulmuş yanıt</p>
+                                    </div>
+                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-bold shrink-0">
+                                        {aiAnswers.length} {aiAnswers.length === 1 ? 'Yanıt' : 'Yanıt'}
+                                    </span>
+                                </div>
+                                <div className="space-y-3 p-4 bg-gradient-to-br from-indigo-50/60 via-sky-50/40 to-cyan-50/60 dark:from-indigo-950/25 dark:via-sky-950/20 dark:to-cyan-950/25">
+                                    {aiAnswers.map((answer) => {
+                                        const answerCommentKey = `answer_${answer.id}`;
+                                        const isBestAnswer = answer.is_accepted;
+                                        const hasBestAnswer = answers.some(a => a.is_accepted);
+                                        const isOwner = question.isOwner;
+                                        const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
+                                        const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
+                                        const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : 'border-indigo-200/60 dark:border-indigo-700/30';
+                                        const answerBgClass = isBestAnswer ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900' : 'bg-white/80 dark:bg-gray-800/60';
+                                        const youtubeLinks = getYoutubeVideoLinks(answer.content);
+                                        return (
+                                            <div key={answer.id} id={`answer-${answer.id}`} className={`p-4 md:p-5 rounded-xl border-l-4 border transition-all scroll-mt-24 shadow-sm hover:shadow-md ${answerBorderClass} ${answerBgClass}`}>
+                                                <div className="flex gap-3 min-w-0">
+                                                    {answer.user?.username === 'anonim' ? (
+                                                        <div className="cursor-default shrink-0"><UserAvatar user={answer.user} size="md" className="border-2 border-white" /></div>
+                                                    ) : (
+                                                        <Link to={`/profile/${answer.user?.username}`} className="shrink-0"><UserAvatar user={answer.user} size="md" className="hover:border-coral transition-colors" /></Link>
+                                                    )}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex justify-between items-start gap-2">
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                                    {answer.user?.username === 'anonim' ? (
+                                                                        <span className="font-bold text-gray-800 dark:text-white cursor-default">Gizli Üye</span>
+                                                                    ) : (
+                                                                        <Link to={`/profile/${answer.user?.username}`} className="font-bold text-gray-800 dark:text-white hover:underline">{answer.user?.username}</Link>
+                                                                    )}
+                                                                    <AiBadge />
+                                                                    {answer.user?.level && (
+                                                                        <span
+                                                                            className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 shrink-0"
+                                                                            style={answer.user?.level_color ? { color: answer.user.level_color, backgroundColor: `${answer.user.level_color}20` } : {}}
+                                                                        >
+                                                                            {typeof answer.user.level === 'object' ? answer.user.level?.name : answer.user.level}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-xs text-gray-500">{formatDate(answer.created_at)}</span>
+                                                                {canSelectBestAnswer && (
+                                                                    <button
+                                                                        onClick={() => handleBestAnswer(answer.id)}
+                                                                        className="lg:hidden mt-2 text-xs font-semibold text-green-600 hover:bg-green-50 px-2 py-1 rounded-lg border border-green-200 transition-colors flex items-center gap-1"
+                                                                    >
+                                                                        <FaCheckCircle /> EİG Seç
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                            {canSelectBestAnswer && (
+                                                                <button
+                                                                    onClick={() => handleBestAnswer(answer.id)}
+                                                                    className="hidden lg:flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-green-600 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-xl hover:border-green-300 transition-all shadow-sm"
+                                                                    title="En İyi Görüş Seç"
+                                                                >
+                                                                    <FaCheck /> Seç
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        {answer.content && <div className="mt-3 text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap break-words">{textWithMentions(answer.content)}</div>}
+                                                        {youtubeLinks.length > 0 && (
+                                                            <div className="space-y-3 mt-2">
+                                                                {youtubeLinks.map(({ videoId, isMusic, url }) => (
+                                                                    <div key={videoId} className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5 dark:bg-gray-900/60">
+                                                                        <div className="relative w-full pb-[56.25%] bg-black">
+                                                                            <iframe src={`https://www.youtube.com/embed/${videoId}`} title="YouTube video" className="absolute inset-0 w-full h-full" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+                                                                        </div>
+                                                                        <div className="px-3 py-2 flex items-center justify-between gap-2 bg-white/80 dark:bg-gray-900/80">
+                                                                            <span className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">{isMusic ? 'YouTube Music' : 'YouTube'}</span>
+                                                                            <a href={url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold text-coral hover:text-coral-dark whitespace-nowrap">YouTube'da aç</a>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {answer.gif_url && (
+                                                            <div className="mt-3 rounded-lg overflow-hidden">
+                                                                <img src={answer.gif_url} alt="GIF" className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.open(answer.gif_url, '_blank')} />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-4 pt-3 border-t border-indigo-100 dark:border-indigo-800/30">
+                                                            <div className="flex items-center gap-2">
+                                                                <button onClick={(e) => handleLike(e, 'answer', answer.id)} className={`flex items-center gap-1 transition-colors ${answer.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}><FaHeart /></button>
+                                                                <button onClick={() => openLikersModal('answer', answer.id)} className="font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline cursor-pointer">{answer.likes_count || 0}</button>
+                                                            </div>
+                                                            <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+                                                                <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
+                                                            </button>
+                                                            {(answer.user?.id === currentUser?.id || canModerate) && (
+                                                                <button onClick={() => openDeleteAnswerModal(answer.id)} className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors text-sm" title="Cevabı sil">
+                                                                    <FaTrash className="text-xs" /> <span>Sil</span>
+                                                                </button>
+                                                            )}
+                                                            {currentUser && answer.user?.id !== currentUser?.id && (
+                                                                <button onClick={() => openHideAnswerModal(answer.id)} className="flex items-center gap-1 text-gray-500 hover:text-orange-500 transition-colors text-sm" title="Cevabı gizle (sadece sen görmezsin)">
+                                                                    <FaEyeSlash className="text-xs" /> <span>Gizle</span>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        {commentingOn?.type === 'answer' && commentingOn?.id === answer.id && (
+                                                            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                                                <div className="flex items-center gap-2 mb-3">
+                                                                    <UserAvatar user={currentUser} size="xs" className="w-6 h-6 flex-shrink-0" />
+                                                                    <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 truncate">{currentUser?.username}</span>
+                                                                    <span className="text-[10px] text-gray-400">• yorum yazıyor</span>
+                                                                </div>
+                                                                <form onSubmit={handleSubmitComment}>
+                                                                    {commentGifUrls[answerCommentKey] && (
+                                                                        <div className="mb-2 relative inline-block">
+                                                                            <img src={commentGifUrls[answerCommentKey]} alt="GIF" className="max-w-[160px] sm:max-w-xs rounded-xl shadow-sm" />
+                                                                            <button type="button" onClick={() => clearCommentGif(answerCommentKey)} className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"><FaTimes className="text-[10px]" /></button>
+                                                                        </div>
+                                                                    )}
+                                                                    <textarea value={commentTexts[answerCommentKey] || ''} onChange={(e) => setCommentTexts(prev => ({ ...prev, [answerCommentKey]: e.target.value }))} placeholder="Yorumunuzu yazın..." rows={2} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/20 transition-all resize-none text-sm" autoFocus />
+                                                                    <div className="flex items-center gap-1.5 mt-2">
+                                                                        <button type="button" onClick={() => openGifPicker('comment', answerCommentKey)} className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 hover:text-coral dark:hover:text-coral hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors flex-shrink-0" title="GIF Ekle"><FaImage className="text-xs" /></button>
+                                                                        <button type="button" onClick={() => setCommentAnonymous(prev => ({ ...prev, [answerCommentKey]: !prev[answerCommentKey] }))} className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${commentAnonymous[answerCommentKey] ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700' : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500'}`}><FaUserSecret className="text-[11px]" /><span className="hidden xs:inline">{commentAnonymous[answerCommentKey] ? 'Gizli' : 'Gizli'}</span></button>
+                                                                        <div className="flex-1" />
+                                                                        <button type="button" onClick={() => setCommentingOn(null)} className="px-3 py-1.5 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors font-medium">İptal</button>
+                                                                        <button type="submit" disabled={!commentTexts[answerCommentKey]?.trim() && !commentGifUrls[answerCommentKey]} className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-coral text-white hover:bg-coral/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm">Gönder</button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        )}
+                                                        {answer.comments && answer.comments.length > 0 && (
+                                                            <div className="mt-6 pt-4 border-t border-indigo-100 dark:border-indigo-800/30">
+                                                                <div className="flex items-center gap-2 mb-4">
+                                                                    <FaComment className="text-coral text-sm" /><span className="text-sm font-semibold text-gray-600 dark:text-gray-400">{answer.comments.length} Yorum</span>
+                                                                </div>
+                                                                <div className="space-y-4">{answer.comments.map(comment => renderComment(comment, 'answer', answer.id, 0, null))}</div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         {maleAnswers.length > 0 && (
                             <div className="space-y-4">
-                                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                                    Erkeklerin Yorumu
-                                </h3>
+                                <div className="relative flex items-center gap-3">
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-full shrink-0 shadow-sm">
+                                        <FaMars className="text-blue-500 text-sm" />
+                                        <span className="text-blue-700 dark:text-blue-300 text-sm font-bold">Erkeklerin Yorumu</span>
+                                        <span className="text-xs bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded-full font-semibold">{maleAnswers.length}</span>
+                                    </div>
+                                    <div className="flex-1 h-px bg-blue-200 dark:bg-blue-800/50" />
+                                </div>
                                 {maleAnswers.map((answer) => {
                                     const answerCommentKey = `answer_${answer.id}`;
                                     const isBestAnswer = answer.is_accepted;
@@ -2224,9 +2384,14 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
                         {femaleAnswers.length > 0 && (
                             <div className="space-y-4">
-                                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                                    Kadınların Yorumu
-                                </h3>
+                                <div className="relative flex items-center gap-3">
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-pink-50 dark:bg-pink-900/30 border border-pink-200 dark:border-pink-800 rounded-full shrink-0 shadow-sm">
+                                        <FaVenus className="text-pink-500 text-sm" />
+                                        <span className="text-pink-700 dark:text-pink-300 text-sm font-bold">Kadınların Yorumu</span>
+                                        <span className="text-xs bg-pink-100 dark:bg-pink-800/50 text-pink-600 dark:text-pink-300 px-1.5 py-0.5 rounded-full font-semibold">{femaleAnswers.length}</span>
+                                    </div>
+                                    <div className="flex-1 h-px bg-pink-200 dark:bg-pink-800/50" />
+                                </div>
                                 {femaleAnswers.map((answer) => {
                                     const answerCommentKey = `answer_${answer.id}`;
                                     const isBestAnswer = answer.is_accepted;
