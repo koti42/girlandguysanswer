@@ -1,36 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import { FaHashtag, FaSearch, FaFire, FaChartLine } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { tagsAPI } from '../services/api';
 
 const TagsPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTag, setSelectedTag] = useState(null);
+    const [searchParams] = useSearchParams();
+    const selectedTag = searchParams.get('tag');
 
-    // Örnek etiketler - gerçek uygulamada API'den gelecek
-    const [tags] = useState([
-        { id: 1, name: 'aşk', count: 1250, trending: true },
-        { id: 2, name: 'ilişkiler', count: 980, trending: true },
-        { id: 3, name: 'moda', count: 750, trending: false },
-        { id: 4, name: 'güzellik', count: 650, trending: false },
-        { id: 5, name: 'teknoloji', count: 540, trending: true },
-        { id: 6, name: 'sağlık', count: 480, trending: false },
-        { id: 7, name: 'eğitim', count: 420, trending: false },
-        { id: 8, name: 'yemek', count: 380, trending: false },
-        { id: 9, name: 'seyahat', count: 320, trending: false },
-        { id: 10, name: 'spor', count: 290, trending: false },
-        { id: 11, name: 'müzik', count: 250, trending: false },
-        { id: 12, name: 'film', count: 220, trending: false },
-        { id: 13, name: 'kitap', count: 180, trending: false },
-        { id: 14, name: 'oyun', count: 150, trending: false },
-        { id: 15, name: 'hobi', count: 120, trending: false },
-    ]);
+    const [popularTags, setPopularTags] = useState([]);
+    const [allTags, setAllTags] = useState([]);
+    const [loadingTags, setLoadingTags] = useState(false);
 
-    const filteredTags = tags.filter(tag =>
-        tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+    useEffect(() => {
+        const fetchTags = async () => {
+            try {
+                setLoadingTags(true);
+                const [popularRes, allRes] = await Promise.all([
+                    tagsAPI.getPopular({ limit: 12, period_days: 14 }),
+                    tagsAPI.getAll({ limit: 200 }),
+                ]);
+
+                setPopularTags(popularRes.data?.data?.tags || []);
+                setAllTags(allRes.data?.data?.tags || []);
+            } catch (err) {
+                console.error('Etiketler yüklenemedi:', err);
+            } finally {
+                setLoadingTags(false);
+            }
+        };
+
+        fetchTags();
+    }, []);
+
+    const filteredTags = allTags.filter((t) =>
+        (t.tag || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const trendingTags = tags.filter(tag => tag.trending);
+    const trendingTags = popularTags;
+    const trendingTagSet = new Set(trendingTags.map((t) => t.tag));
 
     return (
         <MainLayout>
@@ -74,12 +83,12 @@ const TagsPage = () => {
                             <div className="flex flex-wrap gap-2">
                                 {trendingTags.map((tag) => (
                                     <Link
-                                        key={tag.id}
-                                        to={`/questions?tag=${tag.name}`}
+                                        key={tag.tag}
+                                        to={`/questions?tag=${tag.tag}`}
                                         className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-full font-semibold hover:shadow-lg transition-all"
                                     >
                                         <FaHashtag />
-                                        {tag.name}
+                                        {tag.tag}
                                         <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
                                             {tag.count}
                                         </span>
@@ -100,27 +109,31 @@ const TagsPage = () => {
                                 ({filteredTags.length})
                             </span>
                         </div>
-                        {filteredTags.length > 0 ? (
+                        {loadingTags ? (
+                            <div className="text-center py-12">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral mx-auto" />
+                                <p className="text-gray-500 dark:text-gray-400 mt-3">Etiketler yükleniyor...</p>
+                            </div>
+                        ) : filteredTags.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {filteredTags.map((tag) => (
                                     <Link
-                                        key={tag.id}
-                                        to={`/questions?tag=${tag.name}`}
+                                        key={tag.tag}
+                                        to={`/questions?tag=${tag.tag}`}
                                         className={`p-4 rounded-xl border-2 transition-all ${
-                                            selectedTag === tag.id
+                                            selectedTag === tag.tag
                                                 ? 'border-coral bg-coral/10'
                                                 : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:border-coral/50'
                                         }`}
-                                        onClick={() => setSelectedTag(tag.id)}
                                     >
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
                                                 <FaHashtag className="text-coral" />
                                                 <span className="font-semibold text-gray-900 dark:text-white">
-                                                    {tag.name}
+                                                    {tag.tag}
                                                 </span>
                                             </div>
-                                            {tag.trending && (
+                                            {trendingTagSet.has(tag.tag) && (
                                                 <FaFire className="text-orange-500 text-xs" />
                                             )}
                                         </div>

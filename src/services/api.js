@@ -213,6 +213,12 @@ export const tagsAPI = {
             period_days: Math.min(params.period_days ?? 14, 90),
         },
     }),
+    getAll: (params = {}) => api.get('/tags/all', {
+        params: {
+            limit: Math.min(params.limit ?? 50, 200),
+            search: params.search,
+        },
+    }),
 };
 
 export const opinionsAPI = {

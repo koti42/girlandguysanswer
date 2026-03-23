@@ -5,19 +5,21 @@ import CategoryNav from '../components/CategoryNav';
 import FeedTabs from '../components/FeedTabs';
 import QuestionCard from '../components/QuestionCard';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
-import { FaMars, FaVenus, FaGlobe } from 'react-icons/fa';
+import { FaMars, FaVenus, FaGlobe, FaRobot } from 'react-icons/fa';
 import { questionsAPI, categoriesAPI } from '../services/api';
 
 import { useSearchParams } from 'react-router-dom';
 
 const QuestionsPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const tagFilter = searchParams.get('tag') || undefined;
     const initialQuery = searchParams.get('search') || '';
     const [searchQuery, setSearchQuery] = useState(initialQuery);
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState({ id: 0, title: 'Tümü' });
     const [genderFilter, setGenderFilter] = useState('all');
+    const [aiFilter, setAiFilter] = useState(false);
     const [sortBy, setSortBy] = useState('popular');
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -61,7 +63,9 @@ const QuestionsPage = () => {
                 gender: genderFilter !== 'all' ? genderFilter : undefined,
                 sort: sortBy,
                 page: page,
-                limit: 10
+                limit: 10,
+                ...(tagFilter ? { tag: tagFilter } : {}),
+                ...(aiFilter ? { has_ai_answers: true } : {}),
             };
 
             const response = await questionsAPI.getAll(params);
@@ -83,24 +87,22 @@ const QuestionsPage = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [searchQuery, selectedCategory, genderFilter, sortBy]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy, tagFilter, aiFilter]);
 
 
 
     useEffect(() => {
-        if (searchQuery) {
-            setSearchParams({ search: searchQuery });
-        } else {
-            searchParams.delete('search');
-            setSearchParams(searchParams);
-        }
-    }, [searchQuery, setSearchParams]);
+        const params = new URLSearchParams(searchParams);
+        if (searchQuery) params.set('search', searchQuery);
+        else params.delete('search');
+        setSearchParams(params, { replace: true });
+    }, [searchQuery, searchParams, setSearchParams]);
 
     useEffect(() => {
         setCurrentPage(1);
         setQuestions([]);
         fetchQuestions(1, false);
-    }, [searchQuery, selectedCategory, genderFilter, sortBy]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy, tagFilter, aiFilter]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -175,6 +177,19 @@ const QuestionsPage = () => {
                             >
                                 <FaMars className="text-blue-500" />
                                 <span>Erkekler Soruyor</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setAiFilter((prev) => !prev)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${
+                                    aiFilter
+                                        ? 'bg-gradient-to-r from-indigo-500 to-sky-500 text-white shadow-lg'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700'
+                                }`}
+                            >
+                                <FaRobot className={aiFilter ? 'text-white' : 'text-indigo-500'} />
+                                <span>AI Soruları</span>
                             </button>
                         </div>
 
