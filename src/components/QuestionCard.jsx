@@ -80,7 +80,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
             if (error.response?.status === 401) {
                 showToast('Oturumunuz sonlanmış olabilir.', 'error');
             } else {
-                showToast('Bir hata oluştu.', 'error');
+                showToast(error.response?.data?.message || 'Bir hata oluştu.', 'error');
             }
         }
     };

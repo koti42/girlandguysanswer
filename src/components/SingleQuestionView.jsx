@@ -504,7 +504,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             else if (type === 'answer') toggleLikeInState(answers, setAnswers);
             else if (type === 'comment') toggleLikeInState(null, null);
 
-            displayToast('Beğeni işlemi başarısız.', 'error');
+            displayToast(error.response?.data?.message || 'Beğeni işlemi başarısız.', 'error');
         }
     };
 
