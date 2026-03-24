@@ -4,6 +4,7 @@ import { FaBold, FaItalic, FaImage, FaPalette } from 'react-icons/fa';
 const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yazın...', uploadImage }) => {
     const editorRef = useRef(null);
     const fileInputRef = useRef(null);
+    const savedSelectionRef = useRef(null);
     const [selectedImg, setSelectedImg] = useState(null);
     const [overlayStyle, setOverlayStyle] = useState(null);
 
@@ -126,24 +127,63 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
         setTimeout(updateContent, 0);
     };
 
+    const saveSelection = () => {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+            savedSelectionRef.current = sel.getRangeAt(0).cloneRange();
+        }
+    };
+
+    const insertImageAtCursor = (url) => {
+        editorRef.current?.focus();
+
+        const sel = window.getSelection();
+        if (sel && savedSelectionRef.current) {
+            sel.removeAllRanges();
+            sel.addRange(savedSelectionRef.current);
+        }
+
+        const img = document.createElement('img');
+        img.src = url;
+
+        const currentSel = window.getSelection();
+        if (currentSel && currentSel.rangeCount > 0) {
+            const range = currentSel.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(img);
+            range.setStartAfter(img);
+            range.setEndAfter(img);
+            currentSel.removeAllRanges();
+            currentSel.addRange(range);
+        } else {
+            editorRef.current?.appendChild(img);
+        }
+
+        setTimeout(updateContent, 0);
+    };
+
     const handleImageUpload = async (e) => {
         e?.preventDefault?.();
         e?.stopPropagation?.();
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
 
         try {
-            if (typeof uploadImage === 'function') {
-                const url = await uploadImage(file);
-                if (url) execCommand('insertImage', url);
-                return;
+            for (const file of files) {
+                if (typeof uploadImage === 'function') {
+                    const url = await uploadImage(file);
+                    if (url) insertImageAtCursor(url);
+                } else {
+                    await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            insertImageAtCursor(event.target?.result);
+                            resolve();
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
             }
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                execCommand('insertImage', event.target?.result);
-            };
-            reader.readAsDataURL(file);
         } catch (err) {
             console.error('Image upload failed:', err);
         } finally {
@@ -212,6 +252,7 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
                     onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        saveSelection();
                     }}
                     onClick={(e) => {
                         e.preventDefault();
@@ -219,7 +260,7 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
                         fileInputRef.current?.click();
                     }}
                     className="p-2.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                    title="Görsel Ekle"
+                    title="Görsel Ekle (çoklu seçim desteklenir)"
                 >
                     <FaImage className="text-gray-700 dark:text-gray-300" />
                 </button>
@@ -227,6 +268,7 @@ const RichTextEditor = ({ value, onChange, placeholder = 'Detayları buraya yaz�
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleImageUpload}
                     className="hidden"
                 />
