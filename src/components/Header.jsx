@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
 import QuickAskModal from './QuickAskModal';
-import { categoriesAPI, questionsAPI } from '../services/api';
+import { categoriesAPI, messagesAPI, questionsAPI } from '../services/api';
 
 const Header = ({ onSearch }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
     const [searchResults, setSearchResults] = useState([]);
@@ -22,12 +23,46 @@ const Header = ({ onSearch }) => {
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [isQuestionsModalOpen, setIsQuestionsModalOpen] = useState(false);
     const [showQuickAskModal, setShowQuickAskModal] = useState(false);
+    const [unreadMessageCount, setUnreadMessageCount] = useState(0);
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [selectedModalCategory, setSelectedModalCategory] = useState(null);
     const [modalActiveTab, setModalActiveTab] = useState('tum-sorular'); // tum-sorular, populer, cevapsiz
     const { isDark, toggleTheme } = useTheme();
     const { user, isAuthenticated, logout } = useAuth();
+
+    useEffect(() => {
+        let intervalId;
+        let isMounted = true;
+
+        const syncUnreadMessages = async () => {
+            if (!isAuthenticated) {
+                if (isMounted) setUnreadMessageCount(0);
+                return;
+            }
+
+            try {
+                const response = await messagesAPI.getConversations();
+                const conversations = response.data?.data || [];
+                const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
+                if (isMounted) {
+                    setUnreadMessageCount(totalUnread);
+                }
+            } catch (error) {
+                if (isMounted) {
+                    setUnreadMessageCount(0);
+                }
+            }
+        };
+
+        syncUnreadMessages();
+        intervalId = setInterval(syncUnreadMessages, 15000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
+    }, [isAuthenticated, location.pathname]);
 
     const handleLogout = async () => {
         try {
@@ -272,10 +307,15 @@ const Header = ({ onSearch }) => {
                         {/* Messages Button */}
                         <Link
                             to="/messages"
-                            className="hidden md:block p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                            className="hidden md:block relative p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
                             title="Mesajlar"
                         >
-                            <FaEnvelope className="text-base sm:text-lg" />
+                            <FaEnvelope className={`text-base sm:text-lg transition-transform ${unreadMessageCount > 0 ? 'animate-pulse' : ''}`} />
+                            {unreadMessageCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shadow-lg">
+                                    {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                                </span>
+                            )}
                         </Link>
 
                         {/* Notifications */}
@@ -549,7 +589,14 @@ const Header = ({ onSearch }) => {
                                     onClick={closeMobileMenu}
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
                                 >
-                                    <FaEnvelope className="text-xl text-coral" />
+                                    <div className="relative">
+                                        <FaEnvelope className="text-xl text-coral" />
+                                        {unreadMessageCount > 0 && (
+                                            <span className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-[16px] px-1 flex items-center justify-center shadow-lg">
+                                                {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className="text-gray-700 dark:text-gray-200 font-medium">Mesajlar</span>
                                 </Link>
                                 <Link
