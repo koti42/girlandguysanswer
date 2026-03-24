@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret, FaEyeSlash, FaPoll } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret, FaEyeSlash, FaPoll, FaCheckCircle } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 import UserHoverCard from './UserHoverCard';
 import QuestionActionsMenu from './QuestionActionsMenu';
@@ -32,6 +32,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [showReportModal, setShowReportModal] = useState(false);
+    const [hasAnswered, setHasAnswered] = useState(question.user_has_answered || (currentUser && question.isOwner) || false);
 
     const [isLiked, setIsLiked] = useState(question.is_liked || false);
     const [likesCount, setLikesCount] = useState(question.likes_count || question.stats?.likes || question.likes || 0);
@@ -46,6 +47,10 @@ const QuestionCard = ({ question, onModerationAction }) => {
             setIsAnonymous(currentUser.last_action_is_anonymous);
         }
     }, [currentUser?.last_action_is_anonymous]);
+
+    useEffect(() => {
+        setHasAnswered(question.user_has_answered || (currentUser && question.isOwner) || false);
+    }, [question.user_has_answered, question.isOwner, currentUser]);
 
     const handleLike = async (e) => {
         e.preventDefault();
@@ -105,7 +110,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
             showToast('Cevabınız başarıyla gönderildi! 🎉', 'success');
             setReplyText('');
             setIsAnonymous(false);
-            setShowReplyBox(false);
+            setHasAnswered(true);
 
         } catch (error) {
             console.error('QuestionCard - Answer error:', error.response?.data);
@@ -332,39 +337,48 @@ const QuestionCard = ({ question, onModerationAction }) => {
             {/* Quick Reply Box */}
             {showReplyBox && (
                 <form onSubmit={handleSubmitReply} className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            placeholder="Hızlı cevap yaz..."
-                            className="flex-1 px-3 md:px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all text-sm"
-                            autoFocus
-                            disabled={loading}
-                        />
-                        <button
-                            type="submit"
-                            disabled={!replyText.trim() || loading}
-                            className="bg-gradient-to-r from-coral to-orange-400 text-white p-2 md:p-2.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[40px] md:min-w-[44px]"
-                        >
-                            {loading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-b-transparent"></div> : <FaPaperPlane />}
-                        </button>
-                    </div>
-                    <div className="flex items-center justify-between mt-2 md:mt-3">
-                        <button
-                            type="button"
-                            onClick={() => setIsAnonymous(!isAnonymous)}
-                            disabled={loading}
-                            className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-medium transition-all ${isAnonymous
-                                ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
-                                }`}
-                        >
-                            <FaUserSecret className="text-base md:text-lg" />
-                            <span className="text-xs md:text-sm">{isAnonymous ? 'Gizli' : 'Gizli Üye ol'}</span>
-                        </button>
-                        <p className="text-[10px] md:text-xs text-gray-500 hidden md:block">Detaylı cevap için soruya tıklayın</p>
-                    </div>
+                    {hasAnswered ? (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600">
+                            <FaCheckCircle className="text-gray-500 dark:text-gray-300" />
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Daha önce yorum yaptınız.</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={replyText}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                    placeholder="Hızlı cevap yaz..."
+                                    className="flex-1 px-3 md:px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all text-sm"
+                                    autoFocus
+                                    disabled={loading}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!replyText.trim() || loading}
+                                    className="bg-gradient-to-r from-coral to-orange-400 text-white p-2 md:p-2.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[40px] md:min-w-[44px]"
+                                >
+                                    {loading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-b-transparent"></div> : <FaPaperPlane />}
+                                </button>
+                            </div>
+                            <div className="flex items-center justify-between mt-2 md:mt-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAnonymous(!isAnonymous)}
+                                    disabled={loading}
+                                    className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-medium transition-all ${isAnonymous
+                                        ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800'
+                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                                        }`}
+                                >
+                                    <FaUserSecret className="text-base md:text-lg" />
+                                    <span className="text-xs md:text-sm">{isAnonymous ? 'Gizli' : 'Gizli Üye ol'}</span>
+                                </button>
+                                <p className="text-[10px] md:text-xs text-gray-500 hidden md:block">Detaylı cevap için soruya tıklayın</p>
+                            </div>
+                        </>
+                    )}
                 </form>
             )}
         </div>
