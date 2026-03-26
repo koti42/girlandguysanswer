@@ -10,6 +10,8 @@ import { MAX_CHARS, WAVE_LENGTH } from './constants';
 
 export default function MessageInput({ onSendMessage, disabled = false, replyingTo, onCancelReply, onTyping, onScrollToQuotedMessage }) {
     const { user } = useAuth();
+    const canSendImages = (user?.allow_image_messages ?? user?.detail?.allow_image_messages ?? true) !== false;
+    const canSendAudio = (user?.allow_audio_messages ?? user?.detail?.allow_audio_messages ?? true) !== false;
     const [message, setMessage] = useState('');
     const typingTimeoutRef = useRef(null);
     const typingStopRef = useRef(null);
@@ -373,18 +375,24 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                 </button>
                 <button
                     onClick={() => {
+                        if (!canSendImages) {
+                            alert('Fotoğraf gönderme ayarınız kapalı.');
+                            return;
+                        }
                         setEphemeralModalChosenOption(null);
                         setShowEphemeralModal(true);
                     }}
-                    disabled={disabled || isRecording}
+                    disabled={disabled || isRecording || !canSendImages}
                     className="p-1.5 sm:p-2 disabled:opacity-50 flex-shrink-0 text-gray-500 hover:text-coral"
+                    title={canSendImages ? 'Fotoğraf gönder' : 'Fotoğraf gönderme ayarı kapalı'}
                 >
                     <FaImage className="text-base sm:text-lg" />
                 </button>
                 <button
                     onClick={isRecording ? stopRecording : startRecording}
-                    disabled={disabled || selectedFile}
+                    disabled={disabled || selectedFile || !canSendAudio}
                     className={`p-1.5 sm:p-2 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-coral' : 'text-gray-500 hover:text-coral'}`}
+                    title={canSendAudio ? 'Ses kaydı gönder' : 'Ses kaydı gönderme ayarı kapalı'}
                 >
                     <FaMicrophone className="text-base sm:text-lg" />
                 </button>

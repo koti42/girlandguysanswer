@@ -35,6 +35,9 @@ const SettingsPage = () => {
         is_private: false,
         allow_messaging: true,
         messaging_mode: 'everyone',
+        allow_video_call: true,
+        allow_image_messages: true,
+        allow_audio_messages: true,
         privacy_hide_online_from_others: false,
         privacy_hide_read_receipts_from_others: false,
         allow_following: true,
@@ -120,6 +123,9 @@ const SettingsPage = () => {
                     is_private: detail.is_private || false,
                     allow_messaging: detail.allow_messaging !== undefined ? detail.allow_messaging : true,
                     messaging_mode: detail.messaging_mode || 'everyone',
+                    allow_video_call: detail.allow_video_call !== undefined ? detail.allow_video_call : true,
+                    allow_image_messages: detail.allow_image_messages !== undefined ? detail.allow_image_messages : true,
+                    allow_audio_messages: detail.allow_audio_messages !== undefined ? detail.allow_audio_messages : true,
                     privacy_hide_online_from_others: !!detail.privacy_hide_online_from_others,
                     privacy_hide_read_receipts_from_others: !!detail.privacy_hide_read_receipts_from_others,
                     allow_following: detail.allow_following !== undefined ? detail.allow_following : true,
@@ -153,8 +159,16 @@ const SettingsPage = () => {
                     is_private: backendSettings.is_private,
                     allow_messaging: backendSettings.allow_messaging,
                     messaging_mode: backendSettings.messaging_mode,
+                    allow_video_call: backendSettings.allow_video_call ?? true,
+                    allow_image_messages: backendSettings.allow_image_messages ?? true,
+                    allow_audio_messages: backendSettings.allow_audio_messages ?? true,
                     allow_following: backendSettings.allow_following,
-                    allow_mention_notifications: backendSettings.allow_mention_notifications
+                    allow_mention_notifications: backendSettings.allow_mention_notifications,
+                    privacy_hide_online_from_others: backendSettings.privacy_hide_online_from_others ?? false,
+                    privacy_hide_read_receipts_from_others: backendSettings.privacy_hide_read_receipts_from_others ?? false,
+                    profile_color: backendSettings.profile_color || null,
+                    profile_color_female: backendSettings.profile_color_female || null,
+                    profile_color_male: backendSettings.profile_color_male || null
                 });
             }
 
@@ -177,6 +191,9 @@ const SettingsPage = () => {
             const response = await usersAPI.updateMessaging({
                 allow_messaging: newValue,
                 messaging_mode: settings.messaging_mode,
+                allow_video_call: settings.allow_video_call,
+                allow_image_messages: settings.allow_image_messages,
+                allow_audio_messages: settings.allow_audio_messages,
                 privacy_hide_online_from_others: settings.privacy_hide_online_from_others,
                 privacy_hide_read_receipts_from_others: settings.privacy_hide_read_receipts_from_others,
             });
@@ -187,12 +204,21 @@ const SettingsPage = () => {
                     is_private: backendSettings.is_private,
                     allow_messaging: backendSettings.allow_messaging,
                     messaging_mode: backendSettings.messaging_mode,
-                    allow_following: backendSettings.allow_following
+                    allow_video_call: backendSettings.allow_video_call ?? true,
+                    allow_image_messages: backendSettings.allow_image_messages ?? true,
+                    allow_audio_messages: backendSettings.allow_audio_messages ?? true,
+                    allow_following: backendSettings.allow_following,
+                    allow_mention_notifications: backendSettings.allow_mention_notifications ?? settings.allow_mention_notifications,
+                    privacy_hide_online_from_others: backendSettings.privacy_hide_online_from_others ?? false,
+                    privacy_hide_read_receipts_from_others: backendSettings.privacy_hide_read_receipts_from_others ?? false,
+                    profile_color: backendSettings.profile_color || null,
+                    profile_color_female: backendSettings.profile_color_female || null,
+                    profile_color_male: backendSettings.profile_color_male || null
                 });
             }
 
             if (user) {
-                updateUser({ allow_messaging: newValue });
+                updateUser({ allow_messaging: newValue, detail: { ...(user?.detail || {}), allow_messaging: newValue } });
             }
 
             showSuccess(response.data.message || `Mesajlaşma ${newValue ? 'açıldı' : 'kapatıldı'}.`);
@@ -211,6 +237,9 @@ const SettingsPage = () => {
             await usersAPI.updateMessaging({
                 allow_messaging: settings.allow_messaging,
                 messaging_mode: mode,
+                allow_video_call: settings.allow_video_call,
+                allow_image_messages: settings.allow_image_messages,
+                allow_audio_messages: settings.allow_audio_messages,
                 privacy_hide_online_from_others: settings.privacy_hide_online_from_others,
                 privacy_hide_read_receipts_from_others: settings.privacy_hide_read_receipts_from_others,
             });
@@ -231,10 +260,35 @@ const SettingsPage = () => {
             await usersAPI.updateMessaging({
                 allow_messaging: next.allow_messaging,
                 messaging_mode: next.messaging_mode,
+                allow_video_call: next.allow_video_call,
+                allow_image_messages: next.allow_image_messages,
+                allow_audio_messages: next.allow_audio_messages,
                 privacy_hide_online_from_others: next.privacy_hide_online_from_others,
                 privacy_hide_read_receipts_from_others: next.privacy_hide_read_receipts_from_others,
             });
             showSuccess('Mesajlaşma gizliliği güncellendi.');
+        } catch (error) {
+            setSettings(prev);
+            showToast(error.response?.data?.message || 'Ayar güncellenemedi.', 'error');
+        }
+    };
+
+    const handleMessagingCapabilityToggle = async (key, newValue, successText) => {
+        const prev = settings;
+        const next = { ...settings, [key]: newValue };
+        try {
+            setSettings(next);
+            await usersAPI.updateMessaging({
+                allow_messaging: next.allow_messaging,
+                messaging_mode: next.messaging_mode,
+                allow_video_call: next.allow_video_call,
+                allow_image_messages: next.allow_image_messages,
+                allow_audio_messages: next.allow_audio_messages,
+                privacy_hide_online_from_others: next.privacy_hide_online_from_others,
+                privacy_hide_read_receipts_from_others: next.privacy_hide_read_receipts_from_others,
+            });
+            updateUser({ [key]: newValue, detail: { ...(user?.detail || {}), [key]: newValue } });
+            showSuccess(successText);
         } catch (error) {
             setSettings(prev);
             showToast(error.response?.data?.message || 'Ayar güncellenemedi.', 'error');
@@ -299,12 +353,16 @@ const SettingsPage = () => {
 
             if (response.data.data?.settings) {
                 const backendSettings = response.data.data.settings;
-                setSettings({
+                setSettings(prev => ({
+                    ...prev,
                     is_private: backendSettings.is_private,
                     allow_messaging: backendSettings.allow_messaging,
                     messaging_mode: backendSettings.messaging_mode,
+                    allow_video_call: backendSettings.allow_video_call ?? prev.allow_video_call,
+                    allow_image_messages: backendSettings.allow_image_messages ?? prev.allow_image_messages,
+                    allow_audio_messages: backendSettings.allow_audio_messages ?? prev.allow_audio_messages,
                     allow_following: backendSettings.allow_following
-                });
+                }));
             }
 
             if (user) {
@@ -534,6 +592,27 @@ const SettingsPage = () => {
                                 </div>
                             </div>
                         )}
+
+                        <div className="mt-4">
+                            <Toggle
+                                label="Görüntülü Arama İzni"
+                                description="Kapalıysa görüntülü arama başlatamazsın ve sana da görüntülü arama yapılamaz."
+                                enabled={settings.allow_video_call}
+                                onChange={(v) => handleMessagingCapabilityToggle('allow_video_call', v, 'Görüntülü arama ayarı güncellendi.')}
+                            />
+                            <Toggle
+                                label="Fotoğraf Gönderimine İzin Ver"
+                                description="Kapalıysa mesaj içinde fotoğraf gönderemezsin ve sana fotoğraf gönderilemez."
+                                enabled={settings.allow_image_messages}
+                                onChange={(v) => handleMessagingCapabilityToggle('allow_image_messages', v, 'Fotoğraf gönderim ayarı güncellendi.')}
+                            />
+                            <Toggle
+                                label="Ses Kaydı Gönderimine İzin Ver"
+                                description="Kapalıysa ses kaydı gönderemezsin ve sana ses kaydı gönderilemez."
+                                enabled={settings.allow_audio_messages}
+                                onChange={(v) => handleMessagingCapabilityToggle('allow_audio_messages', v, 'Ses kaydı gönderim ayarı güncellendi.')}
+                            />
+                        </div>
 
                         <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Mesajlaşma gizliliği</p>
