@@ -745,7 +745,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
         const isMainComment = level === 0;
         const commentUserId = comment.user_id || comment.user?.id;
-        const isCommentOwner = currentUser?.id === commentUserId;
+        const isCommentOwner = Boolean(currentUser?.id) && Boolean(commentUserId) && currentUser.id === commentUserId;
         const isQuestionOwner = type === 'question' && (question?.isOwner || question?.user?.id === currentUser?.id);
         const answer = type === 'answer' ? answers.find(a => a.id === targetId) : null;
         const isAnswerOwner = type === 'answer' && (answer?.user?.id === currentUser?.id);
