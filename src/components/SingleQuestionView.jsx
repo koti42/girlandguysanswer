@@ -770,7 +770,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         const isCommentOwner = Boolean(currentUser?.id) && Boolean(commentUserId) && currentUser.id === commentUserId;
         const isQuestionOwner = type === 'question' && (question?.isOwner || question?.user?.id === currentUser?.id);
         const answer = type === 'answer' ? answers.find(a => a.id === targetId) : null;
-        const isAnswerOwner = type === 'answer' && (answer?.user?.id === currentUser?.id);
+        const isAnswerOwner =
+            type === 'answer' &&
+            Boolean(currentUser?.id) &&
+            Boolean(answer?.user?.id) &&
+            answer.user.id === currentUser.id;
         const canDeleteComment = isCommentOwner || canModerate || (isMainComment && (isQuestionOwner || isAnswerOwner));
 
         return (
@@ -2089,7 +2093,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                                                 <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
                                                             </button>
-                                                            {(answer.user?.id === currentUser?.id || canModerate) && (
+                                                            {((Boolean(currentUser?.id) && Boolean(answer.user?.id) && answer.user.id === currentUser.id) || canModerate) && (
                                                                 <button onClick={() => openDeleteAnswerModal(answer.id)} className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors text-sm" title="Cevabı sil">
                                                                     <FaTrash className="text-xs" /> <span>Sil</span>
                                                                 </button>
@@ -2296,7 +2300,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
                                                     </button>
                                                     {/* Cevap Sil/Gizle Butonları */}
-                                                    {(answer.user?.id === currentUser?.id || canModerate) && (
+                                                    {((Boolean(currentUser?.id) && Boolean(answer.user?.id) && answer.user.id === currentUser.id) || canModerate) && (
                                                         <button
                                                             onClick={() => openDeleteAnswerModal(answer.id)}
                                                             className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors text-sm"
