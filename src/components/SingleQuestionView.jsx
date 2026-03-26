@@ -347,16 +347,16 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         let matched = false;
 
         if (hash.startsWith('#answer-')) {
-            const id = parseInt(hash.replace('#answer-', ''), 10);
-            if (!isNaN(id)) {
+            const id = decodeURIComponent(hash.replace('#answer-', '')).trim();
+            if (id) {
                 setHighlightedAnswerId(id);
                 matched = true;
             }
         }
 
         if (hash.startsWith('#comment-')) {
-            const id = parseInt(hash.replace('#comment-', ''), 10);
-            if (!isNaN(id)) {
+            const id = decodeURIComponent(hash.replace('#comment-', '')).trim();
+            if (id) {
                 setHighlightedCommentId(id);
                 matched = true;
             }
@@ -364,6 +364,28 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
         setIsFromNotification(matched);
     }, [location]);
+
+    useEffect(() => {
+        const { hash } = location;
+        if (!hash || (!hash.startsWith('#comment-') && !hash.startsWith('#answer-'))) return;
+
+        let attempts = 0;
+        const maxAttempts = 12;
+
+        const tryScroll = () => {
+            attempts += 1;
+            const el = document.querySelector(hash);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            if (attempts < maxAttempts) {
+                setTimeout(tryScroll, 200);
+            }
+        };
+
+        setTimeout(tryScroll, 120);
+    }, [location.hash, question?.id, answers.length]);
 
     useEffect(() => {
         if (initialQuestion) {
@@ -736,7 +758,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         const marginLeft = marginClasses[Math.min(level, 3)];
         const isReplyingToThis = replyingTo?.commentId === comment.id;
 
-        const isHighlighted = highlightedCommentId && comment.id === highlightedCommentId;
+        const isHighlighted = highlightedCommentId && String(comment.id) === String(highlightedCommentId);
         const commentHighlightClasses = isHighlighted
             ? ' ring-2 ring-amber-400 border-amber-300 bg-amber-50/80 dark:bg-amber-900/30'
             : '';
@@ -1030,7 +1052,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
     const acceptedAnswers = sortedAnswers.filter((answer) => answer.is_accepted);
 
     const highlightedAnswer = highlightedAnswerId
-        ? sortedAnswers.find((a) => a.id === highlightedAnswerId)
+        ? sortedAnswers.find((a) => String(a.id) === String(highlightedAnswerId))
         : null;
 
     const bestAnswers = acceptedAnswers.filter(
