@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaUnlock, FaTag, FaEllipsisV } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput/index.jsx';
@@ -12,7 +12,7 @@ import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
 const TYPING_RESET_MS = 3000;
 
-const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
+const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingOlder, setLoadingOlder] = useState(false);
@@ -776,6 +776,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     </div>
                     {/* Desktop/Tablet Horizontal Menu */}
                     <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 lg:gap-3 ml-auto flex-shrink-0">
+                        {embeddedInDock && conversation?.other_user?.username && (
+                            <Link
+                                to={`/messages/${conversation.other_user.username}`}
+                                className="text-xs sm:text-sm font-semibold text-white/95 hover:bg-white/15 px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                            >
+                                Tam sayfa
+                            </Link>
+                        )}
                         {conversation?.id && (
                             <button
                                 type="button"
@@ -844,6 +852,15 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
                         {showActionMenu && (
                             <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-1 z-50 animate-in fade-in zoom-in duration-200">
+                                {embeddedInDock && conversation?.other_user?.username && (
+                                    <Link
+                                        to={`/messages/${conversation.other_user.username}`}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-coral font-semibold hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                                        onClick={() => setShowActionMenu(false)}
+                                    >
+                                        Tam sayfa
+                                    </Link>
+                                )}
                                 {conversation?.id && (
                                     <button
                                         onClick={() => { setShowNotebook(v => !v); setShowActionMenu(false); }}

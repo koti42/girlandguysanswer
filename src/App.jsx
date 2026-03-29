@@ -48,6 +48,7 @@ import BlogPage from './pages/BlogPage';
 import XperPuanPage from './pages/XperPuanPage';
 import FeatureTagsPage from './pages/FeatureTagsPage';
 import WelcomeGuideModal from './components/WelcomeGuideModal';
+import FloatingMessagesDock from './components/FloatingMessagesDock';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import usePresence from './hooks/usePresence';
@@ -250,6 +251,7 @@ function App() {
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
               </Routes>
+              <FloatingMessagesDock />
               <AgeGate />
               <WelcomeGuideGate />
             </div>
