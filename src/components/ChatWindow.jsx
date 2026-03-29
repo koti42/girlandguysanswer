@@ -783,14 +783,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
                     </div>
                     {/* Desktop/Tablet Horizontal Menu */}
                     <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 lg:gap-3 ml-auto flex-shrink-0">
-                        {embeddedInDock && conversation?.other_user?.username && (
-                            <Link
-                                to={`/messages/${conversation.other_user.username}`}
-                                className="text-xs sm:text-sm font-semibold text-white/95 hover:bg-white/15 px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap"
-                            >
-                                Tam sayfa
-                            </Link>
-                        )}
                         {conversation?.id && (
                             <button
                                 type="button"
