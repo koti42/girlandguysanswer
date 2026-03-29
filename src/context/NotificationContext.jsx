@@ -21,15 +21,28 @@ export const NotificationProvider = ({ children }) => {
             window.dispatchEvent(new Event('notification:refresh'));
         };
 
+        const refreshOnly = () => {
+            window.dispatchEvent(new Event('notification:refresh'));
+        };
+
         const privateChannel = echo.private(channelName);
         privateChannel.listen('.notification.sent', (data) => {
+            if (data?.type === 'new_message' || data?.data?.type === 'new_message') {
+                refreshOnly();
+                return;
+            }
             const msg = data?.message ?? data?.data?.message ?? 'Yeni bir bildiriminiz var';
             showToastAndRefresh(msg);
         });
         privateChannel.listen('notification', (data) => {
-            const msg = data?.type === 'new_message' && data?.title
-                ? `${data.title}: ${data.message || 'Yeni mesaj'}`
-                : (data?.message || 'Yeni mesaj');
+            if (data?.type === 'new_message') {
+                refreshOnly();
+                return;
+            }
+            const msg =
+                data?.message ||
+                (data?.title ? `${data.title}` : null) ||
+                'Yeni mesaj';
             showToastAndRefresh(msg);
         });
 
