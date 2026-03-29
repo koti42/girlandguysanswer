@@ -27,6 +27,12 @@ function toHex({ r, g, b }) {
     return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
 }
 
+/** Çok açık (beyaza yakın) tema renkleri: başlıkta beyaz üzerine beyaz metin oluşmasın */
+function isRgbTooLightForHeader(r, g, b) {
+    const L = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return L > 0.9;
+}
+
 function isFemale(gender) {
     const g = gender?.toLowerCase();
     return g === 'female' || g === 'kiz' || g === 'kadın' || g === 'woman';
@@ -80,11 +86,16 @@ export function getViewerPrefs(user) {
 
 export function getThemeStyles(contentCreator, viewerPrefs = null) {
     const color = getProfileColor(contentCreator, viewerPrefs);
-    const rgb = hexToRgb(color) || hexToRgb(DEFAULT_NEUTRAL);
+    let rgb = hexToRgb(color) || hexToRgb(DEFAULT_NEUTRAL);
+    if (isRgbTooLightForHeader(rgb.r, rgb.g, rgb.b)) {
+        rgb = hexToRgb(DEFAULT_NEUTRAL);
+    }
     const { r, g, b } = rgb;
     const safeHex = toHex(rgb);
+    const headerBgSolid = `rgb(${r},${g},${b})`;
     return {
-        headerBg: `linear-gradient(to right, rgb(${r},${g},${b}), rgba(${r},${g},${b},0.88))`,
+        headerBgSolid,
+        headerBg: `linear-gradient(to right, ${headerBgSolid}, rgba(${r},${g},${b},0.88))`,
         borderColor: safeHex,
         bgColor: `rgba(${r}, ${g}, ${b}, 0.08)`,
         bgColorStrong: `rgba(${r}, ${g}, ${b}, 0.15)`,

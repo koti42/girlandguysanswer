@@ -746,8 +746,15 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
 
     return (
         <div className="flex flex-col h-full relative w-full overflow-x-hidden bg-white dark:bg-gray-900">
-            {/* Header - cinsiyete göre renk (kadın: pembe, erkek: mavi) */}
-            <div className="flex-shrink-0 p-3 sm:p-4 w-full z-10 sticky top-0" style={{ background: themeStyles.headerBg }}>
+            <div
+                className={`flex-shrink-0 p-3 sm:p-4 w-full z-10 ${embeddedInDock ? '' : 'sticky top-0'}`}
+                style={{
+                    backgroundColor: themeStyles.headerBgSolid,
+                    backgroundImage: themeStyles.headerBg,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '100% 100%',
+                }}
+            >
                 <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
                     <button
                         onClick={onBack}
