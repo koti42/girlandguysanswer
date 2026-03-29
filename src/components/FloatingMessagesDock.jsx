@@ -32,6 +32,8 @@ const renderMessagePreview = (message) => {
     }
 };
 
+const INCOMING_TOAST_MS = 7000;
+
 const FloatingMessagesDock = () => {
     const { user } = useAuth();
     const location = useLocation();
@@ -39,13 +41,41 @@ const FloatingMessagesDock = () => {
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState(false);
     const [activeConversation, setActiveConversation] = useState(null);
+    const [incomingToast, setIncomingToast] = useState(null);
     const panelRef = useRef(null);
     const buttonRef = useRef(null);
     const activeConversationRef = useRef(null);
+    const incomingToastTimerRef = useRef(null);
 
     useEffect(() => {
         activeConversationRef.current = activeConversation;
     }, [activeConversation]);
+
+    const dismissIncomingToast = useCallback(() => {
+        if (incomingToastTimerRef.current) {
+            clearTimeout(incomingToastTimerRef.current);
+            incomingToastTimerRef.current = null;
+        }
+        setIncomingToast(null);
+    }, []);
+
+    const showIncomingToast = useCallback((payload) => {
+        if (incomingToastTimerRef.current) {
+            clearTimeout(incomingToastTimerRef.current);
+        }
+        setIncomingToast({ ...payload, _toastKey: `${payload.key || ''}-${Date.now()}` });
+        incomingToastTimerRef.current = setTimeout(() => {
+            setIncomingToast(null);
+            incomingToastTimerRef.current = null;
+        }, INCOMING_TOAST_MS);
+    }, []);
+
+    useEffect(
+        () => () => {
+            if (incomingToastTimerRef.current) clearTimeout(incomingToastTimerRef.current);
+        },
+        []
+    );
 
     const isMessagesRoute =
         location.pathname === '/messages' || location.pathname.startsWith('/messages/');
@@ -73,6 +103,20 @@ const FloatingMessagesDock = () => {
         (message) => {
             if (!message?.conversation_id) return;
             const isOwnMessage = message.sender_id === user?.id;
+            const viewingThisChat =
+                activeConversationRef.current?.id === message.conversation_id;
+
+            if (!isOwnMessage && !viewingThisChat) {
+                const sender = message.sender || {};
+                showIncomingToast({
+                    key: message.id,
+                    conversationId: message.conversation_id,
+                    senderUsername: sender.username,
+                    senderName: sender.username || 'Mesaj',
+                    avatar: ensureHttps(sender.avatar) || 'https://i.pravatar.cc/200?u=default',
+                    previewText: renderMessagePreview(message),
+                });
+            }
 
             setConversations((prev) => {
                 const idx = prev.findIndex((c) => c.id === message.conversation_id);
@@ -92,7 +136,7 @@ const FloatingMessagesDock = () => {
                 return [conv, ...next];
             });
         },
-        [user?.id, fetchConversations]
+        [user?.id, fetchConversations, showIncomingToast]
     );
 
     const dockPusherActive = Boolean(user && !isMessagesRoute && !activeConversation);
@@ -190,6 +234,31 @@ const FloatingMessagesDock = () => {
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, [expanded]);
+
+    const handleIncomingToastClick = useCallback(async () => {
+        const convId = incomingToast?.conversationId;
+        if (!convId) return;
+        dismissIncomingToast();
+        setExpanded(true);
+        try {
+            const response = await messagesAPI.getConversations();
+            const list = response.data?.data || [];
+            const arr = Array.isArray(list) ? list : [];
+            const conv = arr.find((c) => c.id === convId);
+            setConversations(
+                conv
+                    ? arr.map((c) =>
+                          c.id === conv.id ? { ...c, unread_count: 0 } : c
+                      )
+                    : arr
+            );
+            if (conv?.other_user?.username) {
+                setActiveConversation({ ...conv, unread_count: 0 });
+            }
+        } catch (e) {
+            console.error('FloatingMessagesDock toast open:', e);
+        }
+    }, [incomingToast, dismissIncomingToast]);
 
     if (!user || isMessagesRoute) return null;
 
@@ -347,6 +416,45 @@ const FloatingMessagesDock = () => {
                             />
                         </div>
                     )}
+                </div>
+            )}
+
+            {incomingToast && (
+                <div
+                    key={incomingToast._toastKey}
+                    className="pointer-events-auto flex w-[min(340px,calc(100vw-3rem))] items-stretch rounded-2xl bg-white dark:bg-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-gray-600 overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200"
+                    role="status"
+                >
+                    <button
+                        type="button"
+                        onClick={handleIncomingToastClick}
+                        className="flex flex-1 min-w-0 items-center gap-3 pl-3 pr-2 py-3 text-left hover:bg-gray-50/90 dark:hover:bg-gray-700/40 transition-colors"
+                    >
+                        <img
+                            src={incomingToast.avatar}
+                            alt=""
+                            className="h-11 w-11 shrink-0 rounded-full object-cover"
+                        />
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-[15px] font-semibold text-gray-900 dark:text-white">
+                                {incomingToast.senderName}
+                            </p>
+                            <p className="mt-0.5 line-clamp-2 break-words text-[13px] leading-snug text-gray-700 dark:text-gray-300">
+                                {incomingToast.previewText}
+                            </p>
+                        </div>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            dismissIncomingToast();
+                        }}
+                        className="shrink-0 px-3 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                        aria-label="Önizlemeyi kapat"
+                    >
+                        <FaTimes className="h-4 w-4" />
+                    </button>
                 </div>
             )}
 
