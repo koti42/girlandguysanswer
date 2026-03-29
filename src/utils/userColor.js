@@ -2,6 +2,31 @@ const DEFAULT_FEMALE = '#EC4899';
 const DEFAULT_MALE = '#3B82F6';
 const DEFAULT_NEUTRAL = '#FF6F61';
 
+/**
+ * #RGB / #RRGGBB veya # olmadan gelen değerleri güvenli şekilde RGB'ye çevirir.
+ * Geçersizse null döner (8 haneli #RRGGBBAA desteklenmez; önce kırpılır).
+ */
+function hexToRgb(hex) {
+    if (!hex || typeof hex !== 'string') return null;
+    let h = hex.trim();
+    if (!h.startsWith('#')) h = `#${h}`;
+    h = h.slice(1);
+    if (h.length >= 8) h = h.slice(0, 6);
+    if (h.length === 3) {
+        h = h.split('').map((c) => c + c).join('');
+    }
+    if (h.length !== 6) return null;
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+    return { r, g, b };
+}
+
+function toHex({ r, g, b }) {
+    return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
+}
+
 function isFemale(gender) {
     const g = gender?.toLowerCase();
     return g === 'female' || g === 'kiz' || g === 'kadın' || g === 'woman';
@@ -34,13 +59,13 @@ export function getProfileColorStyle(contentCreator, viewerPrefs = null) {
 
 export function getProfileGradientStyle(contentCreator, viewerPrefs = null, alpha = 0.15) {
     const color = getProfileColor(contentCreator, viewerPrefs);
-    const r = parseInt(color.slice(1, 3), 16);
-    const g = parseInt(color.slice(3, 5), 16);
-    const b = parseInt(color.slice(5, 7), 16);
+    const rgb = hexToRgb(color) || hexToRgb(DEFAULT_NEUTRAL);
+    const { r, g, b } = rgb;
+    const safeHex = toHex(rgb);
     return {
         backgroundColor: `rgba(${r}, ${g}, ${b}, ${alpha})`,
-        borderLeftColor: color,
-        borderColor: `${color}40`,
+        borderLeftColor: safeHex,
+        borderColor: `rgba(${r}, ${g}, ${b}, 0.25)`,
     };
 }
 
@@ -55,15 +80,15 @@ export function getViewerPrefs(user) {
 
 export function getThemeStyles(contentCreator, viewerPrefs = null) {
     const color = getProfileColor(contentCreator, viewerPrefs);
-    const r = parseInt(color.slice(1, 3), 16);
-    const g = parseInt(color.slice(3, 5), 16);
-    const b = parseInt(color.slice(5, 7), 16);
+    const rgb = hexToRgb(color) || hexToRgb(DEFAULT_NEUTRAL);
+    const { r, g, b } = rgb;
+    const safeHex = toHex(rgb);
     return {
-        headerBg: `linear-gradient(to right, ${color}, ${color}dd)`,
-        borderColor: color,
+        headerBg: `linear-gradient(to right, rgb(${r},${g},${b}), rgba(${r},${g},${b},0.88))`,
+        borderColor: safeHex,
         bgColor: `rgba(${r}, ${g}, ${b}, 0.08)`,
         bgColorStrong: `rgba(${r}, ${g}, ${b}, 0.15)`,
-        shellBg: `linear-gradient(to bottom right, ${color}18, ${color}0c, ${color}18)`,
-        accentColor: color,
+        shellBg: `linear-gradient(to bottom right, rgba(${r},${g},${b},0.14), rgba(${r},${g},${b},0.05), rgba(${r},${g},${b},0.14))`,
+        accentColor: safeHex,
     };
 }
