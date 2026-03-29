@@ -15,10 +15,13 @@ const NotificationsPage = () => {
         notifications,
         unreadCount,
         loading,
+        loadingMore,
+        hasMore,
         markAsRead,
         markAllAsRead,
         deleteNotification,
         deleteAllNotifications,
+        loadMoreNotifications,
     } = useNotifications(false);
 
     const showToast = (message, type = 'error') => {
@@ -257,6 +260,18 @@ const NotificationsPage = () => {
                                 onDelete={deleteNotification}
                             />
                         ))}
+                        {filter === 'all' && hasMore && (
+                            <div className="flex justify-center pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => loadMoreNotifications()}
+                                    disabled={loadingMore}
+                                    className="px-6 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                                >
+                                    {loadingMore ? 'Yükleniyor…' : 'Daha fazla yükle'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

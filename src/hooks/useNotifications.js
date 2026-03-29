@@ -1,13 +1,62 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { notificationsAPI } from '../services/api';
 
+/** Backend: NotificationController limit/per_page (max 100), page + offset */
+const NOTIFICATIONS_PER_PAGE = 50;
+
+function mergeNotificationLists(existing, incoming) {
+    const seen = new Set(existing.map((n) => n.id));
+    const merged = [...existing];
+    for (const n of incoming) {
+        if (n?.id != null && !seen.has(n.id)) {
+            seen.add(n.id);
+            merged.push(n);
+        }
+    }
+    return merged;
+}
+
+function pickPaginationPayload(innerData, axiosData) {
+    return (
+        innerData?.pagination
+        ?? innerData?.meta
+        ?? axiosData?.meta
+        ?? axiosData?.pagination
+        ?? null
+    );
+}
+
+function resolveHasMore(innerData, axiosData, batchLength, requestedPerPage) {
+    if (batchLength === 0) return false;
+
+    const p = pickPaginationPayload(innerData, axiosData);
+    if (p && typeof p === 'object') {
+        const cur = p.current_page ?? p.currentPage ?? 1;
+        const last = p.last_page ?? p.lastPage ?? p.total_pages;
+        if (typeof last === 'number' && typeof cur === 'number' && last >= 1) {
+            return cur < last;
+        }
+        const total = p.total;
+        const per = p.per_page ?? p.perPage ?? requestedPerPage;
+        if (typeof total === 'number' && typeof per === 'number' && per > 0) {
+            const curPage = p.current_page ?? p.currentPage ?? 1;
+            return (curPage - 1) * per + batchLength < total;
+        }
+    }
+
+    return batchLength >= requestedPerPage;
+}
+
 const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSound = true) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
     const [error, setError] = useState(null);
     const lastFetchTime = useRef(Date.now());
     const isFetchingRef = useRef(false);
+    const lastPageFetchedRef = useRef(1);
     const previousUnreadCount = useRef(0);
     const audioRef = useRef(null);
 
@@ -56,42 +105,66 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         }
     }, []);
 
-    const fetchNotifications = useCallback(async (unreadOnly = false, silent = false) => {
+    const fetchNotifications = useCallback(async (unreadOnly = false, silent = false, opts = {}) => {
+        const { page = 1, append = false } = opts;
         if (isFetchingRef.current) return;
 
         isFetchingRef.current = true;
-        if (!silent) setLoading(true);
+        if (!silent && !append) setLoading(true);
+        if (append) setLoadingMore(true);
         setError(null);
 
         try {
-            const params = {};
+            const params = {
+                limit: NOTIFICATIONS_PER_PAGE,
+                page,
+            };
+
             if (unreadOnly) params.unread_only = true;
 
             const response = await notificationsAPI.getAll(params);
-            const data = response.data.data;
+            const data = response.data.data || {};
 
             const newNotifications = data.notifications || [];
-            const newUnreadCount = data.unread_count || 0;
+            const newUnreadCount = data.unread_count ?? 0;
 
-            if (previousUnreadCount.current > 0 && newUnreadCount > previousUnreadCount.current) {
-                const latestNotification = newNotifications.find(n => !n.is_read);
+            if (!append && previousUnreadCount.current > 0 && newUnreadCount > previousUnreadCount.current) {
+                const latestNotification = newNotifications.find((n) => !n.is_read);
                 if (latestNotification) {
                     playNotificationSound();
                     showBrowserNotification(latestNotification);
                 }
             }
 
-            setNotifications(newNotifications);
+            if (append) {
+                setNotifications((prev) => mergeNotificationLists(prev, newNotifications));
+            } else {
+                setNotifications(newNotifications);
+            }
             setUnreadCount(newUnreadCount);
-            previousUnreadCount.current = newUnreadCount;
+            if (!append) {
+                previousUnreadCount.current = newUnreadCount;
+            }
+            lastPageFetchedRef.current = page;
+            if (append && newNotifications.length === 0) {
+                setHasMore(false);
+            } else {
+                setHasMore(resolveHasMore(data, response.data, newNotifications.length, NOTIFICATIONS_PER_PAGE));
+            }
             lastFetchTime.current = Date.now();
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
             isFetchingRef.current = false;
         }
     }, [playNotificationSound, showBrowserNotification]);
+
+    const loadMoreNotifications = useCallback(async () => {
+        if (!hasMore || loadingMore || isFetchingRef.current) return;
+        await fetchNotifications(false, true, { page: lastPageFetchedRef.current + 1, append: true });
+    }, [hasMore, loadingMore, fetchNotifications]);
 
     const markAsRead = useCallback(async (notificationId) => {
         try {
@@ -150,6 +223,7 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
 
             setNotifications([]);
             setUnreadCount(0);
+            setHasMore(false);
 
             localStorage.setItem('notifications_update', Date.now().toString());
         } catch (err) {
@@ -224,10 +298,9 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         return () => window.removeEventListener('storage', handleStorageChange);
     }, [fetchNotifications]);
 
-    // Listen for Pusher/Global refresh events
     useEffect(() => {
         const handleRefresh = () => {
-            fetchNotifications(false, true); // Silent fetch
+            fetchNotifications(false, true);
         };
 
         window.addEventListener('notification:refresh', handleRefresh);
@@ -238,8 +311,11 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
         notifications,
         unreadCount,
         loading,
+        loadingMore,
+        hasMore,
         error,
         fetchNotifications,
+        loadMoreNotifications,
         markAsRead,
         markAllAsRead,
         deleteNotification,
