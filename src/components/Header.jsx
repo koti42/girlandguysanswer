@@ -574,6 +574,25 @@ const Header = ({ onSearch }) => {
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Bul</span>
                         </Link>
 
+                        <button
+                            type="button"
+                            onClick={() => {
+                                toggleTheme();
+                                closeMobileMenu();
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                            title={isDark ? 'Açık Mod' : 'Koyu Mod'}
+                        >
+                            {isDark ? (
+                                <FaSun className="text-xl text-coral flex-shrink-0" />
+                            ) : (
+                                <FaMoon className="text-xl text-coral flex-shrink-0" />
+                            )}
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">
+                                {isDark ? 'Açık Mod' : 'Koyu Mod'}
+                            </span>
+                        </button>
+
                         {isAuthenticated ? (
                             <>
                                 <Link
