@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaUnlock, FaTag, FaEllipsisV } from 'react-icons/fa';
+import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaUnlock, FaTag, FaEllipsisV, FaImage } from 'react-icons/fa';
 import { useNavigate, Link } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput/index.jsx';
 import ConfirmationModal from './ConfirmationModal';
-import { messagesAPI } from '../services/api';
+import { messagesAPI, usersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
@@ -48,7 +48,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
     const [nicknameSaving, setNicknameSaving] = useState(false);
     const [countdownTick, setCountdownTick] = useState(() => Date.now());
     const [showActionMenu, setShowActionMenu] = useState(false);
+    const [showChatBackground, setShowChatBackground] = useState(true);
     const actionMenuRef = useRef(null);
+    const { user, permissions, updateUser } = useAuth();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -63,16 +65,19 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
     useEffect(() => {
         setIsLocked(conversation?.is_locked || false);
     }, [conversation]);
+    useEffect(() => {
+        setShowChatBackground(user?.detail?.chat_background_enabled ?? true);
+    }, [user?.detail?.chat_background_enabled]);
     const typingResetRef = useRef(null);
     const loadingOlderRef = useRef(false);
     const prependScrollRef = useRef(null);
-    const { user, permissions } = useAuth();
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
     const conversationRef = useRef(conversation);
     const navigate = useNavigate();
 
     const canExportPdf = user?.username === 'Koti42' || permissions?.is_super_admin;
+    const detailSettings = user?.detail || {};
 
     const ensureHttps = (url) => {
         if (!url) return url;
@@ -386,6 +391,33 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             setNicknameSaving(false);
         }
     };
+
+    const handleToggleChatBackground = useCallback(async () => {
+        const nextValue = !showChatBackground;
+        setShowChatBackground(nextValue);
+        try {
+            await usersAPI.updateMessaging({
+                allow_messaging: detailSettings.allow_messaging ?? true,
+                messaging_mode: detailSettings.messaging_mode || 'everyone',
+                allow_video_call: detailSettings.allow_video_call ?? true,
+                allow_image_messages: detailSettings.allow_image_messages ?? true,
+                allow_audio_messages: detailSettings.allow_audio_messages ?? true,
+                privacy_hide_online_from_others: detailSettings.privacy_hide_online_from_others ?? false,
+                privacy_hide_read_receipts_from_others: detailSettings.privacy_hide_read_receipts_from_others ?? false,
+                chat_background_enabled: nextValue,
+            });
+            updateUser({
+                detail: {
+                    ...detailSettings,
+                    chat_background_enabled: nextValue,
+                },
+            });
+            notificationToast(nextValue ? 'Sohbet arka planı açıldı.' : 'Sohbet arka planı kapatıldı.', 'success');
+        } catch (error) {
+            setShowChatBackground(!nextValue);
+            notificationToast(error?.response?.data?.message || 'Arka plan ayarı kaydedilemedi.', 'error');
+        }
+    }, [showChatBackground, detailSettings, updateUser]);
 
     const handleSendMessage = async ({ content, file, type, is_ephemeral, ephemeral_max_views }) => {
         if (!conversation) return;
@@ -823,6 +855,14 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
                                 )}
                                 <button
                                     type="button"
+                                    onClick={handleToggleChatBackground}
+                                    className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showChatBackground ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                                    title={showChatBackground ? 'Arka planı kapat' : 'Arka planı aç'}
+                                >
+                                    <FaImage className="text-base sm:text-lg" />
+                                </button>
+                                <button
+                                    type="button"
                                     onClick={() => setShowNicknameInput(v => !v)}
                                     className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNicknameInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
                                     title="Takma Ad Ver"
@@ -885,6 +925,13 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
                                                 <span>PDF İndir</span>
                                             </button>
                                         )}
+                                        <button
+                                            onClick={() => { handleToggleChatBackground(); setShowActionMenu(false); }}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
+                                        >
+                                            <FaImage className={showChatBackground ? 'text-coral' : 'text-gray-400'} />
+                                            <span>{showChatBackground ? 'Arka Planı Kapat' : 'Arka Planı Aç'}</span>
+                                        </button>
                                         <button
                                             onClick={() => { setShowNicknameInput(v => !v); setShowActionMenu(false); }}
                                             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
@@ -1209,8 +1256,17 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             {/* Messages Area - Scrollable (Flex-1) */}
             <div
                 ref={messagesContainerRef}
-                className={`flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto w-full bg-white dark:bg-gray-900`}
-                style={{ WebkitOverflowScrolling: 'touch' }}
+                className={`flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto w-full`}
+                style={{
+                    WebkitOverflowScrolling: 'touch',
+                    backgroundColor: themeStyles.bgColor,
+                    backgroundImage: showChatBackground
+                        ? `linear-gradient(to top, ${themeStyles.accentColor}12, transparent 45%), linear-gradient(to top, rgba(255,255,255,0.68), rgba(255,255,255,0.68)), url('/ankara-herkeslersoruyor.png')`
+                        : 'none',
+                    backgroundRepeat: showChatBackground ? 'no-repeat, no-repeat, no-repeat' : 'no-repeat',
+                    backgroundPosition: showChatBackground ? 'center bottom, center bottom, center center' : 'center center',
+                    backgroundSize: showChatBackground ? '100% 100%, 100% 100%, 100% 100%' : 'auto',
+                }}
                 onScroll={(e) => {
                     if (e.target.scrollTop < 150 && hasMoreOlder && !loadingOlder && messages.length > 0) {
                         loadOlderMessages();
