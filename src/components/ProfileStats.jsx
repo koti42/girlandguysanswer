@@ -4,7 +4,7 @@ import { FaQuestionCircle, FaLightbulb, FaComment } from 'react-icons/fa';
 const ProfileStats = ({ stats, isVIP = false }) => {
     const statItems = [
         { icon: FaQuestionCircle, label: 'Soru Sordu', value: stats.questions, color: isVIP ? 'text-amber-500' : 'text-blue-600' },
-        { icon: FaLightbulb, label: 'Beence Paylaşıı', value: stats.ideas || 0, color: isVIP ? 'text-yellow-500' : 'text-yellow-600' },
+        { icon: FaLightbulb, label: 'Bence Paylaştı', value: stats.ideas || 0, color: isVIP ? 'text-yellow-500' : 'text-yellow-600' },
         { icon: FaComment, label: 'Cevap Yazdı', value: stats.answers, color: isVIP ? 'text-purple-500' : 'text-green-600' }
     ];
 
