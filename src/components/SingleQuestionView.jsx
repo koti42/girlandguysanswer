@@ -652,7 +652,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             const response = await answersAPI.selectBestAnswer(answerId);
 
             setAnswers(prev => prev.map(a =>
-                a.id === answerId ? { ...a, is_accepted: true } : { ...a, is_accepted: false }
+                a.id === answerId ? { ...a, is_accepted: true } : a
             ));
 
             const gamification = response.data.data?.gamification;
@@ -1532,17 +1532,17 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     const answerCommentKey = `answer_${answer.id}`;
                                     const isBestAnswer = answer.is_accepted;
                                     const isOwner = question.isOwner;
-                                    const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
 
+                                    const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
                                     const hasBestForGender = acceptedAnswers.some(
                                         (a) => a.user?.gender && a.user.gender === answer.user?.gender
                                     );
                                     const canSelectBestAnswer =
                                         isOwner &&
+                                        hoursSinceQuestion >= 24 &&
                                         !hasBestForGender &&
                                         !isBestAnswer &&
-                                        answer.user?.id !== currentUser?.id &&
-                                        hoursSinceQuestion >= 24;
+                                        answer.user?.id !== currentUser?.id;
 
                                     const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
                                     const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
@@ -1763,7 +1763,6 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     const answerCommentKey = `answer_${answer.id}`;
                                     const isBestAnswer = answer.is_accepted;
                                     const isOwner = question.isOwner;
-                                    const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
 
                                     // En İyi Görüş: her cinsiyet için ayrı seçim yapabil (ör. 1 kadın + 1 erkek)
                                     const hasBestForGender = acceptedAnswers.some(
@@ -1773,8 +1772,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         isOwner &&
                                         !hasBestForGender &&
                                         !isBestAnswer &&
-                                        answer.user?.id !== currentUser?.id &&
-                                        hoursSinceQuestion >= 24;
+                                        answer.user?.id !== currentUser?.id;
 
                                     const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
                                     const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
@@ -2029,8 +2027,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                         const isBestAnswer = answer.is_accepted;
                                         const hasBestAnswer = answers.some(a => a.is_accepted);
                                         const isOwner = question.isOwner;
-                                        const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
-                                        const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
+                                        const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id;
                                         const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : 'border-indigo-200/60 dark:border-indigo-700/30';
                                         const answerBgClass = isBestAnswer ? 'bg-green-50 dark:bg-green-900/10 ring-1 ring-green-100 dark:ring-green-900' : 'bg-white/80 dark:bg-gray-800/60';
                                         const youtubeLinks = getYoutubeVideoLinks(answer.content);
@@ -2176,10 +2173,16 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 {maleAnswers.map((answer) => {
                                     const answerCommentKey = `answer_${answer.id}`;
                                     const isBestAnswer = answer.is_accepted;
-                                    const hasBestAnswer = answers.some(a => a.is_accepted);
                                     const isOwner = question.isOwner;
-                                    const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
-                                    const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
+
+                                    const hasBestForGender = acceptedAnswers.some(
+                                        (a) => a.user?.gender && a.user.gender === answer.user?.gender
+                                    );
+                                    const canSelectBestAnswer =
+                                        isOwner &&
+                                        !hasBestForGender &&
+                                        !isBestAnswer &&
+                                        answer.user?.id !== currentUser?.id;
 
                                     const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
                                     const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
@@ -2438,10 +2441,16 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 {femaleAnswers.map((answer) => {
                                     const answerCommentKey = `answer_${answer.id}`;
                                     const isBestAnswer = answer.is_accepted;
-                                    const hasBestAnswer = answers.some(a => a.is_accepted);
                                     const isOwner = question.isOwner;
-                                    const hoursSinceQuestion = question.created_at ? differenceInHours(new Date(), new Date(question.created_at)) : 0;
-                                    const canSelectBestAnswer = isOwner && !hasBestAnswer && !isBestAnswer && answer.user?.id !== currentUser?.id && hoursSinceQuestion >= 24;
+
+                                    const hasBestForGender = acceptedAnswers.some(
+                                        (a) => a.user?.gender && a.user.gender === answer.user?.gender
+                                    );
+                                    const canSelectBestAnswer =
+                                        isOwner &&
+                                        !hasBestForGender &&
+                                        !isBestAnswer &&
+                                        answer.user?.id !== currentUser?.id;
 
                                     const answerColorStyle = isBestAnswer ? null : getProfileGradientStyle(answer.user, viewerPrefs, 0.08);
                                     const answerBorderClass = isBestAnswer ? 'border-green-200 dark:border-green-800' : '';
