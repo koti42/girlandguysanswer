@@ -120,6 +120,14 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         setShowToast(true);
     };
 
+    const answerRestriction = question?.answer_gender_restriction || null;
+    const canAnswerByRestriction = !answerRestriction || currentUser?.gender === answerRestriction;
+    const answerRestrictionLabel = answerRestriction === 'female'
+        ? 'Bu soru sadece kadın kullanıcıların cevabına açıktır.'
+        : answerRestriction === 'male'
+            ? 'Bu soru sadece erkek kullanıcıların cevabına açıktır.'
+            : null;
+
     useEffect(() => {
         if (showEditQuestionModal && question) {
             setEditQuestionTitle(question.title || '');
@@ -532,6 +540,10 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
     const handleSubmitAnswer = async (e) => {
         e.preventDefault();
+        if (!canAnswerByRestriction) {
+            displayToast(answerRestrictionLabel || 'Bu soruya cevap veremezsiniz.', 'error');
+            return;
+        }
         if (!answerText.trim() && !answerGifUrl) return;
         try {
             const response = await questionsAPI.createAnswer(question.id, {
@@ -1316,6 +1328,11 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                         {question.tags?.map((tag, idx) => (
                             <span key={idx} className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">{tag}</span>
                         ))}
+                        {answerRestrictionLabel && (
+                            <span className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded-full text-xs font-semibold">
+                                {answerRestriction === 'female' ? 'Sadece kadınlar cevaplayabilir' : 'Sadece erkekler cevaplayabilir'}
+                            </span>
+                        )}
                     </div>
 
                     {question.image && (
@@ -1460,7 +1477,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                 )}
 
                 {/* Answer Form - Only if not owner */}
-                {!question.isOwner && (
+                {!question.isOwner && canAnswerByRestriction && (
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Cevap Yaz</h3>
                         <form onSubmit={handleSubmitAnswer}>
@@ -1504,6 +1521,13 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                 <button type="submit" disabled={!answerText.trim() && !answerGifUrl} className="bg-gradient-to-r from-coral to-orange-400 text-white font-semibold py-2 px-6 rounded-2xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">Cevap Gönder</button>
                             </div>
                         </form>
+                    </div>
+                )}
+                {!question.isOwner && !canAnswerByRestriction && answerRestrictionLabel && (
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft">
+                        <div className="rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 px-4 py-3 text-indigo-700 dark:text-indigo-300 text-sm font-medium">
+                            {answerRestrictionLabel}
+                        </div>
                     </div>
                 )}
 

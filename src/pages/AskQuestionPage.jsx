@@ -34,6 +34,7 @@ const AskQuestionPage = () => {
     const [toast, setToast] = useState(null);
     const [isAnonymous, setIsAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
     const [noAiAnswer, setNoAiAnswer] = useState(false);
+    const [answerGenderRestriction, setAnswerGenderRestriction] = useState(prefill.answer_gender_restriction || '');
     const [gifUrl, setGifUrl] = useState(null);
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gamificationFeedback, setGamificationFeedback] = useState(null);
@@ -172,6 +173,7 @@ const AskQuestionPage = () => {
                 tags: formData.tags,
                 is_anonymous: isAnonymous,
                 allow_ai_answer: !noAiAnswer,
+                answer_gender_restriction: answerGenderRestriction || null,
                 gif_url: gifUrl || null,
                 is_draft: true,
             };
@@ -200,6 +202,7 @@ const AskQuestionPage = () => {
         });
         setIsAnonymous(!!draft.is_anonymous);
         setNoAiAnswer(draft.allow_ai_answer === false);
+        setAnswerGenderRestriction(draft.answer_gender_restriction || '');
         setGifUrl(draft.gif_url || null);
         setShowDraftsModal(false);
         setEditingDraftId(draft.id);
@@ -298,6 +301,7 @@ const AskQuestionPage = () => {
                 tags: formData.tags,
                 is_anonymous: isAnonymous,
                 allow_ai_answer: !noAiAnswer,
+                answer_gender_restriction: answerGenderRestriction || null,
                 gif_url: gifUrl || null
             };
             if (expiresInHours) {
@@ -346,6 +350,7 @@ const AskQuestionPage = () => {
                             category: formData.category,
                             tags: formData.tags,
                             is_anonymous: isAnonymous,
+                            answer_gender_restriction: answerGenderRestriction || null,
                         },
                         gamification: gamification || null,
                         slug: slug,
@@ -376,6 +381,7 @@ const AskQuestionPage = () => {
                         category: formData.category,
                         tags: formData.tags,
                         is_anonymous: isAnonymous,
+                        answer_gender_restriction: answerGenderRestriction || null,
                     },
                     gamification: gamification || null,
                     slug: slug,
@@ -551,6 +557,14 @@ const AskQuestionPage = () => {
                         <div className="pt-2 border-t border-gray-100 dark:border-gray-600 mt-2">
                             <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                                 <FaClock /> Süreli soru: {expiresInHours < 24 ? `${expiresInHours} saat` : `${Math.floor(expiresInHours / 24)} gün`} sonra siteden kaldırılacak
+                            </p>
+                        </div>
+                    )}
+
+                    {answerGenderRestriction && (
+                        <div className="pt-2 border-t border-gray-100 dark:border-gray-600 mt-2">
+                            <p className="text-xs text-indigo-600 dark:text-indigo-400">
+                                Cevap kısıtı: {answerGenderRestriction === 'female' ? 'Sadece kadınlar cevaplayabilir' : 'Sadece erkekler cevaplayabilir'}
                             </p>
                         </div>
                     )}
@@ -901,6 +915,48 @@ const AskQuestionPage = () => {
                                 {noAiAnswer
                                     ? '🤖 Bu soruya yapay zeka cevabı yazılmayacak; sadece topluluk cevaplayabilir.'
                                     : '🤖 Yayınlandıktan kısa süre sonra yapay zeka bir cevap önerisi ekleyebilir (isteğe bağlı kapatabilirsiniz).'}
+                            </p>
+                        </div>
+
+                        {/* Cevap verebilecek cinsiyet */}
+                        <div className="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800/40">
+                            <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300 mb-3">
+                                Cevap verebilecek cinsiyet
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setAnswerGenderRestriction('')}
+                                    className={`px-3 py-2 rounded-xl text-sm font-medium border transition-all ${answerGenderRestriction === ''
+                                        ? 'bg-indigo-600 text-white border-indigo-600'
+                                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                                        }`}
+                                >
+                                    Herkes cevaplayabilir
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setAnswerGenderRestriction('female')}
+                                    className={`px-3 py-2 rounded-xl text-sm font-medium border transition-all ${answerGenderRestriction === 'female'
+                                        ? 'bg-pink-600 text-white border-pink-600'
+                                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                                        }`}
+                                >
+                                    Sadece kadınlar
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setAnswerGenderRestriction('male')}
+                                    className={`px-3 py-2 rounded-xl text-sm font-medium border transition-all ${answerGenderRestriction === 'male'
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                                        }`}
+                                >
+                                    Sadece erkekler
+                                </button>
+                            </div>
+                            <p className="text-xs text-indigo-600/80 dark:text-indigo-300/80 mt-2">
+                                Seçim yaparsanız, sadece belirlediğiniz cinsiyetteki kullanıcılar bu soruya cevap verebilir.
                             </p>
                         </div>
 

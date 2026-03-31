@@ -132,6 +132,13 @@ const QuestionCard = ({ question, onModerationAction }) => {
     const levelColor = typeof rawLevel === 'object' ? rawLevel?.color : (question.user?.level_color || '#6B7280');
     const featureTag = question.user?.feature_tag;
     const featureColor = featureTag?.color || '#FACC15';
+    const answerRestriction = question.answer_gender_restriction || null;
+    const canAnswerByRestriction = !answerRestriction || currentUser?.gender === answerRestriction;
+    const answerRestrictionLabel = answerRestriction === 'female'
+        ? 'Sadece kadınlar cevaplayabilir'
+        : answerRestriction === 'male'
+            ? 'Sadece erkekler cevaplayabilir'
+            : null;
 
     return (
         <div className="rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}40` }}>
@@ -250,6 +257,11 @@ const QuestionCard = ({ question, onModerationAction }) => {
                             Anket
                         </span>
                     )}
+                    {answerRestrictionLabel && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
+                            {answerRestrictionLabel}
+                        </span>
+                    )}
                 </div>
                 <Link to={`/question/${question.slug || question.id}`}>
                     <h3 className="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 md:mb-3 leading-snug hover:text-coral transition-colors cursor-pointer line-clamp-2 md:line-clamp-none">
@@ -304,7 +316,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
                 </div>
 
                 {/* Reply Button - Only if not owner */}
-                {!question.isOwner && (
+                {!question.isOwner && canAnswerByRestriction && (
                     <button
                         onClick={() => setShowReplyBox(!showReplyBox)}
                         className="w-full py-2.5 md:py-3 px-4 rounded-xl text-white font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2 text-sm md:text-base"
@@ -313,6 +325,11 @@ const QuestionCard = ({ question, onModerationAction }) => {
                         <FaComment />
                         {showReplyBox ? 'Vazgeç' : 'Cevapla'}
                     </button>
+                )}
+                {!question.isOwner && !canAnswerByRestriction && answerRestrictionLabel && (
+                    <div className="w-full py-2.5 px-4 rounded-xl bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-300 text-sm font-medium text-center">
+                        {answerRestrictionLabel}
+                    </div>
                 )}
             </div>
 
@@ -335,7 +352,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
             />
 
             {/* Quick Reply Box */}
-            {showReplyBox && (
+            {showReplyBox && canAnswerByRestriction && (
                 <form onSubmit={handleSubmitReply} className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700">
                     {hasAnswered ? (
                         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600">
