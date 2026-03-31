@@ -978,7 +978,7 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/80 dark:text-white focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/20 transition-all resize-none text-sm"
                                     autoFocus
                                 />
-                                <div className="flex items-center gap-1.5 mt-2">
+                                <div className="flex flex-wrap items-center gap-1.5 mt-2">
                                     <button
                                         type="button"
                                         onClick={() => openGifPicker('reply', comment.id)}
