@@ -58,6 +58,14 @@ const SettingsPage = () => {
     const [usernameChangesRemaining, setUsernameChangesRemaining] = useState(null);
     const [newUsername, setNewUsername] = useState('');
     const [usernameSubmitting, setUsernameSubmitting] = useState(false);
+    const [currentEmail, setCurrentEmail] = useState(user?.email || '');
+    const [newEmail, setNewEmail] = useState('');
+    const [emailCode, setEmailCode] = useState('');
+    const [emailCodeSent, setEmailCodeSent] = useState(false);
+    const [emailCodeExpiresAt, setEmailCodeExpiresAt] = useState(null);
+    const [emailBlockedUntil, setEmailBlockedUntil] = useState(null);
+    const [emailRequestSubmitting, setEmailRequestSubmitting] = useState(false);
+    const [emailVerifySubmitting, setEmailVerifySubmitting] = useState(false);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -117,6 +125,7 @@ const SettingsPage = () => {
                 const userData = response.data.data.user;
                 const detail = userData.detail;
                 const remaining = response.data.data.username_changes_remaining;
+                setCurrentEmail(userData.email || user?.email || '');
                 setUsernameChangesRemaining(remaining !== undefined ? remaining : 3);
 
                 setSettings({
@@ -346,6 +355,82 @@ const SettingsPage = () => {
         }
     };
 
+    const isEmailBlocked = !!(emailBlockedUntil && new Date(emailBlockedUntil) > new Date());
+
+    const handleRequestEmailCode = async () => {
+        const targetEmail = (newEmail || '').trim().toLowerCase();
+        if (!targetEmail) {
+            showToast('Yeni e-posta adresi zorunludur.', 'error');
+            return;
+        }
+        if (targetEmail === (currentEmail || '').toLowerCase()) {
+            showToast('Yeni e-posta mevcut adresinizden farklı olmalıdır.', 'error');
+            return;
+        }
+        if (isEmailBlocked) {
+            showToast('E-posta değiştirme şu an kilitli. Lütfen daha sonra tekrar deneyin.', 'error');
+            return;
+        }
+
+        setEmailRequestSubmitting(true);
+        try {
+            const res = await usersAPI.requestEmailChangeCode(targetEmail);
+            setEmailCodeSent(true);
+            setEmailCode('');
+            setEmailCodeExpiresAt(res.data?.data?.expires_at || null);
+            setEmailBlockedUntil(null);
+            showSuccess(res.data?.message || 'Doğrulama kodu gönderildi.');
+        } catch (err) {
+            const status = err.response?.status;
+            if (status === 429) {
+                setEmailBlockedUntil(new Date(Date.now() + 60 * 60 * 1000).toISOString());
+            }
+            showToast(err.response?.data?.message || 'Doğrulama kodu gönderilemedi.', 'error');
+        } finally {
+            setEmailRequestSubmitting(false);
+        }
+    };
+
+    const handleVerifyEmailCode = async () => {
+        if (!emailCodeSent) {
+            showToast('Önce doğrulama kodu istemelisiniz.', 'error');
+            return;
+        }
+        if (!/^\d{6}$/.test((emailCode || '').trim())) {
+            showToast('6 haneli kod giriniz.', 'error');
+            return;
+        }
+
+        setEmailVerifySubmitting(true);
+        try {
+            const res = await usersAPI.verifyEmailChangeCode((newEmail || '').trim().toLowerCase(), emailCode.trim());
+            const updatedUser = res.data?.data?.user;
+            const updatedEmail = updatedUser?.email || (newEmail || '').trim().toLowerCase();
+
+            setCurrentEmail(updatedEmail);
+            updateUser({ email: updatedEmail });
+
+            setNewEmail('');
+            setEmailCode('');
+            setEmailCodeSent(false);
+            setEmailCodeExpiresAt(null);
+            setEmailBlockedUntil(null);
+
+            showSuccess(res.data?.message || 'E-posta adresiniz güncellendi.');
+        } catch (err) {
+            const status = err.response?.status;
+            if (status === 429) {
+                setEmailCodeSent(false);
+                setEmailCode('');
+                setEmailCodeExpiresAt(null);
+                setEmailBlockedUntil(new Date(Date.now() + 60 * 60 * 1000).toISOString());
+            }
+            showToast(err.response?.data?.message || 'Kod doğrulanamadı.', 'error');
+        } finally {
+            setEmailVerifySubmitting(false);
+        }
+    };
+
     const handleFollowingToggle = async (newValue) => {
         try {
             setSettings(prev => ({ ...prev, allow_following: newValue }));
@@ -462,6 +547,79 @@ const SettingsPage = () => {
                                 </>
                             ) : (
                                 <p className="text-sm text-amber-600 dark:text-amber-400">Kullanıcı adı değiştirme hakkınız kalmadı.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Profile Color Section - Kadın ve Erkek ayrı */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6 mb-6">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg text-cyan-600 dark:text-cyan-400">
+                                <FaEnvelope className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">E-posta Adresi</h2>
+                                <p className="text-xs text-gray-500">Yeni e-posta için 6 haneli doğrulama kodu gerekir.</p>
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Mevcut e-posta adresiniz: <span className="font-semibold text-gray-800 dark:text-white">{currentEmail || '-'}</span>
+                            </p>
+                            {isEmailBlocked && (
+                                <p className="text-sm text-red-600 dark:text-red-400">
+                                    Çok fazla hatalı kod denemesi nedeniyle e-posta değiştirme 1 saatliğine kilitli.
+                                </p>
+                            )}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Yeni e-posta adresi</label>
+                                <input
+                                    type="email"
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                    placeholder="ornek@mail.com"
+                                    className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20"
+                                    disabled={isEmailBlocked}
+                                />
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={handleRequestEmailCode}
+                                    disabled={emailRequestSubmitting || !newEmail.trim() || isEmailBlocked}
+                                    className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {emailRequestSubmitting ? 'Kod Gönderiliyor...' : (emailCodeSent ? 'Kodu Tekrar Gönder' : 'Doğrulama Kodu Gönder')}
+                                </button>
+                                {emailCodeExpiresAt && (
+                                    <span className="text-xs text-gray-500">
+                                        Kod geçerlilik: {new Date(emailCodeExpiresAt).toLocaleString('tr-TR')}
+                                    </span>
+                                )}
+                            </div>
+
+                            {emailCodeSent && (
+                                <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">6 haneli doğrulama kodu</label>
+                                        <input
+                                            type="text"
+                                            value={emailCode}
+                                            onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                            placeholder="000000"
+                                            inputMode="numeric"
+                                            className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/20 tracking-[0.2em]"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleVerifyEmailCode}
+                                        disabled={emailVerifySubmitting || emailCode.length !== 6 || isEmailBlocked}
+                                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {emailVerifySubmitting ? 'Doğrulanıyor...' : 'Kodu Doğrula ve E-postayı Değiştir'}
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>
