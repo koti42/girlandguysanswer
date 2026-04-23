@@ -12,6 +12,7 @@ import QuestionsPage from './pages/QuestionsPage';
 import OpinionsPage from './pages/OpinionsPage';
 import AnswersPage from './pages/AnswersPage';
 import CommentsPage from './pages/CommentsPage';
+import SpecialDaysPage from './pages/SpecialDaysPage';
 
 // Protected Route Wrapper
 const AdminProtectedRoute = ({ children }) => {
@@ -93,6 +94,7 @@ const AdminAppContent = () => {
                 <Route path="/opinions" element={<OpinionsPage />} />
                 <Route path="/answers" element={<AnswersPage />} />
                 <Route path="/comments" element={<CommentsPage />} />
+                <Route path="/special-days" element={<SpecialDaysPage />} />
             </Route>
 
             {/* Catch all */}

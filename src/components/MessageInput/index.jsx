@@ -8,16 +8,7 @@ import StickerGifDrawer from './StickerGifDrawer';
 import RecordingBar from './RecordingBar';
 import { MAX_CHARS, WAVE_LENGTH } from './constants';
 
-export default function MessageInput({
-    onSendMessage,
-    disabled = false,
-    replyingTo,
-    onCancelReply,
-    onTyping,
-    onScrollToQuotedMessage,
-    /** Yüzen panel: sadece metin + gönder */
-    simpleMode = false,
-}) {
+export default function MessageInput({ onSendMessage, disabled = false, replyingTo, onCancelReply, onTyping, onScrollToQuotedMessage }) {
     const { user } = useAuth();
     const canSendImages = (user?.allow_image_messages ?? user?.detail?.allow_image_messages ?? true) !== false;
     const canSendAudio = (user?.allow_audio_messages ?? user?.detail?.allow_audio_messages ?? true) !== false;
@@ -301,46 +292,44 @@ export default function MessageInput({
 
     return (
         <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2 sm:p-3 min-w-0 overflow-hidden">
-            {!simpleMode && (
-                <>
-                    <EphemeralPhotoModal
-                        isOpen={showEphemeralModal}
-                        chosenOption={ephemeralModalChosenOption}
-                        onChooseOption={setPhotoOptionInModal}
-                        onOpenPhotoPicker={() => imageInputRef.current?.click()}
-                        onClose={() => {
-                            setShowEphemeralModal(false);
-                            setEphemeralModalChosenOption(null);
-                        }}
-                    />
-                    <StickerGifDrawer
-                        isOpen={showStickerGifDrawer}
-                        activeTab={stickerGifTab}
-                        onTabChange={setStickerGifTab}
-                        onCloseDrawer={() => setShowStickerGifDrawer(false)}
-                        onOpenGifPicker={() => setShowGifPicker(true)}
-                        onSendMessage={onSendMessage}
-                    />
-                    <GifPickerModal
-                        isOpen={showGifPicker}
-                        onClose={() => setShowGifPicker(false)}
-                        onSelect={(url) => {
-                            if (url) {
-                                onSendMessage({ type: 'gif', content: url });
-                                setShowStickerGifDrawer(false);
-                            }
-                            setShowGifPicker(false);
-                        }}
-                        title="GIF Seç"
-                    />
-                </>
-            )}
+            <EphemeralPhotoModal
+                isOpen={showEphemeralModal}
+                chosenOption={ephemeralModalChosenOption}
+                onChooseOption={setPhotoOptionInModal}
+                onOpenPhotoPicker={() => imageInputRef.current?.click()}
+                onClose={() => {
+                    setShowEphemeralModal(false);
+                    setEphemeralModalChosenOption(null);
+                }}
+            />
 
             <ReplyBar
                 replyingTo={replyingTo}
                 currentUserId={user?.id}
                 onScrollToQuotedMessage={onScrollToQuotedMessage}
                 onCancelReply={onCancelReply}
+            />
+
+            <StickerGifDrawer
+                isOpen={showStickerGifDrawer}
+                activeTab={stickerGifTab}
+                onTabChange={setStickerGifTab}
+                onCloseDrawer={() => setShowStickerGifDrawer(false)}
+                onOpenGifPicker={() => setShowGifPicker(true)}
+                onSendMessage={onSendMessage}
+            />
+
+            <GifPickerModal
+                isOpen={showGifPicker}
+                onClose={() => setShowGifPicker(false)}
+                onSelect={(url) => {
+                    if (url) {
+                        onSendMessage({ type: 'gif', content: url });
+                        setShowStickerGifDrawer(false);
+                    }
+                    setShowGifPicker(false);
+                }}
+                title="GIF Seç"
             />
 
             {isRecording && (
@@ -362,59 +351,51 @@ export default function MessageInput({
             )}
 
             <div className="flex items-end gap-1 sm:gap-2 min-w-0">
-                {!simpleMode && (
-                    <img
-                        src={ensureHttps(user?.avatar) || 'https://i.pravatar.cc/200?u=default'}
-                        alt="You"
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0 hidden md:block"
-                    />
-                )}
-                {!simpleMode && (
-                    <input
-                        ref={imageInputRef}
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                        multiple
-                        onChange={(e) => handleFileSelect(e, 'image')}
-                        className="hidden"
-                    />
-                )}
-                {!simpleMode && (
-                    <>
-                        <button
-                            type="button"
-                            onClick={() => setShowStickerGifDrawer(prev => !prev)}
-                            disabled={disabled || isRecording}
-                            className={`p-1.5 sm:p-2 flex-shrink-0 transition-colors ${showStickerGifDrawer ? 'text-coral' : 'text-gray-500 hover:text-coral'} disabled:opacity-50`}
-                            title="Çıkartma ve GIF"
-                        >
-                            <FaSmile className="text-base sm:text-lg" />
-                        </button>
-                        <button
-                            onClick={() => {
-                                if (!canSendImages) {
-                                    alert('Fotoğraf gönderme ayarınız kapalı.');
-                                    return;
-                                }
-                                setEphemeralModalChosenOption(null);
-                                setShowEphemeralModal(true);
-                            }}
-                            disabled={disabled || isRecording || !canSendImages}
-                            className="p-1.5 sm:p-2 disabled:opacity-50 flex-shrink-0 text-gray-500 hover:text-coral"
-                            title={canSendImages ? 'Fotoğraf gönder' : 'Fotoğraf gönderme ayarı kapalı'}
-                        >
-                            <FaImage className="text-base sm:text-lg" />
-                        </button>
-                        <button
-                            onClick={isRecording ? stopRecording : startRecording}
-                            disabled={disabled || selectedFile || !canSendAudio}
-                            className={`p-1.5 sm:p-2 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-coral' : 'text-gray-500 hover:text-coral'}`}
-                            title={canSendAudio ? 'Ses kaydı gönder' : 'Ses kaydı gönderme ayarı kapalı'}
-                        >
-                            <FaMicrophone className="text-base sm:text-lg" />
-                        </button>
-                    </>
-                )}
+                <img
+                    src={ensureHttps(user?.avatar) || 'https://i.pravatar.cc/200?u=default'}
+                    alt="You"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0 hidden md:block"
+                />
+                <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                    multiple
+                    onChange={(e) => handleFileSelect(e, 'image')}
+                    className="hidden"
+                />
+                <button
+                    type="button"
+                    onClick={() => setShowStickerGifDrawer(prev => !prev)}
+                    disabled={disabled || isRecording}
+                    className={`p-1.5 sm:p-2 flex-shrink-0 transition-colors ${showStickerGifDrawer ? 'text-coral' : 'text-gray-500 hover:text-coral'} disabled:opacity-50`}
+                    title="Çıkartma ve GIF"
+                >
+                    <FaSmile className="text-base sm:text-lg" />
+                </button>
+                <button
+                    onClick={() => {
+                        if (!canSendImages) {
+                            alert('Fotoğraf gönderme ayarınız kapalı.');
+                            return;
+                        }
+                        setEphemeralModalChosenOption(null);
+                        setShowEphemeralModal(true);
+                    }}
+                    disabled={disabled || isRecording || !canSendImages}
+                    className="p-1.5 sm:p-2 disabled:opacity-50 flex-shrink-0 text-gray-500 hover:text-coral"
+                    title={canSendImages ? 'Fotoğraf gönder' : 'Fotoğraf gönderme ayarı kapalı'}
+                >
+                    <FaImage className="text-base sm:text-lg" />
+                </button>
+                <button
+                    onClick={isRecording ? stopRecording : startRecording}
+                    disabled={disabled || selectedFile || !canSendAudio}
+                    className={`p-1.5 sm:p-2 disabled:opacity-50 flex-shrink-0 ${isRecording ? 'text-coral' : 'text-gray-500 hover:text-coral'}`}
+                    title={canSendAudio ? 'Ses kaydı gönder' : 'Ses kaydı gönderme ayarı kapalı'}
+                >
+                    <FaMicrophone className="text-base sm:text-lg" />
+                </button>
                 <textarea
                     ref={inputRef}
                     value={message}
@@ -448,11 +429,9 @@ export default function MessageInput({
                     <span className="hidden md:inline text-sm font-medium">Gönder</span>
                 </button>
             </div>
-            {!simpleMode && (
-                <div className="text-right text-[10px] sm:text-xs text-gray-500 mt-1">
-                    {message.length}/{MAX_CHARS}
-                </div>
-            )}
+            <div className="text-right text-[10px] sm:text-xs text-gray-500 mt-1">
+                {message.length}/{MAX_CHARS}
+            </div>
         </div>
     );
 }

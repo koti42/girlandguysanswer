@@ -332,24 +332,25 @@ const MessagesPage = () => {
 
     return (
         <MainLayout noMobilePadding={true}>
-            <div className="flex flex-col w-full bg-slate-100 dark:bg-gray-950" style={{ height: 'calc(100dvh - 56px)' }}>
-                <div className="flex-1 flex overflow-hidden p-2 md:p-4 gap-2 md:gap-4">
+            <div className="flex flex-col bg-white dark:bg-gray-900 w-full" style={{ height: 'calc(100dvh - 56px)' }}>
+                {/* Main Content Area - mobilde altta oval geçiş için yuvarlatılmış */}
+                <div className="flex-1 flex overflow-hidden md:rounded-none rounded-b-2xl">
                     {/* Conversations List Sidebar */}
-                    <div className={`${showMobileChat ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-[360px] xl:w-[390px] h-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 shadow-sm overflow-hidden`}>
+                    <div className={`${showMobileChat ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-96 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800`}>
                         <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-800">
-                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-3">
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                                 Mesajlar
                             </h2>
 
                             <div className="relative">
-                                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="text"
                                     placeholder="Ara veya şifre gir..."
                                     value={searchQuery}
                                     onChange={(e) => { setSearchQuery(e.target.value); setLockedResults([]); }}
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleSearchLocked(); }}
-                                    className="w-full pl-11 pr-12 py-2.5 bg-gray-100/90 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral/60"
+                                    className="w-full pl-10 pr-12 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-coral"
                                 />
                                 {searchQuery.trim() && (
                                     <button
@@ -363,7 +364,7 @@ const MessagesPage = () => {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto px-2 py-2">
+                        <div className="flex-1 overflow-y-auto">
                             {/* Locked Conversations Results */}
                             {lockedResults.length > 0 && (
                                 <div className="border-b-2 border-coral/20">
@@ -375,7 +376,7 @@ const MessagesPage = () => {
                                         <div
                                             key={conv.id}
                                             onClick={() => handleLockedConversationClick(conv)}
-                                        className="flex items-center gap-3 p-3 px-3 hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer border border-coral/10 rounded-xl mb-2 transition-colors"
+                                            className="flex items-center gap-3 p-3 px-4 hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer border-b border-coral/10 transition-colors"
                                         >
                                             <div className="relative">
                                                 <img
@@ -422,9 +423,9 @@ const MessagesPage = () => {
                                     <div
                                         key={conversation.id}
                                         onClick={() => handleConversationClick(conversation)}
-                                        className={`flex items-center gap-3 p-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/70 cursor-pointer border border-transparent rounded-xl transition-colors group mb-2 ${activeConversation?.id === conversation.id ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm' : 'bg-white dark:bg-gray-900'
+                                        className={`flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer border-b border-l-4 border-gray-100 dark:border-gray-800 transition-colors group ${activeConversation?.id === conversation.id ? 'bg-gray-50 dark:bg-gray-800' : ''
                                             }`}
-                                        style={activeConversation?.id === conversation.id ? { boxShadow: `inset 3px 0 0 ${themeStyles.accentColor}` } : undefined}
+                                        style={{ borderLeftColor: themeStyles.accentColor }}
                                     >
                                         <div className="relative">
                                             <img
@@ -495,7 +496,7 @@ const MessagesPage = () => {
                     </div>
 
                     {/* Chat Window Area */}
-                    <div className={`${showMobileChat ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 shadow-sm overflow-hidden`}>
+                    <div className={`${showMobileChat ? 'flex' : 'hidden'} md:flex flex-col flex-1 h-full bg-white dark:bg-gray-900`}>
                         <ChatWindow
                             conversation={activeConversation}
                             onBack={handleBack}

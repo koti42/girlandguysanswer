@@ -18,6 +18,7 @@ import {
     FaEdit,
     FaBell,
     FaCog,
+    FaFlag,
 } from 'react-icons/fa';
 
 const AdminLayout = () => {
@@ -71,6 +72,12 @@ const AdminLayout = () => {
                 { path: '/cpl-manage/opinions', icon: FaEdit, label: 'Görüşler' },
                 { path: '/cpl-manage/answers', icon: FaReply, label: 'Cevaplar' },
                 { path: '/cpl-manage/comments', icon: FaComments, label: 'Yorumlar' },
+            ]
+        },
+        {
+            label: 'Site Ayarları',
+            items: [
+                { path: '/cpl-manage/special-days', icon: FaFlag, label: 'Özel Gün Rozetleri' },
             ]
         },
     ];

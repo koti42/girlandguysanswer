@@ -11,7 +11,6 @@ const adminApi = axios.create({
     },
 });
 
-// Request interceptor - attach admin token
 adminApi.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('admin_token');
@@ -72,14 +71,12 @@ export const rolesAPI = {
     delete: (id) => adminApi.delete(`/admin/roles/${id}`),
 };
 
-// Complaints API
 export const complaintsAPI = {
     getAll: (params) => adminApi.get('/admin/complaints', { params }),
     getById: (id) => adminApi.get(`/admin/complaints/${id}`),
     resolve: (id, data) => adminApi.post(`/admin/complaints/${id}/resolve`, data),
 };
 
-// Content APIs
 export const questionsAPI = {
     getAll: (params) => adminApi.get('/admin/questions', { params }),
     update: (id, data) => adminApi.put(`/admin/questions/${id}`, data),
@@ -104,22 +101,24 @@ export const commentsAPI = {
     delete: (id) => adminApi.delete(`/admin/comments/${id}`),
 };
 
-// Question moderation API (uses same endpoints as public moderation, admin token ile)
 export const adminModerationAPI = {
     hideQuestion: (questionId, data) => adminApi.post(`/questions/${questionId}/hide`, data),
     unhideQuestion: (questionId) => adminApi.post(`/questions/${questionId}/unhide`),
     removeQuestion: (questionId, data) => adminApi.post(`/questions/${questionId}/remove`, data),
 };
 
-// Messages API (admin-only message inspection)
 export const adminMessagesAPI = {
-    // Kullanıcının tüm konuşmalarını getirir
     getUserConversations: (userId, params) =>
         adminApi.get(`/admin/users/${userId}/conversations`, { params }),
 
-    // Belirli bir konuşmanın mesajlarını getirir
     getConversationMessages: (conversationId, params) =>
         adminApi.get(`/admin/conversations/${conversationId}/messages`, { params }),
+};
+
+export const specialDaysAPI = {
+    getAll: () => adminApi.get('/admin/special-days'),
+    toggle: (id) => adminApi.post(`/admin/special-days/${id}/toggle`),
+    update: (id, data) => adminApi.put(`/admin/special-days/${id}`, data),
 };
 
 export default adminApi;

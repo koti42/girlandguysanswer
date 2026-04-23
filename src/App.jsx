@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AdminApp from './admin/AdminApp';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
@@ -249,6 +250,7 @@ function App() {
                   <Route path="/xper-puan" element={<XperPuanPage />} />
                   <Route path="/feature-tags" element={<FeatureTagsPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
+                  <Route path="/cpl-manage/*" element={<AdminApp />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
               </Routes>
               <FloatingMessagesDock />

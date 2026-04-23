@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaUnlock, FaTag, FaEllipsisV, FaImage } from 'react-icons/fa';
-import { useNavigate, Link } from 'react-router-dom';
+import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaUnlock, FaTag, FaEllipsisV } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput/index.jsx';
 import ConfirmationModal from './ConfirmationModal';
-import { messagesAPI, usersAPI } from '../services/api';
+import { messagesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
 const TYPING_RESET_MS = 3000;
 
-const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false }) => {
+const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingOlder, setLoadingOlder] = useState(false);
@@ -48,9 +48,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
     const [nicknameSaving, setNicknameSaving] = useState(false);
     const [countdownTick, setCountdownTick] = useState(() => Date.now());
     const [showActionMenu, setShowActionMenu] = useState(false);
-    const [showChatBackground, setShowChatBackground] = useState(true);
     const actionMenuRef = useRef(null);
-    const { user, permissions, updateUser } = useAuth();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -65,19 +63,16 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
     useEffect(() => {
         setIsLocked(conversation?.is_locked || false);
     }, [conversation]);
-    useEffect(() => {
-        setShowChatBackground(user?.detail?.chat_background_enabled ?? true);
-    }, [user?.detail?.chat_background_enabled]);
     const typingResetRef = useRef(null);
     const loadingOlderRef = useRef(false);
     const prependScrollRef = useRef(null);
+    const { user, permissions } = useAuth();
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
     const conversationRef = useRef(conversation);
     const navigate = useNavigate();
 
     const canExportPdf = user?.username === 'Koti42' || permissions?.is_super_admin;
-    const detailSettings = user?.detail || {};
 
     const ensureHttps = (url) => {
         if (!url) return url;
@@ -391,33 +386,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             setNicknameSaving(false);
         }
     };
-
-    const handleToggleChatBackground = useCallback(async () => {
-        const nextValue = !showChatBackground;
-        setShowChatBackground(nextValue);
-        try {
-            await usersAPI.updateMessaging({
-                allow_messaging: detailSettings.allow_messaging ?? true,
-                messaging_mode: detailSettings.messaging_mode || 'everyone',
-                allow_video_call: detailSettings.allow_video_call ?? true,
-                allow_image_messages: detailSettings.allow_image_messages ?? true,
-                allow_audio_messages: detailSettings.allow_audio_messages ?? true,
-                privacy_hide_online_from_others: detailSettings.privacy_hide_online_from_others ?? false,
-                privacy_hide_read_receipts_from_others: detailSettings.privacy_hide_read_receipts_from_others ?? false,
-                chat_background_enabled: nextValue,
-            });
-            updateUser({
-                detail: {
-                    ...detailSettings,
-                    chat_background_enabled: nextValue,
-                },
-            });
-            notificationToast(nextValue ? 'Sohbet arka planı açıldı.' : 'Sohbet arka planı kapatıldı.', 'success');
-        } catch (error) {
-            setShowChatBackground(!nextValue);
-            notificationToast(error?.response?.data?.message || 'Arka plan ayarı kaydedilemedi.', 'error');
-        }
-    }, [showChatBackground, detailSettings, updateUser]);
 
     const handleSendMessage = async ({ content, file, type, is_ephemeral, ephemeral_max_views }) => {
         if (!conversation) return;
@@ -778,15 +746,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
 
     return (
         <div className="flex flex-col h-full relative w-full overflow-x-hidden bg-white dark:bg-gray-900">
-            <div
-                className={`flex-shrink-0 p-3 sm:p-4 w-full z-10 ${embeddedInDock ? '' : 'sticky top-0'}`}
-                style={{
-                    backgroundColor: themeStyles.headerBgSolid,
-                    backgroundImage: themeStyles.headerBg,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundSize: '100% 100%',
-                }}
-            >
+            {/* Header - cinsiyete göre renk (kadın: pembe, erkek: mavi) */}
+            <div className="flex-shrink-0 p-3 sm:p-4 w-full z-10 sticky top-0" style={{ background: themeStyles.headerBg }}>
                 <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
                     <button
                         onClick={onBack}
@@ -813,155 +774,131 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
                             )}
                         </p>
                     </div>
-                    {embeddedInDock && conversation?.other_user?.username ? (
-                        <Link
-                            to={`/messages/${conversation.other_user.username}`}
-                            className="ml-auto flex-shrink-0 text-xs sm:text-sm font-semibold text-white/95 hover:text-white underline-offset-2 hover:underline px-2 py-1 rounded-lg hover:bg-white/10"
+                    {/* Desktop/Tablet Horizontal Menu */}
+                    <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 lg:gap-3 ml-auto flex-shrink-0">
+                        {conversation?.id && (
+                            <button
+                                type="button"
+                                onClick={() => setShowNotebook(v => !v)}
+                                className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNotebook ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                                title="Not Defteri"
+                            >
+                                <FaBook className="text-base sm:text-lg" />
+                            </button>
+                        )}
+                        {!loading && messages.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowSearchInput((v) => !v)}
+                                className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showSearchInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                                title="Mesajlarda ara"
+                            >
+                                <FaSearch className="text-base sm:text-lg" />
+                            </button>
+                        )}
+                        {canExportPdf && (
+                            <button
+                                type="button"
+                                onClick={handleExportPdf}
+                                className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
+                                title="Konuşmayı PDF indir"
+                            >
+                                <FaFilePdf className="text-base sm:text-lg" />
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setShowNicknameInput(v => !v)}
+                            className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNicknameInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            title="Takma Ad Ver"
                         >
-                            Tam sayfa
-                        </Link>
-                    ) : (
-                        <>
-                            <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 lg:gap-3 ml-auto flex-shrink-0">
+                            <FaTag className="text-base sm:text-lg" />
+                        </button>
+                        {conversation?.id && (
+                            <button
+                                type="button"
+                                onClick={() => isLocked ? setUnlockModalOpen(true) : setLockModalOpen(true)}
+                                className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${isLocked ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                                title={isLocked ? 'Kilidi Kaldır' : 'Sohbeti Gizle'}
+                            >
+                                {isLocked ? <FaUnlock className="text-base sm:text-lg" /> : <FaLock className="text-base sm:text-lg" />}
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setShowDeleteModal(true)}
+                            className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
+                            title="Sohbeti Temizle"
+                        >
+                            <FaTrash className="text-base sm:text-lg" />
+                        </button>
+                    </div>
+
+                    {/* Mobile Dropdown Menu */}
+                    <div className="flex sm:hidden relative ml-auto flex-shrink-0" ref={actionMenuRef}>
+                        <button
+                            onClick={() => setShowActionMenu(!showActionMenu)}
+                            className={`p-1.5 rounded-full transition-colors flex-shrink-0 ${showActionMenu ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                        >
+                            <FaEllipsisV className="text-base" />
+                        </button>
+
+                        {showActionMenu && (
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-1 z-50 animate-in fade-in zoom-in duration-200">
                                 {conversation?.id && (
                                     <button
-                                        type="button"
-                                        onClick={() => setShowNotebook(v => !v)}
-                                        className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNotebook ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                                        title="Not Defteri"
+                                        onClick={() => { setShowNotebook(v => !v); setShowActionMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                                     >
-                                        <FaBook className="text-base sm:text-lg" />
+                                        <FaBook className={showNotebook ? 'text-coral' : 'text-gray-400'} />
+                                        <span>Not Defteri</span>
                                     </button>
                                 )}
                                 {!loading && messages.length > 0 && (
                                     <button
-                                        type="button"
-                                        onClick={() => setShowSearchInput((v) => !v)}
-                                        className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showSearchInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                                        title="Mesajlarda ara"
+                                        onClick={() => { setShowSearchInput(v => !v); setShowActionMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
                                     >
-                                        <FaSearch className="text-base sm:text-lg" />
+                                        <FaSearch className={showSearchInput ? 'text-coral' : 'text-gray-400'} />
+                                        <span>Mesajlarda Ara</span>
                                     </button>
                                 )}
                                 {canExportPdf && (
                                     <button
-                                        type="button"
-                                        onClick={handleExportPdf}
-                                        className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
-                                        title="Konuşmayı PDF indir"
+                                        onClick={() => { handleExportPdf(); setShowActionMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
                                     >
-                                        <FaFilePdf className="text-base sm:text-lg" />
+                                        <FaFilePdf className="text-gray-400" />
+                                        <span>PDF İndir</span>
                                     </button>
                                 )}
                                 <button
-                                    type="button"
-                                    onClick={handleToggleChatBackground}
-                                    className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showChatBackground ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                                    title={showChatBackground ? 'Arka planı kapat' : 'Arka planı aç'}
+                                    onClick={() => { setShowNicknameInput(v => !v); setShowActionMenu(false); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
                                 >
-                                    <FaImage className="text-base sm:text-lg" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowNicknameInput(v => !v)}
-                                    className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${showNicknameInput ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                                    title="Takma Ad Ver"
-                                >
-                                    <FaTag className="text-base sm:text-lg" />
+                                    <FaTag className={showNicknameInput ? 'text-coral' : 'text-gray-400'} />
+                                    <span>Takma Ad Ver</span>
                                 </button>
                                 {conversation?.id && (
                                     <button
-                                        type="button"
-                                        onClick={() => isLocked ? setUnlockModalOpen(true) : setLockModalOpen(true)}
-                                        className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${isLocked ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                                        title={isLocked ? 'Kilidi Kaldır' : 'Sohbeti Gizle'}
+                                        onClick={() => { isLocked ? setUnlockModalOpen(true) : setLockModalOpen(true); setShowActionMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
                                     >
-                                        {isLocked ? <FaUnlock className="text-base sm:text-lg" /> : <FaLock className="text-base sm:text-lg" />}
+                                        {isLocked ? <FaUnlock className="text-coral" /> : <FaLock className="text-gray-400" />}
+                                        <span>{isLocked ? 'Kilidi Kaldır' : 'Sohbeti Gizle'}</span>
                                     </button>
                                 )}
                                 <button
-                                    onClick={() => setShowDeleteModal(true)}
-                                    className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
-                                    title="Sohbeti Temizle"
+                                    onClick={() => { setShowDeleteModal(true); setShowActionMenu(false); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors border-t border-gray-100 dark:border-gray-700/50"
                                 >
-                                    <FaTrash className="text-base sm:text-lg" />
+                                    <FaTrash className="text-red-500" />
+                                    <span>Sohbeti Temizle</span>
                                 </button>
                             </div>
-
-                            <div className="flex sm:hidden relative ml-auto flex-shrink-0" ref={actionMenuRef}>
-                                <button
-                                    onClick={() => setShowActionMenu(!showActionMenu)}
-                                    className={`p-1.5 rounded-full transition-colors flex-shrink-0 ${showActionMenu ? 'bg-white/25 text-white' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                                >
-                                    <FaEllipsisV className="text-base" />
-                                </button>
-
-                                {showActionMenu && (
-                                    <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-1 z-50 animate-in fade-in zoom-in duration-200">
-                                        {conversation?.id && (
-                                            <button
-                                                onClick={() => { setShowNotebook(v => !v); setShowActionMenu(false); }}
-                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                                            >
-                                                <FaBook className={showNotebook ? 'text-coral' : 'text-gray-400'} />
-                                                <span>Not Defteri</span>
-                                            </button>
-                                        )}
-                                        {!loading && messages.length > 0 && (
-                                            <button
-                                                onClick={() => { setShowSearchInput(v => !v); setShowActionMenu(false); }}
-                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
-                                            >
-                                                <FaSearch className={showSearchInput ? 'text-coral' : 'text-gray-400'} />
-                                                <span>Mesajlarda Ara</span>
-                                            </button>
-                                        )}
-                                        {canExportPdf && (
-                                            <button
-                                                onClick={() => { handleExportPdf(); setShowActionMenu(false); }}
-                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
-                                            >
-                                                <FaFilePdf className="text-gray-400" />
-                                                <span>PDF İndir</span>
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => { handleToggleChatBackground(); setShowActionMenu(false); }}
-                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
-                                        >
-                                            <FaImage className={showChatBackground ? 'text-coral' : 'text-gray-400'} />
-                                            <span>{showChatBackground ? 'Arka Planı Kapat' : 'Arka Planı Aç'}</span>
-                                        </button>
-                                        <button
-                                            onClick={() => { setShowNicknameInput(v => !v); setShowActionMenu(false); }}
-                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
-                                        >
-                                            <FaTag className={showNicknameInput ? 'text-coral' : 'text-gray-400'} />
-                                            <span>Takma Ad Ver</span>
-                                        </button>
-                                        {conversation?.id && (
-                                            <button
-                                                onClick={() => { isLocked ? setUnlockModalOpen(true) : setLockModalOpen(true); setShowActionMenu(false); }}
-                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t border-gray-100 dark:border-gray-700/50"
-                                            >
-                                                {isLocked ? <FaUnlock className="text-coral" /> : <FaLock className="text-gray-400" />}
-                                                <span>{isLocked ? 'Kilidi Kaldır' : 'Sohbeti Gizle'}</span>
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => { setShowDeleteModal(true); setShowActionMenu(false); }}
-                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors border-t border-gray-100 dark:border-gray-700/50"
-                                        >
-                                            <FaTrash className="text-red-500" />
-                                            <span>Sohbeti Temizle</span>
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    )}
+                        )}
+                    </div>
                 </div>
-                {showSearchInput && !embeddedInDock && !loading && messages.length > 0 && (
+                {showSearchInput && !loading && messages.length > 0 && (
                     <div className="mt-3 pt-2 border-t border-white/20">
                         <div className="relative flex items-center">
                             <FaSearch className="absolute left-4 text-white/70 text-sm pointer-events-none" />
@@ -1000,7 +937,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
                         )}
                     </div>
                 )}
-                {showNicknameInput && !embeddedInDock && (
+                {showNicknameInput && (
                     <div className="mt-3 pt-2 border-t border-white/20">
                         <div className="flex items-center gap-2">
                             <input
@@ -1025,7 +962,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
                 )}
             </div>
 
-            {showEncryptionInfo && !embeddedInDock && (
+            {showEncryptionInfo && (
                 <div className="flex-shrink-0 px-4 py-2.5 flex items-start gap-2 text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-100 border-b border-emerald-200/70 dark:border-emerald-800/70">
                     <div className="mt-0.5">
                         <FaLock className="text-sm" />
@@ -1049,7 +986,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             )}
 
             <ConfirmationModal
-                isOpen={showDeleteModal && !embeddedInDock}
+                isOpen={showDeleteModal}
                 onClose={() => setShowDeleteModal(false)}
                 onConfirm={async () => {
                     try {
@@ -1068,7 +1005,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             />
 
             {/* Lock Conversation Modal */}
-            {!embeddedInDock && lockModalOpen && (
+            {lockModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { setLockModalOpen(false); setLockPassword(''); setLockConfirmPassword(''); }}>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 max-w-[90vw] shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex flex-col items-center mb-5">
@@ -1115,7 +1052,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             )}
 
             {/* Unlock Conversation Modal */}
-            {!embeddedInDock && unlockModalOpen && (
+            {unlockModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { setUnlockModalOpen(false); setUnlockPassword(''); }}>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 max-w-[90vw] shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex flex-col items-center mb-5">
@@ -1155,7 +1092,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             )}
 
             {/* Not Defteri - çizgili defter */}
-            {showNotebook && !embeddedInDock && (
+            {showNotebook && (
                 <div className="fixed inset-0 z-50 flex flex-col bg-gray-900/80 dark:bg-gray-950/90" onClick={() => setShowNotebook(false)}>
                     <div className="flex-1 flex flex-col min-h-0 m-4 rounded-2xl overflow-hidden shadow-2xl bg-amber-50/95 dark:bg-stone-900/95 border border-amber-200/80 dark:border-stone-700 max-w-2xl w-full mx-auto" onClick={e => e.stopPropagation()}>
                         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-amber-200/80 dark:border-stone-700 bg-amber-100/80 dark:bg-stone-800/80">
@@ -1241,7 +1178,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             )}
 
             {/* Süreli mesaj banner - kalan süre anlık geri sayım */}
-            {ephemeralTtlSeconds > 0 && !embeddedInDock && (
+            {ephemeralTtlSeconds > 0 && (
                 <div className="flex-shrink-0 px-4 py-2.5 flex items-center justify-center gap-2 text-sm flex-wrap border-b" style={{ backgroundColor: themeStyles.bgColorStrong, borderColor: `${themeStyles.accentColor}40` }}>
                     <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ backgroundColor: themeStyles.bgColorStrong, color: themeStyles.accentColor }}>
                         <FaClock className="text-xs opacity-90" />
@@ -1256,17 +1193,8 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             {/* Messages Area - Scrollable (Flex-1) */}
             <div
                 ref={messagesContainerRef}
-                className={`flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto w-full`}
-                style={{
-                    WebkitOverflowScrolling: 'touch',
-                    backgroundColor: themeStyles.bgColor,
-                    backgroundImage: showChatBackground
-                        ? `linear-gradient(to top, ${themeStyles.accentColor}12, transparent 45%), linear-gradient(to top, rgba(255,255,255,0.68), rgba(255,255,255,0.68)), url('/ankara-herkeslersoruyor.png')`
-                        : 'none',
-                    backgroundRepeat: showChatBackground ? 'no-repeat, no-repeat, no-repeat' : 'no-repeat',
-                    backgroundPosition: showChatBackground ? 'center bottom, center bottom, center center' : 'center center',
-                    backgroundSize: showChatBackground ? '100% 100%, 100% 100%, 100% 100%' : 'auto',
-                }}
+                className={`flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto w-full bg-white dark:bg-gray-900`}
+                style={{ WebkitOverflowScrolling: 'touch' }}
                 onScroll={(e) => {
                     if (e.target.scrollTop < 150 && hasMoreOlder && !loadingOlder && messages.length > 0) {
                         loadOlderMessages();
@@ -1345,7 +1273,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
             {/* Mesaj kutusu - karşı tarafın cinsiyetine göre renk teması */}
             <div className="flex-shrink-0 w-full min-w-0 z-20 border-t-2" style={{ borderColor: themeStyles.borderColor, backgroundColor: themeStyles.bgColor }}>
                 {/* Süreli mesaj - sohbet temasına uyumlu pill seçici (mobilde dikey & kaydırılabilir) */}
-                {conversation?.id && !embeddedInDock && (
+                {conversation?.id && (
                     <div className="px-2 sm:px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2 border-b" style={{ borderColor: `${themeStyles.accentColor}40` }}>
                         <span className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium flex-shrink-0" style={{ color: themeStyles.accentColor }}>
                             <FaClock className="text-[10px] opacity-80" />
@@ -1387,7 +1315,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage, embeddedInDock = false
                     onCancelReply={() => setReplyingTo(null)}
                     onTyping={conversation?.id ? (typing) => messagesAPI.sendTyping(conversation.id, typing).catch(() => { }) : undefined}
                     onScrollToQuotedMessage={scrollToMessageId}
-                    simpleMode={embeddedInDock}
                 />
             </div>
         </div>

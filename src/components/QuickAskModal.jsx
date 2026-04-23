@@ -15,7 +15,6 @@ const QuickAskModal = ({ onClose }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [isAnonymous, setIsAnonymous] = useState(user?.last_action_is_anonymous || false);
     const [noAiAnswer, setNoAiAnswer] = useState(false);
-    const [answerGenderRestriction, setAnswerGenderRestriction] = useState('');
     const [categories, setCategories] = useState([]);
     const [loadingCats, setLoadingCats] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,7 +67,6 @@ const QuickAskModal = ({ onClose }) => {
                 prefill: {
                     title: title.trim(),
                     category: selectedCategory?.name || '',
-                    answer_gender_restriction: answerGenderRestriction || null,
                 }
             }
         });
@@ -84,7 +82,6 @@ const QuickAskModal = ({ onClose }) => {
                 category: selectedCategory.name,
                 is_anonymous: isAnonymous,
                 allow_ai_answer: !noAiAnswer,
-                answer_gender_restriction: answerGenderRestriction || null,
             });
             const questionResponse = response.data.data?.question || response.data.data;
             const slug = questionResponse?.slug || questionResponse?.id;
@@ -97,7 +94,6 @@ const QuickAskModal = ({ onClose }) => {
                         category: selectedCategory.name,
                         tags: [],
                         is_anonymous: isAnonymous,
-                        answer_gender_restriction: answerGenderRestriction || null,
                     },
                     gamification: gamification || null,
                     slug,
@@ -201,29 +197,6 @@ const QuickAskModal = ({ onClose }) => {
                                     >
                                         <FaRobot className="text-[11px]" />
                                         <span>{noAiAnswer ? 'Kapalı' : 'Açık'}</span>
-                                    </button>
-                                </div>
-                                <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                                    <button
-                                        type="button"
-                                        onClick={() => setAnswerGenderRestriction('')}
-                                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${answerGenderRestriction === '' ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
-                                    >
-                                        Herkes cevaplasın
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setAnswerGenderRestriction('female')}
-                                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${answerGenderRestriction === 'female' ? 'bg-pink-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
-                                    >
-                                        Sadece kadınlar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setAnswerGenderRestriction('male')}
-                                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${answerGenderRestriction === 'male' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
-                                    >
-                                        Sadece erkekler
                                     </button>
                                 </div>
                             </div>

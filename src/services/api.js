@@ -326,4 +326,8 @@ export const communityAPI = {
     respondToInvitation: (invitationId, status) => api.post(`/communities/invitations/${invitationId}/respond`, { status }),
 };
 
+export const specialDaysAPI = {
+    getActive: () => api.get('/special-days'),
+};
+
 export default api;

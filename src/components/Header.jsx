@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay } from 'react-icons/fa';
+import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay, FaUserShield } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
 import QuickAskModal from './QuickAskModal';
-import { categoriesAPI, messagesAPI, questionsAPI } from '../services/api';
+import { categoriesAPI, messagesAPI, questionsAPI, specialDaysAPI } from '../services/api';
 
 const Header = ({ onSearch }) => {
     const navigate = useNavigate();
@@ -28,8 +28,25 @@ const Header = ({ onSearch }) => {
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [selectedModalCategory, setSelectedModalCategory] = useState(null);
     const [modalActiveTab, setModalActiveTab] = useState('tum-sorular'); // tum-sorular, populer, cevapsiz
+    const [activeSpecialDays, setActiveSpecialDays] = useState([]);
     const { isDark, toggleTheme } = useTheme();
     const { user, isAuthenticated, logout } = useAuth();
+
+    // Özel Gün Rozetleri - API'den çek
+    useEffect(() => {
+        const fetchSpecialDays = async () => {
+            try {
+                const res = await specialDaysAPI.getActive();
+                setActiveSpecialDays(res.data?.data || []);
+            } catch {
+                setActiveSpecialDays([]);
+            }
+        };
+        fetchSpecialDays();
+        // Her 5 dakikada bir güncelle
+        const interval = setInterval(fetchSpecialDays, 5 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         let intervalId;
@@ -170,12 +187,41 @@ const Header = ({ onSearch }) => {
 
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity min-w-0">
-                        <img src="/logo.png" alt="Herkesler Soruyor Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                        <div className="relative">
+                            <img src="/logo.png" alt="Herkesler Soruyor Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                        </div>
                         <span className="font-script text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl text-coral font-bold leading-none select-none truncate">
                             <span className="hidden sm:inline">Herkesler Soruyor</span>
                             <span className="sm:hidden">HS</span>
                         </span>
+                        {/* Özel Gün Rozetleri - API'den yönetilir */}
+                        {activeSpecialDays.map((day) => (
+                            <span
+                                key={day.id}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold shadow-lg select-none shrink-0"
+                                style={{
+                                    border: `1.5px solid ${day.color}`,
+                                    color: day.color,
+                                    background: 'white',
+                                    animation: 'pulse23 1.8s ease-in-out infinite',
+                                }}
+                                title={`${day.label} 🎉`}
+                            >
+                                <span>{day.badge_emoji}</span>
+                                <span className="hidden sm:inline font-extrabold tracking-tight">{day.short_label}</span>
+                                <span className="sm:hidden font-extrabold">
+                                    {day.short_label.split(' ').slice(0, 2).join('\u00A0')}
+                                </span>
+                                <span>🇹🇷</span>
+                            </span>
+                        ))}
                     </Link>
+                    <style>{`
+                        @keyframes pulse23 {
+                            0%, 100% { transform: scale(1); box-shadow: 0 0 6px rgba(227,10,23,0.4); }
+                            50% { transform: scale(1.07); box-shadow: 0 0 14px rgba(227,10,23,0.7); }
+                        }
+                    `}</style>
 
                     {/* Desktop Search Bar */}
                     <div className="hidden md:flex flex-1 max-w-xl relative" ref={searchRef}>
@@ -418,6 +464,15 @@ const Header = ({ onSearch }) => {
                                             <FaUser className="text-gray-400" />
                                             Ayarlar
                                         </Link>
+                                        {(user?.roles?.some(r => ['admin','super_admin'].includes(r.slug || r)) || user?.role === 'admin' || user?.role === 'super_admin') && (
+                                            <Link
+                                                to="/cpl-manage"
+                                                className="flex items-center gap-3 px-3 py-2 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors font-semibold"
+                                            >
+                                                <FaUserShield className="text-purple-500" />
+                                                Admin Panel
+                                            </Link>
+                                        )}
                                         <button
                                             onClick={handleLogout}
                                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors mt-1"
@@ -574,25 +629,6 @@ const Header = ({ onSearch }) => {
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Bul</span>
                         </Link>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                toggleTheme();
-                                closeMobileMenu();
-                            }}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
-                            title={isDark ? 'Açık Mod' : 'Koyu Mod'}
-                        >
-                            {isDark ? (
-                                <FaSun className="text-xl text-coral flex-shrink-0" />
-                            ) : (
-                                <FaMoon className="text-xl text-coral flex-shrink-0" />
-                            )}
-                            <span className="text-gray-700 dark:text-gray-200 font-medium">
-                                {isDark ? 'Açık Mod' : 'Koyu Mod'}
-                            </span>
-                        </button>
-
                         {isAuthenticated ? (
                             <>
                                 <Link
@@ -642,6 +678,16 @@ const Header = ({ onSearch }) => {
                                     <FaUser className="text-xl text-coral" />
                                     <span className="text-gray-700 dark:text-gray-200 font-medium">Ayarlar</span>
                                 </Link>
+                                {(user?.roles?.some(r => ['admin','super_admin'].includes(r.slug || r)) || user?.role === 'admin' || user?.role === 'super_admin') && (
+                                    <Link
+                                        to="/cpl-manage"
+                                        onClick={closeMobileMenu}
+                                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors mb-2 min-h-[50px]"
+                                    >
+                                        <FaUserShield className="text-xl text-purple-500" />
+                                        <span className="text-purple-600 dark:text-purple-400 font-semibold">Admin Panel</span>
+                                    </Link>
+                                )}
                                 <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
                                 <button
                                     onClick={() => {

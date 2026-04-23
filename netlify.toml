@@ -4,3 +4,15 @@
   to = "/.netlify/functions/sitemap"
   status = 200
 
+# Admin panel SPA yönlendirmesi
+[[redirects]]
+  from = "/cpl-manage/*"
+  to = "/index.html"
+  status = 200
+
+# Genel SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
