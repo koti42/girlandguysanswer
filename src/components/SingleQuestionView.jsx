@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft, FaTrash, FaEyeSlash, FaEdit, FaRobot } from 'react-icons/fa';
+import { FaHeart, FaThumbsDown, FaComment, FaEye, FaMars, FaVenus, FaShare, FaReply, FaUserSecret, FaImage, FaTimes, FaMedal, FaCheckCircle, FaCheck, FaFlag, FaQuestionCircle, FaHome, FaArrowLeft, FaTrash, FaEyeSlash, FaEdit, FaRobot } from 'react-icons/fa';
 import { questionsAPI, commentsAPI, answersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
@@ -455,6 +455,42 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         setAnswerCommentsPagination(answersPagination);
     };
 
+    const findCommentById = (commentId) => {
+        const search = (list) => {
+            for (const item of list || []) {
+                if (item.id === commentId) return item;
+                const nested = search(item.replies);
+                if (nested) return nested;
+            }
+            return null;
+        };
+        const fromQuestion = search(question?.comments);
+        if (fromQuestion) return fromQuestion;
+        for (const answer of answers || []) {
+            const fromAnswer = search(answer.comments);
+            if (fromAnswer) return fromAnswer;
+        }
+        return null;
+    };
+
+    const updateCommentTreeById = (commentId, updater) => {
+        const mapTree = (list) => (list || []).map((item) => {
+            if (item.id === commentId) return updater(item);
+            if (item.replies?.length) {
+                return { ...item, replies: mapTree(item.replies) };
+            }
+            return item;
+        });
+
+        if (question?.comments) {
+            setQuestion(prev => ({ ...prev, comments: mapTree(prev.comments) }));
+        }
+        setAnswers(prev => prev.map(ans => ({
+            ...ans,
+            comments: mapTree(ans.comments),
+        })));
+    };
+
     const handleLike = async (e, type, id) => {
         e.preventDefault();
         e.stopPropagation();
@@ -462,6 +498,24 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
         if (!currentUser) {
             displayToast('Beğenmek için giriş yapmalısınız.', 'error');
             return;
+        }
+        if (type === 'question' && question?.is_disliked) {
+            displayToast('Beğenmek için önce beğenmemenizi geri almalısınız.', 'error');
+            return;
+        }
+        if (type === 'comment') {
+            const targetComment = findCommentById(id);
+            if (targetComment?.is_disliked) {
+                displayToast('Beğenmek için önce beğenmemenizi geri almalısınız.', 'error');
+                return;
+            }
+        }
+        if (type === 'answer') {
+            const targetAnswer = answers.find((a) => a.id === id);
+            if (targetAnswer?.is_disliked) {
+                displayToast('Beğenmek için önce beğenmemenizi geri almalısınız.', 'error');
+                return;
+            }
         }
 
         const toggleLikeInState = (state, setState) => {
@@ -525,9 +579,32 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
 
         try {
             const response = await questionsAPI.toggleLike({ type, id });
-
-
-
+            const data = response.data?.data;
+            if (type === 'question' && data) {
+                setQuestion(prev => ({
+                    ...prev,
+                    likes_count: data.likes_count ?? prev.likes_count,
+                    dislikes_count: data.dislikes_count ?? prev.dislikes_count,
+                    is_liked: data.is_liked ?? prev.is_liked,
+                    is_disliked: data.is_disliked ?? prev.is_disliked,
+                }));
+            } else if (type === 'comment' && data) {
+                updateCommentTreeById(id, (comment) => ({
+                    ...comment,
+                    likes_count: data.likes_count ?? comment.likes_count,
+                    dislikes_count: data.dislikes_count ?? comment.dislikes_count,
+                    is_liked: data.is_liked ?? comment.is_liked,
+                    is_disliked: data.is_disliked ?? comment.is_disliked,
+                }));
+            } else if (type === 'answer' && data) {
+                setAnswers((prev) => prev.map((a) => (a.id === id ? {
+                    ...a,
+                    likes_count: data.likes_count ?? a.likes_count,
+                    dislikes_count: data.dislikes_count ?? a.dislikes_count,
+                    is_liked: data.is_liked ?? a.is_liked,
+                    is_disliked: data.is_disliked ?? a.is_disliked,
+                } : a)));
+            }
         } catch (error) {
             console.error('Like toggle error:', error);
             if (type === 'question') toggleLikeInState(question, setQuestion);
@@ -535,6 +612,142 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
             else if (type === 'comment') toggleLikeInState(null, null);
 
             displayToast(error.response?.data?.message || 'Beğeni işlemi başarısız.', 'error');
+        }
+    };
+
+    const handleDislike = async (e, type, id) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!currentUser) {
+            displayToast('Beğenmemek için giriş yapmalısınız.', 'error');
+            return;
+        }
+
+        if (type === 'question') {
+            if (question?.is_liked) {
+                displayToast('Beğenmemek için önce beğeninizi geri almalısınız.', 'error');
+                return;
+            }
+
+            const prevDisliked = question.is_disliked;
+            const prevDislikesCount = question.dislikes_count || 0;
+
+            setQuestion(prev => ({
+                ...prev,
+                is_disliked: !prevDisliked,
+                dislikes_count: prevDisliked ? Math.max(0, (prev.dislikes_count || 0) - 1) : (prev.dislikes_count || 0) + 1,
+            }));
+
+            try {
+                const response = await questionsAPI.toggleDislike({ type: 'question', id: question.id });
+                const data = response.data?.data;
+                if (data) {
+                    setQuestion(prev => ({
+                        ...prev,
+                        likes_count: data.likes_count ?? prev.likes_count,
+                        dislikes_count: data.dislikes_count ?? prev.dislikes_count,
+                        is_liked: data.is_liked ?? prev.is_liked,
+                        is_disliked: data.is_disliked ?? prev.is_disliked,
+                    }));
+                }
+            } catch (error) {
+                setQuestion(prev => ({
+                    ...prev,
+                    is_disliked: prevDisliked,
+                    dislikes_count: prevDislikesCount,
+                }));
+                displayToast(error.response?.data?.message || 'Beğenmeme işlemi başarısız.', 'error');
+            }
+            return;
+        }
+
+        if (type === 'comment') {
+            const targetComment = findCommentById(id);
+            if (targetComment?.is_liked) {
+                displayToast('Beğenmemek için önce beğeninizi geri almalısınız.', 'error');
+                return;
+            }
+
+            const snapshot = {
+                is_disliked: !!targetComment?.is_disliked,
+                dislikes_count: targetComment?.dislikes_count || 0,
+            };
+
+            updateCommentTreeById(id, (comment) => ({
+                ...comment,
+                is_disliked: !comment.is_disliked,
+                dislikes_count: comment.is_disliked
+                    ? Math.max(0, (comment.dislikes_count || 0) - 1)
+                    : (comment.dislikes_count || 0) + 1,
+            }));
+
+            try {
+                const response = await questionsAPI.toggleDislike({ type: 'comment', id });
+                const data = response.data?.data;
+                if (data) {
+                    updateCommentTreeById(id, (comment) => ({
+                        ...comment,
+                        likes_count: data.likes_count ?? comment.likes_count,
+                        dislikes_count: data.dislikes_count ?? comment.dislikes_count,
+                        is_liked: data.is_liked ?? comment.is_liked,
+                        is_disliked: data.is_disliked ?? comment.is_disliked,
+                    }));
+                }
+            } catch (error) {
+                updateCommentTreeById(id, (comment) => ({
+                    ...comment,
+                    is_disliked: snapshot.is_disliked,
+                    dislikes_count: snapshot.dislikes_count,
+                }));
+                displayToast(error.response?.data?.message || 'Beğenmeme işlemi başarısız.', 'error');
+            }
+            return;
+        }
+
+        if (type === 'answer') {
+            const targetAnswer = answers.find((a) => a.id === id);
+            if (targetAnswer?.is_liked) {
+                displayToast('Beğenmemek için önce beğeninizi geri almalısınız.', 'error');
+                return;
+            }
+
+            const snapshot = {
+                is_disliked: !!targetAnswer?.is_disliked,
+                dislikes_count: targetAnswer?.dislikes_count || 0,
+            };
+
+            setAnswers((prev) => prev.map((a) => {
+                if (a.id !== id) return a;
+                return {
+                    ...a,
+                    is_disliked: !a.is_disliked,
+                    dislikes_count: a.is_disliked
+                        ? Math.max(0, (a.dislikes_count || 0) - 1)
+                        : (a.dislikes_count || 0) + 1,
+                };
+            }));
+
+            try {
+                const response = await questionsAPI.toggleDislike({ type: 'answer', id });
+                const data = response.data?.data;
+                if (data) {
+                    setAnswers((prev) => prev.map((a) => (a.id === id ? {
+                        ...a,
+                        likes_count: data.likes_count ?? a.likes_count,
+                        dislikes_count: data.dislikes_count ?? a.dislikes_count,
+                        is_liked: data.is_liked ?? a.is_liked,
+                        is_disliked: data.is_disliked ?? a.is_disliked,
+                    } : a)));
+                }
+            } catch (error) {
+                setAnswers((prev) => prev.map((a) => (a.id === id ? {
+                    ...a,
+                    is_disliked: snapshot.is_disliked,
+                    dislikes_count: snapshot.dislikes_count,
+                } : a)));
+                displayToast(error.response?.data?.message || 'Beğenmeme işlemi başarısız.', 'error');
+            }
         }
     };
 
@@ -927,6 +1140,15 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     >
                                         {comment.likes_count || 0}
                                     </button>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={(e) => handleDislike(e, 'comment', comment.id)}
+                                        className={`text-xs flex items-center gap-1 transition-colors ${comment.is_disliked ? 'text-slate-600 dark:text-slate-300' : 'text-gray-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                    >
+                                        <FaThumbsDown />
+                                    </button>
+                                    <span className="text-xs text-gray-500">{comment.dislikes_count || 0}</span>
                                 </div>
                                 <button
                                     onClick={() => {
@@ -1373,6 +1595,15 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                     {question.likes_count || 0}
                                 </button>
                             </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={(e) => handleDislike(e, 'question', question.id)}
+                                    className={`flex items-center gap-1 transition-colors ${question.is_disliked ? 'text-slate-600 dark:text-slate-300' : 'text-gray-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                >
+                                    <FaThumbsDown className="text-lg" />
+                                </button>
+                                <span className="font-semibold text-gray-500">{question.dislikes_count || 0}</span>
+                            </div>
                             {false && <button onClick={() => setCommentingOn(isCommentingOnQuestion ? null : { type: 'question', id: question.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                 <FaComment className="text-lg" /><span className="font-semibold">{question.answers_count || question.comments?.length || 0}</span>
                             </button>}
@@ -1674,6 +1905,15 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 {answer.likes_count || 0}
                                                             </button>
                                                         </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={(e) => handleDislike(e, 'answer', answer.id)}
+                                                                className={`flex items-center gap-1 transition-colors ${answer.is_disliked ? 'text-slate-600 dark:text-slate-300' : 'text-gray-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                                            >
+                                                                <FaThumbsDown />
+                                                            </button>
+                                                            <span className="font-semibold text-gray-500">{answer.dislikes_count || 0}</span>
+                                                        </div>
                                                         <button
                                                             onClick={() => {
                                                                 const key = `answer_${answer.id}`;
@@ -1928,6 +2168,15 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                                 {answer.likes_count || 0}
                                                             </button>
                                                         </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={(e) => handleDislike(e, 'answer', answer.id)}
+                                                                className={`flex items-center gap-1 transition-colors ${answer.is_disliked ? 'text-slate-600 dark:text-slate-300' : 'text-gray-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                                            >
+                                                                <FaThumbsDown />
+                                                            </button>
+                                                            <span className="font-semibold text-gray-500">{answer.dislikes_count || 0}</span>
+                                                        </div>
                                                         <button
                                                             onClick={() => {
                                                                 const key = `answer_${answer.id}`;
@@ -2127,6 +2376,10 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             <div className="flex items-center gap-2">
                                                                 <button onClick={(e) => handleLike(e, 'answer', answer.id)} className={`flex items-center gap-1 transition-colors ${answer.is_liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}><FaHeart /></button>
                                                                 <button onClick={() => openLikersModal('answer', answer.id)} className="font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline cursor-pointer">{answer.likes_count || 0}</button>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <button onClick={(e) => handleDislike(e, 'answer', answer.id)} className={`flex items-center gap-1 transition-colors ${answer.is_disliked ? 'text-slate-600 dark:text-slate-300' : 'text-gray-500 hover:text-slate-600 dark:hover:text-slate-300'}`}><FaThumbsDown /></button>
+                                                                <span className="font-semibold text-gray-500">{answer.dislikes_count || 0}</span>
                                                             </div>
                                                             <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                                                 <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
@@ -2339,6 +2592,15 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                         >
                                                             {answer.likes_count || 0}
                                                         </button>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={(e) => handleDislike(e, 'answer', answer.id)}
+                                                            className={`flex items-center gap-1 transition-colors ${answer.is_disliked ? 'text-slate-600 dark:text-slate-300' : 'text-gray-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                                        >
+                                                            <FaThumbsDown />
+                                                        </button>
+                                                        <span className="font-semibold text-gray-500">{answer.dislikes_count || 0}</span>
                                                     </div>
                                                     <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                                         <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>
@@ -2606,6 +2868,15 @@ const SingleQuestionView = ({ initialQuestion, slug }) => {
                                                             >
                                                                 {answer.likes_count || 0}
                                                             </button>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={(e) => handleDislike(e, 'answer', answer.id)}
+                                                                className={`flex items-center gap-1 transition-colors ${answer.is_disliked ? 'text-slate-600 dark:text-slate-300' : 'text-gray-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                                            >
+                                                                <FaThumbsDown />
+                                                            </button>
+                                                            <span className="font-semibold text-gray-500">{answer.dislikes_count || 0}</span>
                                                         </div>
                                                         <button onClick={() => setCommentingOn(commentingOn?.id === answer.id ? null : { type: 'answer', id: answer.id })} className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
                                                             <FaComment /><span>{answer.comments_count || answer.comments?.length || 0} Yorum</span>

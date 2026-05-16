@@ -5,7 +5,7 @@ import UserAvatar from '../components/UserAvatar';
 import AiBadge from '../components/common/AiBadge';
 import { opinionsAPI, questionsAPI, commentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { FaHeart, FaComment, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icons/fa';
+import { FaHeart, FaThumbsDown, FaComment, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import DOMPurify from 'dompurify';
@@ -49,7 +49,9 @@ const OpinionDetailPage = () => {
     const [commentText, setCommentText] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
+    const [isDisliked, setIsDisliked] = useState(false);
     const [likesCount, setLikesCount] = useState(0);
+    const [dislikesCount, setDislikesCount] = useState(0);
     const [deleteCommentModal, setDeleteCommentModal] = useState({ isOpen: false, commentId: null });
     const [hideCommentModal, setHideCommentModal] = useState({ isOpen: false, commentId: null });
 
@@ -63,7 +65,9 @@ const OpinionDetailPage = () => {
                 setOpinion(op);
                 if (op) {
                     setIsLiked(!!op.is_liked);
+                    setIsDisliked(!!op.is_disliked);
                     setLikesCount(op.likes_count ?? 0);
+                    setDislikesCount(op.dislikes_count ?? 0);
                 }
             } catch (err) {
                 if (err.response?.status === 404) setOpinion(null);
@@ -96,6 +100,10 @@ const OpinionDetailPage = () => {
             notificationToast.warning('Beğenmek için giriş yapın.');
             return;
         }
+        if (isDisliked) {
+            notificationToast.warning('Beğenmek için önce beğenmemenizi geri almalısınız.');
+            return;
+        }
         const prevLiked = isLiked;
         const prevCount = likesCount;
         setIsLiked(!prevLiked);
@@ -105,11 +113,42 @@ const OpinionDetailPage = () => {
             if (res.data?.data) {
                 setIsLiked(!!res.data.data.is_liked);
                 setLikesCount(res.data.data.likes_count ?? likesCount);
+                if (res.data.data.is_disliked != null) setIsDisliked(!!res.data.data.is_disliked);
+                if (res.data.data.dislikes_count != null) setDislikesCount(res.data.data.dislikes_count);
             }
         } catch (err) {
             setIsLiked(prevLiked);
             setLikesCount(prevCount);
-            notificationToast.error('İşlem başarısız.');
+            notificationToast.error(err.response?.data?.message || 'İşlem başarısız.');
+        }
+    };
+
+    const handleDislike = async (e) => {
+        e.preventDefault();
+        if (!user) {
+            notificationToast.warning('Beğenmemek için giriş yapın.');
+            return;
+        }
+        if (isLiked) {
+            notificationToast.warning('Beğenmemek için önce beğeninizi geri almalısınız.');
+            return;
+        }
+        const prevDisliked = isDisliked;
+        const prevCount = dislikesCount;
+        setIsDisliked(!prevDisliked);
+        setDislikesCount(prevDisliked ? prevCount - 1 : prevCount + 1);
+        try {
+            const res = await questionsAPI.toggleDislike({ type: 'opinion', id: opinion.id });
+            if (res.data?.data) {
+                setIsDisliked(!!res.data.data.is_disliked);
+                setDislikesCount(res.data.data.dislikes_count ?? dislikesCount);
+                if (res.data.data.is_liked != null) setIsLiked(!!res.data.data.is_liked);
+                if (res.data.data.likes_count != null) setLikesCount(res.data.data.likes_count);
+            }
+        } catch (err) {
+            setIsDisliked(prevDisliked);
+            setDislikesCount(prevCount);
+            notificationToast.error(err.response?.data?.message || 'İşlem başarısız.');
         }
     };
 
@@ -278,6 +317,13 @@ const OpinionDetailPage = () => {
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${isLiked ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                                 >
                                     <FaHeart /> <span>{likesCount}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleDislike}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${isDisliked ? 'text-slate-600 bg-slate-100 dark:bg-slate-700/40 dark:text-slate-200' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                >
+                                    <FaThumbsDown /> <span>{dislikesCount}</span>
                                 </button>
                                 <span className="flex items-center gap-2 text-gray-500">
                                     <FaComment /> {opinion.comments_count ?? 0} yorum
