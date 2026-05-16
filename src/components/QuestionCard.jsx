@@ -26,13 +26,17 @@ import Toast from './Toast';
 
 const QuestionCard = ({ question, onModerationAction }) => {
     const { user: currentUser, canModerate } = useAuth();
+    const isQuestionOwner = Boolean(
+        question.isOwner ||
+        (currentUser?.id != null && question.user?.id != null && String(question.user.id) === String(currentUser.id))
+    );
     const [showReplyBox, setShowReplyBox] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(currentUser?.last_action_is_anonymous || false);
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [showReportModal, setShowReportModal] = useState(false);
-    const [hasAnswered, setHasAnswered] = useState(question.user_has_answered || (currentUser && question.isOwner) || false);
+    const [hasAnswered, setHasAnswered] = useState(question.user_has_answered || isQuestionOwner || false);
 
     const [isLiked, setIsLiked] = useState(question.is_liked || false);
     const [isDisliked, setIsDisliked] = useState(question.is_disliked || false);
@@ -53,8 +57,8 @@ const QuestionCard = ({ question, onModerationAction }) => {
     }, [currentUser?.last_action_is_anonymous]);
 
     useEffect(() => {
-        setHasAnswered(question.user_has_answered || (currentUser && question.isOwner) || false);
-    }, [question.user_has_answered, question.isOwner, currentUser]);
+        setHasAnswered(question.user_has_answered || isQuestionOwner || false);
+    }, [question.user_has_answered, isQuestionOwner]);
 
     const handleLike = async (e) => {
         e.preventDefault();
@@ -374,7 +378,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
                 </div>
 
                 {/* Reply Button - Only if not owner */}
-                {!question.isOwner && canAnswerByRestriction && (
+                {!isQuestionOwner && canAnswerByRestriction && (
                     <button
                         onClick={() => setShowReplyBox(!showReplyBox)}
                         className="w-full py-2.5 md:py-3 px-4 rounded-xl text-white font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2 text-sm md:text-base"
@@ -384,7 +388,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
                         {showReplyBox ? 'Vazgeç' : 'Cevapla'}
                     </button>
                 )}
-                {!question.isOwner && !canAnswerByRestriction && answerRestrictionLabel && (
+                {!isQuestionOwner && !canAnswerByRestriction && answerRestrictionLabel && (
                     <div className="w-full py-2.5 px-4 rounded-xl bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-300 text-sm font-medium text-center">
                         {answerRestrictionLabel}
                     </div>
@@ -410,7 +414,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
             />
 
             {/* Quick Reply Box */}
-            {showReplyBox && canAnswerByRestriction && (
+            {showReplyBox && !isQuestionOwner && canAnswerByRestriction && (
                 <form onSubmit={handleSubmitReply} className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700">
                     {hasAnswered ? (
                         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600">

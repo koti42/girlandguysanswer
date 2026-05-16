@@ -89,6 +89,7 @@ const ProfilePage = () => {
                     questionsCount = qResponse.data?.data?.count ?? qResponse.data?.data?.questions?.length ?? null;
                     questionsData = qResponse.data.data.questions.map(q => ({
                         ...q,
+                        isOwner: true,
                         user: q.user || {
                             id: data.id,
                             username: data.username,
