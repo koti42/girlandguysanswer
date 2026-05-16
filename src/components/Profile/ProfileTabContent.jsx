@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaUserSecret, FaInbox, FaTrophy, FaComment, FaHeart, FaMedal, FaMars, FaVenus } from 'react-icons/fa';
+import { FaUserSecret, FaInbox, FaTrophy, FaComment, FaHeart, FaThumbsDown, FaMedal, FaMars, FaVenus } from 'react-icons/fa';
 import ProfileStats from '../ProfileStats';
 import QuestionCard from '../QuestionCard';
 import AnswerCard from '../AnswerCard';
@@ -173,6 +173,7 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, opi
         const totalAnswers = answers.length;
         const acceptedAnswers = answers.filter(a => a.is_accepted).length;
         const totalLikes = answers.reduce((sum, a) => sum + (a.likes_count || 0), 0);
+        const totalDislikes = answers.reduce((sum, a) => sum + (a.dislikes_count || 0), 0);
 
         const statCardStyle = { backgroundColor: themeStyles.bgColor, borderColor: `${themeStyles.accentColor}40` };
         const statIconStyle = { backgroundColor: themeStyles.bgColorStrong, color: themeStyles.accentColor };
@@ -185,7 +186,7 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, opi
                     <div className="relative overflow-hidden rounded-2xl shadow-soft">
                         <div className="absolute inset-0 opacity-[0.07]" style={{ background: `linear-gradient(to right, ${themeStyles.accentColor}, ${themeStyles.accentColor}aa)` }}></div>
                         <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-5 border border-gray-100 dark:border-gray-700 rounded-2xl">
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div className="flex items-center gap-3 p-3 rounded-xl border" style={statCardStyle}>
                                     <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={statIconStyle}>
                                         <FaComment className="text-sm" />
@@ -211,6 +212,15 @@ const ProfileTabContent = ({ activeTab, profileData, userQuestions, answers, opi
                                     <div>
                                         <p className="text-xl font-bold text-gray-900 dark:text-white">{totalLikes}</p>
                                         <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Toplam Beğeni</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 p-3 rounded-xl border" style={statCardStyle}>
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-300">
+                                        <FaThumbsDown className="text-sm" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xl font-bold text-gray-900 dark:text-white">{totalDislikes}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Toplam Beğenmeme</p>
                                     </div>
                                 </div>
                             </div>

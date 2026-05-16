@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaMedal, FaMars, FaVenus, FaUserSecret, FaComment, FaArrowRight, FaQuoteLeft } from 'react-icons/fa';
+import { FaHeart, FaThumbsDown, FaMedal, FaMars, FaVenus, FaUserSecret, FaComment, FaArrowRight, FaQuoteLeft } from 'react-icons/fa';
 import { questionsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Toast from './Toast';
@@ -24,6 +24,8 @@ const AnswerCard = ({ answer, profileGender, profileUser }) => {
     const { user: currentUser } = useAuth();
     const [isLiked, setIsLiked] = useState(answer.is_liked || false);
     const [likesCount, setLikesCount] = useState(answer.likes_count || 0);
+    const [isDisliked, setIsDisliked] = useState(answer.is_disliked || false);
+    const [dislikesCount, setDislikesCount] = useState(answer.dislikes_count || 0);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [loading, setLoading] = useState(false);
 
@@ -34,7 +36,9 @@ const AnswerCard = ({ answer, profileGender, profileUser }) => {
     useEffect(() => {
         setIsLiked(answer.is_liked || false);
         setLikesCount(answer.likes_count || 0);
-    }, [answer.is_liked, answer.likes_count]);
+        setIsDisliked(answer.is_disliked || false);
+        setDislikesCount(answer.dislikes_count || 0);
+    }, [answer.is_liked, answer.likes_count, answer.is_disliked, answer.dislikes_count]);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -46,6 +50,10 @@ const AnswerCard = ({ answer, profileGender, profileUser }) => {
 
         if (!currentUser) {
             showToast('Beğenmek için giriş yapmalısınız.', 'error');
+            return;
+        }
+        if (isDisliked) {
+            showToast('Beğenmek için önce beğenmemenizi geri almalısınız.', 'error');
             return;
         }
 
@@ -67,6 +75,8 @@ const AnswerCard = ({ answer, profileGender, profileUser }) => {
             if (response.data?.data) {
                 setLikesCount(response.data.data.likes_count);
                 setIsLiked(response.data.data.is_liked);
+                if (response.data.data.dislikes_count != null) setDislikesCount(response.data.data.dislikes_count);
+                if (response.data.data.is_disliked != null) setIsDisliked(response.data.data.is_disliked);
             }
         } catch (error) {
             setIsLiked(oldIsLiked);
@@ -77,6 +87,49 @@ const AnswerCard = ({ answer, profileGender, profileUser }) => {
             } else {
                 showToast('Bir hata oluştu.', 'error');
             }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDislike = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!currentUser) {
+            showToast('Beğenmemek için giriş yapmalısınız.', 'error');
+            return;
+        }
+        if (isLiked) {
+            showToast('Beğenmemek için önce beğeninizi geri almalısınız.', 'error');
+            return;
+        }
+
+        if (loading) return;
+        setLoading(true);
+
+        const oldIsDisliked = isDisliked;
+        const oldDislikesCount = dislikesCount;
+
+        setIsDisliked(!oldIsDisliked);
+        setDislikesCount(prev => oldIsDisliked ? prev - 1 : prev + 1);
+
+        try {
+            const response = await questionsAPI.toggleDislike({
+                type: 'answer',
+                id: answer.id
+            });
+
+            if (response.data?.data) {
+                setDislikesCount(response.data.data.dislikes_count);
+                setIsDisliked(response.data.data.is_disliked);
+                if (response.data.data.likes_count != null) setLikesCount(response.data.data.likes_count);
+                if (response.data.data.is_liked != null) setIsLiked(response.data.data.is_liked);
+            }
+        } catch (error) {
+            setIsDisliked(oldIsDisliked);
+            setDislikesCount(oldDislikesCount);
+            showToast(error.response?.data?.message || 'Bir hata oluştu.', 'error');
         } finally {
             setLoading(false);
         }
@@ -172,6 +225,15 @@ const AnswerCard = ({ answer, profileGender, profileUser }) => {
                         >
                             <FaHeart className={`text-xs ${isLiked ? 'animate-pulse' : ''}`} />
                             <span>{likesCount}</span>
+                        </button>
+
+                        <button
+                            onClick={handleDislike}
+                            disabled={loading}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${!isDisliked ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600' : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 shadow-sm'}`}
+                        >
+                            <FaThumbsDown className="text-xs" />
+                            <span>{dislikesCount}</span>
                         </button>
 
                         {/* Comments count */}
