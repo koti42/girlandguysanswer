@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import { gamificationAPI } from '../services/api';
-import { FaTrophy, FaMedal, FaCrown, FaUser } from 'react-icons/fa';
+import { FaTrophy, FaMedal, FaCrown } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import ProfileAvatar from '../components/ProfileAvatar';
+import UserAvatar from '../components/UserAvatar';
 
 const LeaderboardPage = () => {
     const [activeTab, setActiveTab] = useState('general');
@@ -120,9 +120,9 @@ const LeaderboardPage = () => {
                                 {/* User Info */}
                                 <div className="flex items-center gap-4 flex-1">
                                     <div className="relative">
-                                        <ProfileAvatar
+                                        <UserAvatar
                                             user={item.user}
-                                            size="md"
+                                            size="lg"
                                             className={`w-12 h-12 md:w-14 md:h-14 border-2 ${(item.rank || index + 1) === 1 ? 'border-yellow-400' :
                                                 (item.rank || index + 1) === 2 ? 'border-gray-300' :
                                                     (item.rank || index + 1) === 3 ? 'border-orange-400' : 'border-transparent'

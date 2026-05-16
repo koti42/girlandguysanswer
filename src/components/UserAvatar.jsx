@@ -64,17 +64,18 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
         );
     }
 
-    const hasAvatar = user?.avatar &&
-        user.avatar !== 'null' &&
-        user.avatar !== 'undefined' &&
-        !user.avatar.includes('default');
+    const avatarUrl = user?.avatar || user?.profile_photo_url;
+    const hasAvatar = avatarUrl &&
+        avatarUrl !== 'null' &&
+        avatarUrl !== 'undefined' &&
+        !String(avatarUrl).includes('default');
     const displayName = user?.name || user?.username || '?';
 
     if (hasAvatar) {
         return (
             <div className={`${currentSizeClass} rounded-full overflow-hidden border border-gray-100 dark:border-gray-700 flex-shrink-0 ${className}`}>
                 <img
-                    src={normalizeAvatarUrl(user.avatar)}
+                    src={normalizeAvatarUrl(avatarUrl)}
                     alt={displayName}
                     className="w-full h-full object-cover rounded-full"
                 />
