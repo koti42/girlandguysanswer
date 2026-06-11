@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaArrowRight, FaUserSecret, FaRocket, FaUsers, FaComments, FaQuestionCircle, FaFire, FaShieldAlt, FaGem } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaArrowRight, FaUserSecret, FaUsers, FaComments, FaQuestionCircle, FaFire, FaShieldAlt, FaGem } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import SEO from '../components/SEO';
 import UserAvatar from '../components/UserAvatar';
+import LandingHero from '../components/landing/LandingHero';
+import WeeklyTopicsMindMap from '../components/landing/WeeklyTopicsMindMap';
 import { useAuth } from '../context/AuthContext';
 import { questionsAPI } from '../services/api';
 import { formatDistanceToNow } from 'date-fns';
@@ -165,57 +167,10 @@ const LandingPage = () => {
 
             <div className="min-h-screen bg-background dark:bg-gray-900">
                 {/* HERO SECTION */}
-                <section className="relative overflow-hidden bg-gradient-to-br from-coral/5 via-background to-indigo-500/5 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-                    <div className="absolute inset-0">
-                        <div className="absolute top-20 left-10 w-72 h-72 bg-pink-400/10 rounded-full blur-3xl"></div>
-                        <div className="absolute bottom-10 right-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl"></div>
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-coral/5 rounded-full blur-3xl"></div>
-                    </div>
+                <LandingHero user={user} />
 
-                    <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-16 md:py-24">
-                        <div className="text-center max-w-4xl mx-auto">
-                            <div className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-soft border border-gray-100 dark:border-gray-700 mb-6">
-                                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                                <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">Topluluk aktif</span>
-                            </div>
-
-                            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 md:mb-6">
-                                <span className="font-script text-coral">Herkesler</span>
-                                <br />
-                                <span className="text-gray-800 dark:text-white">Soruyor</span>
-                            </h1>
-
-                            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed px-4">
-                                Merak ettiğin her şeyi sor, <span className="text-pink-500 font-semibold">kadın</span> ve <span className="text-blue-500 font-semibold">erkek</span> bakış açılarından cevaplar al.
-                            </p>
-
-                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
-                                <Link
-                                    to="/questions"
-                                    className="w-full sm:w-auto bg-gradient-to-r from-coral to-orange-400 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
-                                >
-                                    <FaRocket /> Soruları Keşfet
-                                </Link>
-                                {!user && (
-                                    <Link
-                                        to="/signup"
-                                        className="w-full sm:w-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-2 border-gray-200 dark:border-gray-600 font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl hover:border-coral hover:text-coral dark:hover:border-coral dark:hover:text-coral active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
-                                    >
-                                        <FaUsers /> Hemen Katıl
-                                    </Link>
-                                )}
-                                {user && (
-                                    <Link
-                                        to="/ask"
-                                        className="w-full sm:w-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-2 border-coral font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
-                                    >
-                                        Soru Sor
-                                    </Link>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                {/* HAFTANIN GÜNDEM KONULARI */}
+                <WeeklyTopicsMindMap />
 
                 {/* POPULAR QUESTIONS - VITRIN */}
                 <section className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-16">

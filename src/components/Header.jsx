@@ -233,7 +233,7 @@ const Header = ({ onSearch }) => {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onFocus={() => searchQuery.length >= 2 && setShowDropdown(true)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleFullSearch()}
-                                className="w-full bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm relative z-10"
+                                className="w-full bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 rounded-full py-2.5 pl-5 pr-12 focus:outline-none focus:bg-white focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm relative z-10"
                             />
                             <button
                                 onClick={handleFullSearch}
@@ -372,7 +372,7 @@ const Header = ({ onSearch }) => {
                         {/* User Menu or Auth Buttons */}
                         {isAuthenticated && user ? (
                             <div className="relative group">
-                                <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                <button className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all">
                                     <UserAvatar user={user} size="sm" className="w-8 h-8 text-xs" />
                                     <span className="hidden md:inline text-sm font-semibold text-gray-700 dark:text-gray-300 max-w-[100px] truncate">{user.username}</span>
                                 </button>
