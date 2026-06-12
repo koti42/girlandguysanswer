@@ -29,8 +29,24 @@ const Header = ({ onSearch }) => {
     const [selectedModalCategory, setSelectedModalCategory] = useState(null);
     const [modalActiveTab, setModalActiveTab] = useState('tum-sorular'); // tum-sorular, populer, cevapsiz
     const [activeSpecialDays, setActiveSpecialDays] = useState([]);
+    const [scrolled, setScrolled] = useState(false);
     const { isDark, toggleTheme } = useTheme();
     const { user, isAuthenticated, logout } = useAuth();
+
+    // Anasayfada tepedeyken header şeffaf, scroll edilince buzlu cam olur
+    const isHome = location.pathname === '/';
+    const transparent = isHome && !scrolled;
+
+    useEffect(() => {
+        if (!isHome) {
+            setScrolled(false);
+            return;
+        }
+        const onScroll = () => setScrolled(window.scrollY > 24);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, [isHome]);
 
     // Özel Gün Rozetleri - API'den çek
     useEffect(() => {
@@ -175,7 +191,18 @@ const Header = ({ onSearch }) => {
 
     return (
         <>
-            <header className="sticky top-0 z-50 bg-background/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm py-2 px-2 sm:px-4 md:px-8">
+            <header
+                className={`sticky top-0 z-50 py-2 px-2 sm:px-4 md:px-8 transition-all duration-300 ${
+                    transparent
+                        ? 'border-b border-transparent shadow-none'
+                        : 'bg-background/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm'
+                }`}
+                style={
+                    transparent
+                        ? { background: 'linear-gradient(110deg, #FFE8DC 0%, #FDF6F0 35%, #F2F9FD 65%, #E8F4FC 100%)' }
+                        : undefined
+                }
+            >
                 <div className="max-w-7xl mx-auto flex items-center justify-between gap-1 sm:gap-2 md:gap-4">
                     {/* Mobile Menu Button */}
                     <button
@@ -233,7 +260,11 @@ const Header = ({ onSearch }) => {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onFocus={() => searchQuery.length >= 2 && setShowDropdown(true)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleFullSearch()}
-                                className="w-full bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 rounded-full py-2.5 pl-5 pr-12 focus:outline-none focus:bg-white focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm relative z-10"
+                                className={`w-full dark:text-white rounded-full py-2.5 pl-5 pr-12 focus:outline-none focus:bg-white focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm relative z-10 ${
+                                    transparent
+                                        ? 'bg-white/60 dark:bg-gray-800/50 backdrop-blur-md border border-white/60 dark:border-gray-600 shadow-sm placeholder-gray-500'
+                                        : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600'
+                                }`}
                             />
                             <button
                                 onClick={handleFullSearch}
