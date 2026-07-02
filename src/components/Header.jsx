@@ -215,7 +215,10 @@ const Header = ({ onSearch }) => {
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity min-w-0">
                         <div className="relative">
+                        <picture>
+                            <source srcSet="/logo.webp" type="image/webp" />
                             <img src="/logo.png" alt="Herkesler Soruyor Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                        </picture>
                         </div>
                         <span className="font-script text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl text-coral font-bold leading-none select-none truncate">
                             <span className="hidden sm:inline">Herkesler Soruyor</span>
