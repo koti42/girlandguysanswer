@@ -166,6 +166,7 @@ export const pollsAPI = {
 export const usersAPI = {
     getMe: () => api.get('/user/me'),
     getProfile: (username) => api.get(`/users/${username}`),
+    search: (query, limit = 8) => api.get('/users/search', { params: { search: query, limit } }),
     updateProfile: (data) => api.put('/user/me', data),
     changeUsername: (username) => api.patch('/user/me/username', { username }),
     requestEmailChangeCode: (email) => api.post('/user/me/email/change/request-code', { email }),

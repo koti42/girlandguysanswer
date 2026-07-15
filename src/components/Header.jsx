@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
 import QuickAskModal from './QuickAskModal';
-import { categoriesAPI, messagesAPI, questionsAPI, specialDaysAPI } from '../services/api';
+import { categoriesAPI, messagesAPI, questionsAPI, specialDaysAPI, usersAPI } from '../services/api';
 
 const Header = ({ onSearch }) => {
     const navigate = useNavigate();
@@ -14,6 +14,7 @@ const Header = ({ onSearch }) => {
     const [searchParams] = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
     const [searchResults, setSearchResults] = useState([]);
+    const [userResults, setUserResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const searchRef = useRef(null);
@@ -145,19 +146,35 @@ const Header = ({ onSearch }) => {
                 setIsSearching(true);
                 setShowDropdown(true);
                 try {
-                    const response = await questionsAPI.getAll({
-                        search: searchQuery,
-                        limit: 5 // Get top 5 results
-                    });
-                    setSearchResults(response.data.data.questions || []);
+                    const [questionsRes, usersRes] = await Promise.allSettled([
+                        questionsAPI.getAll({
+                            search: searchQuery,
+                            limit: 5 // Get top 5 results
+                        }),
+                        usersAPI.search(searchQuery, 5)
+                    ]);
+
+                    if (questionsRes.status === 'fulfilled') {
+                        setSearchResults(questionsRes.value.data.data.questions || []);
+                    } else {
+                        setSearchResults([]);
+                    }
+
+                    if (usersRes.status === 'fulfilled') {
+                        setUserResults(usersRes.value.data.data.users || []);
+                    } else {
+                        setUserResults([]);
+                    }
                 } catch (error) {
                     console.error('Search error:', error);
                     setSearchResults([]);
+                    setUserResults([]);
                 } finally {
                     setIsSearching(false);
                 }
             } else {
                 setSearchResults([]);
+                setUserResults([]);
                 setShowDropdown(false);
             }
         }, 500);
@@ -167,6 +184,7 @@ const Header = ({ onSearch }) => {
 
     const handleFullSearch = () => {
         setShowDropdown(false);
+        setIsMobileSearchOpen(false);
         if (onSearch) {
             onSearch(searchQuery);
         } else {
@@ -177,8 +195,17 @@ const Header = ({ onSearch }) => {
     // Navigate to single result
     const handleResultClick = (slug) => {
         setShowDropdown(false);
+        setIsMobileSearchOpen(false);
         setSearchQuery(''); // Optional: clear search after selection
         navigate(`/question/${slug}`);
+    };
+
+    // Navigate to a user profile
+    const handleUserClick = (username) => {
+        setShowDropdown(false);
+        setIsMobileSearchOpen(false);
+        setSearchQuery('');
+        navigate(`/profile/${username}`);
     };
 
     const handleSearchChange = (e) => {
@@ -187,6 +214,101 @@ const Header = ({ onSearch }) => {
 
     const closeMobileMenu = () => {
         setIsMobileMenuOpen(false);
+    };
+
+    // Shared instant-search dropdown content (used by desktop + mobile)
+    const renderSearchDropdownContent = () => {
+        if (isSearching) {
+            return (
+                <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-coral border-t-transparent mx-auto mb-2"></div>
+                    Aranıyor...
+                </div>
+            );
+        }
+
+        const hasResults = userResults.length > 0 || searchResults.length > 0;
+
+        if (!hasResults) {
+            return (
+                <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+                    <p className="text-sm">"{searchQuery}" ile ilgili sonuç bulunamadı.</p>
+                </div>
+            );
+        }
+
+        return (
+            <>
+                {userResults.length > 0 && (
+                    <div className="py-2 border-b border-gray-100 dark:border-gray-700">
+                        <p className="px-4 pb-1 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">Kullanıcılar</p>
+                        {userResults.map((u) => (
+                            <div
+                                key={`user-${u.id}`}
+                                onClick={() => handleUserClick(u.username)}
+                                className="group px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer flex items-center gap-3 transition-all"
+                            >
+                                <UserAvatar user={u} size="md" className="w-9 h-9 border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-coral/50 transition-colors" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate group-hover:text-coral transition-colors">
+                                        @{u.username}
+                                    </p>
+                                    {u.bio && (
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{u.bio}</p>
+                                    )}
+                                </div>
+                                <FaUser className="text-xs text-gray-300 group-hover:text-coral transition-colors" />
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {searchResults.length > 0 && (
+                    <div className="py-2">
+                        {searchResults.map((result) => (
+                            <div
+                                key={result.id}
+                                onClick={() => handleResultClick(result.slug)}
+                                className="group px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer flex items-center gap-4 transition-all border-b border-gray-50 dark:border-gray-700/50 last:border-0"
+                            >
+                                <div className="shrink-0">
+                                    {result.user ? (
+                                        <UserAvatar user={result.user} size="md" className="w-10 h-10 border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-coral/50 transition-colors" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400">
+                                            <FaSearch />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate group-hover:text-coral transition-colors">
+                                        {result.title}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                            {typeof result.category === 'object' ? result.category?.name : result.category}
+                                        </span>
+                                        <span className="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1">
+                                            <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                            @{result.user?.username || 'anonim'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="text-gray-300 group-hover:text-coral transition-colors">
+                                    <FaChevronRight className="text-xs" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div onClick={handleFullSearch} className="bg-gray-50 dark:bg-gray-700/30 p-3 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-100 dark:border-gray-700">
+                    <span className="text-sm font-bold text-coral flex items-center justify-center gap-2">
+                        Tüm "{searchQuery}" sonuçlarını gör
+                    </span>
+                </div>
+            </>
+        );
     };
 
     return (
@@ -279,61 +401,8 @@ const Header = ({ onSearch }) => {
 
                         {/* Instant Search Dropdown */}
                         {showDropdown && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-0 animate-in fade-in slide-in-from-top-2 duration-200">
-                                {isSearching ? (
-                                    <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-                                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-coral border-t-transparent mx-auto mb-2"></div>
-                                        Aranıyor...
-                                    </div>
-                                ) : searchResults.length > 0 ? (
-                                    <>
-                                        <div className="py-2">
-                                            {searchResults.map((result) => (
-                                                <div
-                                                    key={result.id}
-                                                    onClick={() => handleResultClick(result.slug)}
-                                                    className="group px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer flex items-center gap-4 transition-all border-b border-gray-50 dark:border-gray-700/50 last:border-0"
-                                                >
-                                                    <div className="shrink-0">
-                                                        {result.user ? (
-                                                            <UserAvatar user={result.user} size="md" className="w-10 h-10 border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-coral/50 transition-colors" />
-                                                        ) : (
-                                                            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400">
-                                                                <FaSearch />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate group-hover:text-coral transition-colors">
-                                                            {result.title}
-                                                        </p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                                                                {typeof result.category === 'object' ? result.category?.name : result.category}
-                                                            </span>
-                                                            <span className="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1">
-                                                                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-                                                                @{result.user?.username || 'anonim'}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-gray-300 group-hover:text-coral transition-colors">
-                                                        <FaChevronRight className="text-xs" />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div onClick={handleFullSearch} className="bg-gray-50 dark:bg-gray-700/30 p-3 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-100 dark:border-gray-700">
-                                            <span className="text-sm font-bold text-coral flex items-center justify-center gap-2">
-                                                Tüm {searchQuery} sonuçlarını gör
-                                            </span>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-                                        <p className="text-sm">"{searchQuery}" ile ilgili sonuç bulunamadı.</p>
-                                    </div>
-                                )}
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-0 animate-in fade-in slide-in-from-top-2 duration-200 max-h-[70vh] overflow-y-auto">
+                                {renderSearchDropdownContent()}
                             </div>
                         )}
                     </div>
@@ -543,15 +612,26 @@ const Header = ({ onSearch }) => {
                     <div className="md:hidden mt-3 relative">
                         <input
                             type="text"
-                            placeholder="Ara..."
+                            placeholder="Soru veya kullanıcı ara..."
                             value={searchQuery}
                             onChange={handleSearchChange}
+                            onKeyDown={(e) => e.key === 'Enter' && handleFullSearch()}
                             className="w-full bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 rounded-2xl py-2.5 pl-4 pr-12 focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all font-sans text-sm"
                             autoFocus
                         />
-                        <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-coral transition-colors">
+                        <button
+                            onClick={handleFullSearch}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-coral transition-colors"
+                        >
                             <FaSearch />
                         </button>
+
+                        {/* Mobile Instant Search Results */}
+                        {searchQuery.trim().length >= 2 && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50 max-h-[65vh] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                                {renderSearchDropdownContent()}
+                            </div>
+                        )}
                     </div>
                 )}
             </header>
