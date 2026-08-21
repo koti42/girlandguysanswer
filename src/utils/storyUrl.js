@@ -38,3 +38,21 @@ export const extractOpinionId = (slugOrId) => {
     return match ? match[0] : slugOrId;
 };
 
+export const buildStoryPath = (story) => {
+    const id = story?.id;
+    const title = story?.title;
+    const slug = story?.slug;
+    if (!id) return '/stories';
+    if (slug && typeof slug === 'string' && slug.trim().length > 0) {
+        return `/story/${slug.trim()}`;
+    }
+    const s = slugify(title);
+    return `/story/${s}-${id}`;
+};
+
+export const extractStoryId = (slugOrId) => {
+    if (!slugOrId) return slugOrId;
+    const match = String(slugOrId).match(UUID_REGEX);
+    return match ? match[0] : slugOrId;
+};
+
