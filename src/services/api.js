@@ -244,6 +244,27 @@ export const opinionsAPI = {
     }),
 };
 
+export const storiesAPI = {
+    getAll: (params = {}) => api.get('/stories', {
+        params: {
+            page: params.page ?? 1,
+            per_page: params.per_page ?? 15,
+            search: params.search,
+            user: params.user,
+        },
+    }),
+    getById: (id) => api.get(`/stories/${id}`),
+    create: (data) => api.post('/stories', data),
+    update: (id, data) => api.put(`/stories/${id}`, data),
+    delete: (id) => api.delete(`/stories/${id}`),
+    hide: (id) => api.post(`/stories/${id}/hide`),
+    unhide: (id) => api.delete(`/stories/${id}/hide`),
+    getComments: (storyId, params) => api.get(`/stories/${storyId}/comments`, { params }),
+    editorUpload: (formData) => api.post('/stories/editor/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+};
+
 export const gamificationAPI = {
     getLeaderboard: (params) => api.get('/leaderboard', { params }),
 };

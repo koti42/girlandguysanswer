@@ -36,6 +36,9 @@ import CategoryPage from './pages/CategoryPage';
 import OpinionsPage from './pages/OpinionsPage';
 import OpinionDetailPage from './pages/OpinionDetailPage';
 import CreateOpinionPage from './pages/CreateOpinionPage';
+import StoriesPage from './pages/StoriesPage';
+import StoryDetailPage from './pages/StoryDetailPage';
+import CreateStoryPage from './pages/CreateStoryPage';
 import KullanimKilavuzuPage from './pages/KullanimKilavuzuPage';
 import GizlilikPolitikasiPage from './pages/GizlilikPolitikasiPage';
 import CerezPolitikasiPage from './pages/CerezPolitikasiPage';
@@ -227,6 +230,9 @@ function App() {
                   <Route path="/opinions" element={<OpinionsPage />} />
                   <Route path="/opinions/yaz" element={<ProtectedRoute><CreateOpinionPage /></ProtectedRoute>} />
                   <Route path="/opinion/:slugOrId" element={<OpinionDetailPage />} />
+                  <Route path="/stories" element={<StoriesPage />} />
+                  <Route path="/stories/yaz" element={<ProtectedRoute><CreateStoryPage /></ProtectedRoute>} />
+                  <Route path="/story/:slugOrId" element={<StoryDetailPage />} />
                   <Route path="/communities" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
                   <Route path="/community/:uuid" element={<ProtectedRoute><RoomPage /></ProtectedRoute>} />
                   <Route path="/community-invitations" element={<ProtectedRoute><CommunityInvitationsPage /></ProtectedRoute>} />

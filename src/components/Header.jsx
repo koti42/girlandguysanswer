@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay, FaUserShield } from 'react-icons/fa';
+import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay, FaUserShield, FaBookOpen } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -725,6 +725,17 @@ const Header = ({ onSearch }) => {
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Benceler</span>
                         </button>
 
+                        <button
+                            onClick={() => {
+                                closeMobileMenu();
+                                navigate('/stories');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px] text-left"
+                        >
+                            <FaBookOpen className="text-xl text-coral flex-shrink-0" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Hikayeler</span>
+                        </button>
+
                         <Link
                             to="/communities"
                             onClick={closeMobileMenu}
@@ -1001,6 +1012,25 @@ const Header = ({ onSearch }) => {
                                             <div>
                                                 <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-pink-600 transition-colors">Benceler</h3>
                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Konular hakkında yazılar oku, görüşünü paylaş.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Hikayeler */}
+                                    <div
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/stories');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
+                                    >
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                                                <FaBookOpen />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-emerald-600 transition-colors">Hikayeler</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Uzun hikayeler oku, kendi hikayeni yaz.</p>
                                             </div>
                                         </div>
                                     </div>
