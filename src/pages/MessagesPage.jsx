@@ -7,7 +7,7 @@ import BottomNav from '../components/BottomNav';
 import MainLayout from '../layouts/MainLayout';
 import { messagesAPI, usersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
+import { subscribeToUserChannel } from '../services/pusherClient';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import OnlineIndicator from '../components/OnlineIndicator';
@@ -47,13 +47,13 @@ const MessagesPage = () => {
 
     useEffect(() => {
         fetchConversations();
-        setupPusher();
+        const unsubscribe = setupPusher();
 
         return () => {
             Object.values(typingTimeoutsRef.current).forEach(clearTimeout);
             typingTimeoutsRef.current = {};
-            if (user) {
-                unsubscribeFromChannel(user.id);
+            if (typeof unsubscribe === 'function') {
+                unsubscribe();
             }
         };
     }, [user]);
@@ -76,9 +76,9 @@ const MessagesPage = () => {
     }, [username, conversations, loading]);
 
     const setupPusher = () => {
-        if (!user) return;
+        if (!user) return () => {};
 
-        subscribeToUserChannel(user.id, {
+        return subscribeToUserChannel(user.id, {
             onNewMessage: (data) => handleNewMessageEvent(data.message || data),
             onUserTyping: (data) => {
                 if (data.user_id === user.id) return;

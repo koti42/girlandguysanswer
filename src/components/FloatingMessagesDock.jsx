@@ -6,7 +6,7 @@ import { tr } from 'date-fns/locale';
 import ChatWindow from './ChatWindow';
 import { useAuth } from '../context/AuthContext';
 import { messagesAPI } from '../services/api';
-import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
+import { subscribeToUserChannel } from '../services/pusherClient';
 import OnlineIndicator from './OnlineIndicator';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
@@ -144,12 +144,12 @@ const FloatingMessagesDock = () => {
     useEffect(() => {
         if (!dockPusherActive) return;
 
-        subscribeToUserChannel(user.id, {
+        const unsubscribe = subscribeToUserChannel(user.id, {
             onNewMessage: (data) => handleNewMessageEvent(data.message || data),
         });
 
         return () => {
-            unsubscribeFromChannel(user.id);
+            unsubscribe();
         };
     }, [user, dockPusherActive, handleNewMessageEvent]);
 

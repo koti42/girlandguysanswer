@@ -7,10 +7,39 @@ import MessageInput from './MessageInput/index.jsx';
 import ConfirmationModal from './ConfirmationModal';
 import { messagesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { subscribeToUserChannel, unsubscribeFromChannel } from '../services/pusherClient';
+import { subscribeToUserChannel } from '../services/pusherClient';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
 const TYPING_RESET_MS = 3000;
+
+const upsertMessage = (prev, incoming, tempId = null) => {
+    if (!incoming?.id) return prev;
+    const byId = prev.findIndex((m) => m.id === incoming.id);
+    if (byId !== -1) {
+        const next = [...prev];
+        next[byId] = { ...next[byId], ...incoming, is_temp: false };
+        return next;
+    }
+    if (tempId) {
+        const byTemp = prev.findIndex((m) => m.id === tempId || m.client_temp_id === tempId);
+        if (byTemp !== -1) {
+            const next = [...prev];
+            next[byTemp] = { ...incoming, is_temp: false, client_temp_id: tempId };
+            return next;
+        }
+    }
+    if (incoming.client_temp_id) {
+        const byClientTemp = prev.findIndex(
+            (m) => m.id === incoming.client_temp_id || m.client_temp_id === incoming.client_temp_id
+        );
+        if (byClientTemp !== -1) {
+            const next = [...prev];
+            next[byClientTemp] = { ...incoming, is_temp: false };
+            return next;
+        }
+    }
+    return [...prev, { ...incoming, is_temp: false }];
+};
 
 const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const [messages, setMessages] = useState([]);
@@ -70,6 +99,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
     const conversationRef = useRef(conversation);
+    const previousConversationIdRef = useRef(conversation?.id ?? null);
     const navigate = useNavigate();
 
     const canExportPdf = user?.username === 'Koti42' || permissions?.is_super_admin;
@@ -82,13 +112,26 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
     useEffect(() => {
         conversationRef.current = conversation;
-        setMessages([]);
-        setLoading(true);
+        const prevId = previousConversationIdRef.current;
+        const nextId = conversation?.id ?? null;
+        // İlk mesajdan sonra id null→uuid olunca listeyi silme (mesaj kaybolma bug'ı).
+        const isFirstIdAssignment = prevId == null && nextId != null;
+        const isConversationSwitch = prevId != null && nextId != null && prevId !== nextId;
+        const isLeavingConversation = nextId == null && prevId != null;
+        previousConversationIdRef.current = nextId;
+
         setReplyingTo(null);
         setOtherUserTyping(null);
-        setEphemeralTtlSeconds(null);
-        setEphemeralTtlLabel(null);
         setShowEncryptionInfo(false);
+
+        if (isConversationSwitch || isLeavingConversation || (nextId && !isFirstIdAssignment && prevId !== nextId)) {
+            setMessages([]);
+            setLoading(true);
+            setEphemeralTtlSeconds(null);
+            setEphemeralTtlLabel(null);
+        } else if (!isFirstIdAssignment && nextId) {
+            setLoading(true);
+        }
 
         const abortController = new AbortController();
 
@@ -101,19 +144,33 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     if (abortController.signal.aborted) return;
                     if (conversationRef.current?.id !== convId) return;
                     const data = response.data?.data || {};
-                    setMessages(data.messages || []);
+                    const fromServer = data.messages || [];
+
+                    setMessages((prev) => {
+                        if (!isFirstIdAssignment) {
+                            return fromServer;
+                        }
+                        // İlk id atamasında: sunucu listesi + henüz sync olmamış local mesajları koru
+                        const serverIds = new Set(fromServer.map((m) => m.id));
+                        const keepLocal = prev.filter((m) => {
+                            if (serverIds.has(m.id)) return false;
+                            if (m.is_temp || String(m.id).startsWith('temp-')) return true;
+                            return !serverIds.has(m.id);
+                        });
+                        return [...fromServer, ...keepLocal];
+                    });
+
                     setHasMoreOlder(data.has_more !== false);
                     if (data.ephemeral_ttl_seconds != null) {
                         setEphemeralTtlSeconds(data.ephemeral_ttl_seconds);
                         setEphemeralTtlLabel(data.ephemeral_ttl_label || null);
-                    } else {
+                    } else if (!isFirstIdAssignment) {
                         setEphemeralTtlSeconds(null);
                         setEphemeralTtlLabel(null);
                     }
                     try {
                         const nickRes = await messagesAPI.getNickname(convId);
                         const payload = nickRes.data?.data || {};
-                        // Backend: { my_nickname_for_other, other_nickname_for_me }
                         setNickname(payload.my_nickname_for_other || '');
                     } catch (e) {
                         console.log('getNickname error:', e);
@@ -141,7 +198,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                 .then(() => window.dispatchEvent(new Event('notification:refresh')))
                 .catch(() => { });
         } else if (conversation && !conversation.id) {
-            setMessages([]);
+            if (!isFirstIdAssignment) {
+                setMessages([]);
+            }
             setLoading(false);
         }
 
@@ -184,20 +243,24 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     useEffect(() => {
         if (!user) return;
 
-        const channel = subscribeToUserChannel(user.id, {
+        const unsubscribe = subscribeToUserChannel(user.id, {
             onNewMessage: (data) => {
-                if (conversationRef.current && data.message.conversation_id === conversationRef.current.id) {
-                    setMessages(prev => {
-                        const exists = prev.some(msg => msg.id === data.message.id);
-                        if (exists) return prev;
-                        return [...prev, data.message];
-                    });
+                const msg = data.message || data;
+                if (conversationRef.current && msg.conversation_id === conversationRef.current.id) {
+                    setMessages((prev) => upsertMessage(prev, msg, msg.client_temp_id));
 
-                    if (conversationRef.current.id && data.message.sender_id !== user.id) {
+                    if (conversationRef.current.id && msg.sender_id !== user.id) {
                         messagesAPI.markAsRead(conversationRef.current.id)
                             .then(() => window.dispatchEvent(new Event('notification:refresh')))
                             .catch(() => { });
                     }
+                }
+            },
+            onMessageAck: (data) => {
+                const msg = data.message || data;
+                if (!msg?.id) return;
+                if (conversationRef.current && msg.conversation_id === conversationRef.current.id) {
+                    setMessages((prev) => upsertMessage(prev, msg, data.client_temp_id || msg.client_temp_id));
                 }
             },
             onMessagesRead: (data) => {
@@ -268,9 +331,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
         return () => {
             if (typingResetRef.current) clearTimeout(typingResetRef.current);
-            unsubscribeFromChannel(user.id);
+            unsubscribe();
         };
-    }, [conversation?.id, user]);
+    }, [user]);
 
     useEffect(() => {
         const container = messagesContainerRef.current;
@@ -394,8 +457,10 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         setReplyingTo(null);
 
         const isGifOrSticker = type === 'gif' || type === 'sticker';
+        const clientTempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const tempMessage = {
-            id: `temp-${Date.now()}`,
+            id: clientTempId,
+            client_temp_id: clientTempId,
             content: content || '',
             file_url: file ? URL.createObjectURL(file) : (isGifOrSticker ? content || null : null),
             type: type,
@@ -418,20 +483,23 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                     receiver_id: conversationRef.current.other_user.id,
                     content,
                     type: 'text',
-                    reply_to_message_id: replyToId
+                    reply_to_message_id: replyToId,
+                    client_temp_id: clientTempId,
                 });
             } else if (isGifOrSticker) {
                 response = await messagesAPI.sendMessage({
                     receiver_id: conversationRef.current.other_user.id,
                     content,
                     type,
-                    reply_to_message_id: replyToId
+                    reply_to_message_id: replyToId,
+                    client_temp_id: clientTempId,
                 });
             } else {
                 const formData = new FormData();
                 formData.append('receiver_id', conversationRef.current.other_user.id);
                 formData.append('type', type);
                 formData.append('file', file);
+                formData.append('client_temp_id', clientTempId);
                 if (content) formData.append('content', content);
                 if (replyToId) formData.append('reply_to_message_id', replyToId);
                 if (is_ephemeral) formData.append('is_ephemeral', '1');
@@ -441,33 +509,44 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             }
 
             if (response.data?.success === false) {
-                setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+                setMessages(prev => prev.filter(m => m.id !== clientTempId && m.client_temp_id !== clientTempId));
                 notificationToast.error(response.data?.message || 'Mesaj gönderilemedi.');
                 return;
             }
 
             const newMessage = response.data.data.message;
-            const conversationData = response.data.data.conversation;
+            const conversationData = response.data.data.conversation
+                || (newMessage?.conversation_id
+                    ? { id: newMessage.conversation_id, other_user: conversationRef.current?.other_user }
+                    : null);
 
-            console.log('Backend response - newMessage:', newMessage);
-            console.log('read_at value:', newMessage.read_at);
-
-            setMessages(prev => prev.map(m =>
-                m.id === tempMessage.id ? newMessage : m
-            ));
+            setMessages(prev => upsertMessage(prev, {
+                ...newMessage,
+                client_temp_id: clientTempId,
+            }, clientTempId));
 
             if (onNewMessage) {
                 onNewMessage(newMessage, conversationData);
             }
 
-            if (!conversationRef.current.id && conversationData) {
+            if (!conversationRef.current.id && conversationData?.id) {
                 conversationRef.current = { ...conversationRef.current, id: conversationData.id };
             }
 
             setTimeout(() => scrollToBottom(true), 100);
         } catch (error) {
             console.error('Error sending message:', error);
-            setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+            const status = error.response?.status;
+            // Net client/server rejection: temp'i kaldır. Network/timeout'ta mesaj sunucuda olabilir — silme.
+            if (status && status >= 400 && status < 500) {
+                setMessages(prev => prev.filter(m => m.id !== clientTempId && m.client_temp_id !== clientTempId));
+            } else {
+                setMessages(prev => prev.map(m =>
+                    (m.id === clientTempId || m.client_temp_id === clientTempId)
+                        ? { ...m, send_failed: true, is_temp: true }
+                        : m
+                ));
+            }
             const errorMsg = error.response?.data?.message || 'Mesaj gönderilemedi. Lütfen tekrar deneyin.';
             notificationToast.error(errorMsg);
         }
