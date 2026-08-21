@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaArrowRight, FaUserSecret, FaUsers, FaComments, FaQuestionCircle, FaFire, FaShieldAlt, FaGem } from 'react-icons/fa';
+import { FaHeart, FaComment, FaEye, FaMars, FaVenus, FaArrowRight, FaUserSecret, FaUsers, FaComments, FaQuestionCircle, FaFire, FaShieldAlt, FaGem, FaBookOpen, FaThumbsDown } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 import SEO from '../components/SEO';
 import UserAvatar from '../components/UserAvatar';
 import LandingHero from '../components/landing/LandingHero';
 import WeeklyTopicsMindMap from '../components/landing/WeeklyTopicsMindMap';
 import { useAuth } from '../context/AuthContext';
-import { questionsAPI } from '../services/api';
+import { questionsAPI, storiesAPI } from '../services/api';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
+import { buildStoryPath } from '../utils/storyUrl';
+import DOMPurify from 'dompurify';
 
 const formatDate = (dateString) => {
     if (!dateString) return 'Az önce';
@@ -22,11 +24,15 @@ const formatDate = (dateString) => {
     }
 };
 
+const stripHtml = (html) => (html ? DOMPurify.sanitize(html, { ALLOWED_TAGS: [] }) : '');
+
 const LandingPage = () => {
     const { user } = useAuth();
     const viewerPrefs = getViewerPrefs(user);
     const [popularQuestions, setPopularQuestions] = useState([]);
     const [loadingPopular, setLoadingPopular] = useState(true);
+    const [latestStories, setLatestStories] = useState([]);
+    const [loadingStories, setLoadingStories] = useState(true);
 
     useEffect(() => {
         const fetchPopular = async () => {
@@ -41,7 +47,21 @@ const LandingPage = () => {
             }
         };
 
+        const fetchStories = async () => {
+            try {
+                const response = await storiesAPI.getAll({ page: 1, per_page: 6 });
+                const list = response.data?.data?.stories || [];
+                setLatestStories(Array.isArray(list) ? list : []);
+            } catch (err) {
+                console.error('Hikayeler yüklenirken hata:', err);
+                setLatestStories([]);
+            } finally {
+                setLoadingStories(false);
+            }
+        };
+
         fetchPopular();
+        fetchStories();
     }, []);
 
     const QuestionShowcaseCard = ({ question, viewerPrefs }) => {
@@ -158,6 +178,61 @@ const LandingPage = () => {
         </div>
     );
 
+    const StoryShowcaseCard = ({ story, viewerPrefs }) => {
+        const contentCreator = story.user || {};
+        const themeStyles = getThemeStyles(contentCreator, viewerPrefs);
+        const excerpt = stripHtml(story.content).slice(0, 120);
+
+        return (
+            <Link
+                to={buildStoryPath(story)}
+                className="group relative bg-white dark:bg-gray-800 rounded-2xl border shadow-soft hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col"
+                style={{ borderColor: `${themeStyles.accentColor}40` }}
+            >
+                <div className="h-1 w-full bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500" />
+                <div className="p-4 md:p-5 flex-1 flex flex-col">
+                    <div className="flex items-center gap-2.5 mb-3">
+                        <UserAvatar user={story.user} size={32} />
+                        <div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                    {story.user?.username || 'Kullanıcı'}
+                                </span>
+                                {story.user?.gender === 'female' && <FaVenus className="text-xs" style={{ color: themeStyles.accentColor }} />}
+                                {story.user?.gender === 'male' && <FaMars className="text-xs" style={{ color: themeStyles.accentColor }} />}
+                            </div>
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500">{formatDate(story.created_at)}</span>
+                        </div>
+                    </div>
+
+                    <h3 className="text-base font-bold text-gray-800 dark:text-white leading-snug mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+                        {story.title}
+                    </h3>
+                    {excerpt && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 mb-3 flex-1">
+                            {excerpt}{stripHtml(story.content).length > 120 ? '…' : ''}
+                        </p>
+                    )}
+
+                    <div className="flex items-center gap-3 pt-3 border-t border-gray-100 dark:border-gray-700/50 text-xs text-gray-400 dark:text-gray-500 mt-auto">
+                        <span className="flex items-center gap-1">
+                            <FaHeart className="text-[10px] text-red-400" />
+                            {story.likes_count ?? 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <FaThumbsDown className="text-[10px]" />
+                            {story.dislikes_count ?? 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <FaComment className="text-[10px] text-blue-400" />
+                            {story.comments_count ?? 0}
+                        </span>
+                    </div>
+                </div>
+            </Link>
+        );
+    };
+
     return (
         <MainLayout fullWidth={true} showMobileFooter={true}>
             <SEO
@@ -206,6 +281,42 @@ const LandingPage = () => {
                         Tümünü Gör <FaArrowRight className="text-xs" />
                     </Link>
                 </section>
+
+                {/* HİKAYELER — yalnızca hikaye varsa */}
+                {!loadingStories && latestStories.length > 0 && (
+                    <section className="max-w-7xl mx-auto px-4 md:px-6 pb-12 md:pb-16">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="p-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-lg">
+                                        <FaBookOpen className="text-white text-sm" />
+                                    </div>
+                                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Hikayeler</h2>
+                                </div>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">Topluluktan taze anlatılar</p>
+                            </div>
+                            <Link
+                                to="/stories"
+                                className="hidden sm:flex items-center gap-2 text-emerald-600 font-semibold hover:underline text-sm"
+                            >
+                                Tümünü Gör <FaArrowRight className="text-xs" />
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                            {latestStories.map((story) => (
+                                <StoryShowcaseCard key={story.id} story={story} viewerPrefs={viewerPrefs} />
+                            ))}
+                        </div>
+
+                        <Link
+                            to="/stories"
+                            className="sm:hidden flex items-center justify-center gap-2 mt-6 text-emerald-600 font-semibold text-sm"
+                        >
+                            Tümünü Gör <FaArrowRight className="text-xs" />
+                        </Link>
+                    </section>
+                )}
 
                 {/* HOW IT WORKS */}
                 <section className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900 py-16 md:py-20">

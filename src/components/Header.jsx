@@ -997,6 +997,25 @@ const Header = ({ onSearch }) => {
                                         </div>
                                     </div>
 
+                                    {/* Hikayeler — içerik türleriyle birlikte üstte */}
+                                    <div
+                                        onClick={() => {
+                                            setIsQuestionsModalOpen(false);
+                                            navigate('/stories');
+                                        }}
+                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/20 dark:hover:to-teal-900/20 border border-emerald-300/60 dark:border-emerald-700/50 cursor-pointer transition-all"
+                                    >
+                                        <div className="flex gap-3">
+                                            <div className="text-2xl text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                                                <FaBookOpen />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-emerald-600 transition-colors">Hikayeler</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Uzun hikayeler oku, kendi hikayeni yaz.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {/* Benceler */}
                                     <div 
                                         onClick={() => {
@@ -1012,25 +1031,6 @@ const Header = ({ onSearch }) => {
                                             <div>
                                                 <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-pink-600 transition-colors">Benceler</h3>
                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Konular hakkında yazılar oku, görüşünü paylaş.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Hikayeler */}
-                                    <div
-                                        onClick={() => {
-                                            setIsQuestionsModalOpen(false);
-                                            navigate('/stories');
-                                        }}
-                                        className="group p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50 dark:hover:from-gray-700 dark:hover:to-gray-700/80 cursor-pointer transition-all"
-                                    >
-                                        <div className="flex gap-3">
-                                            <div className="text-2xl text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-                                                <FaBookOpen />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-white text-base group-hover:text-emerald-600 transition-colors">Hikayeler</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Uzun hikayeler oku, kendi hikayeni yaz.</p>
                                             </div>
                                         </div>
                                     </div>
