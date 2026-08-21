@@ -113,8 +113,9 @@ const RoomPage = () => {
 
                 channelRef.current = channel;
             } catch (err) {
-                setError("Odaya bağlanılamadı.");
-                toast.error("Odaya giriş yapılamadı.");
+                const apiMessage = err.response?.data?.message;
+                setError(apiMessage || 'Odaya bağlanılamadı.');
+                toast.error(apiMessage || 'Odaya giriş yapılamadı.');
                 setTimeout(() => navigate('/communities'), 2000);
             } finally {
                 setLoading(false);
@@ -181,16 +182,20 @@ const RoomPage = () => {
     return (
         <MainLayout sidebar={SidebarContent} fullHeight>
             <SEO
-                title={community?.name ? `${community.name} - Sesli Sohbet Odası | Herkesler Soruyor` : 'Topluluk Odası | Herkesler Soruyor'}
-                description={community?.name ? `${community.name} odasına katıl, sohbete dahil ol. ${community.description || 'Topluluk sohbet odası.'}` : 'Topluluk sohbet odasına katıl, sohbete dahil ol.'}
+                title={community?.title
+                    ? `${community.title} - ${community.type === 'text' ? 'Yazılı' : 'Sesli'} Sohbet Odası | Herkesler Soruyor`
+                    : 'Topluluk Odası | Herkesler Soruyor'}
+                description={community?.title
+                    ? `${community.title} odasına katıl, sohbete dahil ol. ${community.description || 'Topluluk sohbet odası.'}`
+                    : 'Topluluk sohbet odasına katıl, sohbete dahil ol.'}
                 jsonLd={community ? {
                     "@context": "https://schema.org",
                     "@type": "SocialMediaPosting",
-                    "headline": community.name,
+                    "headline": community.title,
                     "description": community.description || 'Topluluk sohbet odası.',
                     "author": {
                         "@type": "Person",
-                        "name": community.created_by_user?.username || community.created_by || 'Herkesler Soruyor'
+                        "name": community.owner?.username || 'Herkesler Soruyor'
                     }
                 } : undefined}
             />
@@ -209,6 +214,12 @@ const RoomPage = () => {
                             <p className="text-gray-500 dark:text-gray-400 text-sm">Yönlendiriliyorsunuz...</p>
                         </div>
                     </div>
+                ) : community?.type === 'text' ? (
+                    <TextRoomUI
+                        community={community}
+                        participantsCount={participantsCount}
+                        onLeave={handleDisconnect}
+                    />
                 ) : token && serverUrl ? (
                     <LiveKitRoom
                         video={false}
@@ -239,22 +250,14 @@ const RoomPage = () => {
                             </div>
                         ) : null}
 
-                        {community?.type === 'voice' ? (
-                            <VoiceRoomUI
-                                community={community}
-                                role={role}
-                                participantsCount={participantsCount}
-                                onLeave={handleDisconnect}
-                                onRaiseHand={handleRaiseHand}
-                                onToggleChat={() => setIsChatOpen(!isChatOpen)}
-                            />
-                        ) : (
-                            <TextRoomUI
-                                community={community}
-                                participantsCount={participantsCount}
-                                onLeave={handleDisconnect}
-                            />
-                        )}
+                        <VoiceRoomUI
+                            community={community}
+                            role={role}
+                            participantsCount={participantsCount}
+                            onLeave={handleDisconnect}
+                            onRaiseHand={handleRaiseHand}
+                            onToggleChat={() => setIsChatOpen(!isChatOpen)}
+                        />
                         <InRoomChat
                             communityId={communityUuidRef.current || uuid}
                             isOpen={isChatOpen}

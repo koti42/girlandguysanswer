@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaMicrophone, FaKeyboard, FaTimes, FaLock } from 'react-icons/fa';
+import { FaMicrophone, FaKeyboard, FaTimes } from 'react-icons/fa';
 import { communityAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -54,15 +54,14 @@ const CreateRoomModal = ({ isOpen, onClose }) => {
                         </button>
                         <button
                             type="button"
-                            disabled
-                            className="flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed relative opacity-75"
+                            onClick={() => setFormData({ ...formData, type: 'text' })}
+                            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${formData.type === 'text'
+                                    ? 'border-coral bg-orange-50 dark:bg-orange-900/20 text-coral'
+                                    : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300'
+                                }`}
                         >
-                            <span className="absolute top-2 right-2 text-gray-400 dark:text-gray-500">
-                                <FaLock className="text-sm" />
-                            </span>
                             <FaKeyboard size={24} />
                             <span className="font-semibold">Yazılı Sohbet</span>
-                            <span className="text-xs">Yakında</span>
                         </button>
                     </div>
 
