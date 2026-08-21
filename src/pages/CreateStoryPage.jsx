@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import RichTextEditor from '../components/RichTextEditor';
 import { storiesAPI } from '../services/api';
-import { FaArrowLeft, FaLightbulb, FaExclamationTriangle, FaCheckCircle, FaSave } from 'react-icons/fa';
+import { FaArrowLeft, FaLightbulb, FaExclamationTriangle, FaCheckCircle, FaSave, FaEye } from 'react-icons/fa';
 import { notificationToast } from '../utils/notificationToast';
 import SEO from '../components/SEO';
 import { buildStoryPath } from '../utils/storyUrl';
@@ -15,9 +15,24 @@ const CreateStoryPage = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [allowComments, setAllowComments] = useState(true);
+    const [isAdult, setIsAdult] = useState(false);
+    const [categoryId, setCategoryId] = useState('');
+    const [categories, setCategories] = useState([]);
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const draftSaveTimerRef = useRef(null);
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const res = await storiesAPI.getCategories();
+                setCategories(res.data?.data?.categories || []);
+            } catch {
+                setCategories([]);
+            }
+        };
+        loadCategories();
+    }, []);
 
     useEffect(() => {
         try {
@@ -27,6 +42,8 @@ const CreateStoryPage = () => {
             if (draft?.title) setTitle(draft.title);
             if (draft?.content) setContent(draft.content);
             if (typeof draft?.allowComments === 'boolean') setAllowComments(draft.allowComments);
+            if (typeof draft?.isAdult === 'boolean') setIsAdult(draft.isAdult);
+            if (draft?.categoryId) setCategoryId(String(draft.categoryId));
         } catch {
             // ignore
         }
@@ -36,12 +53,19 @@ const CreateStoryPage = () => {
         if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
         draftSaveTimerRef.current = setTimeout(() => {
             try {
-                const hasAny = (title?.trim()?.length ?? 0) > 0 || (content?.trim()?.length ?? 0) > 0;
+                const hasAny = (title?.trim()?.length ?? 0) > 0 || (content?.trim()?.length ?? 0) > 0 || categoryId;
                 if (!hasAny) {
                     localStorage.removeItem(DRAFT_KEY);
                     return;
                 }
-                localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, content, allowComments, savedAt: Date.now() }));
+                localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                    title,
+                    content,
+                    allowComments,
+                    isAdult,
+                    categoryId,
+                    savedAt: Date.now(),
+                }));
             } catch {
                 // ignore
             }
@@ -50,7 +74,7 @@ const CreateStoryPage = () => {
         return () => {
             if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
         };
-    }, [title, content, allowComments]);
+    }, [title, content, allowComments, isAdult, categoryId]);
 
     const validate = () => {
         const e = {};
@@ -59,6 +83,7 @@ const CreateStoryPage = () => {
         if (t.length < 3) e.title = 'Başlık en az 3 karakter olmalı';
         if (t.length > 255) e.title = 'Başlık en fazla 255 karakter olmalı';
         if (c.length < 20) e.content = 'Hikaye en az 20 karakter olmalı';
+        if (!categoryId) e.category = 'Kategori seçmelisiniz';
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -72,6 +97,8 @@ const CreateStoryPage = () => {
                 title: title.trim(),
                 content: content.trim() || '<p></p>',
                 allow_comments: allowComments,
+                is_adult: isAdult,
+                story_category_id: Number(categoryId),
             });
             const op = response.data?.data?.story;
             if (op?.id) {
@@ -157,12 +184,16 @@ const CreateStoryPage = () => {
                     <span>Okuyanı çeken bir başlık seçin</span>
                 </li>
                 <li className="flex gap-3 items-start p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-100 dark:border-purple-800/30">
-                    <span className="text-xl">📝</span>
-                    <span>Uzun metni paragraflara bölün, okumayı kolaylaştırın</span>
+                    <span className="text-xl">📑</span>
+                    <span>Bölümler için H2/H3 başlıkları kullanın</span>
+                </li>
+                <li className="flex gap-3 items-start p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-100 dark:border-purple-800/30">
+                    <span className="text-xl">💬</span>
+                    <span>Diyalogları alıntı bloğuyla vurgulayın</span>
                 </li>
                 <li className="flex gap-3 items-start p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-100 dark:border-purple-800/30">
                     <span className="text-xl">📸</span>
-                    <span>Görsel materyaller kullanın</span>
+                    <span>Görselleri metnin arasına yerleştirin</span>
                 </li>
                 <li className="flex gap-3 items-start p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-100 dark:border-purple-800/30">
                     <span className="text-xl">@</span>
@@ -247,6 +278,29 @@ const CreateStoryPage = () => {
                             {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
                         </div>
 
+                        {/* Category */}
+                        <div className="mb-6">
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Kategori <span className="text-coral">*</span>
+                            </label>
+                            <select
+                                value={categoryId}
+                                onChange={(e) => setCategoryId(e.target.value)}
+                                className={`w-full px-4 py-3 rounded-xl border ${errors.category || errors.story_category_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                    } dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all`}
+                            >
+                                <option value="">Kategori seçin...</option>
+                                {categories.map((cat) => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+                            {(errors.category || errors.story_category_id) && (
+                                <p className="text-red-500 text-sm mt-1">
+                                    {errors.category || errors.story_category_id?.[0] || errors.story_category_id}
+                                </p>
+                            )}
+                        </div>
+
                         {/* Content */}
                         <div className="mb-6">
                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -256,15 +310,17 @@ const CreateStoryPage = () => {
                                 <RichTextEditor
                                     value={content}
                                     onChange={setContent}
-                                    placeholder="Hikayeni yaz; paragraflar, görseller ve  ekleyebilirsin..."
+                                    placeholder="Hikayeni yazmaya başla… Başlıklar, listeler, alıntılar ve görseller ekleyebilirsin."
                                     uploadImage={uploadEditorImage}
+                                    variant="story"
+                                    minHeight={420}
                                 />
                             </div>
                             {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content}</p>}
                         </div>
 
                         {/* Settings */}
-                        <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="mb-8 space-y-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700">
                             <label className="flex items-center gap-3 cursor-pointer select-none group">
                                 <div className="relative">
                                     <input
@@ -276,6 +332,26 @@ const CreateStoryPage = () => {
                                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-coral/20 dark:peer-focus:ring-coral/30 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-coral"></div>
                                 </div>
                                 <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Bu hikayeye yorum yapılabilsin</span>
+                            </label>
+
+                            <label className="flex items-start gap-3 cursor-pointer select-none group p-3 rounded-xl border border-rose-200 dark:border-rose-800/50 bg-rose-50/70 dark:bg-rose-900/20">
+                                <div className="relative mt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAdult}
+                                        onChange={(e) => setIsAdult(e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-rose-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-rose-500"></div>
+                                </div>
+                                <div>
+                                    <span className="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-semibold">
+                                        <FaEye /> +18 içerik barındırıyor
+                                    </span>
+                                    <p className="text-xs text-rose-600/80 dark:text-rose-400/80 mt-1">
+                                        Cinsel / yetişkin detaylar varsa işaretleyin. Bu hikayeler varsayılan listede gizlenir; kullanıcılar açıkça +18 filtresini açarsa görür.
+                                    </p>
+                                </div>
                             </label>
                         </div>
 

@@ -168,6 +168,24 @@ const StoryCard = ({ story, viewerPrefs }) => {
                         </p>
                     </div>
                 </div>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {story.category?.name && (
+                        <span
+                            className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                            style={{
+                                color: story.category.color || '#059669',
+                                backgroundColor: `${story.category.color || '#059669'}18`,
+                            }}
+                        >
+                            {story.category.name}
+                        </span>
+                    )}
+                    {story.is_adult && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                            +18
+                        </span>
+                    )}
+                </div>
                 <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2 line-clamp-2">{story.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed line-clamp-4 mb-3">{excerpt}{stripHtml(story.content).length > 220 ? '…' : ''}</p>
                 {imageUrl && (

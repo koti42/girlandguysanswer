@@ -5,7 +5,7 @@ import UserAvatar from '../components/UserAvatar';
 import AiBadge from '../components/common/AiBadge';
 import { storiesAPI, questionsAPI, commentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { FaHeart, FaThumbsDown, FaComment, FaArrowLeft, FaTrash, FaEyeSlash } from 'react-icons/fa';
+import { FaHeart, FaThumbsDown, FaComment, FaArrowLeft, FaTrash, FaEyeSlash, FaEye } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import DOMPurify from 'dompurify';
@@ -54,6 +54,7 @@ const StoryDetailPage = () => {
     const [dislikesCount, setDislikesCount] = useState(0);
     const [deleteCommentModal, setDeleteCommentModal] = useState({ isOpen: false, commentId: null });
     const [hideCommentModal, setHideCommentModal] = useState({ isOpen: false, commentId: null });
+    const [adultUnlocked, setAdultUnlocked] = useState(false);
 
     useEffect(() => {
         const fetchStory = async () => {
@@ -76,6 +77,7 @@ const StoryDetailPage = () => {
             }
         };
         if (slugOrId) fetchStory();
+        setAdultUnlocked(false);
     }, [slugOrId]);
 
     useEffect(() => {
@@ -288,11 +290,53 @@ const StoryDetailPage = () => {
                                 </div>
                             </div>
 
+                            <div className="flex flex-wrap items-center gap-2 mb-3">
+                                {story.category?.name && (
+                                    <span
+                                        className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                                        style={{
+                                            color: story.category.color || '#059669',
+                                            backgroundColor: `${story.category.color || '#059669'}18`,
+                                        }}
+                                    >
+                                        {story.category.name}
+                                    </span>
+                                )}
+                                {story.is_adult && (
+                                    <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                                        +18
+                                    </span>
+                                )}
+                            </div>
+
                             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">{story.title}</h1>
 
+                            {story.is_adult && !adultUnlocked ? (
+                                <div className="relative mb-6 rounded-2xl overflow-hidden border border-rose-200 dark:border-rose-800/50">
+                                    <div className="blur-md select-none pointer-events-none p-6 opacity-40 max-h-48 overflow-hidden">
+                                        <p className="text-gray-600 dark:text-gray-300">
+                                            {DOMPurify.sanitize(story.content || '', { ALLOWED_TAGS: [] }).slice(0, 280)}…
+                                        </p>
+                                    </div>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm p-6 text-center">
+                                        <FaEye className="text-3xl text-rose-500 mb-3" />
+                                        <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-1">+18 içerik</h2>
+                                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 max-w-sm">
+                                            Bu hikaye yetişkin içerik barındırıyor. Devam etmek için 18 yaşından büyük olduğunuzu onaylayın.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAdultUnlocked(true)}
+                                            className="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold transition-colors"
+                                        >
+                                            18 yaşından büyüğüm, göster
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
                             <div
-                                className="prose prose-gray dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-6 break-words [&>div]:mb-2 [&_b]:font-semibold [&_strong]:font-semibold [&_.mention-link]:font-semibold [&_.mention-link]:text-coral [&_.mention-link]:hover:text-coral-dark [&_.mention-link]:hover:underline [&_.mention-link]:cursor-pointer"
-                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processHtmlWithMentions(story.content || ''), { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'span', 'img'], ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'class', 'style'] }) }}
+                                className="prose prose-gray dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-6 break-words [&>div]:mb-2 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mt-5 [&_h3]:mb-2 [&_blockquote]:border-l-4 [&_blockquote]:border-coral [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-500 [&_hr]:my-6 [&_hr]:border-gray-200 dark:[&_hr]:border-gray-700 [&_b]:font-semibold [&_strong]:font-semibold [&_.mention-link]:font-semibold [&_.mention-link]:text-coral [&_.mention-link]:hover:text-coral-dark [&_.mention-link]:hover:underline [&_.mention-link]:cursor-pointer"
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processHtmlWithMentions(story.content || ''), { ALLOWED_TAGS: ['div', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'h2', 'h3', 'blockquote', 'hr', 'ul', 'ol', 'li', 'a', 'span', 'img'], ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'class', 'style'] }) }}
                                 onClick={(e) => {
                                     const a = e.target.closest('a[href^="/profile/"]');
                                     if (a) {
@@ -301,6 +345,7 @@ const StoryDetailPage = () => {
                                     }
                                 }}
                             />
+                            )}
 
                             {story.images?.length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
