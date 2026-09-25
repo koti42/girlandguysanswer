@@ -9,6 +9,20 @@ export const authApi = {
     login: (email, password) => client.post('/auth/login', { email, password }),
     logout: () => client.post('/auth/logout'),
     me: () => client.get('/user/me'),
+    /** Verilen token ile /user/me - oturum devralma ve Google dönüşü için. */
+    meWith: (token) => client.get('/user/me', { headers: { Authorization: `Bearer ${token}` } }),
+    forgotPassword: (email) => client.post('/auth/password/forgot', { email }),
+    /** Google giriş URL'si; sunucu redirect_uri'yi izinli kaynaklarla sınırlar. */
+    googleUrl: (redirectUri) => client.get('/auth/google', { params: { redirect_uri: redirectUri } }),
+};
+
+export const passkeyApi = {
+    authOptions: (body) => client.post('/auth/passkey/options', body),
+    authenticate: (body) => client.post('/auth/passkey/login', body),
+    list: () => client.get('/passkeys'),
+    registrationOptions: () => client.post('/passkeys/options'),
+    register: (body) => client.post('/passkeys', body),
+    remove: (id) => client.delete(`/passkeys/${id}`),
 };
 
 export const publicApi = {

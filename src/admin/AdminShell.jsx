@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-    FaBars, FaBell, FaBullhorn, FaChevronLeft, FaClipboardList, FaCog, FaExclamationTriangle,
+    FaBars, FaBell, FaBullhorn, FaChevronLeft, FaClipboardList, FaCog, FaExclamationTriangle, FaFingerprint,
     FaFlag, FaGamepad, FaHome, FaLayerGroup, FaSearch, FaServer, FaShieldAlt, FaSignOutAlt, FaTags, FaUsers, FaUserShield, FaComments,
 } from 'react-icons/fa';
 import { usePanelAuth } from '../panel/auth/PanelAuthContext';
@@ -64,6 +64,7 @@ export default function AdminShell() {
         ...NAV.flatMap((g) => g.items.filter((i) => !i.superOnly || isSuperAdmin).map((i) => ({ id: i.to, label: i.label, to: i.to, group: g.group, icon: i.icon }))),
         { id: 'mod', label: 'Moderasyon paneline geç', to: '/mod', group: 'Panel', icon: FaShieldAlt },
         { id: 'users-search', label: 'Kullanıcı ara…', to: '/cpl-manage/users?focus=1', group: 'Hızlı', icon: FaSearch },
+        { id: 'security', label: 'Güvenlik / passkey', to: '/cpl-manage/security', group: 'Hesap', icon: FaFingerprint },
         { id: 'logout', label: 'Çıkış yap', run: () => logout().then(() => navigate('/cpl-manage/login')), group: 'Hesap', icon: FaSignOutAlt },
     ], [isSuperAdmin, logout, navigate]);
 
@@ -120,6 +121,7 @@ export default function AdminShell() {
                         <div className="flex items-center gap-2 pl-2 border-l border-[var(--p-border)]">
                             <Avatar user={user} size={32} />
                             <div className="hidden md:block leading-tight"><div className="text-sm font-semibold">{user?.username}</div><div className="text-[11px] p-muted">{isSuperAdmin ? 'Süper admin' : 'Admin'}</div></div>
+                            <NavLink to="/cpl-manage/security" className="h-10 w-10 rounded-xl grid place-items-center p-muted hover:text-[var(--p-text)] hover:bg-white/[0.06] p-ring" aria-label="Güvenlik" title="Güvenlik / passkey"><FaFingerprint /></NavLink>
                             <button type="button" onClick={() => logout().then(() => navigate('/cpl-manage/login'))} className="h-10 w-10 rounded-xl grid place-items-center p-muted hover:text-rose-300 hover:bg-rose-500/10 p-ring" aria-label="Çıkış yap" title="Çıkış"><FaSignOutAlt /></button>
                         </div>
                     </div>

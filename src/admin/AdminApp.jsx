@@ -19,6 +19,7 @@ const Settings = lazy(() => import('./pages/Settings.jsx'));
 const Broadcast = lazy(() => import('./pages/Broadcast.jsx'));
 const AuditLog = lazy(() => import('./pages/AuditLog.jsx'));
 const System = lazy(() => import('./pages/System.jsx'));
+const Security = lazy(() => import('../panel/features/SecurityPage.jsx'));
 
 const Fallback = () => <div className="py-16 grid place-items-center"><div className="h-8 w-8 rounded-full border-2 border-white/20 border-t-[var(--p-accent)] animate-spin" /></div>;
 
@@ -44,6 +45,7 @@ export default function AdminApp() {
                         <Route path="broadcast" element={<Suspense fallback={<Fallback />}><Broadcast /></Suspense>} />
                         <Route path="audit" element={<Suspense fallback={<Fallback />}><AuditLog /></Suspense>} />
                         <Route path="system" element={<Suspense fallback={<Fallback />}><System /></Suspense>} />
+                        <Route path="security" element={<Suspense fallback={<Fallback />}><Security /></Suspense>} />
                     </Route>
                     <Route path="*" element={<Navigate to="/cpl-manage" replace />} />
                 </Routes>

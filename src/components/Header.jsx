@@ -31,6 +31,13 @@ const Header = ({ onSearch }) => {
     const [scrolled, setScrolled] = useState(false);
     const { isDark, toggleTheme } = useTheme();
     const { user, isAuthenticated, logout } = useAuth();
+    // Panel linkleri: rolü yeten kullanıcı tek tıkla panele geçer; panel ana
+    // sitedeki oturumu devralır, tekrar giriş sormaz.
+    const roleSlugs = (user?.roles || []).map((r) => (typeof r === 'string' ? r : r.slug));
+    const panelLinks = [
+        ...(roleSlugs.some((r) => ['admin', 'super_admin'].includes(r)) ? [{ to: '/cpl-manage', label: 'Yönetim Paneli' }] : []),
+        ...(roleSlugs.some((r) => ['moderator', 'admin', 'super_admin'].includes(r)) ? [{ to: '/mod', label: 'Moderasyon Paneli' }] : []),
+    ];
 
     // Anasayfada tepedeyken header şeffaf, scroll edilince buzlu cam olur
     const isHome = location.pathname === '/';
@@ -485,15 +492,16 @@ const Header = ({ onSearch }) => {
                                             <FaUser className="text-gray-400" />
                                             Ayarlar
                                         </Link>
-                                        {(user?.roles?.some(r => ['admin','super_admin'].includes(r.slug || r)) || user?.role === 'admin' || user?.role === 'super_admin') && (
+                                        {panelLinks.map((p) => (
                                             <Link
-                                                to="/cpl-manage"
+                                                key={p.to}
+                                                to={p.to}
                                                 className="flex items-center gap-3 px-3 py-2 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors font-semibold"
                                             >
                                                 <FaUserShield className="text-purple-500" />
-                                                Admin Panel
+                                                {p.label}
                                             </Link>
-                                        )}
+                                        ))}
                                         <button
                                             onClick={handleLogout}
                                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors mt-1"
@@ -721,16 +729,17 @@ const Header = ({ onSearch }) => {
                                     <FaUser className="text-xl text-coral" />
                                     <span className="text-gray-700 dark:text-gray-200 font-medium">Ayarlar</span>
                                 </Link>
-                                {(user?.roles?.some(r => ['admin','super_admin'].includes(r.slug || r)) || user?.role === 'admin' || user?.role === 'super_admin') && (
+                                {panelLinks.map((p) => (
                                     <Link
-                                        to="/cpl-manage"
+                                        key={p.to}
+                                        to={p.to}
                                         onClick={closeMobileMenu}
                                         className="flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors mb-2 min-h-[50px]"
                                     >
                                         <FaUserShield className="text-xl text-purple-500" />
-                                        <span className="text-purple-600 dark:text-purple-400 font-semibold">Admin Panel</span>
+                                        <span className="text-purple-600 dark:text-purple-400 font-semibold">{p.label}</span>
                                     </Link>
-                                )}
+                                ))}
                                 <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
                                 <button
                                     onClick={() => {

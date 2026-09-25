@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { FaBars, FaClipboardList, FaHome, FaLayerGroup, FaSearch, FaShieldAlt, FaSignOutAlt, FaUserShield, FaUsers, FaBolt } from 'react-icons/fa';
+import { FaBars, FaClipboardList, FaFingerprint, FaHome, FaLayerGroup, FaSearch, FaShieldAlt, FaSignOutAlt, FaUserShield, FaUsers, FaBolt } from 'react-icons/fa';
 import { usePanelAuth } from '../panel/auth/PanelAuthContext';
 import { useQuery } from '../panel/hooks/useQuery';
 import { useHotkeys } from '../panel/hooks/useHotkeys';
@@ -42,6 +42,7 @@ export default function ModShell() {
         ...NAV.map((n) => ({ id: n.to, label: n.label, to: n.to, hint: n.key, icon: n.icon, group: 'Sayfa' })),
         { id: 'search-user', label: 'Kullanıcı ara…', to: '/mod/users?focus=1', icon: FaSearch, group: 'Hızlı' },
         ...(isAdmin ? [{ id: 'admin', label: 'Yönetim paneline geç', to: '/cpl-manage', icon: FaUserShield, group: 'Panel' }] : []),
+        { id: 'security', label: 'Güvenlik / passkey', to: '/mod/security', icon: FaFingerprint, group: 'Hesap' },
         { id: 'logout', label: 'Çıkış yap', run: () => logout().then(() => navigate('/mod/login')), icon: FaSignOutAlt, group: 'Hesap' },
     ], [isAdmin, logout, navigate]);
 
@@ -68,6 +69,7 @@ export default function ModShell() {
                         <div className="flex items-center gap-2 pl-2 border-l border-[var(--p-border)]">
                             <Avatar user={user} size={28} />
                             <span className="hidden md:block text-sm font-medium">{user?.username}</span>
+                            <NavLink to="/mod/security" className="h-9 w-9 rounded-lg grid place-items-center p-muted hover:text-[var(--p-text)] hover:bg-white/[0.06] p-ring" aria-label="Güvenlik" title="Güvenlik / passkey"><FaFingerprint /></NavLink>
                             <button type="button" onClick={() => logout().then(() => navigate('/mod/login'))} className="h-9 w-9 rounded-lg grid place-items-center p-muted hover:text-rose-300 hover:bg-rose-500/10 p-ring" aria-label="Çıkış yap" title="Çıkış"><FaSignOutAlt /></button>
                         </div>
                         <button type="button" onClick={() => setMenuOpen((v) => !v)} className="md:hidden h-9 w-9 rounded-lg grid place-items-center hover:bg-white/[0.06] p-ring" aria-label="Menü"><FaBars /></button>
