@@ -10,6 +10,8 @@ import { useHotkeys } from '../panel/hooks/useHotkeys';
 import { adminApi } from '../panel/api/endpoints';
 import { MOD_DATA_CHANGED, on } from '../panel/lib/events';
 import { Avatar, CommandPalette, Kbd } from '../panel/ui';
+import ThemeToggle from '../panel/ui/ThemeToggle';
+import { usePanelTheme } from '../panel/hooks/usePanelTheme';
 import '../panel/theme.css';
 
 const NAV = [
@@ -43,6 +45,7 @@ const NAV = [
  */
 export default function AdminShell() {
     const { user, logout, isSuperAdmin } = usePanelAuth();
+    const { resolved: theme } = usePanelTheme();
     const navigate = useNavigate();
     const location = useLocation();
     const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('admin_sidebar') === '1'; } catch { return false; } });
@@ -78,7 +81,7 @@ export default function AdminShell() {
                     <ul className="space-y-0.5">
                         {g.items.filter((i) => !i.superOnly || isSuperAdmin).map((i) => (
                             <li key={i.to}>
-                                <NavLink to={i.to} end={i.end} title={collapsed ? i.label : undefined} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-3 h-10 text-sm transition-colors p-ring ${isActive ? 'p-accent-bg font-semibold shadow-sm' : 'p-muted hover:text-[var(--p-text)] hover:bg-white/[0.06]'} ${collapsed ? 'justify-center' : ''}`}>
+                                <NavLink to={i.to} end={i.end} title={collapsed ? i.label : undefined} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-3 h-10 text-sm transition-colors p-ring ${isActive ? 'p-accent-bg font-semibold shadow-sm' : 'p-muted hover:text-[var(--p-text)] p-hover'} ${collapsed ? 'justify-center' : ''}`}>
                                     <i.icon className="text-[15px] shrink-0" aria-hidden />
                                     {!collapsed && <span className="flex-1 truncate">{i.label}</span>}
                                     {!collapsed && i.badge === 'pending' && pending > 0 && <span className="text-[10px] font-bold rounded-full bg-rose-500 text-white px-1.5 py-0.5">{pending}</span>}
@@ -92,7 +95,7 @@ export default function AdminShell() {
     );
 
     return (
-        <div data-panel="admin" className="min-h-screen flex">
+        <div data-panel="admin" data-theme={theme} className="min-h-screen flex">
             {mobileOpen && <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
             <aside className={`fixed lg:sticky top-0 z-50 h-screen flex flex-col p-surface border-r transition-[width,transform] duration-200 ${collapsed ? 'w-[72px]' : 'w-64'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
@@ -102,7 +105,7 @@ export default function AdminShell() {
                 </div>
                 {sidebar}
                 <div className="p-3 border-t border-[var(--p-border)]">
-                    <button type="button" onClick={() => setCollapsed((c) => !c)} className="hidden lg:flex w-full items-center justify-center gap-2 h-9 rounded-lg text-xs p-muted hover:text-[var(--p-text)] hover:bg-white/[0.06] p-ring" aria-label={collapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}>
+                    <button type="button" onClick={() => setCollapsed((c) => !c)} className="hidden lg:flex w-full items-center justify-center gap-2 h-9 rounded-lg text-xs p-muted hover:text-[var(--p-text)] p-hover p-ring" aria-label={collapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}>
                         <FaChevronLeft className={`transition-transform ${collapsed ? 'rotate-180' : ''}`} />{!collapsed && 'Daralt'}
                     </button>
                 </div>
@@ -110,21 +113,22 @@ export default function AdminShell() {
 
             <div className="flex-1 min-w-0 flex flex-col">
                 <header className="sticky top-0 z-30 h-16 p-surface border-b flex items-center gap-3 px-4 lg:px-6">
-                    <button type="button" onClick={() => setMobileOpen(true)} className="lg:hidden h-10 w-10 rounded-xl grid place-items-center hover:bg-white/[0.06] p-ring" aria-label="Menü"><FaBars /></button>
-                    <button type="button" onClick={() => setPaletteOpen(true)} className="flex-1 max-w-md h-10 rounded-xl bg-black/30 border border-[var(--p-border)] px-3 flex items-center gap-2 text-sm p-muted hover:text-[var(--p-text)] p-ring">
+                    <button type="button" onClick={() => setMobileOpen(true)} className="lg:hidden h-10 w-10 rounded-xl grid place-items-center p-hover p-ring" aria-label="Menü"><FaBars /></button>
+                    <button type="button" onClick={() => setPaletteOpen(true)} className="flex-1 max-w-md h-10 rounded-xl p-inset border border-[var(--p-border)] px-3 flex items-center gap-2 text-sm p-muted hover:text-[var(--p-text)] p-ring">
                         <FaSearch className="text-xs" /><span className="flex-1 text-left">Ara veya komut çalıştır</span><Kbd>⌘K</Kbd>
                     </button>
                     <div className="ml-auto flex items-center gap-2">
-                        <NavLink to="/cpl-manage/complaints" className="relative h-10 w-10 rounded-xl grid place-items-center hover:bg-white/[0.06] p-ring" aria-label={`${pending} bekleyen şikâyet`} title="Bekleyen şikâyetler">
+                        <NavLink to="/cpl-manage/complaints" className="relative h-10 w-10 rounded-xl grid place-items-center p-hover p-ring" aria-label={`${pending} bekleyen şikâyet`} title="Bekleyen şikâyetler">
                             <FaBell />
                             {pending > 0 && <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center px-1">{pending > 99 ? '99+' : pending}</span>}
                         </NavLink>
-                        <NavLink to="/mod" className="hidden sm:inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm border border-amber-500/30 text-amber-300 hover:bg-amber-500/10 p-ring" title="Moderasyon paneli"><FaShieldAlt className="text-xs" />Moderasyon</NavLink>
+                        <ThemeToggle />
+                        <NavLink to="/mod" className="hidden sm:inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm border border-amber-500/30 p-tone-warning hover:bg-amber-500/10 p-ring" title="Moderasyon paneli"><FaShieldAlt className="text-xs" />Moderasyon</NavLink>
                         <div className="flex items-center gap-2 pl-2 border-l border-[var(--p-border)]">
                             <Avatar user={user} size={32} />
                             <div className="hidden md:block leading-tight"><div className="text-sm font-semibold">{user?.username}</div><div className="text-[11px] p-muted">{isSuperAdmin ? 'Süper admin' : 'Admin'}</div></div>
-                            <NavLink to="/cpl-manage/security" className="h-10 w-10 rounded-xl grid place-items-center p-muted hover:text-[var(--p-text)] hover:bg-white/[0.06] p-ring" aria-label="Güvenlik" title="Güvenlik / passkey"><FaFingerprint /></NavLink>
-                            <button type="button" onClick={() => logout().then(() => navigate('/cpl-manage/login'))} className="h-10 w-10 rounded-xl grid place-items-center p-muted hover:text-rose-300 hover:bg-rose-500/10 p-ring" aria-label="Çıkış yap" title="Çıkış"><FaSignOutAlt /></button>
+                            <NavLink to="/cpl-manage/security" className="h-10 w-10 rounded-xl grid place-items-center p-muted hover:text-[var(--p-text)] p-hover p-ring" aria-label="Güvenlik" title="Güvenlik / passkey"><FaFingerprint /></NavLink>
+                            <button type="button" onClick={() => logout().then(() => navigate('/cpl-manage/login'))} className="h-10 w-10 rounded-xl grid place-items-center p-muted hover:p-tone-danger hover:bg-rose-500/10 p-ring" aria-label="Çıkış yap" title="Çıkış"><FaSignOutAlt /></button>
                         </div>
                     </div>
                 </header>

@@ -32,7 +32,7 @@ export default function Home() {
                         </Card>
                         <Card title="Bugün ben" subtitle="Kişisel sayaçlar">
                             <dl className="grid grid-cols-3 gap-2 text-center">
-                                {[['İşlem', d.me.actions_today], ['Şikâyet', d.me.complaints_resolved_today], ['Bu hafta', d.me.actions_week]].map(([k, v]) => <div key={k} className="rounded-lg bg-white/[0.04] py-3"><dt className="text-[10px] uppercase p-muted">{k}</dt><dd className="text-2xl font-bold">{v}</dd></div>)}
+                                {[['İşlem', d.me.actions_today], ['Şikâyet', d.me.complaints_resolved_today], ['Bu hafta', d.me.actions_week]].map(([k, v]) => <div key={k} className="rounded-lg p-fill py-3"><dt className="text-[10px] uppercase p-muted">{k}</dt><dd className="text-2xl font-bold">{v}</dd></div>)}
                             </dl>
                             <div className="mt-4 text-xs p-muted space-y-1">
                                 <div>Kuyrukta gez: <Kbd>j</Kbd> <Kbd>k</Kbd> · kabul <Kbd>a</Kbd> · ret <Kbd>r</Kbd></div>

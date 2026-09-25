@@ -58,7 +58,7 @@ export default function Dashboard() {
                             <Donut segments={[{ label: 'Kadın', value: o.users.female, color: '#f472b6' }, { label: 'Erkek', value: o.users.male, color: '#38bdf8' }, { label: 'Belirsiz', value: Math.max(0, o.users.total - o.users.female - o.users.male), color: '#64748b' }]} centerLabel={formatNumber(o.users.total)} />
                             <dl className="grid grid-cols-2 gap-2 text-xs">
                                 {[[FaUserCheck, 'Doğrulanmış', o.users.verified], [FaUserPlus, 'Bu ay yeni', o.users.month], [FaSnowflake, 'Bot hesap', o.users.bots], [FaClock, 'Silinecek', o.users.deletion_scheduled]].map(([Icon, k, v]) => (
-                                    <div key={k} className="rounded-lg bg-white/[0.04] px-3 py-2 flex items-center gap-2"><Icon className="p-muted" /><span className="p-muted flex-1">{k}</span><b>{formatNumber(v)}</b></div>
+                                    <div key={k} className="rounded-lg p-fill px-3 py-2 flex items-center gap-2"><Icon className="p-muted" /><span className="p-muted flex-1">{k}</span><b>{formatNumber(v)}</b></div>
                                 ))}
                             </dl>
                         </div>
@@ -80,7 +80,7 @@ export default function Dashboard() {
                     {top.loading ? <Skeleton className="h-40" /> : top.data?.most_reported?.length ? (
                         <ul className="space-y-2">
                             {top.data.most_reported.map((u) => (
-                                <li key={u.id}><button type="button" onClick={() => navigate(`/cpl-manage/users/${u.id}`)} className="w-full flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/[0.05] text-left p-ring"><Avatar user={u} size={28} /><span className="text-sm font-medium flex-1 truncate">@{u.username}</span><Badge tone={u.reports_count >= 5 ? 'danger' : 'warning'}>{u.reports_count} şikâyet</Badge></button></li>
+                                <li key={u.id}><button type="button" onClick={() => navigate(`/cpl-manage/users/${u.id}`)} className="w-full flex items-center gap-3 rounded-lg px-2 py-1.5 p-hover text-left p-ring"><Avatar user={u} size={28} /><span className="text-sm font-medium flex-1 truncate">@{u.username}</span><Badge tone={u.reports_count >= 5 ? 'danger' : 'warning'}>{u.reports_count} şikâyet</Badge></button></li>
                             ))}
                         </ul>
                     ) : <p className="text-xs p-muted py-6 text-center">Şikâyet alan yok 🎉</p>}
@@ -99,7 +99,7 @@ export default function Dashboard() {
                                     ['Başarısız iş', String(health.data.queue.failed ?? 0), (health.data.queue.failed || 0) > 0 ? 'danger' : 'success'],
                                     ['Disk', health.data.disk.used_percent != null ? `%${health.data.disk.used_percent} dolu` : '—', (health.data.disk.used_percent || 0) > 85 ? 'danger' : 'success'],
                                     ['Bellek', formatBytes(health.data.memory.usage_bytes), 'neutral'],
-                                ].map(([k, v, tone]) => <div key={k} className="rounded-lg bg-white/[0.04] px-3 py-2"><dt className="p-muted">{k}</dt><dd className="mt-0.5"><Badge tone={tone}>{v}</Badge></dd></div>)}
+                                ].map(([k, v, tone]) => <div key={k} className="rounded-lg p-fill px-3 py-2"><dt className="p-muted">{k}</dt><dd className="mt-0.5"><Badge tone={tone}>{v}</Badge></dd></div>)}
                             </dl>
                         ) : <p className="text-xs p-muted">Sağlık verisi alınamadı.</p>}
                     </Card>

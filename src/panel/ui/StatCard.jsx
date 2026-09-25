@@ -4,19 +4,19 @@ import { compactNumber } from '../lib/format';
 
 const TONE_BG = {
     accent: 'p-accent-bg',
-    info: 'bg-sky-500/20 text-sky-300',
-    success: 'bg-emerald-500/20 text-emerald-300',
-    warning: 'bg-amber-500/20 text-amber-300',
-    danger: 'bg-rose-500/20 text-rose-300',
-    neutral: 'bg-white/[0.08] text-[var(--p-text)]',
+    info: 'bg-sky-500/20 p-tone-info',
+    success: 'bg-emerald-500/20 p-tone-success',
+    warning: 'bg-amber-500/20 p-tone-warning',
+    danger: 'bg-rose-500/20 p-tone-danger',
+    neutral: 'p-fill text-[var(--p-text)]',
 };
 
 /** KPI kutusu: değer, alt bilgi, isteğe bağlı değişim ve mini grafik. */
 export default function StatCard({ label, value, sub, delta, spark, icon: Icon, tone = 'neutral', onClick, compact = false }) {
     const Tag = onClick ? 'button' : 'div';
-    const deltaTone = delta > 0 ? 'text-emerald-400' : delta < 0 ? 'text-rose-400' : 'p-muted';
+    const deltaTone = delta > 0 ? 'p-tone-success' : delta < 0 ? 'p-tone-danger' : 'p-muted';
     return (
-        <Tag type={onClick ? 'button' : undefined} onClick={onClick} className={`p-surface rounded-2xl text-left w-full p-fade-in ${compact ? 'p-4' : 'p-5'} ${onClick ? 'hover:bg-white/[0.03] transition-colors p-ring' : ''}`}>
+        <Tag type={onClick ? 'button' : undefined} onClick={onClick} className={`p-surface rounded-2xl text-left w-full p-fade-in ${compact ? 'p-4' : 'p-5'} ${onClick ? 'p-hover transition-colors p-ring' : ''}`}>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <div className="text-xs font-semibold p-muted truncate">{label}</div>

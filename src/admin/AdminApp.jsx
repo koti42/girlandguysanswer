@@ -21,7 +21,7 @@ const AuditLog = lazy(() => import('./pages/AuditLog.jsx'));
 const System = lazy(() => import('./pages/System.jsx'));
 const Security = lazy(() => import('../panel/features/SecurityPage.jsx'));
 
-const Fallback = () => <div className="py-16 grid place-items-center"><div className="h-8 w-8 rounded-full border-2 border-white/20 border-t-[var(--p-accent)] animate-spin" /></div>;
+const Fallback = () => <div className="py-16 grid place-items-center"><div className="h-8 w-8 rounded-full border-2 border-[var(--p-border)] border-t-[var(--p-accent)] animate-spin" /></div>;
 
 /** Admin paneli: /cpl-manage/* - admin ve super_admin. */
 export default function AdminApp() {

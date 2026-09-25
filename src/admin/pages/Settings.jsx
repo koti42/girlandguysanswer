@@ -62,7 +62,7 @@ export default function Settings() {
                             const err = errors[s.key];
                             const label = <span className="inline-flex items-center gap-2">{s.label}{dirty && <Badge tone="warning" size="xs">değişti</Badge>}{s.public && <Badge size="xs" tone="neutral">herkese açık</Badge>}</span>;
                             if (s.type === 'bool') {
-                                return <div key={s.key} className={`rounded-xl border p-4 ${dirty ? 'border-amber-500/40' : 'border-[var(--p-border)]'} ${s.key === 'maintenance_mode' && v ? 'bg-rose-500/10' : ''}`}><Switch checked={!!v} onChange={(nv) => setValues({ ...values, [s.key]: nv })} label={label} description={s.help} />{err && <p className="text-xs text-rose-400 mt-1">{err}</p>}</div>;
+                                return <div key={s.key} className={`rounded-xl border p-4 ${dirty ? 'border-amber-500/40' : 'border-[var(--p-border)]'} ${s.key === 'maintenance_mode' && v ? 'bg-rose-500/10' : ''}`}><Switch checked={!!v} onChange={(nv) => setValues({ ...values, [s.key]: nv })} label={label} description={s.help} />{err && <p className="text-xs p-tone-danger mt-1">{err}</p>}</div>;
                             }
                             return (
                                 <Field key={s.key} label={label} hint={s.help || (s.type === 'int' && s.min != null ? `${s.min}–${s.max}` : undefined)} error={err} className={`rounded-xl border p-4 ${dirty ? 'border-amber-500/40' : 'border-[var(--p-border)]'}`}>

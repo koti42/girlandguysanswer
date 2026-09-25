@@ -118,7 +118,7 @@ export default function ComplaintQueue({ keyboard = true, initialStatus = 'pendi
                         </Select>
                     </div>
                     {selection.size > 0 && (
-                        <div className="flex items-center gap-2 text-xs rounded-lg bg-white/[0.05] px-2 py-1.5">
+                        <div className="flex items-center gap-2 text-xs rounded-lg p-fill px-2 py-1.5">
                             <b>{selection.size} seçili</b>
                             <Button size="xs" variant="success" onClick={() => bulk('accepted')} loading={busy}>Kabul</Button>
                             <Button size="xs" variant="secondary" onClick={() => bulk('rejected')} loading={busy}>Ret</Button>
@@ -134,14 +134,14 @@ export default function ComplaintQueue({ keyboard = true, initialStatus = 'pendi
                         const active = c.id === activeId;
                         return (
                             <li key={c.id} role="option" aria-selected={active}>
-                                <button type="button" onClick={() => setActiveId(c.id)} className={`w-full text-left p-3 flex gap-3 transition-colors ${active ? 'bg-white/[0.07] border-l-2 border-l-[var(--p-accent)]' : 'hover:bg-white/[0.04] border-l-2 border-l-transparent'}`}>
+                                <button type="button" onClick={() => setActiveId(c.id)} className={`w-full text-left p-3 flex gap-3 transition-colors ${active ? 'p-fill border-l-2 border-l-[var(--p-accent)]' : 'p-hover border-l-2 border-l-transparent'}`}>
                                     <input type="checkbox" checked={selection.has(c.id)} onChange={() => setSelection((s) => toggleOne(s, c.id))} onClick={(e) => e.stopPropagation()} className="mt-1 accent-[var(--p-accent)]" aria-label="Seç" />
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2 text-xs mb-1">
                                             <Badge tone="info" size="xs">{CONTENT_LABELS[c.type] || c.type}</Badge>
                                             {c.report_count > 1 && <Badge tone={urgency} size="xs">{c.report_count}× şikâyet</Badge>}
                                             {c.status !== 'pending' && <Badge tone={COMPLAINT_STATUS[c.status]?.tone} size="xs">{COMPLAINT_STATUS[c.status]?.label}</Badge>}
-                                            <span className={`ml-auto ${urgency === 'danger' ? 'text-rose-400 font-semibold' : 'p-muted'}`}>{hoursLabel(c.age_hours)}</span>
+                                            <span className={`ml-auto ${urgency === 'danger' ? 'p-tone-danger font-semibold' : 'p-muted'}`}>{hoursLabel(c.age_hours)}</span>
                                         </div>
                                         <div className="text-sm font-medium truncate">{c.reason || 'Sebep belirtilmemiş'}</div>
                                         <div className="text-xs p-muted truncate">{c.reported_user ? `@${c.reported_user.username}` : 'bilinmeyen kullanıcı'} · {truncate(c.description || c.reportable?.title || c.reportable?.content || '', 70) || '—'}</div>
@@ -178,7 +178,7 @@ export default function ComplaintQueue({ keyboard = true, initialStatus = 'pendi
                                 </div>
                             )}
                         >
-                            {complaint.description && <p className="text-sm mb-3 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2"><b className="text-amber-300">Açıklama:</b> {complaint.description}</p>}
+                            {complaint.description && <p className="text-sm mb-3 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2"><b className="p-tone-warning">Açıklama:</b> {complaint.description}</p>}
                             <ContentPreview type={complaint.type} item={complaint.reportable} />
                             {complaint.status !== 'pending' && (
                                 <p className="text-xs p-muted mt-3">Karar: <b>{complaint.handled_by?.username || '—'}</b> · {relativeTime(complaint.handled_at)} {complaint.resolution_notes && <>· {complaint.resolution_notes}</>}</p>
@@ -204,7 +204,7 @@ export default function ComplaintQueue({ keyboard = true, initialStatus = 'pendi
                                         {detail.data.reported_user_stats && (
                                             <dl className="grid grid-cols-3 gap-2 mt-4 text-center">
                                                 {[['Şikâyet', detail.data.reported_user_stats.complaints_against], ['Uyarı', detail.data.reported_user_stats.warnings], ['Durum', detail.data.reported_user_stats.is_banned ? 'Banlı' : detail.data.reported_user_stats.is_frozen ? 'Donuk' : 'Aktif']].map(([k, v]) => (
-                                                    <div key={k} className="rounded-lg bg-white/[0.04] py-2"><dt className="text-[10px] uppercase p-muted">{k}</dt><dd className="font-bold text-sm">{v}</dd></div>
+                                                    <div key={k} className="rounded-lg p-fill py-2"><dt className="text-[10px] uppercase p-muted">{k}</dt><dd className="font-bold text-sm">{v}</dd></div>
                                                 ))}
                                             </dl>
                                         )}
@@ -216,7 +216,7 @@ export default function ComplaintQueue({ keyboard = true, initialStatus = 'pendi
                                 {detail.data.related?.length ? (
                                     <ul className="space-y-2 text-xs">
                                         {detail.data.related.map((r) => (
-                                            <li key={r.id} className="flex items-center gap-2 rounded-lg bg-white/[0.04] px-3 py-2">
+                                            <li key={r.id} className="flex items-center gap-2 rounded-lg p-fill px-3 py-2">
                                                 <Badge tone={COMPLAINT_STATUS[r.status]?.tone} size="xs">{COMPLAINT_STATUS[r.status]?.label}</Badge>
                                                 <span className="font-medium truncate">{r.reason || '—'}</span>
                                                 <span className="p-muted ml-auto whitespace-nowrap">@{r.reporter?.username} · {relativeTime(r.created_at)}</span>

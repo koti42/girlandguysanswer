@@ -41,7 +41,7 @@ export default function SecurityPage() {
     return (
         <div>
             <PageHeader title="Güvenlik" description={`@${user?.username} · giriş yöntemlerin`} actions={supported && <Button size="sm" variant="primary" icon={FaPlus} onClick={() => setAdding(true)}>Passkey ekle</Button>} />
-            {borrowedSession && <p className="mb-4 text-xs rounded-xl bg-white/[0.05] border border-[var(--p-border)] px-4 py-3">Bu oturum ana siteden devralındı. Panelden çıkış yapmak ana site oturumunu kapatmaz.</p>}
+            {borrowedSession && <p className="mb-4 text-xs rounded-xl p-fill border border-[var(--p-border)] px-4 py-3">Bu oturum ana siteden devralındı. Panelden çıkış yapmak ana site oturumunu kapatmaz.</p>}
             <Card title="Passkey'ler" subtitle="Parmak izi, yüz veya cihaz PIN'i ile şifresiz giriş. Her cihaz için ayrı kayıt." padded={false}>
                 {!supported && <p className="p-5 text-sm p-muted">Bu tarayıcı passkey desteklemiyor.</p>}
                 {list.loading ? <Skeleton className="h-24 m-5" /> : items.length === 0 ? (
@@ -50,7 +50,7 @@ export default function SecurityPage() {
                     <ul className="divide-y divide-[var(--p-border)]">
                         {items.map((p) => (
                             <li key={p.id} className="flex items-center gap-4 px-5 py-4">
-                                <span className="h-10 w-10 rounded-xl bg-white/[0.06] grid place-items-center p-accent-text"><FaFingerprint /></span>
+                                <span className="h-10 w-10 rounded-xl p-fill grid place-items-center p-accent-text"><FaFingerprint /></span>
                                 <div className="min-w-0 flex-1">
                                     <div className="font-medium">{p.name}</div>
                                     <div className="text-xs p-muted">eklendi {formatDateTime(p.created_at)} · {p.last_used_at ? `son kullanım ${relativeTime(p.last_used_at)}` : 'hiç kullanılmadı'}</div>

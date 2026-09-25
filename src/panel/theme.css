@@ -31,7 +31,60 @@
   --p-accent-ink: #1a1305;
 }
 
+/* Dolgu / iç alan / ton renkleri: bileşenler bunları kullanır, sabit renk değil. */
+[data-panel] {
+  --p-fill: rgba(255, 255, 255, 0.06);
+  --p-fill-hover: rgba(255, 255, 255, 0.1);
+  --p-fill-strong: rgba(255, 255, 255, 0.12);
+  --p-inset: rgba(0, 0, 0, 0.3);
+  --p-tone-danger: #fda4af;
+  --p-tone-success: #6ee7b7;
+  --p-tone-warning: #fcd34d;
+  --p-tone-info: #7dd3fc;
+}
+
+/* Açık tema: aynı bileşenler, ters değerler. */
+[data-panel][data-theme="light"] {
+  --p-bg: #f3f5f9;
+  --p-surface: #ffffff;
+  --p-surface-2: #eef1f6;
+  --p-border: rgba(15, 23, 42, 0.12);
+  --p-text: #0f172a;
+  --p-muted: #5b6478;
+  --p-fill: rgba(15, 23, 42, 0.05);
+  --p-fill-hover: rgba(15, 23, 42, 0.08);
+  --p-fill-strong: rgba(15, 23, 42, 0.1);
+  --p-inset: rgba(15, 23, 42, 0.04);
+  --p-tone-danger: #be123c;
+  --p-tone-success: #047857;
+  --p-tone-warning: #b45309;
+  --p-tone-info: #0369a1;
+  color-scheme: light;
+}
+[data-panel="mod"][data-theme="light"] {
+  --p-bg: #f7f4ee;
+  --p-surface: #ffffff;
+  --p-surface-2: #f1ede4;
+  --p-border: rgba(180, 83, 9, 0.18);
+  --p-accent: #d97706;
+  --p-accent-2: #ea580c;
+  --p-accent-ink: #ffffff;
+}
+
 [data-panel] { background: var(--p-bg); color: var(--p-text); }
+
+.p-fill { background: var(--p-fill); }
+.p-fill-strong { background: var(--p-fill-strong); }
+.p-hover:hover { background: var(--p-fill-hover); }
+.p-inset { background: var(--p-inset); }
+.p-tone-danger { color: var(--p-tone-danger); }
+.p-tone-success { color: var(--p-tone-success); }
+.p-tone-warning { color: var(--p-tone-warning); }
+.p-tone-info { color: var(--p-tone-info); }
+.hover\:p-tone-danger:hover { color: var(--p-tone-danger); }
+/* Açık temada kutu gölgeleri daha belirgin olsun, yoksa yüzeyler zemine karışır. */
+[data-panel][data-theme="light"] .p-surface { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px -8px rgba(15, 23, 42, 0.12); }
+[data-panel][data-theme="light"] .p-accent-bg { color: #ffffff; }
 
 .p-surface { background: var(--p-surface); border: 1px solid var(--p-border); }
 .p-surface-2 { background: var(--p-surface-2); }

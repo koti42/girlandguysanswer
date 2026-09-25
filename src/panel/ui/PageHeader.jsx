@@ -16,5 +16,5 @@ export default function PageHeader({ title, description, actions, children }) {
 }
 
 export function Kbd({ children }) {
-    return <kbd className="inline-block rounded border border-[var(--p-border)] bg-black/30 px-1.5 py-0.5 text-[10px] font-mono leading-none p-muted">{children}</kbd>;
+    return <kbd className="inline-block rounded border border-[var(--p-border)] p-inset px-1.5 py-0.5 text-[10px] font-mono leading-none p-muted">{children}</kbd>;
 }

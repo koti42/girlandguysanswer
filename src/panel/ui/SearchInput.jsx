@@ -19,7 +19,7 @@ export default function SearchInput({ value, onChange, placeholder = 'Ara…', d
                 onChange={(e) => setLocal(e.target.value)}
                 placeholder={placeholder}
                 autoFocus={autoFocus}
-                className="w-full h-10 rounded-lg bg-black/30 border border-[var(--p-border)] pl-9 pr-8 text-sm text-[var(--p-text)] placeholder:text-[var(--p-muted)] p-ring"
+                className="w-full h-10 rounded-lg p-inset border border-[var(--p-border)] pl-9 pr-8 text-sm text-[var(--p-text)] placeholder:text-[var(--p-muted)] p-ring"
                 type="search"
                 aria-label={placeholder}
             />

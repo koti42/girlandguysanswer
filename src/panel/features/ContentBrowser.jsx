@@ -70,7 +70,7 @@ export default function ContentBrowser({ initialType = 'question', userId = null
                     <option value="newest">En yeni</option><option value="oldest">En eski</option><option value="reported">Çok şikâyetli</option>
                 </Select>
                 {selection.size > 0 && (
-                    <div className="ml-auto flex items-center gap-2 text-xs rounded-xl bg-white/[0.05] px-3 py-2">
+                    <div className="ml-auto flex items-center gap-2 text-xs rounded-xl p-fill px-3 py-2">
                         <b>{selection.size} seçili</b>
                         <Button size="xs" variant="warning" icon={FaEyeSlash} onClick={() => setBulkDialog('hide')}>Gizle</Button>
                         <Button size="xs" variant="success" icon={FaEye} onClick={() => setBulkDialog('unhide')}>Göster</Button>
@@ -111,14 +111,14 @@ function ItemDetail({ type, id, fallback }) {
         return () => { alive = false; };
     }, [type, id, fallback]);
 
-    if (!data) return <div className="space-y-3"><div className="h-24 animate-pulse rounded-lg bg-white/[0.07]" /></div>;
+    if (!data) return <div className="space-y-3"><div className="h-24 animate-pulse rounded-lg p-fill" /></div>;
     return (
         <div className="space-y-5">
             <ContentPreview type={type} item={data.content} full />
             {data.content?.hidden_reason && <p className="text-xs rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2">Gizleme sebebi: {data.content.hidden_reason}</p>}
             {data.content?.removed_reason && <p className="text-xs rounded-lg bg-rose-500/10 border border-rose-500/20 px-3 py-2">Kaldırma sebebi: {data.content.removed_reason}</p>}
             <section><h4 className="text-xs font-semibold p-muted mb-2">Şikâyetler ({data.complaints?.length || 0})</h4>
-                {data.complaints?.length ? <ul className="space-y-1.5 text-xs">{data.complaints.map((c) => <li key={c.id} className="rounded-lg bg-white/[0.04] px-3 py-2 flex gap-2"><Badge tone={c.status === 'pending' ? 'warning' : c.status === 'accepted' ? 'success' : 'neutral'} size="xs">{c.status}</Badge><span className="truncate">{c.reason} · @{c.reporter?.username}</span><span className="ml-auto p-muted">{relativeTime(c.created_at)}</span></li>)}</ul> : <p className="text-xs p-muted">Şikâyet yok.</p>}
+                {data.complaints?.length ? <ul className="space-y-1.5 text-xs">{data.complaints.map((c) => <li key={c.id} className="rounded-lg p-fill px-3 py-2 flex gap-2"><Badge tone={c.status === 'pending' ? 'warning' : c.status === 'accepted' ? 'success' : 'neutral'} size="xs">{c.status}</Badge><span className="truncate">{c.reason} · @{c.reporter?.username}</span><span className="ml-auto p-muted">{relativeTime(c.created_at)}</span></li>)}</ul> : <p className="text-xs p-muted">Şikâyet yok.</p>}
             </section>
             <section><h4 className="text-xs font-semibold p-muted mb-2">İşlem geçmişi</h4><Timeline items={data.actions || []} showTarget={false} /></section>
         </div>

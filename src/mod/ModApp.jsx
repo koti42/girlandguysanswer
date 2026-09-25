@@ -13,7 +13,7 @@ const Users = lazy(() => import('./pages/Users.jsx'));
 const Activity = lazy(() => import('./pages/Activity.jsx'));
 const Security = lazy(() => import('../panel/features/SecurityPage.jsx'));
 
-const Fallback = () => <div className="py-16 grid place-items-center"><div className="h-8 w-8 rounded-full border-2 border-white/20 border-t-[var(--p-accent)] animate-spin" /></div>;
+const Fallback = () => <div className="py-16 grid place-items-center"><div className="h-8 w-8 rounded-full border-2 border-[var(--p-border)] border-t-[var(--p-accent)] animate-spin" /></div>;
 const S = ({ children }) => <Suspense fallback={<Fallback />}>{children}</Suspense>;
 
 /** Moderasyon paneli: /mod/* - moderator, admin, super_admin. */

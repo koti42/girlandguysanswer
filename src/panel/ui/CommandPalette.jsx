@@ -39,7 +39,7 @@ export default function CommandPalette({ open, onClose, commands = [], panel }) 
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[950] flex items-start justify-center pt-[12vh] px-4" data-panel={panel} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <div className="fixed inset-0 z-[950] flex items-start justify-center pt-[12vh] px-4" data-panel={panel} data-theme={document.querySelector('[data-panel]')?.dataset.theme} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative w-full max-w-xl p-surface rounded-2xl shadow-2xl overflow-hidden p-fade-in" role="dialog" aria-label="Komut paleti">
                 <div className="flex items-center gap-3 px-4 h-14 border-b border-[var(--p-border)]">
@@ -51,7 +51,7 @@ export default function CommandPalette({ open, onClose, commands = [], panel }) 
                     {results.length === 0 && <li className="px-4 py-6 text-center text-xs p-muted">Sonuç yok</li>}
                     {results.map((c, i) => (
                         <li key={c.id}>
-                            <button type="button" onMouseEnter={() => setIdx(i)} onClick={() => run(c)} className={`w-full text-left px-4 py-2.5 flex items-center gap-3 text-sm ${i === idx ? 'bg-white/[0.08]' : ''}`}>
+                            <button type="button" onMouseEnter={() => setIdx(i)} onClick={() => run(c)} className={`w-full text-left px-4 py-2.5 flex items-center gap-3 text-sm ${i === idx ? 'p-fill' : ''}`}>
                                 {c.icon && <c.icon className="p-muted text-xs" />}
                                 <span className="flex-1 truncate">{c.label}</span>
                                 {c.group && <span className="text-[10px] uppercase p-muted">{c.group}</span>}

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { usePanelAuth } from './PanelAuthContext';
+import { currentTheme } from '../hooks/usePanelTheme';
+import '../theme.css';
 
 /**
  * Rota kapısı. `panel` = 'mod' | 'admin'. Girişsizse login'e, girişli ama
@@ -12,8 +14,8 @@ export default function RequireRole({ panel, loginPath, children }) {
 
     if (booting) {
         return (
-            <div className="min-h-screen grid place-items-center bg-slate-950">
-                <div className="h-10 w-10 rounded-full border-2 border-slate-700 border-t-amber-400 animate-spin" />
+            <div data-panel={panel} data-theme={currentTheme()} className="min-h-screen grid place-items-center bg-[var(--p-bg)]">
+                <div className="h-10 w-10 rounded-full border-2 border-[var(--p-border)] border-t-[var(--p-accent)] animate-spin" />
             </div>
         );
     }

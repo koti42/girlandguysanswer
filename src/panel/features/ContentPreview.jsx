@@ -15,7 +15,7 @@ export default function ContentPreview({ type, item, full = false }) {
     const owner = item.user;
 
     return (
-        <article className="rounded-xl border border-[var(--p-border)] bg-black/20 p-4">
+        <article className="rounded-xl border border-[var(--p-border)] p-inset p-4">
             <header className="flex items-center gap-2 mb-2 flex-wrap">
                 <Badge tone="info">{CONTENT_LABELS[type] || type}</Badge>
                 {item.is_hidden && <Badge tone="warning">Gizli</Badge>}

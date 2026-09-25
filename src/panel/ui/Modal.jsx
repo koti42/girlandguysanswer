@@ -29,7 +29,7 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
     if (!open) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[900] flex items-end sm:items-center justify-center p-0 sm:p-4" data-panel={panel || document.querySelector('[data-panel]')?.dataset.panel || 'admin'} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
+        <div className="fixed inset-0 z-[900] flex items-end sm:items-center justify-center p-0 sm:p-4" data-panel={panel || document.querySelector('[data-panel]')?.dataset.panel || 'admin'} data-theme={document.querySelector('[data-panel]')?.dataset.theme} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div ref={boxRef} role="dialog" aria-modal="true" aria-label={title} className={`relative w-full ${width} p-surface rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[92vh] flex flex-col p-fade-in`}>
                 <header className="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-[var(--p-border)]">
@@ -37,7 +37,7 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
                         <h2 className="text-base font-semibold">{title}</h2>
                         {subtitle && <p className="text-xs p-muted mt-0.5">{subtitle}</p>}
                     </div>
-                    <button type="button" data-close onClick={onClose} aria-label="Kapat" className="h-8 w-8 rounded-lg grid place-items-center p-muted hover:text-[var(--p-text)] hover:bg-white/10 p-ring">
+                    <button type="button" data-close onClick={onClose} aria-label="Kapat" className="h-8 w-8 rounded-lg grid place-items-center p-muted hover:text-[var(--p-text)] p-hover p-ring">
                         <FaTimes />
                     </button>
                 </header>

@@ -51,7 +51,7 @@ export default function UserDrawer({ id, onClose, onChanged, roles = [] }) {
 
     return (
         <Drawer open={!!id} onClose={onClose} width="max-w-3xl"
-            title={user ? <span className="inline-flex items-center gap-3"><Avatar user={user} size={36} />@{user.username}{user.is_verified && <FaCheckCircle className="text-sky-400 text-sm" />}<Badge tone={USER_STATUS[status].tone} dot>{USER_STATUS[status].label}</Badge></span> : 'Kullanıcı'}
+            title={user ? <span className="inline-flex items-center gap-3"><Avatar user={user} size={36} />@{user.username}{user.is_verified && <FaCheckCircle className="p-tone-info text-sm" />}<Badge tone={USER_STATUS[status].tone} dot>{USER_STATUS[status].label}</Badge></span> : 'Kullanıcı'}
             subtitle={user && `${user.email} · kayıt ${formatDateTime(user.created_at)} · son görülme ${user.last_seen_at ? relativeTime(user.last_seen_at) : '—'}`}
             footer={user && (
                 <>
@@ -69,7 +69,7 @@ export default function UserDrawer({ id, onClose, onChanged, roles = [] }) {
                     {q.data.counts && (
                         <dl className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
                             {[['Soru', q.data.counts.questions], ['Cevap', q.data.counts.answers], ['Yorum', q.data.counts.comments], ['Görüş', q.data.counts.opinions], ['Hikâye', q.data.counts.stories], ['Şikâyet', q.data.counts.complaints_against]].map(([k, v]) => (
-                                <div key={k} className="rounded-lg bg-white/[0.04] py-2"><dt className="text-[10px] uppercase p-muted">{k}</dt><dd className="font-bold text-sm">{formatNumber(v)}</dd></div>
+                                <div key={k} className="rounded-lg p-fill py-2"><dt className="text-[10px] uppercase p-muted">{k}</dt><dd className="font-bold text-sm">{formatNumber(v)}</dd></div>
                             ))}
                         </dl>
                     )}
@@ -99,7 +99,7 @@ export default function UserDrawer({ id, onClose, onChanged, roles = [] }) {
                                     {roles.map((r) => {
                                         const on = roleSlugs.includes(r.slug);
                                         const locked = r.slug === 'super_admin' && !isSuperAdmin;
-                                        return <button key={r.slug} type="button" disabled={locked} onClick={() => setRoleSlugs((s) => on ? s.filter((x) => x !== r.slug) : [...s, r.slug])} className={`text-xs rounded-full border px-3 py-1.5 transition-colors p-ring disabled:opacity-40 ${on ? 'p-accent-bg border-transparent' : 'border-[var(--p-border)] hover:bg-white/[0.06]'}`} title={locked ? 'Yalnızca süper admin' : r.description}>{r.name}</button>;
+                                        return <button key={r.slug} type="button" disabled={locked} onClick={() => setRoleSlugs((s) => on ? s.filter((x) => x !== r.slug) : [...s, r.slug])} className={`text-xs rounded-full border px-3 py-1.5 transition-colors p-ring disabled:opacity-40 ${on ? 'p-accent-bg border-transparent' : 'border-[var(--p-border)] p-hover'}`} title={locked ? 'Yalnızca süper admin' : r.description}>{r.name}</button>;
                                     })}
                                     <Button size="sm" variant="primary" disabled={!rolesDirty} loading={busy} onClick={() => run(() => adminApi.updateRoles(user.id, roleSlugs), 'Roller güncellendi.')}>Rolleri kaydet</Button>
                                 </div>
@@ -150,12 +150,12 @@ function Messages({ userId }) {
             <ul className="space-y-1 max-h-96 overflow-y-auto">
                 {convs.loading && <Skeleton className="h-24" />}
                 {!convs.loading && !list.length && <li className="text-xs p-muted">Konuşma yok.</li>}
-                {list.map((c) => <li key={c.id}><button type="button" onClick={() => setOpen(c.id)} className={`w-full text-left text-xs rounded-lg px-3 py-2 ${open === c.id ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]'}`}>{c.other_user?.username || c.participants?.map((p) => p.username).join(', ') || c.id}<span className="block p-muted">{relativeTime(c.updated_at || c.last_message_at)}</span></button></li>)}
+                {list.map((c) => <li key={c.id}><button type="button" onClick={() => setOpen(c.id)} className={`w-full text-left text-xs rounded-lg px-3 py-2 ${open === c.id ? 'p-fill' : 'p-hover'}`}>{c.other_user?.username || c.participants?.map((p) => p.username).join(', ') || c.id}<span className="block p-muted">{relativeTime(c.updated_at || c.last_message_at)}</span></button></li>)}
             </ul>
             <div className="max-h-96 overflow-y-auto space-y-2 text-sm">
                 {!open && <p className="text-xs p-muted">Bir konuşma seçin.</p>}
                 {open && msgs.loading && <Skeleton className="h-24" />}
-                {open && !msgs.loading && (msgs.data?.messages || msgs.data?.items || []).map((m) => <div key={m.id} className={`rounded-lg px-3 py-2 ${m.sender_id === userId ? 'bg-[var(--p-accent)]/15 ml-8' : 'bg-white/[0.05] mr-8'}`}><div className="text-[10px] p-muted mb-0.5">{m.sender?.username || m.sender_id} · {relativeTime(m.created_at)}</div>{m.content || <i className="p-muted">[dosya/medya]</i>}</div>)}
+                {open && !msgs.loading && (msgs.data?.messages || msgs.data?.items || []).map((m) => <div key={m.id} className={`rounded-lg px-3 py-2 ${m.sender_id === userId ? 'bg-[var(--p-accent)]/15 ml-8' : 'p-fill mr-8'}`}><div className="text-[10px] p-muted mb-0.5">{m.sender?.username || m.sender_id} · {relativeTime(m.created_at)}</div>{m.content || <i className="p-muted">[dosya/medya]</i>}</div>)}
             </div>
         </div>
     );

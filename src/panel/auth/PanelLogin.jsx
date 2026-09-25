@@ -8,6 +8,8 @@ import { authApi } from '../api/endpoints';
 import { conditionalUiAvailable, isUserCancel, passkeySupported } from '../lib/webauthn';
 import { panelsFor } from '../lib/permissions';
 import '../theme.css';
+import ThemeToggle from '../ui/ThemeToggle';
+import { usePanelTheme } from '../hooks/usePanelTheme';
 
 const COPY = {
     admin: {
@@ -39,6 +41,7 @@ export default function PanelLogin({ panel }) {
     const navigate = useNavigate();
     const location = useLocation();
     const [sp, setSp] = useSearchParams();
+    const { resolved: theme } = usePanelTheme();
 
     const [mode, setMode] = useState('login'); // login | forgot | forgot-sent
     const [email, setEmail] = useState('');
@@ -98,7 +101,8 @@ export default function PanelLogin({ panel }) {
     const Icon = c.icon;
 
     return (
-        <div data-panel={panel} className="min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
+        <div data-panel={panel} data-theme={theme} className="min-h-screen grid lg:grid-cols-[1.1fr_1fr] relative">
+            <div className="absolute top-4 right-4 z-10"><ThemeToggle /></div>
             {/* Sol: kimlik */}
             <aside className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden">
                 <div className="absolute inset-0 opacity-[0.35]" style={{ background: 'radial-gradient(60% 50% at 20% 20%, var(--p-accent) 0%, transparent 60%), radial-gradient(50% 40% at 80% 80%, var(--p-accent-2) 0%, transparent 60%)' }} aria-hidden />
@@ -111,7 +115,7 @@ export default function PanelLogin({ panel }) {
                     <h1 className="text-4xl font-bold tracking-tight leading-tight max-w-md">{c.tagline}</h1>
                     <ul className="mt-8 space-y-4">
                         {c.bullets.map(([BIcon, text]) => (
-                            <li key={text} className="flex items-center gap-3 text-sm"><span className="h-8 w-8 rounded-lg bg-white/[0.08] grid place-items-center p-accent-text"><BIcon /></span>{text}</li>
+                            <li key={text} className="flex items-center gap-3 text-sm"><span className="h-8 w-8 rounded-lg p-fill grid place-items-center p-accent-text"><BIcon /></span>{text}</li>
                         ))}
                     </ul>
                 </div>
@@ -128,13 +132,13 @@ export default function PanelLogin({ panel }) {
 
                     {/* Ana sitede oturum var ama yetki yok */}
                     {mainSession && !mainSession.hasAccess && mode === 'login' && (
-                        <p className="mb-4 text-xs rounded-xl bg-white/[0.05] border border-[var(--p-border)] px-4 py-3">Ana sitede <b>@{mainSession.username}</b> olarak girişlisiniz ama bu hesabın panel yetkisi yok. Yetkili bir hesapla giriş yapın.</p>
+                        <p className="mb-4 text-xs rounded-xl p-fill border border-[var(--p-border)] px-4 py-3">Ana sitede <b>@{mainSession.username}</b> olarak girişlisiniz ama bu hesabın panel yetkisi yok. Yetkili bir hesapla giriş yapın.</p>
                     )}
 
                     <div className="p-surface rounded-2xl p-6 sm:p-8 space-y-5">
                         {mode === 'forgot-sent' ? (
                             <div className="text-center py-4">
-                                <div className="mx-auto h-12 w-12 rounded-2xl bg-emerald-500/15 text-emerald-300 grid place-items-center text-xl">✓</div>
+                                <div className="mx-auto h-12 w-12 rounded-2xl bg-emerald-500/15 p-tone-success grid place-items-center text-xl">✓</div>
                                 <h2 className="mt-4 font-semibold">E-postanı kontrol et</h2>
                                 <p className="text-sm p-muted mt-1">Bu adrese kayıtlı bir hesap varsa sıfırlama bağlantısı gönderildi.</p>
                                 <Button className="mt-5" variant="secondary" onClick={() => setMode('login')}>Girişe dön</Button>
@@ -143,7 +147,7 @@ export default function PanelLogin({ panel }) {
                             <form onSubmit={submitForgot} className="space-y-4">
                                 <div><h2 className="text-lg font-semibold">Parolanı sıfırla</h2><p className="text-sm p-muted mt-1">E-postana bir bağlantı göndereceğiz.</p></div>
                                 <Field label="E-posta"><Input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus /></Field>
-                                {error && <p className="text-sm text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2" role="alert">{error}</p>}
+                                {error && <p className="text-sm p-tone-danger bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2" role="alert">{error}</p>}
                                 <Button type="submit" variant="primary" className="w-full" loading={busy === 'forgot'}>Bağlantı gönder</Button>
                                 <button type="button" onClick={() => setMode('login')} className="w-full text-xs p-muted hover:text-[var(--p-text)]">Vazgeç</button>
                             </form>
@@ -156,7 +160,7 @@ export default function PanelLogin({ panel }) {
                                     <Field label={<span className="flex items-center justify-between w-full">Parola<button type="button" onClick={() => { setError(''); setMode('forgot'); }} className="text-xs p-accent-text hover:underline font-normal">Şifremi unuttum</button></span>}>
                                         <Input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required data-testid="login-password" />
                                     </Field>
-                                    {error && <p className="text-sm text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2" role="alert">{error}</p>}
+                                    {error && <p className="text-sm p-tone-danger bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2" role="alert">{error}</p>}
                                     <Button type="submit" variant="primary" className="w-full" loading={busy === 'password'} disabled={!!busy && busy !== 'password'} icon={FaArrowRight} data-testid="login-submit">Giriş yap</Button>
                                 </form>
 

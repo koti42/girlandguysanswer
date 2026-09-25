@@ -60,7 +60,7 @@ export default function Users() {
 
     const columns = useMemo(() => [
         { key: 'username', label: 'Kullanıcı', render: (u) => (
-            <span className="inline-flex items-center gap-3 min-w-0"><Avatar user={u} size={32} /><span className="min-w-0"><span className="font-medium flex items-center gap-1.5">{u.username}{u.is_verified && <FaCheckCircle className="text-sky-400 text-xs" title="Doğrulanmış" />}{u.is_bot && <Badge size="xs">bot</Badge>}</span><span className="block text-xs p-muted truncate">{u.email}</span></span></span>
+            <span className="inline-flex items-center gap-3 min-w-0"><Avatar user={u} size={32} /><span className="min-w-0"><span className="font-medium flex items-center gap-1.5">{u.username}{u.is_verified && <FaCheckCircle className="p-tone-info text-xs" title="Doğrulanmış" />}{u.is_bot && <Badge size="xs">bot</Badge>}</span><span className="block text-xs p-muted truncate">{u.email}</span></span></span>
         ) },
         { key: 'roles', label: 'Roller', render: (u) => <span className="flex gap-1 flex-wrap">{(u.roles || []).filter((r) => r.slug !== 'user').map((r) => <Badge key={r.slug} tone={r.slug === 'super_admin' ? 'accent' : r.slug === 'admin' ? 'info' : r.slug === 'moderator' ? 'warning' : 'neutral'} size="xs">{r.name || r.slug}</Badge>)}</span> },
         { key: 'status', label: 'Durum', width: 130, render: (u) => { const s = userStatusOf(u); return <span className="flex gap-1 flex-wrap"><Badge tone={USER_STATUS[s].tone} dot>{USER_STATUS[s].label}</Badge>{u.pending_reports > 0 && <Badge tone="danger" size="xs">{u.pending_reports} şikâyet</Badge>}</span>; } },
@@ -81,7 +81,7 @@ export default function Users() {
                     <Select value={filters.sort} onChange={(e) => set('sort')(e.target.value)} className="w-auto" aria-label="Sıralama"><option value="newest">En yeni</option><option value="oldest">En eski</option><option value="last_seen">Son görülme</option><option value="reported">Çok şikâyetli</option><option value="username">Ad</option></Select>
                 </div>
                 {selection.size > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white/[0.05] border border-[var(--p-border)] px-3 py-2 text-xs">
+                    <div className="flex flex-wrap items-center gap-2 rounded-xl p-fill border border-[var(--p-border)] px-3 py-2 text-xs">
                         <b className="mr-1">{selection.size} seçili</b>
                         <Button size="xs" variant="danger" icon={FaBan} onClick={() => setBulk({ action: 'ban' })}>Banla</Button>
                         <Button size="xs" variant="success" icon={FaUnlock} onClick={() => setBulk({ action: 'unban' })}>Banı kaldır</Button>

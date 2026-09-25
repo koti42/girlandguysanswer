@@ -2,11 +2,11 @@ import React from 'react';
 
 const VARIANTS = {
     primary: 'p-accent-bg shadow-sm hover:brightness-110 disabled:opacity-50',
-    secondary: 'bg-white/[0.06] border border-white/10 text-[var(--p-text)] hover:bg-white/[0.1] disabled:opacity-50',
-    ghost: 'text-[var(--p-muted)] hover:text-[var(--p-text)] hover:bg-white/[0.06] disabled:opacity-50',
-    danger: 'bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25 disabled:opacity-50',
-    warning: 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 disabled:opacity-50',
-    success: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 disabled:opacity-50',
+    secondary: 'p-fill border border-[var(--p-border)] text-[var(--p-text)] p-hover disabled:opacity-50',
+    ghost: 'text-[var(--p-muted)] hover:text-[var(--p-text)] p-hover disabled:opacity-50',
+    danger: 'bg-rose-500/15 p-tone-danger border border-rose-500/30 hover:bg-rose-500/25 disabled:opacity-50',
+    warning: 'bg-amber-500/15 p-tone-warning border border-amber-500/30 hover:bg-amber-500/25 disabled:opacity-50',
+    success: 'bg-emerald-500/15 p-tone-success border border-emerald-500/30 hover:bg-emerald-500/25 disabled:opacity-50',
 };
 
 const SIZES = {

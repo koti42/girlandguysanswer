@@ -61,7 +61,7 @@ function Profile({ id, onClose, onChanged }) {
                     {(u.banned_reason || u.frozen_reason) && <p className="text-xs rounded-lg bg-rose-500/10 border border-rose-500/20 px-3 py-2">{u.banned_reason ? `Ban: ${u.banned_reason}` : `Dondurma: ${u.frozen_reason}`}{(u.banned_until || u.frozen_until) && ` · bitiş ${formatDateTime(u.banned_until || u.frozen_until)}`}</p>}
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
                         {[['Kabul edilen şikâyet', d.risk.factors.accepted, 'danger'], ['Bekleyen', d.risk.factors.pending, 'warning'], ['Uyarı', d.risk.factors.warnings, 'warning'], ['Yaptırım', d.risk.factors.sanctions, 'danger'], ['Hesap yaşı', `${d.risk.factors.account_age_days}g`, 'neutral']].map(([k, v, tone]) => (
-                            <div key={k} className="rounded-lg bg-white/[0.04] py-2 px-1"><div className="text-[10px] uppercase p-muted leading-tight">{k}</div><div className={`font-bold ${v > 0 && tone === 'danger' ? 'text-rose-400' : v > 0 && tone === 'warning' ? 'text-amber-400' : ''}`}>{v}</div></div>
+                            <div key={k} className="rounded-lg p-fill py-2 px-1"><div className="text-[10px] uppercase p-muted leading-tight">{k}</div><div className={`font-bold ${v > 0 && tone === 'danger' ? 'p-tone-danger' : v > 0 && tone === 'warning' ? 'p-tone-warning' : ''}`}>{v}</div></div>
                         ))}
                     </div>
                     <Tabs items={[{ key: 'overview', label: 'Geçmiş', count: d.history?.length }, { key: 'against', label: 'Aldığı şikâyetler', count: d.complaints_against?.length }, { key: 'by', label: 'Yaptığı şikâyetler', count: d.complaints_by?.length }, { key: 'content', label: 'İçerik' }]} value={tab} onChange={setTab} />
@@ -70,7 +70,7 @@ function Profile({ id, onClose, onChanged }) {
                     {tab === 'by' && <ComplaintList items={d.complaints_by} />}
                     {tab === 'content' && (
                         <div className="space-y-4">
-                            <div className="grid sm:grid-cols-5 gap-2 text-center text-xs">{Object.entries(u.counts || {}).map(([k, v]) => <div key={k} className="rounded-lg bg-white/[0.04] py-2"><div className="uppercase text-[10px] p-muted">{k}</div><b>{v}</b></div>)}</div>
+                            <div className="grid sm:grid-cols-5 gap-2 text-center text-xs">{Object.entries(u.counts || {}).map(([k, v]) => <div key={k} className="rounded-lg p-fill py-2"><div className="uppercase text-[10px] p-muted">{k}</div><b>{v}</b></div>)}</div>
                             <ContentBrowser userId={u.id} />
                         </div>
                     )}
@@ -85,7 +85,7 @@ function ComplaintList({ items = [], who }) {
     return (
         <ul className="space-y-1.5 text-xs">
             {items.map((c) => (
-                <li key={c.id} className="rounded-lg bg-white/[0.04] px-3 py-2 flex items-center gap-2 flex-wrap">
+                <li key={c.id} className="rounded-lg p-fill px-3 py-2 flex items-center gap-2 flex-wrap">
                     <Badge tone={COMPLAINT_STATUS[c.status]?.tone} size="xs">{COMPLAINT_STATUS[c.status]?.label}</Badge>
                     <b>{c.reason || '—'}</b>
                     {c.description && <span className="p-muted">{truncate(c.description, 60)}</span>}

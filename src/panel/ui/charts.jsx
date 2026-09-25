@@ -114,7 +114,7 @@ export function BarRows({ items = [], max, formatValue = (v) => v }) {
                         <span className="truncate pr-2">{it.label}</span>
                         <b className="tabular-nums">{formatValue(it.value)}</b>
                     </div>
-                    <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="h-2 rounded-full p-fill overflow-hidden">
                         <div className="h-full rounded-full" style={{ width: `${Math.min(100, ((Number(it.value) || 0) / top) * 100)}%`, background: it.color || PALETTE[i % PALETTE.length] }} />
                     </div>
                 </li>

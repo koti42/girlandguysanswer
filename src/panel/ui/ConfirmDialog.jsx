@@ -26,7 +26,7 @@ export default function ConfirmDialog({ open, onClose, onConfirm, title, message
             {confirmText && (
                 <label className="block mt-4 text-xs p-muted">
                     Devam etmek için <span className="font-mono font-bold text-[var(--p-text)]">{confirmText}</span> yazın
-                    <input value={typed} onChange={(e) => setTyped(e.target.value)} className="mt-1.5 w-full h-10 rounded-lg bg-black/30 border border-[var(--p-border)] px-3 text-sm text-[var(--p-text)] p-ring" data-testid="confirm-input" />
+                    <input value={typed} onChange={(e) => setTyped(e.target.value)} className="mt-1.5 w-full h-10 rounded-lg p-inset border border-[var(--p-border)] px-3 text-sm text-[var(--p-text)] p-ring" data-testid="confirm-input" />
                 </label>
             )}
         </Modal>

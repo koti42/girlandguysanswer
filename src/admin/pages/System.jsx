@@ -35,10 +35,10 @@ export default function System() {
                     <Card title="Uygulama" className="mb-4">
                         <dl className="grid sm:grid-cols-3 gap-3 text-sm">
                             {[['Ortam', h.app.env], ['Debug', h.app.debug ? 'AÇIK' : 'kapalı'], ['Laravel', h.app.laravel], ['PHP', h.app.php], ['Saat dilimi', h.app.timezone], ['Bellek', `${formatBytes(h.memory.usage_bytes)} / ${h.memory.limit}`]].map(([k, v]) => (
-                                <div key={k} className="rounded-lg bg-white/[0.04] px-3 py-2"><dt className="text-[10px] uppercase p-muted">{k}</dt><dd className={`font-medium ${k === 'Debug' && h.app.debug ? 'text-rose-400' : ''}`}>{v}</dd></div>
+                                <div key={k} className="rounded-lg p-fill px-3 py-2"><dt className="text-[10px] uppercase p-muted">{k}</dt><dd className={`font-medium ${k === 'Debug' && h.app.debug ? 'p-tone-danger' : ''}`}>{v}</dd></div>
                             ))}
                         </dl>
-                        {h.app.debug && h.app.env === 'production' && <p className="mt-3 text-xs text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">Canlı ortamda APP_DEBUG açık: hata sayfaları kod ve ayar sızdırır. Kapatın.</p>}
+                        {h.app.debug && h.app.env === 'production' && <p className="mt-3 text-xs p-tone-danger bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">Canlı ortamda APP_DEBUG açık: hata sayfaları kod ve ayar sızdırır. Kapatın.</p>}
                     </Card>
                 </>
             )}

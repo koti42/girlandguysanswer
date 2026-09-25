@@ -58,7 +58,7 @@ export default function DataTable({
                                 <tr
                                     key={id}
                                     onClick={onRowClick ? () => onRowClick(row) : undefined}
-                                    className={`border-b border-[var(--p-border)] last:border-0 transition-colors ${onRowClick ? 'cursor-pointer hover:bg-white/[0.04]' : ''} ${checked ? 'bg-[var(--p-accent)]/10' : ''} ${tone ? TONES[tone] || '' : ''}`}
+                                    className={`border-b border-[var(--p-border)] last:border-0 transition-colors ${onRowClick ? 'cursor-pointer p-hover' : ''} ${checked ? 'bg-[var(--p-accent)]/10' : ''} ${tone ? TONES[tone] || '' : ''}`}
                                     data-testid="table-row"
                                 >
                                     {selectable && (

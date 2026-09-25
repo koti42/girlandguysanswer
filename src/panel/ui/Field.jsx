@@ -1,13 +1,13 @@
 import React from 'react';
 
-const base = 'w-full rounded-lg bg-black/30 border border-[var(--p-border)] px-3 text-sm text-[var(--p-text)] placeholder:text-[var(--p-muted)] p-ring disabled:opacity-50';
+const base = 'w-full rounded-lg p-inset border border-[var(--p-border)] px-3 text-sm text-[var(--p-text)] placeholder:text-[var(--p-muted)] p-ring disabled:opacity-50';
 
 export function Field({ label, hint, error, children, className = '' }) {
     return (
         <label className={`block ${className}`}>
             {label && <span className="block text-xs font-semibold p-muted mb-1.5">{label}</span>}
             {children}
-            {error ? <span className="block text-xs text-rose-400 mt-1">{error}</span> : hint ? <span className="block text-[11px] p-muted mt-1">{hint}</span> : null}
+            {error ? <span className="block text-xs p-tone-danger mt-1">{error}</span> : hint ? <span className="block text-[11px] p-muted mt-1">{hint}</span> : null}
         </label>
     );
 }
@@ -31,7 +31,7 @@ export function Select({ className = '', children, ...rest }) {
 export function Switch({ checked, onChange, label, description, disabled }) {
     return (
         <button type="button" role="switch" aria-checked={checked} disabled={disabled} onClick={() => onChange(!checked)} className="flex items-start gap-3 text-left w-full p-ring rounded-lg disabled:opacity-50">
-            <span className={`mt-0.5 relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-[var(--p-accent)]' : 'bg-white/15'}`}>
+            <span className={`mt-0.5 relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-[var(--p-accent)]' : 'p-fill-strong'}`}>
                 <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
             </span>
             {(label || description) && (

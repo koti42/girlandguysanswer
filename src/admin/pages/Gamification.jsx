@@ -13,7 +13,7 @@ export default function Gamification() {
             {tab === 'points' && (
                 <CatalogCrud type="points" title="Puan kuralları" description="action_key kodda kullanılan anahtar; ör. answer_posted, reported_valid, content_removed_by_admin."
                     fields={[{ key: 'action_key', label: 'İşlem anahtarı', required: true, placeholder: 'answer_posted' }, { key: 'points', label: 'Puan', type: 'number', required: true, hint: 'Negatif olabilir (ceza)' }, { key: 'description', label: 'Açıklama', full: true }]}
-                    columns={[{ key: 'action_key', label: 'Anahtar', render: (r) => <code className="text-xs">{r.action_key}</code> }, { key: 'points', label: 'Puan', width: 90, render: (r) => <b className={r.points < 0 ? 'text-rose-400' : 'text-emerald-400'}>{r.points > 0 ? '+' : ''}{r.points}</b> }, { key: 'description', label: 'Açıklama', render: (r) => <span className="text-xs p-muted">{r.description || '—'}</span> }]} />
+                    columns={[{ key: 'action_key', label: 'Anahtar', render: (r) => <code className="text-xs">{r.action_key}</code> }, { key: 'points', label: 'Puan', width: 90, render: (r) => <b className={r.points < 0 ? 'p-tone-danger' : 'p-tone-success'}>{r.points > 0 ? '+' : ''}{r.points}</b> }, { key: 'description', label: 'Açıklama', render: (r) => <span className="text-xs p-muted">{r.description || '—'}</span> }]} />
             )}
             {tab === 'levels' && (
                 <CatalogCrud type="levels" title="Seviyeler" description="min_xp benzersiz olmalı; seviyeler XP'ye göre sıralanır."

@@ -19,7 +19,7 @@ export default function Catalog() {
             {tab === 'story-categories' && (
                 <CatalogCrud type="story-categories" title="Hikâye kategorileri" description="Ok tuşlarıyla sıralayın; sıra sitede aynen görünür." usageKey="stories_count" sortable
                     fields={[{ key: 'name', label: 'Ad', required: true }, { key: 'slug', label: 'Slug' }, { key: 'icon', label: 'İkon (emoji/ad)' }, { key: 'color', label: 'Renk', type: 'color' }, { key: 'is_active', label: 'Aktif', type: 'switch', hint: 'Pasif kategori seçilemez' }]}
-                    columns={[{ key: 'name', label: 'Ad', render: (r) => <span className="inline-flex items-center gap-2">{r.icon && <span>{r.icon}</span>}<b>{r.name}</b></span> }, { key: 'is_active', label: 'Durum', width: 90, render: (r) => <span className={`text-xs ${r.is_active ? 'text-emerald-400' : 'p-muted'}`}>{r.is_active ? 'Aktif' : 'Pasif'}</span> }, { key: 'color', label: 'Renk', render: (r) => colorCell(r) }]} />
+                    columns={[{ key: 'name', label: 'Ad', render: (r) => <span className="inline-flex items-center gap-2">{r.icon && <span>{r.icon}</span>}<b>{r.name}</b></span> }, { key: 'is_active', label: 'Durum', width: 90, render: (r) => <span className={`text-xs ${r.is_active ? 'p-tone-success' : 'p-muted'}`}>{r.is_active ? 'Aktif' : 'Pasif'}</span> }, { key: 'color', label: 'Renk', render: (r) => colorCell(r) }]} />
             )}
             {tab === 'feature-tags' && (
                 <CatalogCrud type="feature-tags" title="Fenomen etiketleri" description="Kullanıcı profilinde dönen halka ve rozet olarak görünür." usageKey="users_count"
