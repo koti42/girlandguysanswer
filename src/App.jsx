@@ -160,6 +160,7 @@ import { NotificationProvider } from './context/NotificationContext';
  * istemiyoruz.
  */
 const AdminApp = lazy(() => import('./admin/AdminApp'));
+const ModApp = lazy(() => import('./mod/ModApp'));
 
 // Rota dışı ağır parçalar.
 //
@@ -291,6 +292,7 @@ function App() {
                   <Route path="/feature-tags" element={<FeatureTagsPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="/cpl-manage/*" element={<AdminApp />} />
+                  <Route path="/mod/*" element={<ModApp />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
               </Routes>
               </Suspense>

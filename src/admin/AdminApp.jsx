@@ -1,115 +1,53 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
-import AdminLayout from './layouts/AdminLayout';
-import LoginPage from './pages/LoginPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import DashboardPage from './pages/DashboardPage';
-import ComplaintsPage from './pages/ComplaintsPage';
-import UsersPage from './pages/UsersPage';
-import RolesPage from './pages/RolesPage';
-import QuestionsPage from './pages/QuestionsPage';
-import OpinionsPage from './pages/OpinionsPage';
-import AnswersPage from './pages/AnswersPage';
-import CommentsPage from './pages/CommentsPage';
-import SpecialDaysPage from './pages/SpecialDaysPage';
+import React, { Suspense, lazy } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { PanelAuthProvider } from '../panel/auth/PanelAuthContext';
+import RequireRole from '../panel/auth/RequireRole';
+import PanelLogin from '../panel/auth/PanelLogin';
+import { ToastProvider } from '../panel/hooks/useToast';
+import AdminShell from './AdminShell';
 
-// Protected Route Wrapper
-const AdminProtectedRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAdminAuth();
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+const Users = lazy(() => import('./pages/Users.jsx'));
+const Content = lazy(() => import('./pages/Content.jsx'));
+const Complaints = lazy(() => import('./pages/Complaints.jsx'));
+const Communities = lazy(() => import('./pages/Communities.jsx'));
+const Catalog = lazy(() => import('./pages/Catalog.jsx'));
+const Gamification = lazy(() => import('./pages/Gamification.jsx'));
+const Roles = lazy(() => import('./pages/Roles.jsx'));
+const SpecialDays = lazy(() => import('./pages/SpecialDays.jsx'));
+const Settings = lazy(() => import('./pages/Settings.jsx'));
+const Broadcast = lazy(() => import('./pages/Broadcast.jsx'));
+const AuditLog = lazy(() => import('./pages/AuditLog.jsx'));
+const System = lazy(() => import('./pages/System.jsx'));
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-                <div className="relative">
-                    <div className="w-16 h-16 rounded-full border-4 border-coral/20 border-t-coral animate-spin" />
-                </div>
-            </div>
-        );
-    }
+const Fallback = () => <div className="py-16 grid place-items-center"><div className="h-8 w-8 rounded-full border-2 border-white/20 border-t-[var(--p-accent)] animate-spin" /></div>;
 
-    if (!isAuthenticated) {
-        return <Navigate to="/cpl-manage/login" replace />;
-    }
-
-    return children;
-};
-
-// Public Route Wrapper (redirect if already logged in)
-const AdminPublicRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAdminAuth();
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-                <div className="relative">
-                    <div className="w-16 h-16 rounded-full border-4 border-coral/20 border-t-coral animate-spin" />
-                </div>
-            </div>
-        );
-    }
-
-    if (isAuthenticated) {
-        return <Navigate to="/cpl-manage" replace />;
-    }
-
-    return children;
-};
-
-// Main Admin App Component
-const AdminAppContent = () => {
+/** Admin paneli: /cpl-manage/* - admin ve super_admin. */
+export default function AdminApp() {
     return (
-        <Routes>
-            {/* Public Routes */}
-            <Route
-                path="/login"
-                element={
-                    <AdminPublicRoute>
-                        <LoginPage />
-                    </AdminPublicRoute>
-                }
-            />
-            <Route
-                path="/forgot-password"
-                element={
-                    <AdminPublicRoute>
-                        <ForgotPasswordPage />
-                    </AdminPublicRoute>
-                }
-            />
-
-            {/* Protected Routes */}
-            <Route
-                element={
-                    <AdminProtectedRoute>
-                        <AdminLayout />
-                    </AdminProtectedRoute>
-                }
-            >
-                <Route index element={<DashboardPage />} />
-                <Route path="/complaints" element={<ComplaintsPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/roles" element={<RolesPage />} />
-                <Route path="/questions" element={<QuestionsPage />} />
-                <Route path="/opinions" element={<OpinionsPage />} />
-                <Route path="/answers" element={<AnswersPage />} />
-                <Route path="/comments" element={<CommentsPage />} />
-                <Route path="/special-days" element={<SpecialDaysPage />} />
-            </Route>
-
-            {/* Catch all */}
-            <Route path="*" element={<Navigate to="/cpl-manage" replace />} />
-        </Routes>
+        <PanelAuthProvider>
+            <ToastProvider>
+                <Routes>
+                    <Route path="/login" element={<PanelLogin panel="admin" />} />
+                    <Route element={<RequireRole panel="admin" loginPath="/cpl-manage/login"><AdminShell /></RequireRole>}>
+                        <Route index element={<Suspense fallback={<Fallback />}><Dashboard /></Suspense>} />
+                        <Route path="users" element={<Suspense fallback={<Fallback />}><Users /></Suspense>} />
+                        <Route path="users/:id" element={<Suspense fallback={<Fallback />}><Users /></Suspense>} />
+                        <Route path="content" element={<Suspense fallback={<Fallback />}><Content /></Suspense>} />
+                        <Route path="complaints" element={<Suspense fallback={<Fallback />}><Complaints /></Suspense>} />
+                        <Route path="communities" element={<Suspense fallback={<Fallback />}><Communities /></Suspense>} />
+                        <Route path="catalog" element={<Suspense fallback={<Fallback />}><Catalog /></Suspense>} />
+                        <Route path="gamification" element={<Suspense fallback={<Fallback />}><Gamification /></Suspense>} />
+                        <Route path="roles" element={<Suspense fallback={<Fallback />}><Roles /></Suspense>} />
+                        <Route path="special-days" element={<Suspense fallback={<Fallback />}><SpecialDays /></Suspense>} />
+                        <Route path="settings" element={<Suspense fallback={<Fallback />}><Settings /></Suspense>} />
+                        <Route path="broadcast" element={<Suspense fallback={<Fallback />}><Broadcast /></Suspense>} />
+                        <Route path="audit" element={<Suspense fallback={<Fallback />}><AuditLog /></Suspense>} />
+                        <Route path="system" element={<Suspense fallback={<Fallback />}><System /></Suspense>} />
+                    </Route>
+                    <Route path="*" element={<Navigate to="/cpl-manage" replace />} />
+                </Routes>
+            </ToastProvider>
+        </PanelAuthProvider>
     );
-};
-
-// Wrap with Provider
-const AdminApp = () => {
-    return (
-        <AdminAuthProvider>
-            <AdminAppContent />
-        </AdminAuthProvider>
-    );
-};
-
-export default AdminApp;
+}

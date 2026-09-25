@@ -86,7 +86,7 @@ export default defineConfig([
     // Context dosyaları hem Provider bileşenini hem useX hook'unu dışa açıyor.
     // Bu React'te standart kalıp; kural yalnızca Fast Refresh'in o dosyada
     // tam çalışmayacağını söylüyor, gerçek bir hata değil.
-    files: ['src/context/**/*.jsx', 'src/admin/context/**/*.jsx'],
+    files: ['src/context/**/*.jsx', 'src/panel/auth/**/*.jsx', 'src/panel/hooks/**/*.jsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
 ])

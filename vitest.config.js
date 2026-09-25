@@ -1,19 +1,19 @@
 import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
 
 /**
- * Test yapılandırması.
- *
- * Kapsam kasıtlı olarak saf mantıkla sınırlı: URL/slug üretimi, avatar
- * normalizasyonu, içerik ayrıştırma, renk seçimi. Bunlar bileşen ağacına
- * bağlı olmayan, sessizce bozulduğunda kullanıcıya yanlış bağlantı veya
- * kırık görsel olarak yansıyan parçalar.
- *
- * Bileşen render testleri (jsdom + testing-library) henüz yok; onlar ayrı
- * bir adım ve daha fazla kurulum istiyor.
+ * İki test katmanı:
+ *  - *.test.js   saf mantık, node ortamı (hızlı)
+ *  - *.test.jsx  bileşen testleri, jsdom + testing-library
+ * Bileşen testleri dosya başında `// @vitest-environment jsdom` bildirir;
+ * ayrı yapılandırma dosyası gerekmez.
  */
 export default defineConfig({
+    plugins: [react()],
     test: {
         environment: 'node',
-        include: ['src/**/*.test.js'],
+        include: ['src/**/*.test.{js,jsx}'],
+        setupFiles: ['./src/test/setup.js'],
+        css: false,
     },
 });

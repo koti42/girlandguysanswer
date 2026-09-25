@@ -1,0 +1,49 @@
+/*
+ * Panel tema değişkenleri. İki panel aynı bileşenleri kullanır; kimliklerini
+ * data-panel özniteliğiyle ayırırlar: admin indigo, moderasyon amber.
+ * Bileşenler renkleri buradan (--p-accent...) okur, sabit renk kullanmaz.
+ */
+[data-panel] {
+  --p-bg: #0b1220;
+  --p-surface: #111a2e;
+  --p-surface-2: #172238;
+  --p-border: rgba(148, 163, 184, 0.14);
+  --p-text: #e5e9f2;
+  --p-muted: #8b96ad;
+  --p-accent: #6366f1;
+  --p-accent-2: #8b5cf6;
+  --p-accent-ink: #ffffff;
+  --p-success: #10b981;
+  --p-warning: #f59e0b;
+  --p-danger: #f43f5e;
+  --p-info: #38bdf8;
+  color-scheme: dark;
+}
+
+[data-panel="mod"] {
+  --p-bg: #0c0f14;
+  --p-surface: #14181f;
+  --p-surface-2: #1c2129;
+  --p-border: rgba(251, 191, 36, 0.12);
+  --p-accent: #f59e0b;
+  --p-accent-2: #fb923c;
+  --p-accent-ink: #1a1305;
+}
+
+[data-panel] { background: var(--p-bg); color: var(--p-text); }
+
+.p-surface { background: var(--p-surface); border: 1px solid var(--p-border); }
+.p-surface-2 { background: var(--p-surface-2); }
+.p-muted { color: var(--p-muted); }
+.p-accent-bg { background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2)); color: var(--p-accent-ink); }
+.p-accent-text { color: var(--p-accent); }
+.p-ring:focus-visible { outline: 2px solid var(--p-accent); outline-offset: 2px; }
+
+/* İnce kaydırma çubuğu: panel tabloları için */
+[data-panel] *::-webkit-scrollbar { width: 8px; height: 8px; }
+[data-panel] *::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.25); border-radius: 8px; }
+[data-panel] *::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes p-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.p-fade-in { animation: p-fade-in .18s ease-out; }
+@media (prefers-reduced-motion: reduce) { .p-fade-in { animation: none; } }
