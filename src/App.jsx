@@ -1,58 +1,11 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AdminApp from './admin/AdminApp';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
-import QuestionsPage from './pages/QuestionsPage';
-import ProfilePage from './pages/ProfilePage';
-import AskQuestionPage from './pages/AskQuestionPage';
-import QuestionSubmittedPage from './pages/QuestionSubmittedPage';
-import LoginPage from './pages/LoginPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import SignupPage from './pages/SignupPage';
-import FollowersPage from './pages/FollowersPage';
-import FollowingPage from './pages/FollowingPage';
-import QuestionDetailPage from './pages/QuestionDetailPage';
-import MessagesPage from './pages/MessagesPage';
-import SettingsPage from './pages/SettingsPage';
-import NotificationsPage from './pages/NotificationsPage';
-import FollowRequestsPage from './pages/FollowRequestsPage';
-import LeaderboardPage from './pages/LeaderboardPage';
-import PusherTestPage from './pages/PusherTestPage';
-import CocukGuvenligiPage from './pages/CocukGuvenligiPage';
-import SSSPage from './pages/SSSPage';
-import YardimMerkeziPage from './pages/YardimMerkeziPage';
-import CommunityPage from './pages/CommunityPage';
-import RoomPage from './pages/RoomPage';
-import CommunityInvitationsPage from './pages/CommunityInvitationsPage';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
-import GoogleCallback from './pages/GoogleCallback';
-import CompleteProfilePage from './pages/CompleteProfilePage';
 import ErrorPage from './pages/ErrorPage';
-import CategoryPage from './pages/CategoryPage';
-import OpinionsPage from './pages/OpinionsPage';
-import OpinionDetailPage from './pages/OpinionDetailPage';
-import CreateOpinionPage from './pages/CreateOpinionPage';
-import StoriesPage from './pages/StoriesPage';
-import StoryDetailPage from './pages/StoryDetailPage';
-import CreateStoryPage from './pages/CreateStoryPage';
-import KullanimKilavuzuPage from './pages/KullanimKilavuzuPage';
-import GizlilikPolitikasiPage from './pages/GizlilikPolitikasiPage';
-import CerezPolitikasiPage from './pages/CerezPolitikasiPage';
-import TermsOfServicePage from './pages/TermsOfServicePage';
-import KullanimKurallariPage from './pages/KullanimKurallariPage';
-import TagsPage from './pages/TagsPage';
-import ContactPage from './pages/ContactPage';
-import ReklamPage from './pages/ReklamPage';
-import OrtaklikPage from './pages/OrtaklikPage';
-import BlogPage from './pages/BlogPage';
-import XperPuanPage from './pages/XperPuanPage';
-import FeatureTagsPage from './pages/FeatureTagsPage';
-import WelcomeGuideModal from './components/WelcomeGuideModal';
-import FloatingMessagesDock from './components/FloatingMessagesDock';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import usePresence from './hooks/usePresence';
@@ -183,20 +136,101 @@ const WelcomeGuideGate = () => {
   };
 
   return (
-    <WelcomeGuideModal
-      isOpen={showModal}
-      onClose={handleClose}
-      onGoToGuide={handleGoToGuide}
-    />
+    <Suspense fallback={null}>
+      <WelcomeGuideModal
+        isOpen={showModal}
+        onClose={handleClose}
+        onGoToGuide={handleGoToGuide}
+      />
+    </Suspense>
   );
 };
 
 import { NotificationProvider } from './context/NotificationContext';
 
+/*
+ * Rota bazlı kod bölme.
+ *
+ * Daha önce 48 sayfanın tamamı ve admin paneli tek bundle'a giriyordu:
+ * ana sayfayı açan ziyaretçi mesajlaşma, LiveKit oda arayüzü ve admin
+ * ekranlarını da indiriyordu (tek parça ~1.8 MB).
+ *
+ * LandingPage ve ErrorPage kasten statik import: ilki en sık girilen
+ * sayfa, ikincisi hata yolu - ikisinde de yükleniyor ekranı görmek
+ * istemiyoruz.
+ */
+const AdminApp = lazy(() => import('./admin/AdminApp'));
+
+// Rota dışı ağır parçalar.
+//
+// Dock, ChatWindow'u ve Pusher aboneliğini birlikte getiriyor; giriş yapmamış
+// ziyaretçi bunların hiçbirini kullanmıyor. Karşılama modalı da ilk boyamada
+// gerekmiyor. İkisi de fallback'siz (null) askıya alınır: geç gelmeleri
+// sayfanın görünümünü bozmaz.
+const FloatingMessagesDock = lazy(() => import('./components/FloatingMessagesDock'));
+const WelcomeGuideModal = lazy(() => import('./components/WelcomeGuideModal'));
+const QuestionsPage = lazy(() => import('./pages/QuestionsPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const AskQuestionPage = lazy(() => import('./pages/AskQuestionPage'));
+const QuestionSubmittedPage = lazy(() => import('./pages/QuestionSubmittedPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
+const FollowersPage = lazy(() => import('./pages/FollowersPage'));
+const FollowingPage = lazy(() => import('./pages/FollowingPage'));
+const QuestionDetailPage = lazy(() => import('./pages/QuestionDetailPage'));
+const MessagesPage = lazy(() => import('./pages/MessagesPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const FollowRequestsPage = lazy(() => import('./pages/FollowRequestsPage'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
+const CocukGuvenligiPage = lazy(() => import('./pages/CocukGuvenligiPage'));
+const SSSPage = lazy(() => import('./pages/SSSPage'));
+const YardimMerkeziPage = lazy(() => import('./pages/YardimMerkeziPage'));
+const CommunityPage = lazy(() => import('./pages/CommunityPage'));
+const RoomPage = lazy(() => import('./pages/RoomPage'));
+const CommunityInvitationsPage = lazy(() => import('./pages/CommunityInvitationsPage'));
+const GoogleCallback = lazy(() => import('./pages/GoogleCallback'));
+const CompleteProfilePage = lazy(() => import('./pages/CompleteProfilePage'));
+const CategoryPage = lazy(() => import('./pages/CategoryPage'));
+const OpinionsPage = lazy(() => import('./pages/OpinionsPage'));
+const OpinionDetailPage = lazy(() => import('./pages/OpinionDetailPage'));
+const CreateOpinionPage = lazy(() => import('./pages/CreateOpinionPage'));
+const StoriesPage = lazy(() => import('./pages/StoriesPage'));
+const StoryDetailPage = lazy(() => import('./pages/StoryDetailPage'));
+const CreateStoryPage = lazy(() => import('./pages/CreateStoryPage'));
+const KullanimKilavuzuPage = lazy(() => import('./pages/KullanimKilavuzuPage'));
+const GizlilikPolitikasiPage = lazy(() => import('./pages/GizlilikPolitikasiPage'));
+const CerezPolitikasiPage = lazy(() => import('./pages/CerezPolitikasiPage'));
+const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
+const KullanimKurallariPage = lazy(() => import('./pages/KullanimKurallariPage'));
+const TagsPage = lazy(() => import('./pages/TagsPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const ReklamPage = lazy(() => import('./pages/ReklamPage'));
+const OrtaklikPage = lazy(() => import('./pages/OrtaklikPage'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const XperPuanPage = lazy(() => import('./pages/XperPuanPage'));
+const FeatureTagsPage = lazy(() => import('./pages/FeatureTagsPage'));
+
+
 const PresenceHeartbeat = () => {
   usePresence();
   return null;
 };
+
+/**
+ * Parça inerken görünen ara ekran.
+ *
+ * Kasten sade ve yüksekliği sabit: iskelet çizmek yerine boş bir alan tutmak,
+ * hızlı bağlantıda göz kırpması gibi görünen bir parlamayı önlüyor.
+ */
+const RouteFallback = () => (
+  <div className="min-h-[60vh] flex items-center justify-center" role="status" aria-live="polite">
+    <span className="sr-only">Sayfa yükleniyor</span>
+    <div className="h-8 w-8 rounded-full border-2 border-current border-t-transparent animate-spin opacity-40" />
+  </div>
+);
 
 function App() {
   return (
@@ -207,6 +241,7 @@ function App() {
           <Router>
             <GenderCheck>
               <div className="overflow-x-hidden">
+              <Suspense fallback={<RouteFallback />}>
               <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/questions" element={<QuestionsPage />} />
@@ -239,7 +274,6 @@ function App() {
                   <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                   <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                   <Route path="/follow-requests" element={<ProtectedRoute><FollowRequestsPage /></ProtectedRoute>} />
-                  <Route path="/pusher-test" element={<PusherTestPage />} />
                   <Route path="/cocuk-guvenligi" element={<CocukGuvenligiPage />} />
                   <Route path="/sss" element={<SSSPage />} />
                   <Route path="/yardim-merkezi" element={<YardimMerkeziPage />} />
@@ -259,7 +293,10 @@ function App() {
                   <Route path="/cpl-manage/*" element={<AdminApp />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
               </Routes>
-              <FloatingMessagesDock />
+              </Suspense>
+              <Suspense fallback={null}>
+                <FloatingMessagesDock />
+              </Suspense>
               <AgeGate />
               <WelcomeGuideGate />
             </div>
