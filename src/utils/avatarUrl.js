@@ -9,6 +9,12 @@ export const normalizeAvatarUrl = (rawUrl) => {
     let url = String(rawUrl).trim();
     if (!url || url === 'null' || url === 'undefined') return null;
 
+    // Tekrar eden protokolü (`https://https://...`) baştan tek başa indir.
+    // Aşağıdaki temizlik yalnızca protokolsüz dalda çalışıyordu; protokolle
+    // başlayan girdi ilk koşuldan erken dönüyor ve bozuk adres olduğu gibi
+    // tarayıcıya gidiyordu (kırık avatar).
+    url = url.replace(/^(?:https?:\/\/)+(?=https?:\/\/)/i, '');
+
     if (/^https?:\/\//i.test(url)) {
         url = url.replace(
             /^https?:\/\/herkeslersoruyor\.com\.tr\/herkeslersoruyor\.panalix\.com\.tr\//i,
