@@ -93,7 +93,10 @@ const QuestionDetailPage = () => {
                     fetchNextQuestion();
                 }
             },
-            { threshold: 0.1 }
+            // Dibe varmadan ~600px önce yüklemeye başla: sentinel'in ekrana
+            // girmesini beklemek, kullanıcının listenin sonuna çarpıp isteği
+            // beklemesi demekti - mobilde "takıldı" hissinin kaynağı.
+            { threshold: 0, rootMargin: '600px 0px' }
         );
 
         if (observerTarget.current) {

@@ -1,56 +1,84 @@
 import React from 'react';
 import { FaLock } from 'react-icons/fa';
 
+/**
+ * Sekme düğmesi.
+ *
+ * Bu bileşen ProfileTabs'in İÇİNDE tanımlıydı. Her çizimde yeni bir bileşen
+ * türü üretiliyor, React de onu farklı bir bileşen sanıp yedi düğmenin
+ * tamamını söküp yeniden kuruyordu (react-hooks/static-components). Dışarı
+ * alındı; kapanıştan okuduğu değerler artık props.
+ */
+const TabButton = ({
+    id,
+    label,
+    count,
+    borderClass,
+    vipColorClass,
+    vipBorderClass,
+    activeTab,
+    setActiveTab,
+    isUnlocked,
+    isVIP,
+}) => {
+    const isActive = activeTab === id;
+
+    let buttonClass = `text-center rounded-lg p-2 transition-all `;
+
+    if (isUnlocked) {
+        if (isActive) {
+            if (isVIP) {
+                buttonClass += `bg-gradient-to-br ${vipColorClass || 'from-amber-100 to-yellow-100'} dark:from-amber-900/40 dark:to-yellow-900/40 border-2 ${vipBorderClass || 'border-amber-400'} shadow-lg`;
+            } else {
+                buttonClass += `bg-coral/10 border ${borderClass || 'border-coral'}`;
+            }
+        } else {
+            if (isVIP) {
+                buttonClass += `hover:bg-amber-50 dark:hover:bg-amber-900/20`;
+            } else {
+                buttonClass += `hover:bg-gray-50 dark:bg-gray-700`;
+            }
+        }
+    } else {
+        buttonClass += `opacity-50 cursor-not-allowed`;
+    }
+
+    const countClass = `font-bold text-lg ${isActive && isVIP ? 'text-amber-600 dark:text-amber-400' : ''}`;
+
+    return (
+        <button
+            onClick={() => isUnlocked && setActiveTab(id)}
+            disabled={!isUnlocked}
+            className={buttonClass}
+        >
+            <div className={countClass}>
+                {isUnlocked ? count : <FaLock className="text-sm mx-auto" />}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
+        </button>
+    );
+};
+
 const ProfileTabs = ({ activeTab, setActiveTab, stats, isVIP, privacy, isOwnProfile }) => {
     const isUnlocked = isOwnProfile || !privacy.isPrivate || privacy.isFollowing;
 
-    const TabButton = ({ id, label, count, colorClass, borderClass, vipColorClass, vipBorderClass }) => {
-        const isActive = activeTab === id;
-
-        let buttonClass = `text-center rounded-lg p-2 transition-all `;
-
-        if (isUnlocked) {
-            if (isActive) {
-                if (isVIP) {
-                    buttonClass += `bg-gradient-to-br ${vipColorClass || 'from-amber-100 to-yellow-100'} dark:from-amber-900/40 dark:to-yellow-900/40 border-2 ${vipBorderClass || 'border-amber-400'} shadow-lg`;
-                } else {
-                    buttonClass += `bg-coral/10 border ${borderClass || 'border-coral'}`;
-                }
-            } else {
-                if (isVIP) {
-                    buttonClass += `hover:bg-amber-50 dark:hover:bg-amber-900/20`;
-                } else {
-                    buttonClass += `hover:bg-gray-50 dark:bg-gray-700`;
-                }
-            }
-        } else {
-            buttonClass += `opacity-50 cursor-not-allowed`;
-        }
-
-        const countClass = `font-bold text-lg ${isActive && isVIP ? 'text-amber-600 dark:text-amber-400' : ''}`;
-
-        return (
-            <button
-                onClick={() => isUnlocked && setActiveTab(id)}
-                disabled={!isUnlocked}
-                className={buttonClass}
-            >
-                <div className={countClass}>
-                    {isUnlocked ? count : <FaLock className="text-sm mx-auto" />}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
-            </button>
-        );
-    };
 
     return (
         <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 mt-6">
             <TabButton
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isUnlocked={isUnlocked}
+                isVIP={isVIP}
                 id="questions"
                 label="Sorular"
                 count={stats.questions}
             />
             <TabButton
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isUnlocked={isUnlocked}
+                isVIP={isVIP}
                 id="answers"
                 label="Cevaplar"
                 count={stats.answers}
@@ -58,6 +86,10 @@ const ProfileTabs = ({ activeTab, setActiveTab, stats, isVIP, privacy, isOwnProf
                 vipBorderClass="border-purple-400"
             />
             <TabButton
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isUnlocked={isUnlocked}
+                isVIP={isVIP}
                 id="opinions"
                 label="Benceler"
                 count={stats.opinions ?? 0}
@@ -65,6 +97,10 @@ const ProfileTabs = ({ activeTab, setActiveTab, stats, isVIP, privacy, isOwnProf
                 vipBorderClass="border-indigo-400"
             />
             <TabButton
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isUnlocked={isUnlocked}
+                isVIP={isVIP}
                 id="followers"
                 label="Takipçi"
                 count={stats.followers}
@@ -72,6 +108,10 @@ const ProfileTabs = ({ activeTab, setActiveTab, stats, isVIP, privacy, isOwnProf
                 vipBorderClass="border-pink-400"
             />
             <TabButton
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isUnlocked={isUnlocked}
+                isVIP={isVIP}
                 id="following"
                 label="Takip"
                 count={stats.following}
@@ -79,6 +119,10 @@ const ProfileTabs = ({ activeTab, setActiveTab, stats, isVIP, privacy, isOwnProf
                 vipBorderClass="border-blue-400"
             />
             <TabButton
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isUnlocked={isUnlocked}
+                isVIP={isVIP}
                 id="liked"
                 label="Beğeni"
                 count={stats.likes}
@@ -86,6 +130,10 @@ const ProfileTabs = ({ activeTab, setActiveTab, stats, isVIP, privacy, isOwnProf
                 vipBorderClass="border-red-400"
             />
             <TabButton
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isUnlocked={isUnlocked}
+                isVIP={isVIP}
                 id="badges"
                 label="Rozetler"
                 count={stats.badges || 0}

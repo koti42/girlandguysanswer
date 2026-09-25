@@ -16,7 +16,7 @@ const QuestionsPage = () => {
     const initialQuery = searchParams.get('search') || '';
     const [searchQuery, setSearchQuery] = useState(initialQuery);
     const [categories, setCategories] = useState([]);
-    const [loadingCategories, setLoadingCategories] = useState(true);
+    const [, setLoadingCategories] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState({ id: 0, title: 'Tümü' });
     const [genderFilter, setGenderFilter] = useState('all');
     const [aiFilter, setAiFilter] = useState(false);
@@ -31,6 +31,12 @@ const QuestionsPage = () => {
     const [totalPages, setTotalPages] = useState(1);
 
     const observerTarget = useRef(null);
+
+    // handleModerationAction'ın referansı sabit kalsın diye güncel değerler
+    // ref üzerinden okunuyor: state'e doğrudan bağımlı olsaydı callback her
+    // sayfa yüklemesinde yeniden üretilir, QuestionCard'ın memo'su bozulurdu.
+    const fetchQuestionsRef = useRef(null);
+    const currentPageRef = useRef(1);
 
     // Kategorileri API'den çek
     useEffect(() => {
@@ -81,13 +87,38 @@ const QuestionsPage = () => {
             setCurrentPage(pagination.currentPage);
             setHasNextPage(pagination.hasNextPage);
             setTotalPages(pagination.totalPages);
-        } catch (err) {
+        } catch {
             setError("Sorular yüklenirken bir sorun oluştu.");
         } finally {
             setLoading(false);
             setLoadingMore(false);
         }
     }, [searchQuery, selectedCategory, genderFilter, sortBy, tagFilter, aiFilter]);
+
+    // Ref tazeleme çizimde değil efektte: çizim sırasında ref yazmak React'in
+    // önerdiği kullanım değil (bkz. react-hooks/refs).
+    useEffect(() => {
+        fetchQuestionsRef.current = fetchQuestions;
+        currentPageRef.current = currentPage;
+    });
+
+    /**
+     * Moderasyon sonrası liste tazeleme.
+     *
+     * Eskiden her kartın prop'una inline ok fonksiyonu olarak veriliyordu: her
+     * çizimde yeni bir referans üretiyor, dolayısıyla QuestionCard'ı memo'lamak
+     * hiçbir işe yaramıyordu. useCallback ile referans sabitlendi.
+     *
+     * fetchQuestions'a bağımlı olmamak için sayfa numarası ref üzerinden
+     * okunuyor; yoksa her sayfa yüklemesinde referans yine değişirdi.
+     */
+    const handleModerationAction = useCallback((action, questionId) => {
+        if (action === 'remove') {
+            setQuestions(prev => prev.filter(item => item.id !== questionId));
+        } else {
+            fetchQuestionsRef.current(currentPageRef.current, false);
+        }
+    }, []);
 
 
 
@@ -111,7 +142,11 @@ const QuestionsPage = () => {
                     fetchQuestions(currentPage + 1, true);
                 }
             },
-            { threshold: 0.1 }
+            // rootMargin: sayfanın dibine varmadan ~600px önce yüklemeye başla.
+            // Eskiden sentinel'in ekrana girmesi bekleniyordu, yani kullanıcı
+            // listenin sonuna çarpıyor ve isteğin dönmesini bekliyordu; mobilde
+            // bu "takıldı" gibi hissettiren asıl şeydi.
+            { threshold: 0, rootMargin: '600px 0px' }
         );
 
         const currentTarget = observerTarget.current;
@@ -214,18 +249,10 @@ const QuestionsPage = () => {
                             ) : questions.length > 0 ? (
                                 <>
                                     {questions.map((q) => (
-                                        <QuestionCard 
-                                            key={q.id} 
+                                        <QuestionCard
+                                            key={q.id}
                                             question={q}
-                                            onModerationAction={(action, questionId) => {
-                                                // Moderasyon işleminden sonra soruyu listeden kaldır veya güncelle
-                                                if (action === 'remove') {
-                                                    setQuestions(prev => prev.filter(q => q.id !== questionId));
-                                                } else {
-                                                    // Hide/unhide durumunda soruyu yeniden yükle
-                                                    fetchQuestions(currentPage, false);
-                                                }
-                                            }}
+                                            onModerationAction={handleModerationAction}
                                         />
                                     ))}
 

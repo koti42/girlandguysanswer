@@ -11,13 +11,13 @@ import QuestionModerationMenu from './Moderation/QuestionModerationMenu';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
-import { questionsAPI, commentsAPI } from '../services/api';
+import { questionsAPI } from '../services/api';
 
 const formatQuestionDate = (dateString) => {
     if (!dateString) return null;
     try {
         return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: tr });
-    } catch (e) {
+    } catch {
         return null;
     }
 };
@@ -193,7 +193,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
             : null;
 
     return (
-        <div className="rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}40` }}>
+        <div className="list-card-skip rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}40` }}>
             {/* Header */}
             <div className="flex justify-between items-start">
                 <UserHoverCard
@@ -335,7 +335,13 @@ const QuestionCard = ({ question, onModerationAction }) => {
                 {question.image && (
                     <Link to={`/question/${question.slug || question.id}`}>
                         <div className="rounded-xl md:rounded-2xl overflow-hidden mb-3 md:mb-4 shadow-sm cursor-pointer group">
-                            <img src={question.image} alt="Question" className="w-full h-56 md:h-72 object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
+                            <img
+                                src={question.image}
+                                alt="Question"
+                                loading="lazy"
+                                decoding="async"
+                                className="w-full h-56 md:h-72 object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
+                            />
                         </div>
                     </Link>
                 )}
@@ -464,4 +470,14 @@ const QuestionCard = ({ question, onModerationAction }) => {
     );
 };
 
-export default QuestionCard;
+/**
+ * React.memo: listede yüz karta kadar çıkılıyor ve sonsuz kaydırma her yeni
+ * sayfada questions dizisini değiştiriyor. Memo olmadan her ek sayfa, o ana
+ * kadarki BÜTÜN kartları yeniden çiziyordu - mobilde kaydırmayı donduran tek
+ * uzun görev buydu. Kartın kendi state'i var; memo yalnızca dışarıdan gelen
+ * props aynı kaldığında çizimi atlar, iç etkileşimi etkilemez.
+ *
+ * Bunun işe yaraması için ebeveynin `onModerationAction`'ı her çizimde yeniden
+ * üretmemesi şart (bkz. QuestionsPage > handleModerationAction).
+ */
+export default React.memo(QuestionCard);

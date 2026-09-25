@@ -4,7 +4,7 @@ import MainLayout from '../layouts/MainLayout';
 import QuestionCard from '../components/QuestionCard';
 import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
 import { questionsAPI, categoriesAPI } from '../services/api';
-import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
+import { getCategoryIcon } from '../utils/categoryIcons';
 import { FaArrowLeft, FaGoogle, FaFacebook, FaInstagram, FaTwitter, FaDownload } from 'react-icons/fa';
 import SEO from '../components/SEO';
 
@@ -94,7 +94,10 @@ const CategoryPage = () => {
                     fetchQuestions(page + 1, true);
                 }
             },
-            { threshold: 0.1 }
+            // Dibe varmadan ~600px önce yüklemeye başla: sentinel'in ekrana
+            // girmesini beklemek, kullanıcının listenin sonuna çarpıp isteği
+            // beklemesi demekti - mobilde "takıldı" hissinin kaynağı.
+            { threshold: 0, rootMargin: '600px 0px' }
         );
 
         if (observerTarget.current) {

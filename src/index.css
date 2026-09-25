@@ -129,3 +129,26 @@
     border-width: 2px;
   }
 }
+/*
+ * Uzun listelerde ekran dışı kartların çizimini atla.
+ *
+ * Sonsuz kaydırmada DOM'da yüzlerce soru kartı birikiyor; tarayıcı her kaydırma
+ * karesinde hepsinin yerleşimini ve boyamasını hesaplamak zorunda kalıyordu.
+ * Mobilde kaydırmanın takılmasının ikinci büyük sebebi buydu (birincisi
+ * kartların memo'suz yeniden çizilmesiydi).
+ *
+ * content-visibility ekran dışındaki kartı atlatır; contain-intrinsic-size ise
+ * atlanan karta tahmini bir yükseklik verir ki kaydırma çubuğu zıplamasın ve
+ * kart görünüme girdiğinde sayfa sarsılmasın. Destek yoksa özellik görmezden
+ * gelinir, görünüm değişmez.
+ */
+.list-card-skip {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+}
+
+@media (max-width: 768px) {
+  .list-card-skip {
+    contain-intrinsic-size: auto 360px;
+  }
+}
