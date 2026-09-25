@@ -120,7 +120,7 @@ const OpinionCard = ({ opinion, viewerPrefs }) => {
     return (
         <Link
             to={buildOpinionPath(opinion)}
-            className="list-card-skip block bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-soft hover:shadow-md transition-all border-l-4"
+            className="block bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-soft hover:shadow-md transition-shadow border-l-4"
             style={{ borderLeftColor: opinion.user ? getProfileColor(opinion.user, viewerPrefs) : undefined }}
         >
             <div className="p-5 md:p-6">

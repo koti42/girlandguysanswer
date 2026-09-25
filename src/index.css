@@ -112,6 +112,19 @@
   }
 }
 
+/*
+ * Öne çıkarılmış kullanıcıların avatarındaki dönen kesikli halka.
+ *
+ * Listede her kart için bir tane çiziliyor ve animasyon durmadan dönüyor.
+ * Kesikli kenarlık + parıltı gölgesi döndürülürken her karede yeniden
+ * rasterleştirme gerektiriyor; uzun listede bu, kaydırma sırasında ana
+ * iş parçacığını meşgul eden gerçek bir maliyet.
+ *
+ * will-change ile kendi katmanına alınıyor: dönüş artık yalnızca
+ * kompozisyon işi, kare başına yeniden boyama yok. Öğe küçük (~50px)
+ * olduğu için katman maliyeti önemsiz, üstelik halka yalnızca öne
+ * çıkarılmış kullanıcılarda var.
+ */
 .feature-tag-ring {
   position: absolute;
   inset: -6px;
@@ -121,6 +134,15 @@
   opacity: 0.85;
   animation: feature-tag-ring-orbit 3s linear infinite;
   pointer-events: none;
+  will-change: transform;
+}
+
+/* Hareketi azaltılmış tercih ediliyorsa halka döner değil, sabit durur. */
+@media (prefers-reduced-motion: reduce) {
+  .feature-tag-ring {
+    animation: none;
+    will-change: auto;
+  }
 }
 
 @media (max-width: 768px) {
@@ -130,25 +152,20 @@
   }
 }
 /*
- * Uzun listelerde ekran dışı kartların çizimini atla.
+ * Buradaki `.list-card-skip` kuralı (content-visibility: auto +
+ * contain-intrinsic-size) KALDIRILDI.
  *
- * Sonsuz kaydırmada DOM'da yüzlerce soru kartı birikiyor; tarayıcı her kaydırma
- * karesinde hepsinin yerleşimini ve boyamasını hesaplamak zorunda kalıyordu.
- * Mobilde kaydırmanın takılmasının ikinci büyük sebebi buydu (birincisi
- * kartların memo'suz yeniden çizilmesiydi).
+ * Amacı ekran dışı kartların yerleşim/boyama hesabını atlatmaktı, ama pratikte
+ * kaydırmayı bozdu - özellikle Samsung Internet'te: önce takılma, sonra ani
+ * aşağı sıçrama.
  *
- * content-visibility ekran dışındaki kartı atlatır; contain-intrinsic-size ise
- * atlanan karta tahmini bir yükseklik verir ki kaydırma çubuğu zıplamasın ve
- * kart görünüme girdiğinde sayfa sarsılmasın. Destek yoksa özellik görmezden
- * gelinir, görünüm değişmez.
+ * Sebebi şu: kartların gerçek yüksekliği çok değişken (görselli kart görselsizden
+ * ~220px uzun), verilen tahmini yükseklik ise tek bir sayı. Kart görünüme
+ * girdikçe tarayıcı o kareyi yerleşim+boyamaya harcıyor (takılma), ardından
+ * tahmini yükseklik gerçeğiyle değişince belge yüksekliği yeniden hesaplanıyor
+ * ve kaydırma konumu zıplıyor.
+ *
+ * Uzun listeyi gerçekten hafifletmenin doğru yolu pencereleme (yalnızca görünür
+ * aralığı DOM'da tutmak); o ayrı bir iş. Yeniden eklenecekse önce Samsung
+ * Internet'te denenmeli.
  */
-.list-card-skip {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 420px;
-}
-
-@media (max-width: 768px) {
-  .list-card-skip {
-    contain-intrinsic-size: auto 360px;
-  }
-}

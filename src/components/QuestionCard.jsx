@@ -193,7 +193,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
             : null;
 
     return (
-        <div className="list-card-skip rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300 border flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}40` }}>
+        <div className="rounded-2xl md:rounded-3xl p-4 md:p-6 transition-shadow duration-300 border flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}40` }}>
             {/* Header */}
             <div className="flex justify-between items-start">
                 <UserHoverCard
