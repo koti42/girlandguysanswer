@@ -64,7 +64,7 @@ const SpeakerAvatar = ({ participant, onClick, isHost }) => {
     );
 };
 
-const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: initialRole, participantsCount }) => {
+const VoiceRoomUI = ({ community, onRaiseHand, onLeave, _onToggleChat, role: initialRole, participantsCount }) => {
     const room = useRoomContext();
     const participants = useParticipants();
     const { localParticipant } = useLocalParticipant();
@@ -85,7 +85,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
     useEffect(() => {
         if (!room || !localParticipant) return;
 
-        const handlePermissionChange = (prevPermissions) => {
+        const handlePermissionChange = (_prevPermissions) => {
             const canPublishNow = localParticipant.permissions?.canPublish ?? false;
 
             setCanPublish(canPublishNow);
@@ -146,7 +146,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
                 const metadata = JSON.parse(participant.metadata || '{}');
                 const username = metadata.username || participant.name || 'Birisi';
                 toast.success(`${username} odaya katıldı`, { icon: '👋', duration: 3000 });
-            } catch (e) {
+            } catch {
                 toast.success('Yeni bir kullanıcı odaya katıldı', { icon: '👋', duration: 3000 });
             }
         };
@@ -158,7 +158,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
                 const metadata = JSON.parse(participant.metadata || '{}');
                 const username = metadata.username || participant.name || 'Birisi';
                 toast(`${username} odadan ayrıldı`, { icon: '👋', duration: 3000 });
-            } catch (e) {
+            } catch {
                 toast('Bir kullanıcı odadan ayrıldı', { icon: '👋', duration: 3000 });
             }
         };
@@ -185,7 +185,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
         try {
             const metadata = JSON.parse(localParticipant.metadata || '{}');
             if (metadata.role) return metadata.role;
-        } catch { }
+        } catch { /* bozuk/boş metadata: varsayılana düş */ }
 
         return initialRole;
     }, [room?.localParticipant, user, userRoles, initialRole]);
@@ -306,7 +306,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
         try {
             const metadata = JSON.parse(participant.metadata || '{}');
             if (metadata.user_id) return metadata.user_id;
-        } catch (e) { }
+        } catch { /* bozuk/boş metadata: varsayılana düş */ }
 
         if (participant.identity && participant.identity.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
             return participant.identity;
@@ -333,7 +333,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
         try {
             const metadata = JSON.parse(participant.metadata || '{}');
             if (metadata.role) return metadata.role;
-        } catch { }
+        } catch { /* bozuk/boş metadata: varsayılana düş */ }
 
         return 'listener';
     };
@@ -358,7 +358,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
 
             toast.success("Kullanıcı dinleyici yapıldı");
             setSelectedParticipant(null);
-        } catch (e) {
+        } catch {
             toast.error("İşlem başarısız");
         }
     };
@@ -405,7 +405,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
 
             toast.success("El indirildi (Reddedildi)");
             setShowRequests(false);
-        } catch (e) {
+        } catch {
             toast.error("Hata");
         }
     };
@@ -485,7 +485,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
         try {
             const metadata = JSON.parse(p.metadata || '{}');
             return metadata.raised_hand === true;
-        } catch { }
+        } catch { /* bozuk/boş metadata: varsayılana düş */ }
         return false;
     });
 
@@ -715,7 +715,7 @@ const VoiceRoomUI = ({ community, onRaiseHand, onLeave, onToggleChat, role: init
                                         try {
                                             const metadata = JSON.parse(participant.metadata || '{}');
                                             if (metadata.raised_hand === true) hasRaisedHand = true;
-                                        } catch { }
+                                        } catch { /* bozuk/boş metadata: varsayılana düş */ }
                                     }
 
                                     return hasRaisedHand ? (

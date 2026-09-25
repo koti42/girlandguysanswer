@@ -1,10 +1,9 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FaGhost, FaHome, FaSearch, FaServer, FaRedo } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
 
 const ErrorPage = ({ code = 404, title, message, icon: CustomIcon }) => {
-    const navigate = useNavigate();
 
     const config = {
         404: {

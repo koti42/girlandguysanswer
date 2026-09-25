@@ -27,7 +27,9 @@ function getRequestFingerprint(config) {
     if (body instanceof FormData) {
         body = 'form-data';
     } else if (typeof body === 'string') {
-        body = body;
+        // Zaten metin: JSON.stringify'a sokulursa tırnak eklenir ve parmak izi
+        // her seferinde değişirdi. `body = body` yazılıydı - aynı işi yapan
+        // ama kendine atama olduğu için hata gibi görünen bir satırdı.
     } else if (body != null) {
         try {
             body = JSON.stringify(body);

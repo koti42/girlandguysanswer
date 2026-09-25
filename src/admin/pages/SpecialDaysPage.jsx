@@ -20,7 +20,7 @@ const SpecialDaysPage = () => {
             setLoading(true);
             const res = await specialDaysAPI.getAll();
             setDays(res.data?.data || []);
-        } catch (err) {
+        } catch {
             showToast('Özel günler yüklenemedi.', 'error');
         } finally {
             setLoading(false);
@@ -39,7 +39,7 @@ const SpecialDaysPage = () => {
                 prev.map((d) => (d.id === day.id ? res.data.data : d))
             );
             showToast(res.data.message || 'Güncellendi.');
-        } catch (err) {
+        } catch {
             showToast('Güncelleme başarısız.', 'error');
         } finally {
             setTogglingId(null);
@@ -70,7 +70,7 @@ const SpecialDaysPage = () => {
             );
             showToast(res.data.message || 'Güncellendi.');
             cancelEdit();
-        } catch (err) {
+        } catch {
             showToast('Güncelleme başarısız.', 'error');
         }
     };

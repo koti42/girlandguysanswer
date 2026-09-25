@@ -26,7 +26,8 @@ const CommunityPage = () => {
             } else {
                 setCommunities([]);
             }
-        } catch (error) {
+        } catch {
+            // FIXME: liste yüklenemezse ekran boş kalıyor, hata gösterilmiyor
         } finally {
             setLoading(false);
         }

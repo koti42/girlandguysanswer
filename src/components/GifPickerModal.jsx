@@ -58,7 +58,7 @@ const GifPickerModal = ({ isOpen, onClose, onSelect, title = 'GIF Seç' }) => {
             } else {
                 setHasMore(data.length >= DEFAULT_LIMIT);
             }
-        } catch (e) {
+        } catch {
             setError('GIF’ler yüklenirken bir hata oluştu.');
             setHasMore(false);
         } finally {

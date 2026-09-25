@@ -57,7 +57,7 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
                 if (data.has_blocked !== undefined) setHasBlocked(data.has_blocked);
                 if (data.hasBlocked !== undefined) setHasBlocked(data.hasBlocked);
             }
-        } catch (err) {
+        } catch {
             setProfile(null);
         } finally {
             setLoading(false);
@@ -153,7 +153,6 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
     const levelColor = typeof level === 'object' ? level?.color : '#6B7280';
     const featureTag = displayProfile?.feature_tag;
     const featureColor = featureTag?.color || '#FACC15';
-    const badgesCount = (displayProfile?.badges || [])?.length ?? stats.badges ?? 0;
     const xp = displayProfile?.xp ?? stats.xperPoints ?? 0;
     const hexColor = categoryName ? getCategoryColor(categoryColor) : '#8B5CF6';
     const IconComponent = categoryName ? getCategoryIcon(categoryName) : null;

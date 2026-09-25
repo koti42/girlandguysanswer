@@ -36,7 +36,7 @@ const AskQuestionPage = () => {
     const [noAiAnswer, setNoAiAnswer] = useState(false);
     const [gifUrl, setGifUrl] = useState(null);
     const [showGifPicker, setShowGifPicker] = useState(false);
-    const [gamificationFeedback, setGamificationFeedback] = useState(null);
+    const [gamificationFeedback] = useState(null);
     const [showLevelUp, setShowLevelUp] = useState(null);
     const [showPreview, setShowPreview] = useState(false);
 

@@ -5,7 +5,7 @@ import QuestionCard from '../QuestionCard';
 import AnswerCard from '../AnswerCard';
 import FollowersList from '../FollowersList';
 import OpinionCard from '../OpinionCard';
-import { getThemeStyles, getViewerPrefs } from '../../utils/userColor';
+import { getThemeStyles } from '../../utils/userColor';
 
 const TabSkeleton = ({ type, contentCreator, viewerPrefs }) => {
     const themeStyles = contentCreator ? getThemeStyles(contentCreator, viewerPrefs) : null;

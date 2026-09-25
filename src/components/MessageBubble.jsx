@@ -142,11 +142,11 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
 
     const [showEphemeralViewer, setShowEphemeralViewer] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
-    const [ephemeralBlobUrl, setEphemeralBlobUrl] = useState(null);
-    const [ephemeralLoading, setEphemeralLoading] = useState(false);
+    const [, setEphemeralBlobUrl] = useState(null);
+    const [ephemeralLoading] = useState(false);
     const [ephemeralError, setEphemeralError] = useState(null);
-    const [countdown, setCountdown] = useState(EPHEMERAL_DURATION);
-    const [expired, setExpired] = useState(() => isEphemeralExpiredFromBackend(message, isMine));
+    const [, setCountdown] = useState(EPHEMERAL_DURATION);
+    const [, setExpired] = useState(() => isEphemeralExpiredFromBackend(message, isMine));
     const countdownRef = useRef(null);
     const blobUrlRef = useRef(null);
     const audioRef = useRef(null);
@@ -288,55 +288,8 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
         };
     }, [showEphemeralViewer, ephemeralLoading, ephemeralError]);
 
-    const loadEphemeralBlob = useCallback(async () => {
-        if (message.is_ephemeral && message.type === 'image') {
-            throw new Error('Ephemeral image viewing is disabled on web.');
-        }
-        setEphemeralLoading(true);
-        setEphemeralError(null);
-        try {
-            const response = await messagesAPI.viewEphemeralFile(message.id);
-            const blob = response.data;
-            const url = URL.createObjectURL(blob);
-            blobUrlRef.current = url;
-            setEphemeralBlobUrl(url);
-        } catch (err) {
-            const status = err.response?.status;
-            if (status === 403 || status === 410) {
-                setExpired(true);
-                setEphemeralError('Bu fotoğrafın görüntüleme hakkı veya süresi doldu.');
-            } else {
-                setEphemeralError('Fotoğraf yüklenemedi.');
-            }
-        } finally {
-            setEphemeralLoading(false);
-        }
-    }, [message.id]);
 
-    const handleOpenEphemeral = useCallback(async () => {
-        if (message.is_ephemeral && message.type === 'image') return;
-        if (expired) return;
 
-        if (ephemeralBlobUrl) {
-            setShowEphemeralViewer(true);
-            return;
-        }
-
-        setShowEphemeralViewer(true);
-        await loadEphemeralBlob();
-    }, [expired, ephemeralBlobUrl, loadEphemeralBlob]);
-
-    const handleCloseEphemeral = useCallback(() => {
-        setShowEphemeralViewer(false);
-        if (countdownRef.current) {
-            clearInterval(countdownRef.current);
-        }
-        if (blobUrlRef.current && !isMine) {
-            URL.revokeObjectURL(blobUrlRef.current);
-            blobUrlRef.current = null;
-            setEphemeralBlobUrl(null);
-        }
-    }, [isMine]);
 
     const [pendingLinkUrl, setPendingLinkUrl] = useState(null);
 
@@ -348,7 +301,7 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
 
     const renderContent = () => {
         switch (message.type) {
-            case 'image':
+            case 'image': {
                 if (message.is_ephemeral) {
                     const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.herkeslersoruyor.mobile';
                     return (
@@ -407,6 +360,7 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
                         )}
                     </>
                 );
+            }
             case 'audio': {
                 const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
                 const formatSec = (s) => {
@@ -634,88 +588,6 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
     return (
         <>
             {/* Ephemeral Photo Viewer Overlay (web'de devre dışı) */}
-            {false && showEphemeralViewer && message.type === 'image' && message.is_ephemeral && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-                    onClick={handleCloseEphemeral}
-                    style={{ userSelect: 'none' }}
-                >
-                    <div
-                        className="relative max-w-[90%] max-h-[90%] flex flex-col items-center"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Loading State */}
-                        {ephemeralLoading && (
-                            <div className="flex flex-col items-center justify-center gap-3 py-20">
-                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
-                                <span className="text-white/70 text-sm">Fotoğraf yükleniyor...</span>
-                            </div>
-                        )}
-
-                        {/* Error State */}
-                        {ephemeralError && !ephemeralLoading && (
-                            <div className="flex flex-col items-center justify-center gap-3 py-20">
-                                <FaLock className="text-white/50 text-4xl" />
-                                <span className="text-white/70 text-sm text-center">{ephemeralError}</span>
-                                <button
-                                    onClick={handleCloseEphemeral}
-                                    className="mt-2 px-4 py-2 bg-white/10 rounded-full text-white text-sm hover:bg-white/20 transition"
-                                >
-                                    Kapat
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Image - only when we have blob URL (revoked after 10s for devtools) */}
-                        {!ephemeralLoading && !ephemeralError && ephemeralBlobUrl && (
-                            <>
-                                {/* Countdown Progress Bar */}
-                                {!isMine && (
-                                    <div className="w-full max-w-md mb-4">
-                                        <div className="relative w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
-                                            <div
-                                                className="absolute left-0 top-0 h-full bg-gradient-to-r from-pink-500 to-red-500 rounded-full transition-all duration-1000 ease-linear"
-                                                style={{ width: `${(countdown / EPHEMERAL_DURATION) * 100}%` }}
-                                            />
-                                        </div>
-                                        <div className="flex justify-between items-center mt-2">
-                                            <span className="text-[11px] text-white/60 font-semibold">
-                                                {getEphemeralLabel()}
-                                            </span>
-                                            <span className="text-[13px] text-white font-bold">
-                                                {countdown} sn
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <img
-                                    src={ephemeralBlobUrl}
-                                    alt="Gizli fotoğraf"
-                                    className="max-w-full max-h-[70vh] rounded-xl"
-                                    draggable={false}
-                                    onContextMenu={(e) => e.preventDefault()}
-                                    style={{ userSelect: 'none', pointerEvents: 'none' }}
-                                />
-
-                                {/* Bottom Label */}
-                                <div className="mt-3 px-3 py-1.5 rounded-full bg-black/70 text-[11px] text-white font-semibold flex items-center gap-2">
-                                    <FaEye className="text-white/70" />
-                                    {getEphemeralLabel()}
-                                </div>
-
-                                {/* Close hint */}
-                                <button
-                                    onClick={handleCloseEphemeral}
-                                    className="mt-4 px-4 py-2 bg-white/10 rounded-full text-white/70 text-xs hover:bg-white/20 transition"
-                                >
-                                    Kapatmak için dokun
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
 
             <div className={`flex items-center gap-1 ${isMine ? 'justify-end' : 'justify-start'} mb-3 px-3 min-w-0 transition-all duration-300 group`}>
                 {onReaction && !message.user_deleted_at && (

@@ -77,7 +77,7 @@ const RoomPage = () => {
                     }
                 });
 
-                channel.listen('.community.ended', (data) => {
+                channel.listen('.community.ended', (_data) => {
                     if (channelRef.current) {
                         echo.leave(`community.${communityUuidRef.current || uuid}`);
                         channelRef.current = null;
@@ -108,7 +108,7 @@ const RoomPage = () => {
                     }
                 });
 
-                channel.listen('.message.sent', (data) => {
+                channel.listen('.message.sent', (_data) => {
                 });
 
                 channelRef.current = channel;
@@ -138,7 +138,8 @@ const RoomPage = () => {
                 if (isHostRef.current && communityUuidRef.current) {
                     try {
                         await communityAPI.leave(communityUuidRef.current);
-                    } catch (err) {
+                    } catch {
+                        // odadan çıkış en iyi çaba; sunucu zaten zaman aşımıyla düşürür
                     }
                 }
             };
@@ -155,7 +156,8 @@ const RoomPage = () => {
 
         try {
             await communityAPI.leave(communityUuidRef.current || uuid);
-        } catch (err) {
+        } catch {
+            // odadan çıkış en iyi çaba; sunucu zaten zaman aşımıyla düşürür
         }
 
         toast("Oda sonlandırıldı/ayrılındı.", { icon: '👋' });
@@ -164,9 +166,9 @@ const RoomPage = () => {
 
     const handleRaiseHand = async () => {
         try {
-            const response = await communityAPI.raiseHand(communityUuidRef.current || uuid);
+            await communityAPI.raiseHand(communityUuidRef.current || uuid);
             toast.success("El kaldırdın! Yöneticiler görüyor.");
-        } catch (err) {
+        } catch {
             toast.error("İşlem başarısız.");
         }
     };

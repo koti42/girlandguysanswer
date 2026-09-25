@@ -7,7 +7,7 @@ const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || import.met
 
 const SignupPage = () => {
     const navigate = useNavigate();
-    const { register, loading, error: authError, isAuthenticated } = useAuth();
+    const { register, loading, isAuthenticated } = useAuth();
     const [formData, setFormData] = useState({
         username: '',
         email: '',

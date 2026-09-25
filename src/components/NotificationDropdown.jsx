@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FaTimes, FaHeart, FaComment, FaUserPlus, FaTrophy } from 'react-icons/fa';
 import { notifications } from '../data/mockData';
 

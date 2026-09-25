@@ -53,7 +53,7 @@ const InRoomChat = ({ communityId, isOpen, onClose }) => {
     useEffect(() => {
         if (!room) return;
 
-        const handleData = (payload, participant, kind) => {
+        const handleData = (payload, _participant, _kind) => {
             const str = new TextDecoder().decode(payload);
             try {
                 const data = JSON.parse(str);
@@ -64,7 +64,7 @@ const InRoomChat = ({ communityId, isOpen, onClose }) => {
                     });
                     scrollToBottom();
                 }
-            } catch (e) { }
+            } catch { /* oda sohbeti en iyi çaba; hata kullanıcıya gösterilmiyor */ }
         };
 
         room.on('dataReceived', handleData);
@@ -77,7 +77,8 @@ const InRoomChat = ({ communityId, isOpen, onClose }) => {
             const res = await communityAPI.getMessages(communityId);
             setMessages(res.data.data || []);
             scrollToBottom();
-        } catch (error) {
+        } catch {
+            // oda sohbeti en iyi çaba; hata kullanıcıya gösterilmiyor
         } finally {
             setLoading(false);
         }
@@ -107,7 +108,8 @@ const InRoomChat = ({ communityId, isOpen, onClose }) => {
             const res = await communityAPI.sendMessage(communityId, { content, type: 'text' });
 
             setMessages(prev => prev.map(m => m.id === tempId ? res.data.data : m));
-        } catch (err) {
+        } catch {
+            // oda sohbeti en iyi çaba; hata kullanıcıya gösterilmiyor
         }
     };
 

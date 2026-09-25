@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
                 if (storedPermissions) {
                     setPermissions(JSON.parse(storedPermissions));
                 }
-            } catch (e) {
+            } catch {
                 localStorage.removeItem('user');
                 localStorage.removeItem('token');
                 localStorage.removeItem('permissions');
@@ -164,7 +164,7 @@ export const AuthProvider = ({ children }) => {
             if (token) {
                 await authAPI.logout();
             }
-        } catch (e) {
+        } catch {
             // Token zaten düşmüş/expire olmuş olabilir
         } finally {
             localStorage.removeItem('token');
@@ -199,7 +199,7 @@ export const AuthProvider = ({ children }) => {
         updateUser({ has_seen_welcome_guide: true });
         try {
             await authAPI.markWelcomeGuideSeen();
-        } catch (_) {}
+        } catch (_) { /* karşılama rehberi işareti sunucuya yazılamadıysa önemli değil */ }
     };
 
     const value = {

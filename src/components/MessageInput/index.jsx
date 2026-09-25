@@ -16,7 +16,12 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
     const typingTimeoutRef = useRef(null);
     const typingStopRef = useRef(null);
     const onTypingRef = useRef(onTyping);
-    onTypingRef.current = onTyping;
+    // Ref'i çizim sırasında değil efektte tazeliyoruz. Çizim sırasında
+    // ref yazmak React'in eşzamanlı çizimlerinde yarım kalan bir render'ın
+    // değeri sızdırmasına yol açabiliyor (react-hooks/refs).
+    useEffect(() => {
+        onTypingRef.current = onTyping;
+    }, [onTyping]);
     const [selectedFile, setSelectedFile] = useState(null);
     const [fileType, setFileType] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -162,7 +167,7 @@ export default function MessageInput({ onSendMessage, disabled = false, replying
                 volumeAnimationRef.current = requestAnimationFrame(updateVolume);
             };
             updateVolume();
-        } catch (e) {
+        } catch {
             setVolumeWave(Array(WAVE_LENGTH).fill(0.15));
         }
     };

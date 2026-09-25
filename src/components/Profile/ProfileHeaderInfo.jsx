@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaCrown, FaStar, FaMapMarkerAlt, FaCalendarAlt, FaTrophy } from 'react-icons/fa';
 import ProfileBadges from '../ProfileBadges';
-import { getProfileColor, getViewerPrefs } from '../../utils/userColor';
+import { getProfileColor } from '../../utils/userColor';
 
 const ProfileHeaderInfo = ({ profileData, isVIP, gender, viewerPrefs }) => {
     const contentCreator = { gender };

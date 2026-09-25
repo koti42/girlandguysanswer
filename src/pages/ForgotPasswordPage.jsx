@@ -36,10 +36,6 @@ const ForgotPasswordPage = () => {
         }
     };
 
-    const resetLink = successData?.token && successData.email
-        ? `/reset-password?token=${encodeURIComponent(successData.token)}&email=${encodeURIComponent(successData.email)}`
-        : null;
-
     return (
         <MainLayout>
             <SEO title="Şifremi Unuttum - Herkesler Soruyor" description="Şifrenizi sıfırlamak için e-posta adresinizi girin." />

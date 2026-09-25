@@ -104,11 +104,6 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
 
     const canExportPdf = user?.username === 'Koti42' || permissions?.is_super_admin;
 
-    const ensureHttps = (url) => {
-        if (!url) return url;
-        if (url.startsWith('http://') || url.startsWith('https://')) return url;
-        return `https://${url}`;
-    };
 
     useEffect(() => {
         conversationRef.current = conversation;
@@ -179,7 +174,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         const storageKey = `chat_encryption_info_hidden_${convId}`;
                         const hidden = localStorage.getItem(storageKey) === '1';
                         setShowEncryptionInfo(!hidden);
-                    } catch (e) {
+                    } catch {
                         setShowEncryptionInfo(true);
                     }
                     setTimeout(() => scrollToBottom(true), 100);
@@ -368,7 +363,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         try {
             const storageKey = `chat_encryption_info_hidden_${conversationRef.current.id}`;
             localStorage.setItem(storageKey, '1');
-        } catch (e) {
+        } catch {
             // ignore
         }
         setShowEncryptionInfo(false);
@@ -443,7 +438,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             await messagesAPI.setNickname(conversation.id, { nickname: nickname.trim() || null });
             setShowNicknameInput(false);
             notificationToast('Takma ad güncellendi', 'success');
-        } catch (e) {
+        } catch {
             notificationToast('Takma ad güncellenemedi', 'error');
         } finally {
             setNicknameSaving(false);

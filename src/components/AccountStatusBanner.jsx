@@ -4,7 +4,6 @@ import { FaSnowflake, FaBan, FaClock, FaExclamationTriangle, FaTimes } from 'rea
 const AccountStatusBanner = ({ accountStatus, onDismiss }) => {
     if (!accountStatus || accountStatus.status === 'active') return null;
 
-    const isFrozen = accountStatus.status === 'frozen';
     const isBanned = accountStatus.status === 'banned';
     const until = accountStatus.until ? new Date(accountStatus.until) : null;
     const now = new Date();

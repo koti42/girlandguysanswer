@@ -78,13 +78,14 @@ const NotificationsPage = () => {
             case 'follow_request':
                 navigate('/follow-requests');
                 break;
-            case 'follow_request_accepted':
+            case 'follow_request_accepted': {
                 const username = notification.data?.user?.username;
                 if (username) {
                     navigate(`/profile/${username}`);
                 }
                 break;
-            case 'community_invitation':
+            }
+            case 'community_invitation': {
                 const invitationId = notification.data?.invitation_id;
                 const communityUuid = notification.data?.community_uuid || notification.data?.community_id;
                 if (invitationId) {
@@ -95,6 +96,7 @@ const NotificationsPage = () => {
                     navigate('/community-invitations');
                 }
                 break;
+            }
             case 'mention':
                 if (notification.data?.question_slug) {
                     const ansId = notification.data?.answer_id;
@@ -132,7 +134,7 @@ const NotificationsPage = () => {
 
         try {
             await deleteAllNotifications();
-        } catch (error) {
+        } catch {
             // Failed to delete all
         }
     };

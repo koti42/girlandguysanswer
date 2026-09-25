@@ -44,8 +44,7 @@ const StoryDetailPage = () => {
     const [story, setStory] = useState(null);
     const [loading, setLoading] = useState(true);
     const [comments, setComments] = useState([]);
-    const [commentsPage, setCommentsPage] = useState(1);
-    const [commentsHasMore, setCommentsHasMore] = useState(false);
+    const [, setCommentsHasMore] = useState(false);
     const [commentText, setCommentText] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
@@ -89,7 +88,7 @@ const StoryDetailPage = () => {
                 setComments(data?.comments || []);
                 const pagination = data?.pagination || {};
                 setCommentsHasMore((pagination.current_page ?? 1) < (pagination.total_pages ?? 1));
-            } catch (e) {
+            } catch {
                 setComments([]);
             }
         };

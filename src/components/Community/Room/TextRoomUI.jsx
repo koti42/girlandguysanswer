@@ -98,7 +98,7 @@ const TextRoomUI = ({ community, onLeave, participantsCount }) => {
                 }
                 setMessages(res.data?.data || []);
                 scrollToBottom();
-            } catch (error) {
+            } catch {
                 if (!cancelled) {
                     toast.error('Mesajlar yüklenemedi.');
                 }

@@ -124,7 +124,7 @@ const ProfilePage = () => {
                     try {
                         const aRes = await usersAPI.getUserAnswers(data.username);
                         answersCount = aRes.data?.data?.count ?? aRes.data?.data?.answers?.length ?? null;
-                    } catch (e) {
+                    } catch {
                         answersCount = null;
                     }
                 }
@@ -252,7 +252,7 @@ const ProfilePage = () => {
                     const list = data?.opinions || (Array.isArray(data) ? data : (res.data?.opinions || []));
                     setOpinions(list);
                 }
-            } catch (error) {
+            } catch {
                 if (activeTab === 'followers') setFollowers([]);
                 if (activeTab === 'following') setFollowing([]);
                 if (activeTab === 'answers') setAnswers([]);
@@ -294,7 +294,7 @@ const ProfilePage = () => {
                     showToast('Profil fotoğrafı güncellendi.', 'success');
                 }
             }
-        } catch (error) {
+        } catch {
             showToast('Profil fotoğrafı güncellenemedi.', 'error');
         }
     };
@@ -307,7 +307,7 @@ const ProfilePage = () => {
                 updateUser({ avatar: DEFAULT_AVATAR });
             }
             showToast('Profil fotoğrafı kaldırıldı.', 'success');
-        } catch (error) {
+        } catch {
             showToast('Profil fotoğrafı kaldırılamadı.', 'error');
         }
     };
@@ -330,7 +330,7 @@ const ProfilePage = () => {
                     showToast('Kapak fotoğrafı güncellendi.', 'success');
                 }
             }
-        } catch (error) {
+        } catch {
             showToast('Kapak fotoğrafı güncellenemedi.', 'error');
         }
     };
@@ -343,7 +343,7 @@ const ProfilePage = () => {
                 updateUser({ cover_image: DEFAULT_COVER });
             }
             showToast('Kapak fotoğrafı kaldırıldı.', 'success');
-        } catch (error) {
+        } catch {
             showToast('Kapak fotoğrafı kaldırılamadı.', 'error');
         }
     };
@@ -411,7 +411,7 @@ const ProfilePage = () => {
                 }
             }));
             showToast('Kullanıcı engellendi.', 'success');
-        } catch (error) {
+        } catch {
             setShowBlockModal(false);
             showToast('Engelleme işlemi başarısız oldu.', 'error');
         }
@@ -428,7 +428,7 @@ const ProfilePage = () => {
             const data = response.data.data;
             setProfileData(prev => ({ ...prev, ...data, hasBlocked: false, isBlocked: false }));
             showToast('Engel başarıyla kaldırıldı.', 'success');
-        } catch (error) {
+        } catch {
             setShowUnblockModal(false);
             showToast('Engel kaldırma işlemi başarısız oldu.', 'error');
         }

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaEllipsisV, FaFlag, FaShare } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
-const QuestionActionsMenu = ({ questionId, onReport }) => {
+const QuestionActionsMenu = ({ _questionId, onReport }) => {
     const { isAuthenticated } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef(null);

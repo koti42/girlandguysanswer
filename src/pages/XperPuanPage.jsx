@@ -138,7 +138,7 @@ export default function XperPuanPage() {
                         </div>
                     </div>
                     <div className="space-y-3">
-                        {POINT_RULES.map(({ icon: Icon, label, points, color, desc }) => (
+                        {POINT_RULES.map(({ icon: _Icon, label, points, color, desc }) => (
                             <div key={label} className="flex items-start gap-4 p-4 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: `${color}18` }}>
                                     <Icon style={{ color }} className="text-lg" />

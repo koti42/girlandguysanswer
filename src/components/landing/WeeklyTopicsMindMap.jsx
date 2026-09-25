@@ -40,6 +40,13 @@ const CategoryChip = ({ category, className = '', style }) => {
                 className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0"
                 style={{ backgroundColor: color }}
             >
+                {/*
+                  * Kural burada yanılıyor: getCategoryIcon yeni bir bileşen
+                  * ÜRETMİYOR, sabit bir eşleme tablosundan hazır react-icons
+                  * bileşenini döndürüyor. Aynı kategori adı her zaman aynı
+                  * referansı verir, yani yeniden kurulma olmaz.
+                  */}
+                {/* eslint-disable-next-line react-hooks/static-components */}
                 <Icon className="text-sm" />
             </span>
             <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate max-w-[140px]" title={category.name}>

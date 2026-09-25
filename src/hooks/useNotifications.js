@@ -69,7 +69,8 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
             }
             audioRef.current.volume = 0.3;
             audioRef.current.play().catch(() => { });
-        } catch (err) {
+        } catch {
+            // ses çalınamıyorsa (izin yok / otomatik oynatma engeli) vazgeç
         }
     }, [enableSound]);
 
@@ -100,7 +101,8 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
                 };
 
                 setTimeout(() => notif.close(), 5000);
-            } catch (err) {
+            } catch {
+                // tarayıcı bildirimi kurulamadıysa uygulama içi liste yeterli
             }
         }
     }, []);
@@ -167,68 +169,52 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
     }, [hasMore, loadingMore, fetchNotifications]);
 
     const markAsRead = useCallback(async (notificationId) => {
-        try {
-            await notificationsAPI.markAsRead(notificationId);
+        await notificationsAPI.markAsRead(notificationId);
 
-            setNotifications(prev =>
-                prev.map(n =>
-                    n.id === notificationId
-                        ? { ...n, is_read: true, read_at: new Date().toISOString() }
-                        : n
-                )
-            );
-            setUnreadCount(prev => Math.max(0, prev - 1));
+        setNotifications(prev =>
+            prev.map(n =>
+                n.id === notificationId
+                    ? { ...n, is_read: true, read_at: new Date().toISOString() }
+                    : n
+            )
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
 
-            localStorage.setItem('notifications_update', Date.now().toString());
-        } catch (err) {
-            throw err;
-        }
+        localStorage.setItem('notifications_update', Date.now().toString());
     }, []);
 
     const markAllAsRead = useCallback(async () => {
-        try {
-            await notificationsAPI.markAllAsRead();
+        await notificationsAPI.markAllAsRead();
 
-            setNotifications(prev =>
-                prev.map(n => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
-            );
-            setUnreadCount(0);
+        setNotifications(prev =>
+            prev.map(n => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
+        );
+        setUnreadCount(0);
 
-            localStorage.setItem('notifications_update', Date.now().toString());
-        } catch (err) {
-            throw err;
-        }
+        localStorage.setItem('notifications_update', Date.now().toString());
     }, []);
 
     const deleteNotification = useCallback(async (notificationId) => {
-        try {
-            await notificationsAPI.delete(notificationId);
+        await notificationsAPI.delete(notificationId);
 
-            const notification = notifications.find(n => n.id === notificationId);
-            setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        const notification = notifications.find(n => n.id === notificationId);
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
 
-            if (notification && !notification.is_read) {
-                setUnreadCount(prev => Math.max(0, prev - 1));
-            }
-
-            localStorage.setItem('notifications_update', Date.now().toString());
-        } catch (err) {
-            throw err;
+        if (notification && !notification.is_read) {
+            setUnreadCount(prev => Math.max(0, prev - 1));
         }
+
+        localStorage.setItem('notifications_update', Date.now().toString());
     }, [notifications]);
 
     const deleteAllNotifications = useCallback(async () => {
-        try {
-            await notificationsAPI.deleteAll();
+        await notificationsAPI.deleteAll();
 
-            setNotifications([]);
-            setUnreadCount(0);
-            setHasMore(false);
+        setNotifications([]);
+        setUnreadCount(0);
+        setHasMore(false);
 
-            localStorage.setItem('notifications_update', Date.now().toString());
-        } catch (err) {
-            throw err;
-        }
+        localStorage.setItem('notifications_update', Date.now().toString());
     }, []);
 
     const refresh = useCallback(() => {
@@ -240,7 +226,7 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
             try {
                 const permission = await Notification.requestPermission();
                 return permission === 'granted';
-            } catch (err) {
+            } catch {
                 return false;
             }
         }

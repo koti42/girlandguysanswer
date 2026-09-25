@@ -24,7 +24,7 @@ const createEcho = () => {
                 Accept: 'application/json'
             }
         },
-        authorizer: (channel, options) => {
+        authorizer: (channel, _options) => {
             return {
                 authorize: (socketId, callback) => {
                     const token = localStorage.getItem('token');

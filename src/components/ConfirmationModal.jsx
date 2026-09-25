@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Onayla", cancelText = "İptal", isDangerous = false }) => {

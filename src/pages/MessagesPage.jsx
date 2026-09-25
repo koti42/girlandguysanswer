@@ -24,7 +24,7 @@ const MessagesPage = () => {
     const [conversations, setConversations] = useState([]);
     const [activeConversation, setActiveConversation] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [loadingNewConversation, setLoadingNewConversation] = useState(false);
+    const [, setLoadingNewConversation] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showMobileChat, setShowMobileChat] = useState(false);
     const [conversationToDelete, setConversationToDelete] = useState(null);

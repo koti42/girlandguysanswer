@@ -8,7 +8,7 @@ const formatDate = (dateString) => {
     if (!dateString) return "Az önce";
     try {
         return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: tr });
-    } catch (e) {
+    } catch {
         return "Bilinmiyor";
     }
 };

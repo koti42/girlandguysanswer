@@ -6,7 +6,6 @@ const ProfileActions = ({
     profileData,
     isOwnProfile,
     isVIP,
-    onEdit,
     onFollowToggle,
     onBlockToggle,
     onUnblock,

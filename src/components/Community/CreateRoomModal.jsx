@@ -23,7 +23,8 @@ const CreateRoomModal = ({ isOpen, onClose }) => {
             const communityUuid = response.data.data.uuid || response.data.data.id;
             onClose();
             navigate(`/community/${communityUuid}`);
-        } catch (error) {
+        } catch {
+            // FIXME: oda kurulamazsa kullanıcı hiçbir uyarı görmüyor
         } finally {
             setLoading(false);
         }

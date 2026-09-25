@@ -11,7 +11,8 @@ const usePresence = () => {
     const sendHeartbeat = async () => {
         try {
             await usersAPI.heartbeat();
-        } catch (error) {
+        } catch {
+            // heartbeat kaçarsa bir sonraki tur yakalar
         }
     };
 

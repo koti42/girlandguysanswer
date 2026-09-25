@@ -26,7 +26,7 @@ const LoginPage = () => {
         const stateNotice = location.state?.notice;
         if (stateNotice) {
             setNotice(stateNotice);
-            try { sessionStorage.removeItem('auth_notice'); } catch (_) { }
+            try { sessionStorage.removeItem('auth_notice'); } catch (_) { /* sessionStorage gizli sekmede erişime kapalı olabilir */ }
             return;
         }
         try {
@@ -35,7 +35,7 @@ const LoginPage = () => {
                 setNotice(stored);
                 sessionStorage.removeItem('auth_notice');
             }
-        } catch (_) { }
+        } catch (_) { /* sessionStorage gizli sekmede erişime kapalı olabilir */ }
     }, [location.state]);
 
     const handleInputChange = (e) => {

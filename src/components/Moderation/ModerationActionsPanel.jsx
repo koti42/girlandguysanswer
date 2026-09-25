@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { FaBan, FaSnowflake, FaUnlock, FaFire, FaExclamationTriangle, FaTimes, FaClock } from 'react-icons/fa';
 import { moderationAPI } from '../../services/api';
 
@@ -10,7 +10,7 @@ const DURATION_OPTIONS = [
     { value: 0, label: 'Süresiz' },
 ];
 
-const ActionModal = React.memo(({ isOpen, onClose, title, icon: Icon, iconColor, onConfirm, confirmText, confirmColor, modalReason, modalDuration, onReasonChange, onDurationChange, modalError, modalLoading }) => {
+const ActionModal = React.memo(({ isOpen, onClose, title, icon: _Icon, iconColor, onConfirm, confirmText, confirmColor, modalReason, modalDuration, onReasonChange, onDurationChange, modalError, modalLoading }) => {
     const textareaRef = React.useRef(null);
     const wasOpenRef = React.useRef(false);
 
@@ -130,7 +130,6 @@ const ActionModal = React.memo(({ isOpen, onClose, title, icon: Icon, iconColor,
 const ModerationActionsPanel = ({ targetUser, onActionComplete }) => {
     const [showBanModal, setShowBanModal] = useState(false);
     const [showFreezeModal, setShowFreezeModal] = useState(false);
-    const [actionType, setActionType] = useState(null);
     const [reason, setReason] = useState('');
     const [duration, setDuration] = useState(1440);
     const [loading, setLoading] = useState(false);

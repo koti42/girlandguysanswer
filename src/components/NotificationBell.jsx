@@ -14,7 +14,8 @@ const NotificationBell = () => {
         try {
             await markAllAsRead();
             setIsOpen(false);
-        } catch (error) {
+        } catch {
+            // okundu işaretleme en iyi çaba; sonraki açılışta tekrar denenir
         }
     };
 
@@ -43,7 +44,8 @@ const NotificationBell = () => {
         if (!notification.is_read) {
             try {
                 await markAsRead(notification.id);
-            } catch (error) {
+            } catch {
+                // okundu işaretleme en iyi çaba; sonraki açılışta tekrar denenir
             }
         }
 
@@ -77,19 +79,21 @@ const NotificationBell = () => {
             case 'follow_request':
                 navigate('/follow-requests');
                 break;
-            case 'follow_request_accepted':
+            case 'follow_request_accepted': {
                 const username = notification.data?.user?.username;
                 if (username) {
                     navigate(`/profile/${username}`);
                 }
                 break;
-            case 'new_message':
+            }
+            case 'new_message': {
                 const senderUsername = notification.data?.sender_username || notification.data?.user?.username || notification.data?.sender?.username;
                 if (senderUsername) {
                     navigate(`/messages/${senderUsername}`);
                 }
                 break;
-            case 'community_invitation':
+            }
+            case 'community_invitation': {
                 const invitationId = notification.data?.invitation_id;
                 const communityUuid = notification.data?.community_uuid || notification.data?.community_id;
                 if (invitationId) {
@@ -100,6 +104,7 @@ const NotificationBell = () => {
                     navigate('/community-invitations');
                 }
                 break;
+            }
             case 'mention':
                 if (notification.data?.question_slug) {
                     const ansId = notification.data?.answer_id;

@@ -85,7 +85,7 @@ const SettingsPage = () => {
     
             try {
                 sessionStorage.setItem('auth_notice', msg);
-            } catch (_) { }
+            } catch (_) { /* sessionStorage / tercih okuması kritik değil */ }
             logout();
             setShowDeleteAccountModal(false);
             setDeletePassword('');
@@ -143,7 +143,8 @@ const SettingsPage = () => {
                     profile_color_female: detail.profile_color_female || null,
                     profile_color_male: detail.profile_color_male || null
                 });
-            } catch (error) {
+            } catch {
+                // sessionStorage / tercih okuması kritik değil
             } finally {
                 setLoading(false);
             }
