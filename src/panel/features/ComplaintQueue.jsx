@@ -11,6 +11,7 @@ import { hoursLabel, relativeTime, truncate } from '../lib/format';
 import ContentPreview from './ContentPreview';
 import UserActions from './UserActions';
 import { emptySelection, toggleOne } from '../ui/selection';
+import { MOD_DATA_CHANGED, emit } from '../lib/events';
 
 /**
  * Şikâyet kuyruğu: sol liste + sağ detay. Her iki panelde de aynı bileşen;
@@ -55,6 +56,7 @@ export default function ComplaintQueue({ keyboard = true, initialStatus = 'pendi
             const next = items[activeIndex + 1] || items[activeIndex - 1];
             list.setData((d) => d ? { ...d, items: d.items.filter((i) => i.id !== activeId) } : d);
             setActiveId(next?.id ?? null);
+            emit(MOD_DATA_CHANGED);
         } catch (e) {
             toast.error(errorMessage(e));
         } finally {
@@ -70,6 +72,7 @@ export default function ComplaintQueue({ keyboard = true, initialStatus = 'pendi
             toast.success(res.data?.message);
             setSelection(emptySelection());
             list.refetch();
+            emit(MOD_DATA_CHANGED);
         } catch (e) { toast.error(errorMessage(e)); } finally { setBusy(false); }
     };
 

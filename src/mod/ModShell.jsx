@@ -5,6 +5,7 @@ import { usePanelAuth } from '../panel/auth/PanelAuthContext';
 import { useQuery } from '../panel/hooks/useQuery';
 import { useHotkeys } from '../panel/hooks/useHotkeys';
 import { modApi } from '../panel/api/endpoints';
+import { MOD_DATA_CHANGED, on } from '../panel/lib/events';
 import { Avatar, CommandPalette, Kbd } from '../panel/ui';
 import '../panel/theme.css';
 
@@ -29,7 +30,7 @@ export default function ModShell() {
     const [paletteOpen, setPaletteOpen] = useState(false);
 
     const dash = useQuery(() => modApi.dashboard(), []);
-    useEffect(() => { const t = window.setInterval(() => dash.refetch(), 30000); return () => window.clearInterval(t); }, [dash]);
+    useEffect(() => { const t = window.setInterval(() => dash.refetch(), 30000); const off = on(MOD_DATA_CHANGED, () => dash.refetch()); return () => { window.clearInterval(t); off(); }; }, [dash]);
     const pending = dash.data?.queue?.pending ?? 0;
     useEffect(() => { setMenuOpen(false); }, [location.pathname]);
 

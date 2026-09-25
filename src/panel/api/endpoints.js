@@ -111,6 +111,7 @@ export const adminApi = {
     specialDays: () => client.get('/admin/special-days'),
     toggleSpecialDay: (id) => client.post(`/admin/special-days/${id}/toggle`),
     updateSpecialDay: (id, body) => client.put(`/admin/special-days/${id}`, body),
+    syncSpecialDays: () => client.post('/admin/special-days/sync'),
 
     actions: (params) => client.get('/admin/actions', { params: clean(params) }),
     exportUrl: (type) => `${client.defaults.baseURL}/admin/export/${type}`,

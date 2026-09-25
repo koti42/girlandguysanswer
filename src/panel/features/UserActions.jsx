@@ -7,6 +7,7 @@ import { usePanelAuth } from '../auth/PanelAuthContext';
 import { can } from '../lib/permissions';
 import { userStatusOf } from '../lib/moderation';
 import { Button, ReasonDialog, Modal, Textarea, Field } from '../ui';
+import { MOD_DATA_CHANGED, emit } from '../lib/events';
 
 /**
  * Bir kullanıcıya uygulanabilecek moderasyon işlemleri. Duruma göre ban /
@@ -29,6 +30,7 @@ export default function UserActions({ user, onChanged, size = 'sm', compact = fa
             const res = await fn();
             toast.success(okMsg || res.data?.message || 'İşlem uygulandı.');
             setDialog(null);
+            emit(MOD_DATA_CHANGED);
             onChanged?.(res.data?.data?.user ?? null);
         } catch (e) {
             toast.error(errorMessage(e));

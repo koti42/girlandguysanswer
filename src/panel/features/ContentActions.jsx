@@ -4,6 +4,7 @@ import { modApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
 import { useToast } from '../hooks/useToast';
 import { Button, ReasonDialog } from '../ui';
+import { MOD_DATA_CHANGED, emit } from '../lib/events';
 
 /** Tek içerik için gizle/göster/kaldır/geri al. `item.is_hidden`, `item.is_removed` bekler. */
 export default function ContentActions({ type, item, onChanged, size = 'xs' }) {
@@ -19,6 +20,7 @@ export default function ContentActions({ type, item, onChanged, size = 'xs' }) {
             const res = await fn();
             toast.success(ok || res.data?.message);
             setDialog(null);
+            emit(MOD_DATA_CHANGED);
             onChanged?.(res.data?.data?.content ?? null);
         } catch (e) {
             toast.error(errorMessage(e));

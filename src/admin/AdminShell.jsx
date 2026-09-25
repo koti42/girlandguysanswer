@@ -8,6 +8,7 @@ import { usePanelAuth } from '../panel/auth/PanelAuthContext';
 import { useQuery } from '../panel/hooks/useQuery';
 import { useHotkeys } from '../panel/hooks/useHotkeys';
 import { adminApi } from '../panel/api/endpoints';
+import { MOD_DATA_CHANGED, on } from '../panel/lib/events';
 import { Avatar, CommandPalette, Kbd } from '../panel/ui';
 import '../panel/theme.css';
 
@@ -51,7 +52,8 @@ export default function AdminShell() {
     const overview = useQuery(() => adminApi.overview(), []);
     useEffect(() => {
         const t = window.setInterval(() => overview.refetch(), 60000);
-        return () => window.clearInterval(t);
+        const off = on(MOD_DATA_CHANGED, () => overview.refetch());
+        return () => { window.clearInterval(t); off(); };
     }, [overview]);
     const pending = overview.data?.moderation?.complaints_pending ?? 0;
 

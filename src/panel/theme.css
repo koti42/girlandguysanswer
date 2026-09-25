@@ -4,12 +4,13 @@
  * Bileşenler renkleri buradan (--p-accent...) okur, sabit renk kullanmaz.
  */
 [data-panel] {
-  --p-bg: #0b1220;
-  --p-surface: #111a2e;
-  --p-surface-2: #172238;
-  --p-border: rgba(148, 163, 184, 0.14);
-  --p-text: #e5e9f2;
-  --p-muted: #8b96ad;
+  /* Orta koyulukta "slate": ilk sürüm neredeyse siyahtı ve yorucuydu. */
+  --p-bg: #1a2234;
+  --p-surface: #222c42;
+  --p-surface-2: #2a3650;
+  --p-border: rgba(148, 163, 184, 0.22);
+  --p-text: #eef2f8;
+  --p-muted: #a3aec4;
   --p-accent: #6366f1;
   --p-accent-2: #8b5cf6;
   --p-accent-ink: #ffffff;
@@ -21,10 +22,10 @@
 }
 
 [data-panel="mod"] {
-  --p-bg: #0c0f14;
-  --p-surface: #14181f;
-  --p-surface-2: #1c2129;
-  --p-border: rgba(251, 191, 36, 0.12);
+  --p-bg: #1f232c;
+  --p-surface: #2a2f3a;
+  --p-surface-2: #333947;
+  --p-border: rgba(251, 191, 36, 0.2);
   --p-accent: #f59e0b;
   --p-accent-2: #fb923c;
   --p-accent-ink: #1a1305;
