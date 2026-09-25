@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import globals from 'globals'
+import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
@@ -22,7 +23,29 @@ export default defineConfig([
         sourceType: 'module',
       },
     },
+    plugins: { react },
+    settings: { react: { version: 'detect' } },
     rules: {
+      /*
+       * JSX'te tanımsız bileşen kullanımını yakalar.
+       *
+       * ESLint'in kendi no-undef'i JSX eleman adlarını referans saymıyor:
+       * `<FaVenus />` yazıp import etmeyi unutmak lint'ten de build'den de
+       * sessizce geçiyor, sadece kullanıcı o ekranı açınca ReferenceError
+       * olarak patlıyordu. Bir bileşen ayrı dosyaya taşındığında tam olarak
+       * bu oluyor.
+       */
+      'react/jsx-no-undef': 'error',
+
+      /*
+       * Aynı boşluğun diğer yüzü: JSX'te kullanılan bir değişken referans
+       * sayılmadığı için no-unused-vars onu "kullanılmıyor" diye işaretliyor.
+       * `{ icon: Icon }` gibi yalnızca JSX'te geçen bağlamalar bu yüzden
+       * yanlışlıkla temizlenebiliyordu.
+       */
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-uses-react': 'error',
+
       /*
        * Prop'tan state'e senkronizasyon (sunucudan gelen beğeni sayısını
        * iyimser yerel state'e yazmak, URL parametresini hata mesajına

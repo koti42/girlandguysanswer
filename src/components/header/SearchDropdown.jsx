@@ -1,4 +1,6 @@
 import React from 'react';
+import { FaChevronRight, FaSearch, FaUser } from 'react-icons/fa';
+import UserAvatar from '../UserAvatar';
 
 /**
  * Anlık arama sonuçları açılır kutusu.

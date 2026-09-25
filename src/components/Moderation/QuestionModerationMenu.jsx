@@ -10,7 +10,7 @@ const DURATION_OPTIONS = [
     { value: 0, label: 'Süresiz' },
 ];
 
-const ActionModal = React.memo(({ isOpen, onClose, title, icon: _Icon, iconColor, onConfirm, confirmText, confirmColor, showDuration = false, modalReason, modalDuration, onReasonChange, onDurationChange, modalError, modalLoading }) => {
+const ActionModal = React.memo(({ isOpen, onClose, title, icon: Icon, iconColor, onConfirm, confirmText, confirmColor, showDuration = false, modalReason, modalDuration, onReasonChange, onDurationChange, modalError, modalLoading }) => {
     const textareaRef = React.useRef(null);
     const wasOpenRef = React.useRef(false);
 

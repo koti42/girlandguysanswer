@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaHeart, FaThumbsDown, FaReply, FaUserSecret, FaImage, FaTimes, FaTrash, FaEyeSlash, FaRobot } from 'react-icons/fa';
+import { FaHeart, FaThumbsDown, FaReply, FaUserSecret, FaImage, FaTimes, FaTrash, FaEyeSlash, FaRobot, FaMars, FaVenus } from 'react-icons/fa';
 import DOMPurify from 'dompurify';
 import UserAvatar from '../UserAvatar';
 import UserHoverCard from '../UserHoverCard';
