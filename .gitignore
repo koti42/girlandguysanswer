@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ortam dosyalari
+#
+# .env YERELDIR ve repoda isi yoktu: makineden makineye degisir, bir gun gizli
+# bir anahtar eklenirse dogruca gecmise yazilir. .env.production repoda KALIR -
+# icinde yalnizca herkese acik degerler var (API adresi, canonical origin ve
+# tarayiciya zaten giden reCAPTCHA SITE key'i) ve Netlify build'i onu okuyor.
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.production
