@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-    FaBars, FaBell, FaBullhorn, FaChevronLeft, FaClipboardList, FaCog, FaExclamationTriangle, FaFingerprint,
-    FaFlag, FaGamepad, FaHome, FaLayerGroup, FaSearch, FaServer, FaShieldAlt, FaSignOutAlt, FaTags, FaUsers, FaUserShield, FaComments,
+    FaBalanceScale, FaBars, FaBell, FaChartBar, FaBullhorn, FaChevronLeft, FaClipboardList, FaCog, FaExclamationTriangle, FaFingerprint,
+    FaFlag, FaGamepad, FaHome, FaLayerGroup, FaPuzzlePiece, FaQuestionCircle, FaSearch, FaServer, FaShieldAlt, FaSignOutAlt, FaTags, FaUsers, FaUserShield, FaComments,
 } from 'react-icons/fa';
 import { usePanelAuth } from '../panel/auth/PanelAuthContext';
 import { useQuery } from '../panel/hooks/useQuery';
@@ -23,6 +23,12 @@ const NAV = [
         { to: '/cpl-manage/content', label: 'İçerik', icon: FaLayerGroup },
         { to: '/cpl-manage/complaints', label: 'Şikâyetler', icon: FaExclamationTriangle, badge: 'pending' },
         { to: '/cpl-manage/communities', label: 'Topluluk odaları', icon: FaComments },
+    ] },
+    { group: 'Oyun', items: [
+        { to: '/cpl-manage/game', label: 'Oyun merkezi', icon: FaChartBar, end: true },
+        { to: '/cpl-manage/game/questions', label: 'Oyun soruları', icon: FaQuestionCircle },
+        { to: '/cpl-manage/game/categories', label: 'Oyun kategorileri', icon: FaPuzzlePiece },
+        { to: '/cpl-manage/game/dilemmas', label: 'İkilemler', icon: FaBalanceScale },
     ] },
     { group: 'Yapılandırma', items: [
         { to: '/cpl-manage/catalog', label: 'Kataloglar', icon: FaTags },

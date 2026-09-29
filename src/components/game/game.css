@@ -1,0 +1,145 @@
+/*
+ * Oyun Merkezi görsel dili.
+ *
+ * Sitenin coral/gold vurgularını ve Inter'i koruyor; zemin ise koyu
+ * lacivert -> mor degradeyle "ayrı bir bölüm" hissi veriyor. Açık temada
+ * sayfa zemini yumuşak bir lavanta, kahraman/oyun kartları yine koyu.
+ */
+
+.game-page {
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(255, 107, 107, 0.12), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(139, 92, 246, 0.14), transparent 60%),
+    linear-gradient(180deg, #f5f3ff 0%, #f8fafc 45%, #fdf2f8 100%);
+}
+
+.dark .game-page {
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(255, 107, 107, 0.14), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(168, 85, 247, 0.22), transparent 60%),
+    linear-gradient(180deg, #0b1030 0%, #151038 50%, #1f0d3a 100%);
+}
+
+.game-hero {
+  background:
+    radial-gradient(600px 240px at 0% 0%, rgba(255, 107, 107, 0.28), transparent 70%),
+    radial-gradient(500px 260px at 100% 100%, rgba(226, 185, 76, 0.18), transparent 70%),
+    linear-gradient(135deg, #111842 0%, #25185a 55%, #43195f 100%);
+  color: #fff;
+}
+
+.game-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  box-shadow: 0 10px 30px -12px rgba(49, 46, 129, 0.18);
+}
+
+.dark .game-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 12px 34px -14px rgba(0, 0, 0, 0.6);
+}
+
+.game-glow-coral {
+  box-shadow: 0 10px 30px -8px rgba(255, 107, 107, 0.55);
+}
+
+.game-text-gradient {
+  background: linear-gradient(90deg, #ff6b6b, #e2b94c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Şık butonu: basınca hafif çökme */
+.game-press {
+  transition: transform 120ms ease, box-shadow 200ms ease, background-color 200ms ease, opacity 200ms ease;
+}
+.game-press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+@keyframes game-pop-in {
+  0% { opacity: 0; transform: translateY(12px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.game-pop-in { animation: game-pop-in 360ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+
+@keyframes game-fade-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.game-fade-up { animation: game-fade-up 420ms ease-out both; }
+
+@keyframes game-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+.game-shake { animation: game-shake 420ms ease-in-out; }
+
+@keyframes game-correct {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+  50% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.game-correct { animation: game-correct 600ms ease-out; }
+
+@keyframes game-float-up {
+  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.8); }
+  20% { opacity: 1; transform: translate(-50%, 0) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -60px) scale(1); }
+}
+.game-float-up { animation: game-float-up 1400ms ease-out forwards; }
+
+@keyframes game-timer-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.game-timer-urgent { animation: game-timer-pulse 700ms ease-in-out infinite; }
+
+@keyframes game-flame {
+  0%, 100% { transform: rotate(-4deg) scale(1); }
+  50% { transform: rotate(4deg) scale(1.12); }
+}
+.game-flame { display: inline-block; animation: game-flame 1.6s ease-in-out infinite; transform-origin: 50% 90%; }
+
+@keyframes game-vs {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+.game-vs { animation: game-vs 1.8s ease-in-out infinite; }
+
+@keyframes game-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.game-float { animation: game-float 3.2s ease-in-out infinite; }
+
+.game-bar-fill {
+  transition: width 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-pop-in,
+  .game-fade-up,
+  .game-shake,
+  .game-correct,
+  .game-timer-urgent,
+  .game-flame,
+  .game-vs,
+  .game-float {
+    animation: none !important;
+  }
+  .game-float-up {
+    animation: none !important;
+    opacity: 1;
+    transform: translate(-50%, -24px);
+  }
+  .game-bar-fill,
+  .game-press {
+    transition: none !important;
+  }
+}

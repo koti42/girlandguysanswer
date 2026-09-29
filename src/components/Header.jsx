@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay, FaUserShield, FaBookOpen } from 'react-icons/fa';
+import { FaSearch, FaBell, FaHeart, FaMoon, FaSun, FaBars, FaTimes, FaHome, FaQuestionCircle, FaEnvelope, FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt, FaChevronRight, FaMedal, FaUsers, FaInstagram, FaFacebook, FaTwitter, FaDownload, FaTimes as FaClose, FaCompass, FaRobot, FaFire, FaLifeRing, FaComment, FaStar, FaPoll, FaCrown, FaApple, FaYoutube, FaGooglePlay, FaUserShield, FaBookOpen, FaGamepad } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -366,6 +366,19 @@ const Header = ({ onSearch }) => {
                             </button>
                         </Link>
 
+                        {/* Oyun Merkezi - mobilde yalnızca ikon, geniş ekranda etiketli */}
+                        <Link
+                            to="/oyun"
+                            title="Oyun Merkezi"
+                            aria-label="Oyun Merkezi"
+                            className={`flex items-center gap-1.5 p-1.5 sm:p-2 lg:px-4 rounded-full lg:rounded-2xl font-semibold text-sm transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                                location.pathname.startsWith('/oyun') ? 'text-coral' : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                        >
+                            <FaGamepad className="text-base sm:text-lg text-coral" />
+                            <span className="hidden lg:inline">Oyun</span>
+                        </Link>
+
                         {/* Ask Question Button */}
                         <button
                             onClick={() => setShowQuickAskModal(true)}
@@ -661,6 +674,16 @@ const Header = ({ onSearch }) => {
                             <FaBookOpen className="text-xl text-coral flex-shrink-0" />
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Hikayeler</span>
                         </button>
+
+                        <Link
+                            to="/oyun"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2 min-h-[50px]"
+                        >
+                            <FaGamepad className="text-xl text-coral" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium">Oyun Merkezi</span>
+                            <span className="ml-auto rounded-full bg-gradient-to-r from-coral to-fuchsia-500 px-2 py-0.5 text-[10px] font-bold text-white">YENİ</span>
+                        </Link>
 
                         <Link
                             to="/communities"

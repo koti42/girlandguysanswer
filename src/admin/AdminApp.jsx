@@ -15,6 +15,7 @@ const Catalog = lazy(() => import('./pages/Catalog.jsx'));
 const Gamification = lazy(() => import('./pages/Gamification.jsx'));
 const Roles = lazy(() => import('./pages/Roles.jsx'));
 const SpecialDays = lazy(() => import('./pages/SpecialDays.jsx'));
+const Game = lazy(() => import('./pages/Game.jsx'));
 const Settings = lazy(() => import('./pages/Settings.jsx'));
 const Broadcast = lazy(() => import('./pages/Broadcast.jsx'));
 const AuditLog = lazy(() => import('./pages/AuditLog.jsx'));
@@ -41,6 +42,8 @@ export default function AdminApp() {
                         <Route path="gamification" element={<Suspense fallback={<Fallback />}><Gamification /></Suspense>} />
                         <Route path="roles" element={<Suspense fallback={<Fallback />}><Roles /></Suspense>} />
                         <Route path="special-days" element={<Suspense fallback={<Fallback />}><SpecialDays /></Suspense>} />
+                        <Route path="game" element={<Suspense fallback={<Fallback />}><Game /></Suspense>} />
+                        <Route path="game/:tab" element={<Suspense fallback={<Fallback />}><Game /></Suspense>} />
                         <Route path="settings" element={<Suspense fallback={<Fallback />}><Settings /></Suspense>} />
                         <Route path="broadcast" element={<Suspense fallback={<Fallback />}><Broadcast /></Suspense>} />
                         <Route path="audit" element={<Suspense fallback={<Fallback />}><AuditLog /></Suspense>} />

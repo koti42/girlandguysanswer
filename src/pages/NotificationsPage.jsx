@@ -97,6 +97,10 @@ const NotificationsPage = () => {
                 }
                 break;
             }
+            case 'game_duel_invite':
+                // Oyun Merkezi düello daveti
+                navigate(notification.data?.duel_id ? `/oyun/duello/${notification.data.duel_id}` : '/oyun/duello');
+                break;
             case 'mention':
                 if (notification.data?.question_slug) {
                     const ansId = notification.data?.answer_id;

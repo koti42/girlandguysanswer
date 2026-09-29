@@ -214,6 +214,18 @@ const BlogPage = lazy(() => import('./pages/BlogPage'));
 const XperPuanPage = lazy(() => import('./pages/XperPuanPage'));
 const FeatureTagsPage = lazy(() => import('./pages/FeatureTagsPage'));
 
+// Oyun Merkezi - ayrı parçalar; hub dışındakiler giriş ister.
+const GameHubPage = lazy(() => import('./pages/game/GameHubPage'));
+const GameArenaPage = lazy(() => import('./pages/game/ArenaPage'));
+const GamePlayPage = lazy(() => import('./pages/game/GamePlayPage'));
+const GameResultPage = lazy(() => import('./pages/game/GameResultPage'));
+const GameDailyPage = lazy(() => import('./pages/game/DailyPage'));
+const GameDuelsPage = lazy(() => import('./pages/game/DuelsPage'));
+const GameDuelDetailPage = lazy(() => import('./pages/game/DuelDetailPage'));
+const GameDilemmaPage = lazy(() => import('./pages/game/DilemmaPage'));
+const GameLeaderboardPage = lazy(() => import('./pages/game/GameLeaderboardPage'));
+const GameProfilePage = lazy(() => import('./pages/game/GameProfilePage'));
+
 
 const PresenceHeartbeat = () => {
   usePresence();
@@ -290,6 +302,16 @@ function App() {
                   <Route path="/blog" element={<BlogPage />} />
                   <Route path="/xper-puan" element={<XperPuanPage />} />
                   <Route path="/feature-tags" element={<FeatureTagsPage />} />
+                  <Route path="/oyun" element={<GameHubPage />} />
+                  <Route path="/oyun/arena" element={<ProtectedRoute><GameArenaPage /></ProtectedRoute>} />
+                  <Route path="/oyun/oyna/:sessionId" element={<ProtectedRoute><GamePlayPage /></ProtectedRoute>} />
+                  <Route path="/oyun/sonuc/:sessionId" element={<ProtectedRoute><GameResultPage /></ProtectedRoute>} />
+                  <Route path="/oyun/gunluk" element={<ProtectedRoute><GameDailyPage /></ProtectedRoute>} />
+                  <Route path="/oyun/duello" element={<ProtectedRoute><GameDuelsPage /></ProtectedRoute>} />
+                  <Route path="/oyun/duello/:id" element={<ProtectedRoute><GameDuelDetailPage /></ProtectedRoute>} />
+                  <Route path="/oyun/ikilem" element={<ProtectedRoute><GameDilemmaPage /></ProtectedRoute>} />
+                  <Route path="/oyun/liderlik" element={<ProtectedRoute><GameLeaderboardPage /></ProtectedRoute>} />
+                  <Route path="/oyun/profil/:username" element={<ProtectedRoute><GameProfilePage /></ProtectedRoute>} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="/cpl-manage/*" element={<AdminApp />} />
                   <Route path="/mod/*" element={<ModApp />} />
