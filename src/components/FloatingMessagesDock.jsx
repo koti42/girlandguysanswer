@@ -9,6 +9,7 @@ import { messagesAPI } from '../services/api';
 import { subscribeToUserChannel } from '../services/pusherClient';
 import OnlineIndicator from './OnlineIndicator';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
+import { isDockHiddenPath } from '../utils/messagesDock';
 
 const ensureHttps = (url) => {
     if (!url) return url;
@@ -77,11 +78,10 @@ const FloatingMessagesDock = () => {
         []
     );
 
-    const isMessagesRoute =
-        location.pathname === '/messages' || location.pathname.startsWith('/messages/');
+    const hideDock = isDockHiddenPath(location.pathname);
 
     const fetchConversations = useCallback(async () => {
-        if (!user || isMessagesRoute) return;
+        if (!user || hideDock) return;
         try {
             setLoading(true);
             const response = await messagesAPI.getConversations();
@@ -92,12 +92,12 @@ const FloatingMessagesDock = () => {
         } finally {
             setLoading(false);
         }
-    }, [user, isMessagesRoute]);
+    }, [user, hideDock]);
 
     useEffect(() => {
-        if (!user || isMessagesRoute) return;
+        if (!user || hideDock) return;
         fetchConversations();
-    }, [user, isMessagesRoute, fetchConversations]);
+    }, [user, hideDock, fetchConversations]);
 
     const handleNewMessageEvent = useCallback(
         (message) => {
@@ -139,7 +139,7 @@ const FloatingMessagesDock = () => {
         [user?.id, fetchConversations, showIncomingToast]
     );
 
-    const dockPusherActive = Boolean(user && !isMessagesRoute && !activeConversation);
+    const dockPusherActive = Boolean(user && !hideDock && !activeConversation);
 
     useEffect(() => {
         if (!dockPusherActive) return;
@@ -260,7 +260,7 @@ const FloatingMessagesDock = () => {
         }
     }, [incomingToast, dismissIncomingToast]);
 
-    if (!user || isMessagesRoute) return null;
+    if (!user || hideDock) return null;
 
     const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
     const previewAvatars = conversations.slice(0, 3);

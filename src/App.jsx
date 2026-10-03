@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorPage from './pages/ErrorPage';
 import { useAuth } from './context/AuthContext';
-import { Toaster } from 'react-hot-toast';
+import AppToaster from './components/AppToaster';
 import usePresence from './hooks/usePresence';
 import { usersAPI } from './services/api';
 import ErrorBoundary from './components/game/ErrorBoundary';
@@ -361,7 +361,7 @@ function App() {
           </Router>
         </NotificationProvider>
       </AuthProvider>
-      <Toaster position="top-center" reverseOrder={false} />
+      <AppToaster />
     </ThemeProvider>
   );
 }
