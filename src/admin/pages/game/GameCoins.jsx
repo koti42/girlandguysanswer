@@ -157,7 +157,9 @@ export default function GameCoins() {
             summary.refetch();
         } catch (err) {
             const fe = fieldErrors(err) || {};
-            if (err?.response?.data?.data?.reason === 'insufficient' || err?.response?.data?.reason === 'insufficient') fe.amount = fe.amount || 'Bakiye yetersiz: kesinti bakiyeyi negatife düşüremez.';
+            const reason = err?.response?.data?.data?.reason ?? err?.response?.data?.reason;
+            if (reason === 'insufficient') fe.amount = fe.amount || 'Bakiye yetersiz: kesinti bakiyeyi negatife düşüremez.';
+            if (reason === 'balance_cap') fe.amount = fe.amount || 'Bu miktarla cüzdan üst sınırı aşılıyor.';
             setAdjErrors(fe);
             setConfirm(null);
             toast.error(errorMessage(err));

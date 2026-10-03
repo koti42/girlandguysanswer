@@ -44,7 +44,7 @@ export const gameAdminApi = {
     searchWallets: (q) => client.get('/admin/game/shop/wallets/search', { params: clean({ q }) }),
     /** ?page → { user, wallet, transactions (sayfalı) } */
     wallet: (userId, params) => client.get(`/admin/game/shop/wallets/${encodeURIComponent(userId)}`, { params: clean(params) }),
-    /** { amount: ±n (≠0, |n| ≤ 1.000.000), reason } — bakiye negatife düşmez. */
+    /** { amount: ±n (≠0, |n| ≤ 50.000.000), reason } — bakiye negatife düşmez; yönetici kendine de verebilir. */
     adjustWallet: (userId, body) => client.post(`/admin/game/shop/wallets/${encodeURIComponent(userId)}/adjust`, body),
 };
 

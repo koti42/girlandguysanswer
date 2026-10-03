@@ -95,7 +95,8 @@ describe('cüzdan', () => {
         expect(validateAdjust({ mode: 'grant', amount: '500', reason: 'Etkinlik ödülü' }, 0)).toEqual({});
         expect(validateAdjust({ mode: 'grant', amount: '0', reason: 'x' }).amount).toBeTruthy();
         expect(validateAdjust({ mode: 'grant', amount: '-5', reason: 'x' }).amount).toBeTruthy();
-        expect(validateAdjust({ mode: 'grant', amount: '1000001', reason: 'x' }).amount).toBeTruthy();
+        expect(validateAdjust({ mode: 'grant', amount: '50000001', reason: 'x' }).amount).toBeTruthy();
+        expect(validateAdjust({ mode: 'grant', amount: '50000000', reason: 'x' }).amount).toBeFalsy();
         expect(validateAdjust({ mode: 'deduct', amount: '101', reason: 'x' }, 100).amount).toMatch(/Bakiye yetersiz/);
         expect(validateAdjust({ mode: 'deduct', amount: '100', reason: 'x' }, 100)).toEqual({});
         expect(validateAdjust({ mode: 'grant', amount: '1', reason: '   ' }).reason).toBe('Gerekçe zorunlu.');

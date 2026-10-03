@@ -71,7 +71,7 @@ export const LIMITS = {
     price: 1_000_000,
     sortOrder: 100_000,
     maxPerUser: 1_000,
-    adjust: 1_000_000,
+    adjust: 50_000_000,
     reason: 255,
 };
 
