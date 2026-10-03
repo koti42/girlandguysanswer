@@ -9,6 +9,7 @@ import ModeCard from '../../components/game/ModeCard';
 import BadgeGrid from '../../components/game/BadgeGrid';
 import Countdown from '../../components/game/Countdown';
 import LeagueBadge from '../../components/game/LeagueBadge';
+import RunnerFeatureCard from '../../components/game/runner/RunnerFeatureCard';
 import UserAvatar from '../../components/UserAvatar';
 import { categoryIcon } from '../../components/game/gameIcons';
 import { formatNumber, nextIstanbulMidnight } from '../../components/game/gameUtils';
@@ -114,6 +115,8 @@ const GuestHub = () => {
             </section>
 
             <h2 className="mt-8 mb-3 text-lg font-extrabold">Modlar</h2>
+            {/* Yeni 3D oyun misafire de açık: antrenman modunda oynanır. */}
+            <RunnerFeatureCard guest />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <ModeCard locked title="Bilgi Arenası" description="10 soru, soru başına 15 saniye. Kategori seç ya da karışık oyna." icon={LuBrain} gradient="from-coral to-orange-400" />
                 <ModeCard locked title="Günün Sorusu" description="Her gün herkese aynı 5 soru. Serini bozma!" icon={LuCalendarCheck} gradient="from-amber-400 to-gold" />
@@ -159,6 +162,7 @@ const PlayerHub = ({ user }) => {
             <PlayerCard user={user} player={player} />
 
             <h2 className="mt-7 mb-3 text-lg font-extrabold">Ne oynamak istersin?</h2>
+            <RunnerFeatureCard />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <ModeCard
                     to="/oyun/arena"

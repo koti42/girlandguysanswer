@@ -110,6 +110,14 @@ const useNotifications = (autoRefresh = true, refreshInterval = 10000, enableSou
     const fetchNotifications = useCallback(async (unreadOnly = false, silent = false, opts = {}) => {
         const { page = 1, append = false } = opts;
         if (isFetchingRef.current) return;
+        // Misafirde (token yok) istek atma: her sayfada ve her odaklanmada konsola 401 düşüyordu.
+        let hasToken = false;
+        try {
+            hasToken = Boolean(localStorage.getItem('token'));
+        } catch {
+            hasToken = false;
+        }
+        if (!hasToken) return;
 
         isFetchingRef.current = true;
         if (!silent && !append) setLoading(true);

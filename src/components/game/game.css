@@ -143,3 +143,127 @@
     transition: none !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Herkesler Koşuyor                                                   */
+/* ------------------------------------------------------------------ */
+
+/* Hub kartındaki perspektifli neon yol (yalnızca CSS, JS yok). */
+.runner-road {
+  perspective: 260px;
+  perspective-origin: 50% 0%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 35%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 35%);
+}
+.runner-road-plane {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 30%;
+  height: 140%;
+  overflow: hidden;
+  transform: rotateX(62deg);
+  transform-origin: 50% 0%;
+  background:
+    linear-gradient(90deg, transparent 32.5%, rgba(255, 255, 255, 0.55) 32.5%, rgba(255, 255, 255, 0.55) 33.5%, transparent 33.5%,
+      transparent 66.5%, rgba(255, 255, 255, 0.55) 66.5%, rgba(255, 255, 255, 0.55) 67.5%, transparent 67.5%),
+    linear-gradient(180deg, rgba(139, 92, 246, 0.15), rgba(255, 107, 107, 0.45));
+  border-left: 2px solid rgba(255, 107, 107, 0.8);
+  border-right: 2px solid rgba(255, 107, 107, 0.8);
+  box-shadow: 0 0 40px rgba(255, 107, 107, 0.35);
+}
+/* Orta şerit çizgileri: yalnızca transform canlandırılır (boyama yok, GPU'da akar). */
+.runner-road-plane::before {
+  content: '';
+  position: absolute;
+  left: calc(50% - 3px);
+  width: 6px;
+  top: -46px;
+  bottom: 0;
+  background: repeating-linear-gradient(180deg, rgba(226, 185, 76, 0.8) 0 14px, transparent 14px 46px);
+  will-change: transform;
+  animation: runner-road-move 0.9s linear infinite;
+}
+@keyframes runner-road-move {
+  from { transform: translateY(0); }
+  to { transform: translateY(46px); }
+}
+
+/* Soru paneli: kapıya kalan süre çubuğu (süre inline style ile). */
+.runner-gate-timer {
+  width: 100%;
+  transform-origin: left center;
+  animation-name: runner-gate-shrink;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes runner-gate-shrink {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/*
+ * Yatay telefon (alçak ekran): soru paneli ekranın yarısını kaplamasın.
+ * Panel biraz genişler (daha az satır), boşluklar ve yazılar küçülür.
+ * İki sınıflı seçiciler Tailwind yardımcılarını ezer.
+ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .runner-qpanel.runner-qpanel { max-width: 40rem; padding: 0.4rem 0.6rem; }
+  .runner-qpanel .runner-qpanel-q { margin-top: 0.125rem; font-size: 0.875rem; line-height: 1.2; }
+  .runner-qpanel .runner-qpanel-opts { margin-top: 0.3rem; }
+  .runner-qpanel .runner-qpanel-opt { padding-top: 0.2rem; padding-bottom: 0.2rem; }
+  .runner-qpanel [data-testid="runner-gate-feedback"] { margin-top: 0.3rem; }
+  .runner-qpanel [data-testid="runner-gate-feedback"] > p { padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: 0.8125rem; }
+  /*
+   * Cevaptan sonra panel başlık + tek geri bildirim satırına iner (~45px):
+   * yatayda soru ve şıklar ufku ve gelen engelleri örtüyordu. Yanlışta
+   * doğru cevap geri bildirim satırında zaten yazıyor.
+   */
+  .runner-qpanel--answered .runner-qpanel-q,
+  .runner-qpanel--answered .runner-qpanel-opts { display: none; }
+  .runner-qpanel--answered [data-testid="runner-gate-feedback"] { margin-top: 0.2rem; }
+}
+
+/* 3-2-1 sayacı */
+@keyframes runner-count {
+  0% { opacity: 0; transform: scale(1.8); }
+  25% { opacity: 1; transform: scale(1); }
+  80% { opacity: 1; transform: scale(0.96); }
+  100% { opacity: 0; transform: scale(0.85); }
+}
+.runner-count { display: inline-block; animation: runner-count 950ms ease-out both; }
+
+/* Sendeleme: kenarlarda kırmızı uyarı. */
+.runner-stumble {
+  box-shadow: inset 0 0 90px 10px rgba(244, 63, 94, 0.55);
+  animation: runner-stumble 450ms ease-in-out infinite alternate;
+}
+@keyframes runner-stumble {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+/* Oyun sahnesi: kaydırma hareketleri sayfayı kaydırmasın, uzun basış menü açmasın. */
+.runner-stage {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runner-road-plane::before,
+  .runner-count,
+  .runner-stumble {
+    animation: none !important;
+  }
+  /*
+   * Kayarak küçülmek yerine ~7 kesik adımda azalır: kalan süre yine görünür,
+   * süre (inline) ve fill-mode aynı kaldığı için kapıda boş biter.
+   */
+  .runner-gate-timer {
+    animation-timing-function: steps(7, end) !important;
+  }
+}

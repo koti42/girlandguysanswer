@@ -10,6 +10,11 @@ import { useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import usePresence from './hooks/usePresence';
 import { usersAPI } from './services/api';
+import ErrorBoundary from './components/game/ErrorBoundary';
+import { installChunkReloadHandler } from './components/game/chunkReload';
+
+// Yeni sürümden sonra eski sekmede parça dosyası inemezse sayfa bir kez kendini yeniler.
+installChunkReloadHandler();
 
 const GenderCheck = ({ children }) => {
   const { user, loading } = useAuth();
@@ -225,7 +230,20 @@ const GameDuelDetailPage = lazy(() => import('./pages/game/DuelDetailPage'));
 const GameDilemmaPage = lazy(() => import('./pages/game/DilemmaPage'));
 const GameLeaderboardPage = lazy(() => import('./pages/game/GameLeaderboardPage'));
 const GameProfilePage = lazy(() => import('./pages/game/GameProfilePage'));
+// Herkesler Koşuyor: lobi ve oyun ekranı herkese açık (misafir antrenman oynar).
+// 3D motor (three.js) oyun ekranının içinden ayrıca dinamik yükleniyor.
+const RunnerLobbyPage = lazy(() => import('./pages/game/runner/RunnerLobbyPage'));
+const RunnerPlayPage = lazy(() => import('./pages/game/runner/RunnerPlayPage'));
 
+
+/*
+ * Rota içeriği için hata sınırı: yüklenemeyen sayfa parçası ya da çizim
+ * hatası bütün uygulamayı beyaz ekrana çevirmesin. Adres değişince sıfırlanır.
+ */
+const RouteErrorBoundary = ({ children }) => {
+  const location = useLocation();
+  return <ErrorBoundary resetKey={location.pathname}>{children}</ErrorBoundary>;
+};
 
 const PresenceHeartbeat = () => {
   usePresence();
@@ -254,6 +272,7 @@ function App() {
           <Router>
             <GenderCheck>
               <div className="overflow-x-hidden">
+              <RouteErrorBoundary>
               <Suspense fallback={<RouteFallback />}>
               <Routes>
                   <Route path="/" element={<LandingPage />} />
@@ -312,12 +331,15 @@ function App() {
                   <Route path="/oyun/ikilem" element={<ProtectedRoute><GameDilemmaPage /></ProtectedRoute>} />
                   <Route path="/oyun/liderlik" element={<ProtectedRoute><GameLeaderboardPage /></ProtectedRoute>} />
                   <Route path="/oyun/profil/:username" element={<ProtectedRoute><GameProfilePage /></ProtectedRoute>} />
+                  <Route path="/oyun/kosu" element={<RunnerLobbyPage />} />
+                  <Route path="/oyun/kosu/oyna" element={<RunnerPlayPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="/cpl-manage/*" element={<AdminApp />} />
                   <Route path="/mod/*" element={<ModApp />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
               </Routes>
               </Suspense>
+              </RouteErrorBoundary>
               <Suspense fallback={null}>
                 <FloatingMessagesDock />
               </Suspense>

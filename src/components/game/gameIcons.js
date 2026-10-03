@@ -13,6 +13,8 @@ import {
     LuPawPrint, LuPizza, LuPlane, LuPuzzle, LuRocket, LuScale, LuShield, LuShirt, LuShuffle, LuSmile,
     LuSparkles, LuStar, LuStethoscope, LuSun, LuSwords, LuTarget, LuTimer, LuTrendingUp, LuTrophy,
     LuTv, LuUsers, LuUtensils, LuVolleyball, LuZap,
+    LuActivity, LuCoins, LuGauge, LuInfinity, LuMagnet, LuMilestone, LuPersonStanding, LuRoute,
+    LuShieldCheck, LuWind,
 } from 'react-icons/lu';
 
 const ICONS = {
@@ -33,14 +35,27 @@ const ICONS = {
     sparkles: LuSparkles, star: LuStar, stethoscope: LuStethoscope, sun: LuSun, swords: LuSwords,
     target: LuTarget, timer: LuTimer, 'trending-up': LuTrendingUp, trophy: LuTrophy, tv: LuTv,
     users: LuUsers, utensils: LuUtensils, volleyball: LuVolleyball, zap: LuZap,
+    // Herkesler Koşuyor rozetleri (footprints, rocket, brain, zap yukarıda)
+    route: LuRoute, milestone: LuMilestone, gauge: LuGauge, activity: LuActivity, coins: LuCoins,
+    magnet: LuMagnet, 'shield-check': LuShieldCheck, wind: LuWind, infinity: LuInfinity,
+    'person-standing': LuPersonStanding, runner: LuPersonStanding,
 };
 
+/*
+ * Yalnızca tablonun kendi anahtarları: "constructor" / "toString" gibi bir ad
+ * prototipten fonksiyon döndürüp bileşen diye çizilmesin.
+ */
+function lookup(name, fallback) {
+    const key = String(name || '').trim().toLowerCase();
+    return Object.prototype.hasOwnProperty.call(ICONS, key) ? ICONS[key] : fallback;
+}
+
 export function categoryIcon(name) {
-    return ICONS[String(name || '').toLowerCase()] || LuSparkles;
+    return lookup(name, LuSparkles);
 }
 
 export function badgeIcon(name) {
-    return ICONS[String(name || '').toLowerCase()] || LuAward;
+    return lookup(name, LuAward);
 }
 
 export { LuShuffle as MixedIcon };

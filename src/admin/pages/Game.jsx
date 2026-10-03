@@ -27,7 +27,7 @@ export default function Game() {
 
     return (
         <div>
-            <PageHeader title="Oyun Merkezi" description="Bilgi Arenası, Günün Sorusu, Düello ve İkilem içerikleri. Puanlama sunucuda yapılır; buradaki değişiklikler yeni oyunlara uygulanır.">
+            <PageHeader title="Oyun Merkezi" description="Bilgi Arenası, Günün Sorusu, Düello, İkilem ve Herkesler Koşuyor içerikleri. Puanlama sunucuda yapılır; buradaki değişiklikler yeni oyunlara uygulanır.">
                 <Tabs items={TABS.map(({ key, label, icon }) => ({ key, label, icon }))} value={tab} onChange={(k) => navigate(k === 'overview' ? '/cpl-manage/game' : `/cpl-manage/game/${k}`)} />
             </PageHeader>
             <Component key={tab} />

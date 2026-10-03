@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen , configure } from '@testing-library/react';
+import { render, screen, within, configure } from '@testing-library/react';
 
 // CI / yoğun makinede jsdom render'ı yavaşlayabiliyor; varsayılan 1 sn / 5 sn
 // sınırları kararsız sonuç veriyordu.
@@ -61,6 +61,12 @@ describe('GameHubPage', () => {
         expect(locked.length).toBeGreaterThan(1);
         expect(screen.getByText('Bilgi Arenası').closest('a')).toHaveAttribute('href', '/login');
 
+        // Yeni 3D koşu kartı misafirde de kilitsiz: antrenmana götürür.
+        const runner = screen.getByRole('link', { name: /Herkesler Koşuyor/ });
+        expect(runner).toHaveAttribute('href', '/oyun/kosu');
+        expect(within(runner).getByText('Yeni · 3D')).toBeInTheDocument();
+        expect(within(runner).getByText('Antrenmana başla')).toBeInTheDocument();
+
         // Auth isteyen uçlar çağrılmaz
         expect(gameApi.overview).not.toHaveBeenCalled();
         expect(gameApi.leaderboard).not.toHaveBeenCalled();
@@ -107,5 +113,17 @@ describe('GameHubPage', () => {
         expect(screen.getByText('Deniz')).toBeInTheDocument();
         expect(screen.getByText('İlk Adım')).toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'Üye ol' })).toBeNull();
+        expect(screen.getByRole('link', { name: /Herkesler Koşuyor/ })).toHaveAttribute('href', '/oyun/kosu');
+    });
+
+    it('GameNav 7 sekme içerir, Koşu sekmesi lobiye gider; dar ekran kısa etiketi erişilebilir adı bozmaz', async () => {
+        gameApi.categories.mockResolvedValue({ categories: [] });
+        renderHub();
+        const nav = screen.getByRole('navigation', { name: 'Oyun Merkezi bölümleri' });
+        const links = within(nav).getAllByRole('link');
+        expect(links).toHaveLength(7);
+        expect(within(nav).getByRole('link', { name: 'Koşu' })).toHaveAttribute('href', '/oyun/kosu');
+        expect(within(nav).getByRole('link', { name: 'Liderlik' })).toHaveAttribute('href', '/oyun/liderlik');
+        expect(within(nav).getByRole('link', { name: 'Merkez' })).toHaveAttribute('aria-current', 'page');
     });
 });

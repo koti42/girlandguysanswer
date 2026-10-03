@@ -1,13 +1,71 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBalanceScale, FaCalendarDay, FaCheckCircle, FaFistRaised, FaPlay, FaQuestionCircle, FaSync, FaUsers } from 'react-icons/fa';
+import { FaBalanceScale, FaCalendarDay, FaCheckCircle, FaFistRaised, FaPlay, FaQuestionCircle, FaRunning, FaSync, FaUsers } from 'react-icons/fa';
 import { gameAdminApi } from '../../gameAdminApi';
 import { useQuery } from '../../../panel/hooks/useQuery';
 import { Avatar, Badge, Button, Card, DataTable, ErrorState, Skeleton, StatCard } from '../../../panel/ui';
-import { formatNumber } from '../../../panel/lib/format';
+import { formatDateTime, formatNumber } from '../../../panel/lib/format';
 import { accuracyOf, accuracyTone, difficultyOf } from './gameUtils';
 
 const pct = (v) => (v === null || v === undefined ? '—' : `%${Math.round(Number(v))}`);
+const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
+// Sunucunun reject_reason kodları (RunnerService::REJECT_*); bilinmeyen kod olduğu gibi yazılır.
+const REJECT_REASONS = { time: 'Zaman tutarsızlığı', lane: 'Şerit uyuşmazlığı' };
+
+function RunnerUserCell({ user, sub, onUser }) {
+    return (
+        <button type="button" disabled={!user?.id} onClick={() => onUser(user.id)} className="flex items-center gap-2 min-w-0 flex-1 basis-44 rounded-lg px-1 py-1 text-left p-hover p-ring disabled:cursor-default">
+            <Avatar user={user} size={28} />
+            <span className="min-w-0">
+                <span className="block text-sm font-medium truncate">@{user?.username || '?'}</span>
+                {sub && <code className="block text-[10px] p-muted truncate">{sub}</code>}
+            </span>
+        </button>
+    );
+}
+
+/*
+ * Herkesler Koşuyor özeti: en yüksek skorlar ve doğrulanamayan (reddedilen)
+ * koşular. Eski API sürümü bu alanları göndermiyorsa bölüm hiç çizilmez.
+ */
+function RunnerSection({ runner, onUser }) {
+    const top = Array.isArray(runner?.top) ? runner.top : [];
+    const rejected = Array.isArray(runner?.rejected) ? runner.rejected : [];
+    return (
+        <div className="grid gap-4 xl:grid-cols-2" data-testid="game-runner">
+            <Card title="Koşu: en yüksek skorlar" subtitle="Herkesler Koşuyor, tüm zamanlar">
+                {top.length ? (
+                    <ol className="divide-y divide-[var(--p-border)]">
+                        {top.map((r, i) => (
+                            <li key={r.run_id ?? i} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                                <span className="text-xs font-bold p-muted tabular-nums w-5 shrink-0">{i + 1}.</span>
+                                <RunnerUserCell user={r.user} sub={r.at ? formatDateTime(r.at) : null} onUser={onUser} />
+                                {/* Dar ekranda puan ve mesafe birlikte alt satıra geçer (kullanıcı adı kırpılmaz). */}
+                                <span className="ml-auto flex shrink-0 items-center gap-2">
+                                    <Badge tone="accent">{formatNumber(r.score ?? 0)} puan</Badge>
+                                    <Badge tone="neutral">{formatNumber(r.distance_m ?? r.distance ?? 0)} m</Badge>
+                                </span>
+                            </li>
+                        ))}
+                    </ol>
+                ) : <p className="text-xs p-muted py-6 text-center">Henüz bitmiş koşu yok.</p>}
+            </Card>
+            <Card title="Koşu: reddedilenler" subtitle="Sunucu doğrulamasından geçemeyen son koşular (zaman / şerit tutarsızlığı)">
+                {rejected.length ? (
+                    <ul className="divide-y divide-[var(--p-border)]" data-testid="game-runner-rejected">
+                        {rejected.map((r, i) => (
+                            <li key={r.run_id ?? i} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                                <RunnerUserCell user={r.user} sub={r.run_id} onUser={onUser} />
+                                {r.reason && <span className="text-xs font-medium p-tone-danger break-words min-w-0">{(Object.prototype.hasOwnProperty.call(REJECT_REASONS, r.reason) && REJECT_REASONS[r.reason]) || String(r.reason)}</span>}
+                                {r.at && <span className="text-[11px] p-muted">{formatDateTime(r.at)}</span>}
+                            </li>
+                        ))}
+                    </ul>
+                ) : <p className="text-xs p-muted py-6 text-center">Reddedilen koşu yok.</p>}
+            </Card>
+        </div>
+    );
+}
 
 /** Oyun Merkezi genel bakış: /admin/game/stats. */
 export default function GameOverview() {
@@ -43,6 +101,7 @@ export default function GameOverview() {
                     <StatCard label="Oturum" value={t.sessions ?? 0} icon={FaPlay} tone="info" compact />
                     <StatCard label="Bugünkü oturum" value={t.sessions_today ?? 0} icon={FaCalendarDay} tone="warning" compact />
                     <StatCard label="Düello" value={t.duels ?? 0} icon={FaFistRaised} tone="danger" compact />
+                    {isNum(t.runner_runs) && <StatCard label="Koşu" value={t.runner_runs} sub={isNum(t.runner_runs_today) ? `${formatNumber(t.runner_runs_today)} bugün` : undefined} icon={FaRunning} tone="accent" compact />}
                 </div>
             )}
 
@@ -79,13 +138,17 @@ export default function GameOverview() {
                 </div>
             )}
 
+            {!stats.error && s?.runner && typeof s.runner === 'object' && (
+                <RunnerSection runner={s.runner} onUser={(id) => navigate(`/cpl-manage/users/${id}`)} />
+            )}
+
             {!stats.error && (
                 <Card title="Şüpheli oturumlar" subtitle="Ortalama cevap süresi 1,2 sn altında ve doğruluk %90 ve üzeri olan bitmiş oturumlar">
                     {stats.loading && !s ? <Skeleton className="h-24" /> : suspicious.length ? (
                         <ul className="divide-y divide-[var(--p-border)]" data-testid="game-suspicious">
                             {suspicious.map((r, i) => (
                                 <li key={r.session_id ?? i} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
-                                    <button type="button" disabled={!r.user?.id} onClick={() => navigate(`/cpl-manage/users/${r.user.id}`)} className="flex items-center gap-2 min-w-0 flex-1 rounded-lg px-1 py-1 text-left p-hover p-ring disabled:cursor-default">
+                                    <button type="button" disabled={!r.user?.id} onClick={() => navigate(`/cpl-manage/users/${r.user.id}`)} className="flex items-center gap-2 min-w-0 flex-1 basis-44 rounded-lg px-1 py-1 text-left p-hover p-ring disabled:cursor-default">
                                         <Avatar user={r.user} size={28} />
                                         <span className="min-w-0">
                                             <span className="block text-sm font-medium truncate">@{r.user?.username || '?'}</span>

@@ -26,6 +26,15 @@ const freshKey = () => ({
     },
 });
 
+/*
+ * Koşu uçlarına istek başına zaman aşımı. api.js'de genel bir sınır yok
+ * (yüklemeler etkilenmesin diye): mobilde Wi-Fi -> hücresel geçişinde askıda
+ * kalan bağlantı "Koşun doğrulanıyor" ekranını sonsuza kadar kilitlemesin.
+ * Zaman aşımı hatasında `response` olmadığından yeniden deneme / "Tekrar
+ * dene" akışı (isRetryable, classifyFinishError) değişmeden çalışır.
+ */
+const runnerCfg = (ms) => ({ ...freshKey(), timeout: ms });
+
 export const gameApi = {
     // Genel
     overview: () => api.get('/game/overview').then(unwrap),
@@ -69,6 +78,33 @@ export const gameApi = {
     leaderboard: ({ period = 'weekly', gender = 'all', limit = 50 } = {}) =>
         api.get('/game/leaderboard', { params: { period, gender, limit } }).then(unwrap),
     profile: (username) => api.get(`/game/profile/${encodeURIComponent(username)}`).then(unwrap),
+
+    /*
+     * Herkesler Koşuyor (3D bilgi koşusu).
+     *
+     * Kapı / bitiş / terk çağrıları da her denemede taze anahtar alıyor:
+     * sunucudaki Idempotency ara katmanı hata yanıtlarını (5xx, 429) da
+     * anahtarla birlikte saklıyor; api.js ise aynı gövdeye 15 sn boyunca aynı
+     * anahtarı veriyor. Yeniden deneme eski hatanın tekrarını almasın diye.
+     * Uçların kendisi sunucuda zaten idempotent (aynı kapı -> aynı sonuç,
+     * bitmiş koşuya ikinci finish -> kayıtlı sonuç).
+     */
+    runnerOverview: () => api.get('/game/runner/overview', { timeout: 15000 }).then(unwrap),
+    startRunner: () => api.post('/game/runner/start', {}, runnerCfg(15000)).then(unwrap),
+    runnerGate: (runId, { gate, lane }) =>
+        api.post(`/game/runner/${encodeURIComponent(runId)}/gate`, { gate, lane }, runnerCfg(8000)).then(unwrap),
+    // Bitişte sunucu koşuyu baştan oynatıyor (replay): süre diğerlerinden uzun.
+    finishRunner: (runId, { end_tick, inputs, client_score }) =>
+        api
+            .post(
+                `/game/runner/${encodeURIComponent(runId)}/finish`,
+                Number.isFinite(client_score) ? { end_tick, inputs, client_score } : { end_tick, inputs },
+                runnerCfg(20000)
+            )
+            .then(unwrap),
+    abandonRunner: (runId) => api.post(`/game/runner/${encodeURIComponent(runId)}/abandon`, {}, runnerCfg(10000)).then(unwrap),
+    runnerLeaderboard: ({ period = 'weekly', gender = 'all', limit = 10 } = {}) =>
+        api.get('/game/runner/leaderboard', { params: { period, gender, limit }, timeout: 15000 }).then(unwrap),
 };
 
 export const gameErrorStatus = (err) => err?.response?.status ?? null;
