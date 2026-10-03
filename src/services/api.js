@@ -344,7 +344,12 @@ export const communityAPI = {
     getMyStatus: (id) => api.get(`/communities/${id}/my-status`),
     create: (data) => api.post('/communities', data),
     join: (id) => api.post(`/communities/${id}/join`),
-    leave: (id) => api.post(`/communities/${id}/leave`),
+    // keepOpen yalnızca yazılı odanın sahibi için anlamlı: true → oda açık kalır
+    // (48 saat içinde dönmezse sunucu kapatır), false → oda herkes için kapanır.
+    leave: (id, { keepOpen } = {}) => api.post(
+        `/communities/${id}/leave`,
+        typeof keepOpen === 'boolean' ? { keep_open: keepOpen } : undefined
+    ),
     getMessages: (id, page = 1) => api.get(`/communities/${id}/messages`, { params: { page } }),
     sendMessage: (id, data) => api.post(`/communities/${id}/messages`, data),
     raiseHand: (id) => api.post(`/communities/${id}/hand-raise`),

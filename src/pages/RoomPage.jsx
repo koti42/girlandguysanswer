@@ -6,6 +6,7 @@ import { communityAPI } from '../services/api';
 import VoiceRoomUI from '../components/Community/Room/VoiceRoomUI';
 import TextRoomUI from '../components/Community/Room/TextRoomUI';
 import InRoomChat from '../components/Community/Room/InRoomChat';
+import OwnerLeaveModal from '../components/Community/Room/OwnerLeaveModal';
 import MainLayout from '../layouts/MainLayout';
 import { toast } from 'react-hot-toast';
 import { TrendsWidget, TopUsersWidget } from '../components/Widgets';
@@ -26,13 +27,19 @@ const RoomPage = () => {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [hasJoinedAudio, setHasJoinedAudio] = useState(false);
     const [participantsCount, setParticipantsCount] = useState(null);
+    const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+    const [leaving, setLeaving] = useState(false);
     const channelRef = useRef(null);
     const isHostRef = useRef(false);
+    const isTextRoomRef = useRef(false);
     const communityUuidRef = useRef(null);
+    // Açıkça "Odayı kapat"/"Açık bırak" dendiyse örtük çıkış (unmount,
+    // beforeunload) ikinci bir leave isteği göndermesin.
+    const hasLeftRef = useRef(false);
 
     useEffect(() => {
         const handleBeforeUnload = () => {
-            if (isHostRef.current && communityUuidRef.current) {
+            if (isHostRef.current && communityUuidRef.current && !hasLeftRef.current) {
                 const token = localStorage.getItem('token');
                 const API_URL = import.meta.env.VITE_API_URL || 'https://herkeslersoruyor.panalix.com.tr/api';
 
@@ -43,7 +50,9 @@ const RoomPage = () => {
                         'Content-Type': 'application/json'
                     },
                     keepalive: true,
-                    body: JSON.stringify({})
+                    // Yazılı oda sahibi sekmeyi kapatınca oda sessizce kapanmaz;
+                    // açık kalır, 48 saat içinde dönmezse sunucu kapatır.
+                    body: JSON.stringify(isTextRoomRef.current ? { keep_open: true } : {})
                 }).catch(() => { });
             }
         };
@@ -66,6 +75,8 @@ const RoomPage = () => {
 
                 setRole(derivedRole);
                 isHostRef.current = isOwner;
+                isTextRoomRef.current = communityData.type === 'text';
+                hasLeftRef.current = false;
                 communityUuidRef.current = communityData.uuid || uuid;
 
                 const channelName = `community.${communityData.uuid || uuid}`;
@@ -135,9 +146,14 @@ const RoomPage = () => {
                     channelRef.current = null;
                 }
 
-                if (isHostRef.current && communityUuidRef.current) {
+                if (isHostRef.current && communityUuidRef.current && !hasLeftRef.current) {
                     try {
-                        await communityAPI.leave(communityUuidRef.current);
+                        // Yazılı oda sahibi sayfadan başka yere geçti: oda açık kalır.
+                        // Sesli odada eskisi gibi sahibin çıkışı odayı kapatır.
+                        await communityAPI.leave(
+                            communityUuidRef.current,
+                            isTextRoomRef.current ? { keepOpen: true } : undefined
+                        );
                     } catch {
                         // odadan çıkış en iyi çaba; sunucu zaten zaman aşımıyla düşürür
                     }
@@ -148,11 +164,16 @@ const RoomPage = () => {
         };
     }, [uuid, navigate, user]);
 
-    const handleDisconnect = async () => {
+    const leaveChannel = () => {
         if (channelRef.current) {
             echo.leave(`community.${communityUuidRef.current || uuid}`);
             channelRef.current = null;
         }
+    };
+
+    const handleDisconnect = async () => {
+        hasLeftRef.current = true;
+        leaveChannel();
 
         try {
             await communityAPI.leave(communityUuidRef.current || uuid);
@@ -162,6 +183,50 @@ const RoomPage = () => {
 
         toast("Oda sonlandırıldı/ayrılındı.", { icon: '👋' });
         window.location.href = '/communities';
+    };
+
+    // Yazılı odada çıkış düğmesi: sahipse önce ne olacağını sor
+    const handleTextRoomLeave = () => {
+        if (isHostRef.current) {
+            setIsLeaveModalOpen(true);
+            return;
+        }
+        handleDisconnect();
+    };
+
+    const handleOwnerCloseRoom = async () => {
+        setLeaving(true);
+        hasLeftRef.current = true;
+        leaveChannel();
+        try {
+            await communityAPI.leave(communityUuidRef.current || uuid, { keepOpen: false });
+        } catch {
+            // odadan çıkış en iyi çaba; sunucu zaten zaman aşımıyla düşürür
+        }
+        setIsLeaveModalOpen(false);
+        toast("Odayı kapattın.", { icon: '👋' });
+        navigate('/communities');
+    };
+
+    const handleOwnerKeepOpen = async () => {
+        setLeaving(true);
+        hasLeftRef.current = true;
+        try {
+            const res = await communityAPI.leave(communityUuidRef.current || uuid, { keepOpen: true });
+            leaveChannel();
+            setIsLeaveModalOpen(false);
+            if (res?.data?.data?.community_closed === true) {
+                toast("Oda kapatıldı.", { icon: '👋' });
+            } else {
+                toast("Odan açık kalıyor. 48 saat içinde dönmezsen kapanacak.", { icon: '⏳' });
+            }
+            navigate('/communities');
+        } catch (err) {
+            // İstek gitmediyse odada kal; örtük çıkış yine keep_open ile denesin
+            hasLeftRef.current = false;
+            setLeaving(false);
+            toast.error(err?.response?.data?.message || 'Odadan çıkılamadı, tekrar dene.');
+        }
     };
 
     const handleRaiseHand = async () => {
@@ -220,7 +285,7 @@ const RoomPage = () => {
                     <TextRoomUI
                         community={community}
                         participantsCount={participantsCount}
-                        onLeave={handleDisconnect}
+                        onLeave={handleTextRoomLeave}
                     />
                 ) : token && serverUrl ? (
                     <LiveKitRoom
@@ -268,6 +333,13 @@ const RoomPage = () => {
                     </LiveKitRoom>
                 ) : null}
             </div>
+            <OwnerLeaveModal
+                isOpen={isLeaveModalOpen}
+                busy={leaving}
+                onCloseRoom={handleOwnerCloseRoom}
+                onKeepOpen={handleOwnerKeepOpen}
+                onCancel={() => setIsLeaveModalOpen(false)}
+            />
         </MainLayout>
     );
 };

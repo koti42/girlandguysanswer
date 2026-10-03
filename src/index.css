@@ -192,3 +192,19 @@
   .app-toast-in, .app-toast-out { animation-duration: 1ms; }
   .app-toast-progress { display: none; }
 }
+
+/* Meydan boş durum çizimi: konuşma balonları hafifçe süzülür.
+   Yalnızca hareket tercihi olmayanlarda; azaltılmışsa çizim sabit durur. */
+@keyframes meydan-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .meydan-float {
+    animation: meydan-float 3.6s ease-in-out infinite;
+    transform-box: fill-box;
+  }
+  .meydan-float-delay-1 { animation-delay: -0.9s; }
+  .meydan-float-delay-2 { animation-delay: -1.8s; }
+  .meydan-float-delay-3 { animation-delay: -2.7s; }
+}

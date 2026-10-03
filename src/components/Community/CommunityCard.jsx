@@ -1,12 +1,15 @@
 import React from 'react';
-import { FaMicrophone, FaKeyboard, FaUserFriends, FaLock } from 'react-icons/fa';
+import { FaMicrophone, FaKeyboard, FaUserFriends, FaLock, FaHourglassHalf } from 'react-icons/fa';
 import { normalizeAvatarUrl } from '../../utils/avatarUrl';
+import { hoursUntilClose } from '../../utils/communityClosing';
 
 const CommunityCard = ({ community, onClick }) => {
     const isVoice = community.type === 'voice';
     const bgGradient = isVoice
         ? 'from-violet-600 via-purple-600 to-indigo-600'
         : 'from-blue-500 via-cyan-500 to-teal-500';
+    // Sahibi "Açık bırak" deyip ayrılan yazılı oda: kapanmasına kalan saat
+    const closingInHours = hoursUntilClose(community.closes_at);
 
     return (
         <div
@@ -34,8 +37,8 @@ const CommunityCard = ({ community, onClick }) => {
             <div className="relative h-full p-5 flex flex-col justify-between text-white">
 
                 {/* Header */}
-                <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
+                <div className="flex justify-between items-start gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/20 backdrop-blur-md border border-white/10 shadow-sm">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -48,9 +51,18 @@ const CommunityCard = ({ community, onClick }) => {
                                 <FaLock size={10} />
                             </div>
                         )}
+                        {closingInHours !== null && (
+                            <div
+                                data-testid="community-closing-badge"
+                                className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-400 text-amber-950 shadow-sm text-[10px] font-bold leading-none whitespace-nowrap"
+                            >
+                                <FaHourglassHalf size={9} aria-hidden="true" />
+                                <span>Sahip ayrıldı · {closingInHours} sa içinde kapanır</span>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-inner">
+                    <div className="shrink-0 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-inner">
                         {isVoice ? <FaMicrophone size={14} /> : <FaKeyboard size={14} />}
                     </div>
                 </div>
