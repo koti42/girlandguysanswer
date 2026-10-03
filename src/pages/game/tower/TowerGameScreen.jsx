@@ -7,6 +7,7 @@ import TowerCountdown from '../../../components/game/tower/TowerCountdown';
 import TowerResult from '../../../components/game/tower/TowerResult';
 import TowerPerfectPop from '../../../components/game/tower/TowerPerfectPop';
 import TowerTapHint from '../../../components/game/tower/TowerTapHint';
+import TowerNudge from '../../../components/game/tower/TowerNudge';
 import { SAFE_AREA_PAD } from '../../../components/game/tower/towerUtils';
 import useTowerSession from './useTowerSession';
 import '../../../components/game/game.css';
@@ -155,7 +156,7 @@ const TowerGameScreen = ({
                 tabIndex={-1}
                 role="application"
                 aria-roledescription="oyun"
-                aria-label="Oyun alanı. Kat tam üstteyken dokun, tıkla ya da Boşluk / Enter'a bas. Esc ile duraklat."
+                aria-label="Oyun alanı. Kayan kat kulenin tam üstüne geldiğinde dokun, tıkla ya da Boşluk / Enter'a bas. Esc ile duraklat."
                 className="tower-stage absolute inset-0 outline-none"
                 onContextMenu={(e) => e.preventDefault()}
                 data-testid="tower-stage"
@@ -176,6 +177,8 @@ const TowerGameScreen = ({
             {playing && <TowerCountdown value={countdown} />}
 
             {playing && s.showHint && !paused && !question && <TowerTapHint touch={s.touch} />}
+
+            {playing && !paused && !question && <TowerNudge nudge={s.nudge} />}
 
             {phase === 'loading' && (
                 <div className={`absolute inset-0 z-40 flex flex-col items-center justify-center gap-6 ${SAFE_AREA_PAD}`}>

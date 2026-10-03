@@ -11,7 +11,7 @@
  * kademesinde uzak binalar ve bulutlar çizilmez.
  */
 import * as THREE from 'three';
-import { BASE_H } from './cameraMath.js';
+import { BASE_H, MAX_DIST, PLAY_AZ, SWAY_LAND } from './cameraMath.js';
 import { hexToRgb, hslToRgb } from './palette.js';
 import { applyEnv, createBoxInstances, createBuildingMaterial } from './buildingMaterial.js';
 import { CLOUD_FRAG, CLOUD_VERT, GROUND_FRAG, GROUND_VERT } from './shaders.js';
@@ -23,6 +23,18 @@ const PLAZA = 13; // meydan yarıçapı
 const GROUND_SIZE = 1600;
 const CLOUD_COUNT = 30;
 const GROUND_Y = -BASE_H;
+// Kameranın baktığı bulvar: oyun kamerası (azimut PLAY_AZ ± salınım) bu
+// açısal koridorda ve en uzak mesafesinin biraz ötesine kadar dururken
+// hemen altındaki bina çatısı ekranın altını kaplamasın; koridor boş kalır.
+const AVENUE_HALF_ANGLE = SWAY_LAND + 0.16;
+const AVENUE_REACH = MAX_DIST + 8;
+
+function angleDiff(a, b) {
+    let d = a - b;
+    while (d > Math.PI) d -= 2 * Math.PI;
+    while (d < -Math.PI) d += 2 * Math.PI;
+    return Math.abs(d);
+}
 
 const CITY_COLORS = [0x2c2f63, 0x3a2f6b, 0x26405f, 0x45335f, 0x1f3550, 0x53406b, 0x2f4a6a, 0x5b3a55];
 
@@ -83,7 +95,10 @@ export function createCity(scene, { boxGeometry, seed = 7 }) {
                     if (d < 34) h = 1.4 + rnd() * 3.4;
                     else if (d < 70) h = 2.5 + rnd() * rnd() * 12;
                     else h = 4 + rnd() * rnd() * 20 + (rnd() < 0.05 ? 14 : 0);
-                    lots.push({ x, z, w, d: dd, h, dist: Math.hypot(x, z), r: rnd() });
+                    const r = rnd();
+                    // Rastgele sayılar tüketildikten sonra: diğer binaların yerleşimi değişmez.
+                    if (Math.hypot(x, z) < AVENUE_REACH && angleDiff(Math.atan2(x, z), PLAY_AZ) < AVENUE_HALF_ANGLE) continue;
+                    lots.push({ x, z, w, d: dd, h, dist: Math.hypot(x, z), r });
                 }
             }
         }

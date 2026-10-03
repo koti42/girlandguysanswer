@@ -15,7 +15,8 @@ import {
     isRetryable,
     loadMusicEnabled,
     loadMuted,
-    markTapHintShown,
+    HINT_LEARN_FLOOR,
+    markTapHintLearned,
     normalizeTowerRun,
     parseAnswerResult,
     randomSeed,
@@ -61,8 +62,10 @@ import { loadTowerEngine } from './engineLoader';
  */
 
 export const PLAYING = ['countdown', 'running'];
-// Kule başladıktan sonra "dokun" ipucunun en fazla kalma süresi (ms).
-const HINT_MS = 6000;
+// Kule başladıktan sonra ipucunun en fazla kalma süresi (ms); ilk yerleşimle kalkar.
+const HINT_MS = 15000;
+// Erken/geç uyarısı ekranda bu kadar kalır (ms).
+const NUDGE_MS = 1800;
 // "Hazırlanıyor / doğrulanıyor" ekranında çıkış bu kadar bekleyince belirir.
 const SLOW_EXIT_MS = 5000;
 // Cevap sonucu ekranda bu kadar kalır (oyun bu sırada sürüyor).
@@ -136,6 +139,7 @@ export default function useTowerSession({
     const [touch] = useState(isCoarsePointer);
     const [showHint, setShowHint] = useState(false);
     const [placeFx, setPlaceFx] = useState(null);
+    const [nudge, setNudge] = useState(null);
     const [ctxLost, setCtxLost] = useState(false);
     const [slowFor, setSlowFor] = useState(null);
 
@@ -160,6 +164,8 @@ export default function useTowerSession({
     const snapshotRef = useRef(null);
     const explicitExitRef = useRef(false);
     const hintSessionRef = useRef(null);
+    const learnedSessionRef = useRef(null);
+    const nudgeIdRef = useRef(0);
     const fxIdRef = useRef(0);
     const lastHapticRef = useRef(0);
     const onExitRef = useRef(onExit);
@@ -353,10 +359,7 @@ export default function useTowerSession({
             const first = phaseRef.current === 'loading' || phaseRef.current === 'countdown';
             if (first && hintSessionRef.current !== s.key) {
                 hintSessionRef.current = s.key;
-                if (shouldShowTapHint()) {
-                    markTapHintShown();
-                    setShowHint(true);
-                }
+                if (shouldShowTapHint()) setShowHint(true);
             }
             if (v === 0) {
                 if (first) {
@@ -373,13 +376,33 @@ export default function useTowerSession({
     );
 
     const handlePlace = useCallback((info) => {
-        if (!sessionRef.current?.live) return;
+        const s = sessionRef.current;
+        if (!s?.live) return;
         setShowHint(false);
+        setNudge(null);
+        if (Number(info?.floor) >= HINT_LEARN_FLOOR && learnedSessionRef.current !== s.key) {
+            learnedSessionRef.current = s.key;
+            markTapHintLearned();
+        }
         if (info?.perfect) {
             fxIdRef.current += 1;
             setPlaceFx({ id: fxIdRef.current, combo: clampInt(info.combo, 0, 1_000_000, 1), grew: Boolean(info.grew) });
         }
     }, []);
+
+    // İlk katlarda erken/geç dokunuş: motor katı bırakmadı, oyuncuya nedenini söyle.
+    const handleNudge = useCallback(
+        (info) => {
+            if (!sessionRef.current?.live) return;
+            const kind = info?.kind === 'late' ? 'late' : 'early';
+            nudgeIdRef.current += 1;
+            const id = nudgeIdRef.current;
+            setNudge({ id, kind });
+            setAnnounce(kind === 'late' ? 'Geç kaldın. Kat geri dönüyor, kulenin üstüne gelince bas.' : 'Erken. Kat kulenin üstüne gelince bas.');
+            later(() => setNudge((n) => (n && n.id === id ? null : n)), NUDGE_MS);
+        },
+        [later]
+    );
 
     const patchQuestion = useCallback((sessionKey, index, patch) => {
         setQuestion((q) => (q && q.sessionKey === sessionKey && q.index === index ? { ...q, ...patch } : q));
@@ -516,6 +539,7 @@ export default function useTowerSession({
             setCountdown(null);
             setPaused(false);
             setShowHint(false);
+            setNudge(null);
 
             const endTick = clampInt(data?.endTick, 0, MAX_END_TICK, 0);
             const inputs = typeof data?.inputs === 'string' ? data.inputs : '';
@@ -608,6 +632,7 @@ export default function useTowerSession({
         const callbacks = {
             onHud: guard(handleHud),
             onPlace: guard(handlePlace),
+            onNudge: guard(handleNudge),
             onQuestion: guard(handleQuestion),
             onAnswer: guard(handleAnswer),
             onCountdown: guard(handleCountdown),
@@ -667,6 +692,7 @@ export default function useTowerSession({
         reducedMotion,
         handleHud,
         handlePlace,
+        handleNudge,
         handleQuestion,
         handleAnswer,
         handleCountdown,
@@ -770,6 +796,7 @@ export default function useTowerSession({
         setMessage('');
         setAnnounce('');
         setShowHint(false);
+        setNudge(null);
         setCtxLost(false);
         setPlaceFx(null);
         hudStore.reset();
@@ -911,6 +938,7 @@ export default function useTowerSession({
         hudStore,
         touch,
         showHint,
+        nudge,
         placeFx,
         ctxLost,
         slowExit: slowFor === phase,

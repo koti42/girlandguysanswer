@@ -44,6 +44,38 @@ export function createTower(scene, { boxGeometry, hue0, questionCount = 0 }) {
     moving.mesh.frustumCulled = false;
     scene.add(moving.mesh);
 
+    // --- Hedef vurgusu (ilk katlar): üst katın dört kenarında parlak çerçeve ---
+    // Çerçeve kenarın hemen dışında ve biraz yukarı taşar: kat tam üstüne
+    // oturduğunda da görünür kalır. Işık/sisten bağımsız, toplamalı.
+    const guideMat = new THREE.MeshBasicMaterial({
+        color: 0xffd36e,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        fog: false,
+    });
+    const guide = new THREE.InstancedMesh(boxGeometry, guideMat, 4);
+    guide.frustumCulled = false;
+    // Başta görünür (saydam): motorun renderer.compile ön ısıtması bu malzemeyi
+    // de derlesin, ilk katta takılma olmasın. İlk karede setGuide gizler/açar.
+    guide.visible = true;
+    for (let i = 0; i < 4; i++) guide.setMatrixAt(i, new THREE.Matrix4().makeScale(0, 0, 0));
+    guide.renderOrder = 2;
+    scene.add(guide);
+    const GUIDE_T = 0.1;
+    const GUIDE_H = 0.08;
+    const gM = new THREE.Matrix4();
+    const gP = new THREE.Vector3();
+    const gS = new THREE.Vector3();
+    const gQ = new THREE.Quaternion();
+    function setGuideEdge(i, x, y, z, sx, sz) {
+        gP.set(x, y, z);
+        gS.set(sx, GUIDE_H, sz);
+        gM.compose(gP, gQ, gS);
+        guide.setMatrixAt(i, gM);
+    }
+
     // --- Düşen parçalar ---
     const debris = createBoxInstances(boxGeometry, material, DEBRIS);
     debris.mesh.count = DEBRIS;
@@ -102,8 +134,39 @@ export function createTower(scene, { boxGeometry, hue0, questionCount = 0 }) {
         c.mesh.computeBoundingSphere();
     }
 
-    /** Hareketli katı göster/gizle; aralıklar mm, ölçek 0..1 doğuş animasyonu. */
-    function setMoving(visible, k, x0, x1, z0, z1, pop = 1) {
+    /**
+     * Hedef vurgusu: (x0..x1, z0..z1 mm) üst kat, y üst yüzey (m), strength
+     * 0..1 hizalama, time nabız için. visible false gizler.
+     */
+    function setGuide(visible, x0, x1, z0, z1, y, strength = 0, time = 0) {
+        if (!visible) {
+            guide.visible = false;
+            return;
+        }
+        const ax0 = x0 * MM;
+        const ax1 = x1 * MM;
+        const az0 = z0 * MM;
+        const az1 = z1 * MM;
+        const cx = (ax0 + ax1) / 2;
+        const cz = (az0 + az1) / 2;
+        const sx = ax1 - ax0 + GUIDE_T * 2;
+        const sz = az1 - az0 + GUIDE_T * 2;
+        const gy = y + GUIDE_H / 2 - 0.01;
+        setGuideEdge(0, cx, gy, az0 - GUIDE_T / 2, sx, GUIDE_T);
+        setGuideEdge(1, cx, gy, az1 + GUIDE_T / 2, sx, GUIDE_T);
+        setGuideEdge(2, ax0 - GUIDE_T / 2, gy, cz, GUIDE_T, sz);
+        setGuideEdge(3, ax1 + GUIDE_T / 2, gy, cz, GUIDE_T, sz);
+        guide.instanceMatrix.needsUpdate = true;
+        const pulse = 0.5 + 0.5 * Math.sin(time * 5);
+        guideMat.opacity = Math.min(1, 0.5 + 0.2 * pulse + 0.3 * strength);
+        guide.visible = true;
+    }
+
+    /**
+     * Hareketli katı göster/gizle; aralıklar mm, ölçek 0..1 doğuş animasyonu,
+     * glow 0..1 parlama (ilk katlarda hedefe hizalanınca).
+     */
+    function setMoving(visible, k, x0, x1, z0, z1, pop = 1, glow = 0) {
         if (!visible) {
             moving.mesh.count = 0;
             return;
@@ -121,7 +184,12 @@ export function createTower(scene, { boxGeometry, hue0, questionCount = 0 }) {
             moving.k = k;
             moving.setColor(0, floorColor(k, hue0, rgb));
             moving.setFlag(0, isQuestionFloor(k) ? 1 : 0, 0, k % 7);
+            moving.glow = 0;
             moving.mesh.count = 1;
+        }
+        if (moving.glow !== glow) {
+            moving.glow = glow;
+            moving.setFlagY(0, glow);
         }
     }
 
@@ -177,6 +245,7 @@ export function createTower(scene, { boxGeometry, hue0, questionCount = 0 }) {
         },
         placeFloor,
         setMoving,
+        setGuide,
         dropPiece,
         flash,
         isQuestionFloor,
@@ -224,6 +293,9 @@ export function createTower(scene, { boxGeometry, hue0, questionCount = 0 }) {
         dispose() {
             podium.dispose();
             moving.dispose();
+            scene.remove(guide);
+            guide.dispose();
+            guideMat.dispose();
             debris.dispose();
             for (const c of chunks) c.dispose();
             chunks.length = 0;

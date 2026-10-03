@@ -28,7 +28,8 @@ import {
     saveMusicEnabled,
     savePending,
     shouldShowTapHint,
-    markTapHintShown,
+    markTapHintLearned,
+    HINT_LEARN_FLOOR,
 } from '../towerUtils';
 
 const RUN = {
@@ -97,13 +98,16 @@ describe('towerUtils', () => {
         expect(loadGuestBest()).toEqual({ score: 100, floor: 14 });
     });
 
-    it('müzik varsayılan açık; ipucu ilk 3 kulede', () => {
+    it('müzik varsayılan açık; ipucu 3 kez öğrenilene (3. kata çıkılana) kadar', () => {
         expect(loadMusicEnabled()).toBe(true);
         saveMusicEnabled(false);
         expect(loadMusicEnabled()).toBe(false);
+        expect(HINT_LEARN_FLOOR).toBe(3);
+        // Eski sayaç (her açılan kulede artan) ipucunu artık gizlemez.
+        localStorage.setItem('hs_tower_hint_seen', '9');
         for (let i = 0; i < 3; i++) {
             expect(shouldShowTapHint()).toBe(true);
-            markTapHintShown();
+            markTapHintLearned();
         }
         expect(shouldShowTapHint()).toBe(false);
     });

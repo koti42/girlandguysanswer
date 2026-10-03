@@ -35,14 +35,19 @@ import {
     BASE_H,
     FLOOR_H,
     MM,
+    PLAY_AZ,
+    PLAY_EL,
     cameraDir,
     floorTopY,
     pingPongMm,
     playDistance,
+    playLookLift,
     playPitch,
+    playSway,
     rectCoversPoint,
     revealDistance,
 } from './cameraMath.js';
+import { GUIDE_FLOORS, alignment, tapDecision } from './tapAssist.js';
 
 const COUNTDOWN_S = 3;
 const CRASH_TO_END_S = 1.5;
@@ -51,15 +56,14 @@ const REVEAL_S = 2.2;
 const AFTER_END_S = 7;
 const INTRO_S = 2.6;
 // Kamera: 45° azimut (iki eksen de yana kayar), alçak bakış (gökyüzü görünsün).
-const AZ0 = Math.PI / 4;
-const EL = 0.22;
+// Azimut salınımı ve kadraj cameraMath'te (playSway / playDistance).
+const AZ0 = PLAY_AZ;
+const EL = PLAY_EL;
 const PITCH = 0.136;
 const EL_REVEAL = 0.3;
 const PITCH_REVEAL = 0.2;
-// Dikey ekranda azimut salınımı daha dar: dönüş noktalarında kat ekran
-// kenarından daha az taşsın.
-const SWAY = 0.17;
-const SWAY_PORTRAIT = 0.08;
+// Erken/geç uyarısı en sık bu aralıkla (ms): basılı tutulan parmak titreşim yağdırmasın.
+const NUDGE_GAP_MS = 350;
 // Hareketli kat karakterin ayaklarına bu kadar (mm) yaklaşınca üstünden atlar.
 const AVATAR_HOP_MARGIN_MM = 250;
 
@@ -104,6 +108,7 @@ export async function createTowerGame(options = {}) {
         onError: callbacks.onError || noop,
         onHaptic: callbacks.onHaptic || noop,
         onPause: callbacks.onPause || noop,
+        onNudge: callbacks.onNudge || noop,
     };
     const safe = (fn, ...args) => {
         try {
@@ -175,6 +180,7 @@ export async function createTowerGame(options = {}) {
     let revealT = -1;
     let spawnPop = 1;
     let lastTapTick = -1;
+    let lastNudgeAt = -Infinity;
     let answerQueued = false;
     // Hareketli kat karakterin ayaklarının altında mı (ip atlama zıplaması için)
     let wasCovered = false;
@@ -368,10 +374,37 @@ export async function createTowerGame(options = {}) {
     }
 
     // --- Girdi ---
+    // tapG: tapDecision'ın girdisi (her dokunuşta yeniden doldurulur).
+    const tapG = { phase: '', paused: false, ended: false, simPhase: '', tick: 0, lastTapTick: -1, floor: 0, off: 0, size: 0, t: 0, v: 0, R: TC.R };
     function tap() {
-        if (paused || ended || destroyed || phase !== 'running') return;
-        // Yalnızca kat kayarken; tick başına bir dokunuş (çift dokunuş kayda girmesin).
-        if (st.phase !== 'moving' || lastTapTick === st.tick) return;
+        if (destroyed) return;
+        // Sim girdiyi bir sonraki adımda o anki st.off ile işler: karar onunla.
+        const p = st.prev;
+        tapG.phase = phase;
+        tapG.paused = paused;
+        tapG.ended = ended;
+        tapG.simPhase = st.phase;
+        tapG.tick = st.tick;
+        tapG.lastTapTick = lastTapTick;
+        tapG.floor = st.floor;
+        tapG.off = st.off;
+        tapG.size = st.axis === 'x' ? p.x1 - p.x0 : p.z1 - p.z0;
+        tapG.t = st.t;
+        tapG.v = st.v;
+        const d = tapDecision(tapG);
+        if (d === 'ignore') return;
+        if (d === 'early' || d === 'late') {
+            // İlk katlarda erken/geç dokunuş sim'e gitmez (kayda girmeyen girdi
+            // uygulanmaz da: sunucu replay'i etkilenmez); oyun bitmez, uyarı çıkar.
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+            if (now - lastNudgeAt >= NUDGE_GAP_MS) {
+                lastNudgeAt = now;
+                effects.addTrauma(0.12);
+                haptic('light');
+                safe(cb.onNudge, { kind: d, floor: st.floor + 1 });
+            }
+            return;
+        }
         if (sim.input('T')) lastTapTick = st.tick;
     }
 
@@ -445,12 +478,25 @@ export async function createTowerGame(options = {}) {
         if (st.phase === 'moving' && !ended && phase !== 'crashing') {
             const k = st.floor + 1;
             const t = st.t + (running ? Math.min(stepper.alpha, 1) : 0);
-            const r = movingRect(pingPongMm(t, st.v, TC.R));
+            const offNow = pingPongMm(t, st.v, TC.R);
+            const r = movingRect(offNow);
             spawnPop = Math.min(1, spawnPop + dt / 0.14);
-            tower.setMoving(true, k, r.x0, r.x1, r.z0, r.z1, easeOutBack(spawnPop));
+            // İlk katlarda hedef vurgusu: kulenin üst kenarı parlar, kat
+            // üstüne geldikçe hem çerçeve hem kat aydınlanır.
+            let glow = 0;
+            if (k <= GUIDE_FLOORS) {
+                const p = st.prev;
+                const size = st.axis === 'x' ? p.x1 - p.x0 : p.z1 - p.z0;
+                glow = alignment(offNow, size);
+                tower.setGuide(true, p.x0, p.x1, p.z0, p.z1, floorTopY(st.floor), glow, time);
+            } else {
+                tower.setGuide(false);
+            }
+            tower.setMoving(true, k, r.x0, r.x1, r.z0, r.z1, easeOutBack(spawnPop), glow * 0.55);
             slabTopY = floorTopY(k);
         } else {
             tower.setMoving(false);
+            tower.setGuide(false);
         }
 
         // Kamera hedefi: kulenin tepesi (yumuşak takip)
@@ -466,7 +512,7 @@ export async function createTowerGame(options = {}) {
         const pitchPlay = playPitch(aspect, VFOV, EL);
         const dPitch = pitchPlay - PITCH;
         let pitch = pitchPlay;
-        const sway = aspect < 1 ? SWAY_PORTRAIT : SWAY;
+        const sway = playSway(aspect);
         let az = AZ0 + (reducedMotion ? 0 : sway * Math.sin(time * 0.085));
 
         if (introT >= 0) {
@@ -496,7 +542,7 @@ export async function createTowerGame(options = {}) {
         cameraDir(az, el, dir);
         const sh = effects.shake;
         camera.position.set(focusX + dir.x * dist + sh.x, focusY + dir.y * dist + sh.y, focusZ + dir.z * dist + sh.z);
-        const lift = dist * (Math.sin(el) - Math.cos(el) * Math.tan(pitch));
+        const lift = playLookLift(dist, el, pitch);
         lookAt.set(focusX + sh.x * 0.5, focusY + lift, focusZ + sh.z * 0.5);
         camera.lookAt(lookAt);
 

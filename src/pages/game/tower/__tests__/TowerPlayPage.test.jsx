@@ -191,7 +191,7 @@ describe('TowerPlayPage', () => {
         expect(opts.muted).toBe(true);
         expect(opts.music).toBe(false);
         expect(opts.container).toBe(screen.getByTestId('tower-stage'));
-        expect(Object.keys(opts.callbacks).sort()).toEqual(['onAnswer', 'onCountdown', 'onEnd', 'onError', 'onHaptic', 'onHud', 'onPlace', 'onQuestion']);
+        expect(Object.keys(opts.callbacks).sort()).toEqual(['onAnswer', 'onCountdown', 'onEnd', 'onError', 'onHaptic', 'onHud', 'onNudge', 'onPlace', 'onQuestion']);
         expect(document.body.style.overflow).toBe('hidden');
         expect(document.documentElement.style.overscrollBehavior).toBe('none');
     });
@@ -219,6 +219,51 @@ describe('TowerPlayPage', () => {
         act(() => opts.callbacks.onPlace({ perfect: true, combo: 4, floor: 27, grew: true }));
         expect(screen.getByText('Harika!')).toBeInTheDocument();
         expect(screen.getByText('Kat büyüdü!')).toBeInTheDocument();
+    });
+
+    it('ilk kulelerde "katı bırak" ipucu: zıplama değil; ilk yerleşimle kalkar, 3 kez 3. kata çıkınca artık görünmez', async () => {
+        renderPlay({ mode: 'practice' });
+        await startCountdown();
+        const hint = screen.getByRole('note');
+        expect(hint).toHaveTextContent('Kayan katı kulenin üstüne bırak');
+        expect(hint).toHaveTextContent('Zıplamak yok');
+        expect(hint).toHaveTextContent(/Boşluk|dokun/);
+        act(() => opts.callbacks.onPlace({ perfect: false, combo: 0, floor: 1, grew: false }));
+        expect(screen.queryByRole('note')).not.toBeInTheDocument();
+        // 1. ve 2. kat "öğrenildi" saymaz; 3. kat sayar (kule başına bir kez)
+        expect(localStorage.getItem(STORAGE_KEYS.hintLearned)).toBeNull();
+        act(() => opts.callbacks.onPlace({ perfect: false, combo: 0, floor: 3, grew: false }));
+        act(() => opts.callbacks.onPlace({ perfect: false, combo: 0, floor: 4, grew: false }));
+        expect(localStorage.getItem(STORAGE_KEYS.hintLearned)).toBe('1');
+    });
+
+    it('ipucu öğrenilmişse görünmez; eski "görüldü" sayacı ipucunu gizlemez', async () => {
+        localStorage.setItem('hs_tower_hint_seen', '3');
+        renderPlay({ mode: 'practice' });
+        await startCountdown();
+        expect(screen.getByRole('note')).toBeInTheDocument();
+        cleanup();
+        localStorage.setItem(STORAGE_KEYS.hintLearned, '3');
+        renderPlay({ mode: 'practice' });
+        await waitFor(() => expect(engine.mod.createTowerGame).toHaveBeenCalledTimes(2));
+        await waitFor(() => expect(engine.controls.start).toHaveBeenCalledTimes(2));
+        act(() => opts.callbacks.onCountdown(3));
+        act(() => opts.callbacks.onCountdown(0));
+        expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    });
+
+    it('erken / geç uyarısı: motor katı bırakmadığında ne zaman basılacağını söyler, yerleşimle kalkar', async () => {
+        renderPlay({ mode: 'practice' });
+        await startCountdown();
+        expect(screen.queryByTestId('tower-nudge')).not.toBeInTheDocument();
+        act(() => opts.callbacks.onNudge({ kind: 'early', floor: 1 }));
+        expect(screen.getByTestId('tower-nudge')).toHaveTextContent('Erken!');
+        act(() => opts.callbacks.onNudge({ kind: 'late', floor: 1 }));
+        expect(screen.getByTestId('tower-nudge')).toHaveTextContent('Geç kaldın!');
+        act(() => opts.callbacks.onPlace({ perfect: false, combo: 0, floor: 1, grew: false }));
+        expect(screen.queryByTestId('tower-nudge')).not.toBeInTheDocument();
+        act(() => opts.callbacks.onNudge({ kind: 'early', floor: 2 }));
+        await waitFor(() => expect(screen.queryByTestId('tower-nudge')).not.toBeInTheDocument(), { timeout: 3000 });
     });
 
     it('soru katında panel açılır; şık motora gider, cevap sunucuya kilitlenir ve sonuç motora iletilir', async () => {

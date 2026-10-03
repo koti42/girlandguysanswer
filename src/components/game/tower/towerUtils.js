@@ -28,7 +28,9 @@ export const STORAGE_KEYS = {
     music: 'hs_tower_music',
     guestBest: 'hs_tower_best_guest',
     pending: 'hs_tower_pending',
-    hintSeen: 'hs_tower_hint_seen',
+    // Eski 'hs_tower_hint_seen' her kulede artıyordu (ilk katı geçemeyen de
+    // 3 denemede ipucunu kaybediyordu); yeni sayaç yalnızca öğrenilen kuleleri sayar.
+    hintLearned: 'hs_tower_hint_learned',
 };
 
 /** Sunucu kuleyi 2 saat sonra kabul etmiyor; bekleyen kayıt da o kadar yaşar. */
@@ -162,22 +164,27 @@ export function clearPending(runId) {
     if (!runId || !p || p.run_id === runId) storageRemove(STORAGE_KEYS.pending);
 }
 
-/* Oyun içi "dokun" ipucu: ilk birkaç kulede gösterilir. */
+/*
+ * Oyun içi "katı bırak" ipucu: oyuncu HINT_RUNS kez en az HINT_LEARN_FLOOR
+ * kat dikene kadar her kulede gösterilir (yalnızca açılan kule sayılmaz).
+ */
 export const HINT_RUNS = 3;
+export const HINT_LEARN_FLOOR = 3;
 
 export function shouldShowTapHint() {
     try {
-        const n = Number(window.localStorage.getItem(STORAGE_KEYS.hintSeen) || 0);
+        const n = Number(window.localStorage.getItem(STORAGE_KEYS.hintLearned) || 0);
         return !Number.isFinite(n) || n < HINT_RUNS;
     } catch {
         return true;
     }
 }
 
-export function markTapHintShown() {
+/** Bu kulede HINT_LEARN_FLOOR. kata ulaşıldı (kule başına bir kez çağrılır). */
+export function markTapHintLearned() {
     try {
-        const n = Number(window.localStorage.getItem(STORAGE_KEYS.hintSeen) || 0);
-        window.localStorage.setItem(STORAGE_KEYS.hintSeen, String((Number.isFinite(n) ? n : 0) + 1));
+        const n = Number(window.localStorage.getItem(STORAGE_KEYS.hintLearned) || 0);
+        window.localStorage.setItem(STORAGE_KEYS.hintLearned, String((Number.isFinite(n) ? n : 0) + 1));
     } catch {
         // depolama kapalı: ipucu her kulede görünür, sorun değil
     }
