@@ -1,7 +1,7 @@
 /*
  * FNV-1a 32 bit (şartname §3.6). Girdi ASCII olduğundan (rakam, '-', '|')
- * charCodeAt bir bayta karşılık gelir; patterns.json gibi UTF-8 metinler için
- * fnv1aBytes kullanılır.
+ * charCodeAt bir bayta karşılık gelir; desen dosyasının kanonik JSON'u gibi
+ * UTF-8 metinler için fnv1aBytes kullanılır.
  */
 
 const FNV_OFFSET = 2166136261;
@@ -28,15 +28,15 @@ export function fnv1aBytes(bytes) {
 }
 
 /**
- * Durum özeti: şu tamsayıların ondalık yazımlarının '|' ile birleşimi.
- * tick|z|x|lane|y|vy|slideTicks|jumpBuffer|stumbleTicks|invulnTicks|
- * magnetTicks|shield(0/1)|crashed(0/1)|coins|gates.length
+ * Durum özeti (v2 §A.5): şu tamsayıların ondalık yazımlarının '|' ile birleşimi.
+ * tick|z|x|lane|y|vy|grounded(0/1)|slideTicks|jumpBuffer|stumbleTicks|
+ * invulnTicks|magnetTicks|superTicks|shield(0/1)|crashed(0/1)|coins|gates.length
  */
 export function stateHash(s) {
     return fnv1a(
         s.tick + '|' + s.z + '|' + s.x + '|' + s.lane + '|' + s.y + '|' + s.vy + '|'
-        + s.slideTicks + '|' + s.jumpBuffer + '|' + s.stumbleTicks + '|' + s.invulnTicks + '|'
-        + s.magnetTicks + '|' + (s.shield ? 1 : 0) + '|' + (s.crashed ? 1 : 0) + '|'
-        + s.coins + '|' + s.gates.length,
+        + (s.grounded ? 1 : 0) + '|' + s.slideTicks + '|' + s.jumpBuffer + '|'
+        + s.stumbleTicks + '|' + s.invulnTicks + '|' + s.magnetTicks + '|' + s.superTicks + '|'
+        + (s.shield ? 1 : 0) + '|' + (s.crashed ? 1 : 0) + '|' + s.coins + '|' + s.gates.length,
     );
 }

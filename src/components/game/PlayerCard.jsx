@@ -52,7 +52,7 @@ const PlayerCard = ({ user, player, showStats = true, linkToProfile = true }) =>
             <div className="flex items-center gap-4">
                 <div className="relative shrink-0">
                     <UserAvatar user={user} size="xl" className="ring-4 ring-white/20" />
-                    <span className="absolute -bottom-1 -right-1 flex h-8 min-w-8 px-1 items-center justify-center rounded-full bg-gradient-to-br from-gold to-coral text-sm font-extrabold text-white ring-2 ring-[#1b1848] shadow-lg">
+                    <span className="absolute -bottom-1 -right-1 flex h-8 min-w-8 px-1 items-center justify-center rounded-full bg-gradient-to-br from-gold to-coral text-sm font-extrabold text-slate-950 ring-2 ring-[#1b1848] shadow-lg">
                         {player.level ?? 1}
                     </span>
                 </div>

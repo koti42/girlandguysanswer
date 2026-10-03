@@ -12,6 +12,12 @@
  *
  * Durumlar: idle -> countdown -> running -> crashing -> ended
  * (paused bayrağı countdown/running üstüne biner).
+ *
+ * v2 (şartname §A, E.3, E.6): karakter avatar yapılandırmasından kurulur
+ * (options.avatar; verilmezse varsayılan karakter); araç
+ * çatıları, rampa, tüneller (ortam karartması + yankı), Süper Zıplama
+ * (HUD'da superPct), gün/gece döngüsü (options.timeOfDay: 'auto' | 'day' |
+ * 'dusk' | 'night') ve callbacks.onHaptic(style) titreşim olayları.
  */
 import { createSim, computeScore, C } from '../sim/index.js';
 import { createStage } from './stage.js';
@@ -26,14 +32,17 @@ import { createAudio } from './audio.js';
 import { createFixedStepper, MAX_FRAME_MS } from './fixedStep.js';
 import { runSnapshot } from './runSnapshot.js';
 import { createQualityController, initialPixelRatio } from './quality.js';
-import { normalizeCharacter } from './palette.js';
 import { isCoarsePointer } from './webgl.js';
+import { createHaptics } from './haptics.js';
+import { nightAmount, normalizeTimeMode, tunnelBlend } from './ambience.js';
+import { normalizeAvatar } from '../../avatar/catalog.js';
 import {
     createBannerTexture,
     createCoinTexture,
     createCurtainTexture,
     createGlowTexture,
     createRoadTexture,
+    createSheenTexture,
     createSignTexture,
     createWindowTextures,
     waitForFont,
@@ -43,6 +52,8 @@ const COUNTDOWN_S = 3;
 const CRASH_TO_END_S = 1.1;
 const HUD_INTERVAL_MS = 100;
 const GATE_APPROACH_S = 7;
+// Süper Zıplama ayak kıvılcımı (saniyede)
+const SUPER_SPARK_RATE = 26;
 
 function noop() {}
 
@@ -55,6 +66,15 @@ function validateGates(gates) {
         if (!g || g.index !== i) throw new TypeError('Kapı indeksleri 0..n-1 olmalı.');
     });
     return sorted;
+}
+
+/**
+ * Motor seçeneklerinden avatar yapılandırması: verilen Config normalize
+ * edilir; yoksa geçerli varsayılan karakter.
+ */
+export function resolveAvatar(avatar) {
+    if (avatar && typeof avatar === 'object') return normalizeAvatar(avatar, avatar.body === 'kiz' ? 'female' : 'male');
+    return normalizeAvatar(null, 'female');
 }
 
 function randomSeed() {
@@ -72,7 +92,8 @@ export async function createRunnerGame(options = {}) {
         container,
         seed: seedIn,
         gates: gatesIn,
-        character,
+        avatar: avatarIn,
+        timeOfDay = 'auto',
         muted = false,
         musicEnabled = true,
         reducedMotion = false,
@@ -84,7 +105,11 @@ export async function createRunnerGame(options = {}) {
     // Misafir antrenmanında seed verilmeyebilir; dereceli koşuda sunucunun seed'i zorunlu.
     const seed = seedIn == null ? randomSeed() : seedIn;
     const gates = validateGates(gatesIn);
-    const sim = createSim({ seed, gateCount: gates.length });
+    // Yalnızca geliştirme sunucusunda: test sayfası belirli bir desen/konumdan başlatabilsin.
+    const devSimDebug = import.meta.env?.DEV && options.__devSimDebug ? options.__devSimDebug : undefined;
+    const sim = createSim({ seed, gateCount: gates.length, debug: devSimDebug });
+    const timeMode = normalizeTimeMode(timeOfDay);
+    const avatarCfg = resolveAvatar(avatarIn);
     const cb = {
         onHud: callbacks.onHud || noop,
         onGateApproach: callbacks.onGateApproach || noop,
@@ -94,6 +119,7 @@ export async function createRunnerGame(options = {}) {
         onEnd: callbacks.onEnd || noop,
         onError: callbacks.onError || noop,
         onPause: callbacks.onPause || noop,
+        onHaptic: callbacks.onHaptic || null,
     };
     const safe = (fn, ...args) => {
         try {
@@ -138,16 +164,17 @@ export async function createRunnerGame(options = {}) {
             sign: createSignTexture(),
             curtain: createCurtainTexture(),
             banner: createBannerTexture(),
+            sheen: createSheenTexture(),
         };
-        built.push(tex.window.map, tex.window.emissive, tex.road, tex.coin, tex.sign, tex.curtain, tex.banner);
+        built.push(tex.window.map, tex.window.emissive, tex.road, tex.coin, tex.sign, tex.curtain, tex.banner, tex.sheen);
         world = createWorld(stage.scene, tex, tex.glow);
         built.push(world);
         entities = createEntities(stage.scene, tex);
         built.push(entities);
         gateView = createGates(stage.scene, { gates, gateZ: sim.gateZ, curtainTexture: tex.curtain });
         built.push(gateView);
-        const ch = normalizeCharacter(character);
-        player = createPlayer(stage.scene, { body: ch.body, palette: ch.palette, glowTexture: tex.glow });
+        // Dokunmatik cihazda daha az poligonlu karakter (ekranda zaten küçük).
+        player = createPlayer(stage.scene, { avatar: avatarCfg, glowTexture: tex.glow, detail: coarse ? 'low' : 'high' });
         built.push(player);
         effects = createEffects(stage.scene, stage.camera, { glowTexture: tex.glow, reducedMotion });
         built.push(effects);
@@ -194,10 +221,18 @@ export async function createRunnerGame(options = {}) {
     let laneVel = 0;
 
     // Render için yeniden kullanılan durum nesneleri (her kare allocation yok)
-    const playerState = { x: 0, y: 0, vy: 0, speed: 0, sliding: false, slideProgress: 0, laneVel: 0, running: false, idle: true, invuln: false, time: 0 };
+    const playerState = {
+        x: 0, y: 0, vy: 0, grounded: true, supportY: 0, speed: 0, sliding: false, slideProgress: 0,
+        laneVel: 0, running: false, idle: true, invuln: false, time: 0, superLeft: 0, pzM: 0,
+    };
     const playerPos = { x: 0, y: 0, z: 0 };
     const fxState = { dt: 0, time: 0, pzM: 0, player: playerPos, speedNorm: 0, shield: false, magnetLeft: 0, running: false };
-    const camState = { dt: 0, aspect: 1, px: 0, py: 0, speedNorm: 0, crashed: false, shake: effects.shake, idleTime: 0 };
+    const camState = { dt: 0, aspect: 1, px: 0, py: 0, groundY: 0, speedNorm: 0, crashed: false, shake: effects.shake, idleTime: 0 };
+    const haptic = cb.onHaptic ? createHaptics((style) => safe(cb.onHaptic, style)) : () => null;
+    const isTunnel = typeof sim.tunnelAt === 'function' ? (c) => sim.tunnelAt(c) : () => false;
+    let sparkAcc = 0;
+    let ambNight = -1;
+    let ambTunnel = -1;
 
     // Düşük kalite kademesi: pahalı efektleri kapat/azalt (bkz. quality.js).
     let liteOn = false;
@@ -208,11 +243,16 @@ export async function createRunnerGame(options = {}) {
         world.setLite(on);
         entities.setLite(on);
         effects.setLite(on);
+        player.setLite(on);
+        ambNight = -1; // ortamı yeniden uygula (sis mesafeleri değişti)
     }
 
     function resizeNow() {
         stage.resize();
         effects.setPixelScale(stage.height * renderer.getPixelRatio(), camera.fov);
+        player.setPixelScale(stage.height * renderer.getPixelRatio(), camera.fov);
+        world.setPixelScale(stage.height * renderer.getPixelRatio(), camera.fov);
+        entities.setPixelScale(stage.height * renderer.getPixelRatio(), camera.fov);
     }
     resizeNow();
 
@@ -235,37 +275,62 @@ export async function createRunnerGame(options = {}) {
                 case 'coin':
                     entities.collectCoin(sim, e.id, st.z);
                     audio.play('coin');
+                    haptic('coin');
                     break;
-                case 'power':
+                case 'power': {
                     audio.play('power');
-                    effects.burst(e.kind === 'magnet' ? 'magnet' : 'shield', px, py + 1, pzM, 22, speedMs(), 0.8);
-                    effects.flash(e.kind === 'magnet' ? 0xff5a6a : 0x5ad8ff, 0.45, 1.6);
+                    haptic('power');
+                    const sup = e.kind === 'superjump';
+                    const kind = e.kind === 'magnet' ? 'magnet' : (sup ? 'superBurst' : 'shield');
+                    effects.burst(kind, px, py + 1, pzM, 22, speedMs(), 0.8);
+                    effects.flash(e.kind === 'magnet' ? 0xff5a6a : (sup ? 0x5dff8a : 0x5ad8ff), 0.45, 1.6);
                     break;
-                case 'jump':
-                    audio.play('jump');
-                    effects.burst('dust', px, 0.1, pzM, 5, 0, 0.4);
+                }
+                case 'jump': {
+                    const sup = e.kind === 'super';
+                    audio.play(sup ? 'superJump' : 'jump');
+                    haptic('jump');
+                    player.jump(sup);
+                    effects.burst(sup ? 'superBurst' : 'dust', px, py + 0.1, pzM, sup ? 16 : 5, 0, sup ? 0.6 : 0.4);
                     break;
-                case 'land':
-                    audio.play('land');
-                    player.land();
-                    effects.burst('dust', px, 0.1, pzM, 7, 0, 0.4);
+                }
+                case 'land': {
+                    const roof = e.kind === 'car' || e.kind === 'bus';
+                    player.land(roof);
+                    haptic('land', e.kind);
+                    if (roof) {
+                        // Çatıya iniş: tok ses, darbe halkası, geniş toz, hafif sarsıntı.
+                        audio.play('landRoof');
+                        effects.impact(px, py, pzM);
+                        effects.burst('roofDust', px, py + 0.05, pzM, 14, speedMs(), 0.35);
+                        effects.addTrauma(0.18);
+                    } else {
+                        audio.play('land');
+                        effects.burst('dust', px, py + 0.1, pzM, 7, 0, 0.4);
+                    }
+                    break;
+                }
+                case 'fall':
+                    audio.play('fall');
                     break;
                 case 'slide':
                     audio.play('slide');
-                    if (st.y === 0) effects.burst('dust', px, 0.1, pzM, 8, 0, 0.3);
+                    if (st.grounded) effects.burst('dust', px, py + 0.1, pzM, 8, 0, 0.3);
                     break;
                 case 'lane':
                     audio.play('lane');
                     break;
                 case 'stumble':
                     audio.play('stumble');
+                    haptic('stumble');
                     player.stumble();
                     effects.addTrauma(0.5);
                     effects.flash(0xff3b5c, 0.4, 2);
-                    effects.burst('dust', px, 0.5, pzM, 10, 0, 1);
+                    effects.burst('dust', px, py + 0.5, pzM, 10, 0, 1);
                     break;
                 case 'shieldBreak':
                     audio.play('shieldBreak');
+                    haptic('shieldBreak');
                     entities.obstacleDestroyed(e.id);
                     effects.shieldBreak();
                     effects.addTrauma(0.45);
@@ -274,6 +339,7 @@ export async function createRunnerGame(options = {}) {
                     break;
                 case 'crash':
                     audio.play('crash');
+                    haptic('crash');
                     player.crash();
                     effects.addTrauma(1);
                     effects.flash(0xff6b6b, 0.9, 1.1);
@@ -324,6 +390,7 @@ export async function createRunnerGame(options = {}) {
             magnetPct: Math.round((st.magnetTicks / C.MAGNET_TICKS) * 100),
             shield: st.shield,
             stumbling: st.stumbleTicks > 0,
+            superPct: Math.round(((st.superTicks || 0) / (C.SUPER_TICKS || 600)) * 100),
             tick: st.tick,
         });
     }
@@ -422,13 +489,28 @@ export async function createRunnerGame(options = {}) {
     function renderFrame(dt) {
         const alpha = phase === 'running' ? stepper.alpha : 1;
         const zMm = prevZ + (st.z - prevZ) * alpha;
-        const xM = (prevX + (st.x - prevX) * alpha) / 1000;
+        const xMm = prevX + (st.x - prevX) * alpha;
+        const xM = xMm / 1000;
         const yM = (prevY + (st.y - prevY) * alpha) / 1000;
         const pzM = zMm / 1000;
         const vNorm = (sim.speed() - C.V0) / (C.VMAX - C.V0);
         const running = phase === 'running' && !paused;
+        // Üzerinde durulan yüzey (zemin/çatı/rampa): gölge ve kamera için.
+        const supportY = typeof sim.groundAt === 'function' ? sim.groundAt(xMm, zMm) / 1000 : 0;
 
-        world.update(pzM);
+        // Ortam: gün/gece + tünel (küçük değişimler yok sayılır)
+        const night = nightAmount(pzM, timeMode);
+        const tun = tunnelBlend(pzM, isTunnel);
+        if (Math.abs(night - ambNight) > 0.004 || Math.abs(tun - ambTunnel) > 0.004) {
+            ambNight = night;
+            ambTunnel = tun;
+            stage.setAmbience(night, tun);
+            world.setAmbience(stage.paletteValue('windows'), stage.paletteValue('road'), stage.horizon, night, tun);
+            entities.setNight(night);
+            audio.setEcho(tun);
+        }
+
+        world.update(pzM, isTunnel);
         // Kamera konumu bir önceki kareden (rig aşağıda güncellenir; fark ihmal edilir).
         gateView.update(zMm, dt, time, camera.position.z);
         playerPos.x = xM;
@@ -436,9 +518,12 @@ export async function createRunnerGame(options = {}) {
         playerPos.z = 0;
         entities.update(sim, zMm, dt, time, playerPos, onCoinArrive);
 
+        const superLeft = (st.superTicks || 0) / 60;
         playerState.x = xM;
         playerState.y = yM;
         playerState.vy = st.vy;
+        playerState.grounded = st.grounded !== false;
+        playerState.supportY = supportY;
         playerState.speed = speedMs();
         playerState.sliding = st.slideTicks > 0 || st.slideBuffer;
         // slideTicks 40 -> 0 sayar; havadaki tamponlu kaymada ilerleme 0 (top pozu, dönüş yok)
@@ -448,7 +533,20 @@ export async function createRunnerGame(options = {}) {
         playerState.idle = phase === 'idle' || phase === 'countdown';
         playerState.invuln = st.invulnTicks > 0;
         playerState.time = time;
+        playerState.superLeft = superLeft;
+        playerState.pzM = pzM;
         player.update(dt, playerState);
+
+        // Süper Zıplama: ayaklardan yeşil kıvılcım
+        if (running && superLeft > 0 && dt > 0) {
+            sparkAcc += dt * SUPER_SPARK_RATE * (liteOn ? 0.5 : 1);
+            while (sparkAcc >= 1) {
+                sparkAcc -= 1;
+                effects.burst('super', xM + (Math.random() - 0.5) * 0.3, yM + 0.08, pzM - 0.1, 1, speedMs(), 0.5);
+            }
+        } else {
+            sparkAcc = 0;
+        }
 
         fxState.dt = dt;
         fxState.time = time;
@@ -463,6 +561,7 @@ export async function createRunnerGame(options = {}) {
         camState.aspect = stage.width / stage.height;
         camState.px = xM;
         camState.py = yM;
+        camState.groundY = supportY;
         camState.speedNorm = running ? vNorm : 0;
         camState.crashed = phase === 'crashing' || (ended && st.crashed);
         camState.idleTime = time;
@@ -638,6 +737,7 @@ export async function createRunnerGame(options = {}) {
             tex.sign.dispose();
             tex.curtain.dispose();
             tex.banner.dispose();
+            tex.sheen.dispose();
             stage.dispose();
         },
         setMuted(m) {
@@ -661,6 +761,7 @@ export async function createRunnerGame(options = {}) {
             const pzM = st.z / 1000;
             const px = st.x / 1000;
             const py = st.y / 1000;
+            haptic(ok ? 'gateCorrect' : 'gateWrong');
             if (ok) {
                 audio.play('correct');
                 effects.flash(0x34f5a0, 0.7, 1.4);
@@ -699,6 +800,13 @@ export async function createRunnerGame(options = {}) {
             };
         },
     };
+
+    // Yalnızca geliştirme sunucusunda: test sayfası düşük kalite kademesini zorlayabilsin.
+    if (import.meta.env?.DEV) {
+        api.__devSetLite = (on) => {
+            if (!destroyed) applyLite(Boolean(on));
+        };
+    }
 
     // İlk kare: başlamadan önce sahne (karakter tanıtımı) görünsün.
     startLoop();

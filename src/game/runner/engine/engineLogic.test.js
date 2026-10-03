@@ -5,7 +5,6 @@ import { buildQualityLadder, createQualityController, initialPixelRatio } from '
 import { createFixedStepper, TICK_MS } from './fixedStep.js';
 import { baseVerticalFov, cameraFraming, gateNearFade, MAX_VFOV, MIN_VFOV } from './cameraMath.js';
 import { clamp, damp, fract, hash32, seededRandom } from './mathUtils.js';
-import { CHARACTER_PALETTES, normalizeCharacter } from './palette.js';
 
 /*
  * 3D motorun three'ye dokunmayan saf parçaları. Render tarafı tarayıcıda
@@ -429,14 +428,5 @@ describe('matematik ve palet yardımcıları', () => {
             expect(v).toBeGreaterThanOrEqual(0);
             expect(v).toBeLessThan(1);
         }
-    });
-
-    it('karakter girdisi güvenli varsayılana düşer', () => {
-        expect(normalizeCharacter({ body: 'erkek', palette: 2 })).toEqual({ body: 'erkek', palette: 2 });
-        expect(normalizeCharacter({ body: 'robot', palette: 9 })).toEqual({ body: 'kiz', palette: 0 });
-        expect(normalizeCharacter({ palette: '1' })).toEqual({ body: 'kiz', palette: 1 });
-        expect(normalizeCharacter(null)).toEqual({ body: 'kiz', palette: 0 });
-        expect(normalizeCharacter({ palette: 1.5 })).toEqual({ body: 'kiz', palette: 0 });
-        expect(CHARACTER_PALETTES).toHaveLength(4);
     });
 });

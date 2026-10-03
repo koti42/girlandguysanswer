@@ -234,6 +234,13 @@ const GameProfilePage = lazy(() => import('./pages/game/GameProfilePage'));
 // 3D motor (three.js) oyun ekranının içinden ayrıca dinamik yükleniyor.
 const RunnerLobbyPage = lazy(() => import('./pages/game/runner/RunnerLobbyPage'));
 const RunnerPlayPage = lazy(() => import('./pages/game/runner/RunnerPlayPage'));
+// Herkesler Yükseliyor (kule): lobi ve oyun misafire açık (antrenman).
+const TowerLobbyPage = lazy(() => import('./pages/game/tower/TowerLobbyPage'));
+const TowerPlayPage = lazy(() => import('./pages/game/tower/TowerPlayPage'));
+// Karakter editörü ve mağaza: ProtectedRoute YOK - sayfalar misafire kendi
+// giriş çağrısını gösteriyor (vitrin/önizleme görülebilsin).
+const AvatarEditorPage = lazy(() => import('./pages/game/AvatarEditorPage'));
+const ShopPage = lazy(() => import('./pages/game/ShopPage'));
 
 
 /*
@@ -333,6 +340,10 @@ function App() {
                   <Route path="/oyun/profil/:username" element={<ProtectedRoute><GameProfilePage /></ProtectedRoute>} />
                   <Route path="/oyun/kosu" element={<RunnerLobbyPage />} />
                   <Route path="/oyun/kosu/oyna" element={<RunnerPlayPage />} />
+                  <Route path="/oyun/kule" element={<TowerLobbyPage />} />
+                  <Route path="/oyun/kule/oyna" element={<TowerPlayPage />} />
+                  <Route path="/oyun/karakter" element={<AvatarEditorPage />} />
+                  <Route path="/oyun/magaza" element={<ShopPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />
                   <Route path="/cpl-manage/*" element={<AdminApp />} />
                   <Route path="/mod/*" element={<ModApp />} />

@@ -1,5 +1,5 @@
 /*
- * "Herkesler Koşuyor" simülasyon sabitleri (şartname §3.1).
+ * "Herkesler Koşuyor" simülasyon sabitleri (şartname v1 §3.1 + v2 §A.1).
  *
  * Birimler: uzunluk milimetre, zaman tick (60 tick = 1 sn), hız mm/tick.
  * Hepsi tamsayı: aynı seed + aynı girdi JS'te ve PHP'de bit-bit aynı sonucu
@@ -7,7 +7,7 @@
  * ve golden.json da değişmek zorunda; SIM_VERSION artırılır.
  */
 
-export const SIM_VERSION = 1;
+export const SIM_VERSION = 3; // v3: rampa-cati katman 0'da + giriş rampası (chunk 3-5)
 
 export const C = Object.freeze({
     TICK_RATE: 60,
@@ -17,7 +17,8 @@ export const C = Object.freeze({
     V0: 180,
     VMAX: 420,
     SPEED_STEP_TICKS: 80, // speed(t) = min(VMAX, V0 + floor(t / 80))
-    JUMP_V: 140,
+    JUMP_V: 140, // tepe 1470 mm, havada 41 tick
+    SUPER_JUMP_V: 200, // Süper Zıplama: tepe 2958 mm, havada ≈ 58 tick
     GRAVITY: 7,
     FAST_FALL_V: 42,
     JUMP_BUFFER: 8,
@@ -25,6 +26,7 @@ export const C = Object.freeze({
     STUMBLE_TICKS: 90,
     INVULN_TICKS: 90,
     MAGNET_TICKS: 600,
+    SUPER_TICKS: 600,
     MAGNET_REACH_BACK: 900,
     MAGNET_REACH_AHEAD: 7000,
     PLAYER_HALF_W: 400,
@@ -32,14 +34,21 @@ export const C = Object.freeze({
     STAND_H: 1700,
     SLIDE_H: 700,
     OBST_HALF_W: 1050,
+    STEP_UP: 320, // yerdeyken tick başına en fazla bu kadar yukarı yüzey takibi (rampa)
+    LAND_TOL: 200, // kenar yakalama: üst yüzeye bu kadar alttan gelen iniş kabul
     BARRIER_DEPTH: 500,
     BARRIER_TOP: 900,
     BAR_DEPTH: 500,
     BAR_BOTTOM: 1100,
+    BAR_TOP: 1600, // tabela [1100, 1600] aralığında kalın levha
+    CAR_DEPTH: 4200,
+    CAR_TOP: 1200, // zıplayarak üstüne çıkılır
+    BUS_TOP: 2700, // yerden zıplamayla çıkılamaz: rampa, araba çatısı ya da Süper Zıplama
+    RAMP_LEN: 6000, // z0'da 0, z0 + 6000'de BUS_TOP; hemen ardından aynı şeritte otobüs
     COIN_REACH_Z: 900,
     COIN_REACH_X: 1000,
     COIN_REACH_Y: 800,
-    COIN_Y_GROUND: 900,
+    COIN_Y_GROUND: 900, // jeton yüksekliği base + 900 (yay jetonlarında base + ARC[i])
     CHUNK_LEN: 30000,
     GATE_FIRST_CHUNK: 8, // kapı k: zGate(k) = (8 + 14k) * 30000
     GATE_EVERY: 14,
@@ -59,14 +68,27 @@ export const C = Object.freeze({
     // Pist üretimi (§3.3)
     START_CHUNKS: 2, // c ∈ {0, 1}
     TIER_STARTS: Object.freeze([12, 30, 60, 100]), // c < 12 → 0, c < 30 → 1 ...
+    // Giriş rampası (v3): her koşuda chunk INTRO_RAMP_FROM + seed % INTRO_RAMP_SPAN
+    // (3, 4 ya da 5 — kapı yaklaşma chunk'ı 6'dan önce, hep 'normal') bu deseni alır.
+    // Desen zarı yine atılır (PRNG akışı değişmez), sonuç bu desenle değiştirilir.
+    INTRO_RAMP_PATTERN: 'rampa-cati',
+    INTRO_RAMP_FROM: 3,
+    INTRO_RAMP_SPAN: 3,
     POWER_ROLL: 1000,
-    POWER_MAGNET_BELOW: 30, // p < 30 → mıknatıs
-    POWER_SHIELD_BELOW: 55, // p < 55 → kalkan
+    POWER_MAGNET_BELOW: 28, // p < 28 → mıknatıs
+    POWER_SHIELD_BELOW: 50, // p < 50 → kalkan
+    POWER_SUPER_BELOW: 70, // p < 70 → Süper Zıplama
     OBSTACLE_ID_STRIDE: 64, // engel id = c * 64 + i
     COIN_ID_STRIDE: 256, // jeton id = c * 256 + j
     POWER_ID_STRIDE: 4, // güçlendirme id = c * 4 + 0
 
-    // Zıplama yayını izleyen jeton yükseklikleri (arc=true hatlarda i. jeton)
+    // Görsel tüneller (§A.6; simülasyonu etkilemez, PHP'de yok)
+    TUNNEL_FROM_CHUNK: 14,
+    TUNNEL_CYCLE: 26,
+    TUNNEL_PHASE_FROM: 16, // c % 26 ∈ [16, 19]
+    TUNNEL_PHASE_TO: 19,
+
+    // Zıplama yayını izleyen jeton yükseklikleri (arc=true hatlarda i. jeton; base eklenir)
     ARC: Object.freeze([1100, 1600, 2000, 2200, 2200, 2000, 1600, 1100]),
 });
 
@@ -76,6 +98,23 @@ export const GATE_LANE_EDGE = C.LANE_WIDTH / 2; // 1250
 
 export function laneX(lane) {
     return (lane - 1) * C.LANE_WIDTH;
+}
+
+/**
+ * Rampanın z'deki yüzey yüksekliği:
+ * floor(2700 * (clamp(z, z0, z1 - 1) - z0) / 6000). Çarpım 2^53'ün çok altında.
+ */
+export function rampHeight(o, z) {
+    const zc = z < o.z0 ? o.z0 : (z > o.z1 - 1 ? o.z1 - 1 : z);
+    return Math.floor((C.BUS_TOP * (zc - o.z0)) / C.RAMP_LEN);
+}
+
+/** Araba/otobüs/rampa üst yüzeyinin z'deki yüksekliği; destek vermeyen engelde -1. */
+export function surfaceAt(o, z) {
+    if (o.type === 'car') return C.CAR_TOP;
+    if (o.type === 'bus') return C.BUS_TOP;
+    if (o.type === 'ramp') return rampHeight(o, z);
+    return -1;
 }
 
 /** speed(t) = min(VMAX, V0 + floor(t / 80)); t negatif olamaz. */

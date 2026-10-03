@@ -42,17 +42,51 @@ describe('katman 4 bölgesi, VMAX', () => {
 });
 
 describe('desen sınırları', () => {
-    // A chunk 2'de, B chunk 3'te; öncesi ve sonrası engelsiz.
-    function pair(a, ma, b, mb, startTick) {
+    // A chunk 2'de, B chunk 3'te; öncesi ve sonrası engelsiz. opts: { lane,
+    // power, lazy } — lazy: bot şerit seçmez (yalnızca gerektiğinde kaçar),
+    // desene `lane` şeridinden girer ve rampalara kendiliğinden tırmanmaz.
+    function pair(a, ma, b, mb, startTick, opts = {}) {
         const override = (c) => {
-            if (c === 2) return { pattern: a, mirror: ma };
+            if (c === 2) return { pattern: a, mirror: ma, power: opts.power || null };
             if (c === 3) return { pattern: b, mirror: mb };
             return { pattern: FILLER };
         };
-        const sim = createSim({ seed: 7, gateCount: 0, debug: { startTick, startZ: 20000, override } });
-        const r = runBot(sim, { untilZ: 4 * C.CHUNK_LEN + 5000, botSeed: 3 });
+        const startZ = opts.lazy ? 2 * C.CHUNK_LEN - 1000 : 20000;
+        const sim = createSim({ seed: 7, gateCount: 0, debug: { startTick, startZ, startLane: opts.lane ?? 1, override } });
+        const r = runBot(sim, opts.lazy
+            ? { untilZ: 4 * C.CHUNK_LEN + 5000, botSeed: 3, homeLane: -1, roofs: false, chase: false }
+            : { untilZ: 4 * C.CHUNK_LEN + 5000, botSeed: 3 });
         return clean(r) && sim.state.z >= 4 * C.CHUNK_LEN + 5000;
     }
+
+    it('her desene her şeritten girilerek (kendiliğinden şerit seçmeden) geçilir', () => {
+        const bad = [];
+        for (let a = 0; a < PATTERNS.length; a++) {
+            for (const m of [false, true]) {
+                for (const t of [0, VMAX_TICK]) {
+                    for (const lane of [0, 1, 2]) {
+                        if (!pair(a, m, FILLER, false, t, { lane, lazy: true })) {
+                            bad.push(PATTERNS[a].id + (m ? '*' : '') + '@' + t + '/' + lane);
+                        }
+                    }
+                }
+            }
+        }
+        expect(bad).toEqual([]);
+    }, 120000);
+
+    it('Süper Zıplama varken her desen V0 ve VMAX\'ta geçilir', () => {
+        const bad = [];
+        for (let a = 0; a < PATTERNS.length; a++) {
+            if (!PATTERNS[a].items.some((it) => it.t === 'power')) continue;
+            for (const m of [false, true]) {
+                for (const t of [0, VMAX_TICK]) {
+                    if (!pair(a, m, FILLER, false, t, { power: 'superjump' })) bad.push(PATTERNS[a].id + (m ? '*' : '') + '@' + t);
+                }
+            }
+        }
+        expect(bad).toEqual([]);
+    }, 120000);
 
     it('her desen (iki yönüyle) V0, orta hız ve VMAX\'ta tek başına geçilir', () => {
         const bad = [];

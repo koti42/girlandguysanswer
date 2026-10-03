@@ -188,6 +188,20 @@ export const AuthProvider = ({ children }) => {
         setUser(newUser);
     };
 
+    // Oyun karakteri kaydedilince (/oyun/karakter) koşu/kule yeni karakteri
+    // hemen kullansın: yalnızca user.detail.game_avatar değişir. Fonksiyonel
+    // güncelleme, istek sürerken gelen getCurrentUser yanıtını ezmesin diye.
+    const setGameAvatar = (gameAvatar) => {
+        setUser((prev) => {
+            if (!prev) return prev;
+            const next = { ...prev, detail: { ...(prev.detail || {}), game_avatar: gameAvatar ?? null } };
+            try {
+                localStorage.setItem('user', JSON.stringify(next));
+            } catch (_) { /* depolama doluysa bellekteki kullanıcı yine güncel */ }
+            return next;
+        });
+    };
+
     const updatePermissions = (newPermissions) => {
         const updated = { ...permissions, ...newPermissions };
         localStorage.setItem('permissions', JSON.stringify(updated));
@@ -211,6 +225,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         updateUser,
+        setGameAvatar,
         updatePermissions,
         getCurrentUser,
         markWelcomeGuideSeen,

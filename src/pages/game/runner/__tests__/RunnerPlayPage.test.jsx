@@ -32,12 +32,13 @@ vi.mock('../engineLoader', () => ({ loadRunnerEngine: vi.fn() }));
 import { gameApi } from '../../../../services/gameApi';
 import { loadRunnerEngine } from '../engineLoader';
 import RunnerPlayPage from '../RunnerPlayPage';
-import { RUNNER_RETRY, STORAGE_KEYS, finishRunOnce, loadPending } from '../../../../components/game/runner/runnerUtils';
+import { RUNNER_RETRY, RUNNER_SIM_VERSION, STORAGE_KEYS, finishRunOnce, loadPending } from '../../../../components/game/runner/runnerUtils';
+import { defaultAvatar } from '../../../../game/avatar/catalog';
 
 const RUN = {
     id: 'run-1',
     seed: 123456,
-    sim_version: 1,
+    sim_version: RUNNER_SIM_VERSION,
     gate_count: 2,
     started_at: '2026-10-02T10:00:00Z',
     gates: [
@@ -160,6 +161,7 @@ describe('RunnerPlayPage', () => {
     });
 
     it('motoru seed, kapılar ve karakterle kurar; gövde kaydırmasını kilitler', async () => {
+        // v1'in yerel karakter seçimi artık motoru etkilemez: karakter avatar sisteminden.
         localStorage.setItem(STORAGE_KEYS.character, JSON.stringify({ body: 'erkek', palette: 2 }));
         localStorage.setItem(STORAGE_KEYS.muted, '1');
         renderPlay({ mode: 'ranked', run: RUN });
@@ -167,13 +169,37 @@ describe('RunnerPlayPage', () => {
         expect(opts.seed).toBe(123456);
         expect(opts.gates).toHaveLength(2);
         expect(opts.gates[0].question.options).toEqual(['İzmir', 'İstanbul', 'Ankara']);
-        expect(opts.character).toEqual({ body: 'erkek', palette: 2 });
+        expect(opts.avatar).toEqual(defaultAvatar('female'));
+        expect(opts.character).toBeUndefined();
         expect(opts.muted).toBe(true);
         expect(typeof opts.reducedMotion).toBe('boolean');
         expect(opts.container).toBe(screen.getByTestId('runner-stage'));
-        expect(Object.keys(opts.callbacks).sort()).toEqual(['onCountdown', 'onCrash', 'onEnd', 'onError', 'onGateApproach', 'onGateCross', 'onHud']);
+        expect(Object.keys(opts.callbacks).sort()).toEqual(['onCountdown', 'onCrash', 'onEnd', 'onError', 'onGateApproach', 'onGateCross', 'onHaptic', 'onHud']);
         expect(document.body.style.overflow).toBe('hidden');
         expect(document.documentElement.style.overscrollBehavior).toBe('none');
+    });
+
+    it('üyenin kayıtlı avatarı motora normalize edilerek verilir (bozuk alan varsayılana düşer)', async () => {
+        const saved = { ...defaultAvatar('male'), hair: { style: 'mohawk', color: 8 }, acc: 'tac', trail: 'bilinmeyen' };
+        Object.assign(auth, { user: { id: 'u1', username: 'mert', gender: 'male', detail: { game_avatar: saved } } });
+        renderPlay({ mode: 'practice' });
+        await waitFor(() => expect(engine.mod.createRunnerGame).toHaveBeenCalledTimes(1));
+        expect(opts.avatar).toEqual({ ...saved, trail: 'none' });
+    });
+
+    it('motorun titreşim bildirimi SPA\'da tarayıcı titreşimine dönmez; kapı sonucu ve çarpma titreşir', async () => {
+        const vib = vi.fn();
+        Object.defineProperty(navigator, 'vibrate', { value: vib, configurable: true, writable: true });
+        gameApi.runnerGate.mockResolvedValue({ gate: { index: 0, chosen_lane: 2, correct: true, correct_lane: 2 } });
+        renderPlay({ mode: 'ranked', run: RUN });
+        await startCountdown();
+        act(() => opts.callbacks.onHaptic('light'));
+        expect(vib).not.toHaveBeenCalled();
+        await act(async () => opts.callbacks.onGateCross({ index: 0, lane: 2 }));
+        await waitFor(() => expect(vib).toHaveBeenCalledWith(30));
+        act(() => opts.callbacks.onCrash());
+        expect(vib).toHaveBeenLastCalledWith([90, 50, 90]);
+        delete navigator.vibrate;
     });
 
     it('StrictMode çift bağlamada tek motor kurar, terk etmez; çıkışta destroy + abandon', async () => {
@@ -721,7 +747,8 @@ describe('RunnerPlayPage', () => {
             Object.assign(auth, { isAuthenticated: false, user: null });
             renderPlay({ mode: 'practice' });
             await startCountdown();
-            expect(opts.character).toEqual({ body: 'kiz', palette: 0 });
+            // Misafir: varsayılan karakter.
+            expect(opts.avatar).toEqual(defaultAvatar());
             expect(opts.muted).toBe(false);
             fireEvent.click(screen.getByRole('button', { name: 'Sesi kapat' }));
             expect(engine.controls.setMuted).toHaveBeenCalledWith(true);

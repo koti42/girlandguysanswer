@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBalanceScale, FaCalendarDay, FaCheckCircle, FaFistRaised, FaPlay, FaQuestionCircle, FaRunning, FaSync, FaUsers } from 'react-icons/fa';
+import { FaBalanceScale, FaBuilding, FaCalendarDay, FaCheckCircle, FaFistRaised, FaPlay, FaQuestionCircle, FaRunning, FaSync, FaUsers } from 'react-icons/fa';
 import { gameAdminApi } from '../../gameAdminApi';
 import { useQuery } from '../../../panel/hooks/useQuery';
 import { Avatar, Badge, Button, Card, DataTable, ErrorState, Skeleton, StatCard } from '../../../panel/ui';
@@ -11,6 +11,11 @@ const pct = (v) => (v === null || v === undefined ? '—' : `%${Math.round(Numbe
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 // Sunucunun reject_reason kodları (RunnerService::REJECT_*); bilinmeyen kod olduğu gibi yazılır.
 const REJECT_REASONS = { time: 'Zaman tutarsızlığı', lane: 'Şerit uyuşmazlığı' };
+// Kule: TowerService::REJECT_* ve suspicionReasons() kodları.
+const TOWER_REJECT_REASONS = { time: 'Zaman tutarsızlığı', answer: 'Cevap uyuşmazlığı' };
+const TOWER_SUSPICION = { combo: 'Aşırı uzun kombo', max_ticks: 'Süre sınırına dayandı', score: 'Olağandışı yüksek skor' };
+const labelOf = (map, code) => (Object.prototype.hasOwnProperty.call(map, code) && map[code]) || String(code);
+const arr = (v) => (Array.isArray(v) ? v : []);
 
 function RunnerUserCell({ user, sub, onUser }) {
     return (
@@ -67,6 +72,68 @@ function RunnerSection({ runner, onUser }) {
     );
 }
 
+/*
+ * Herkesler Yükseliyor (kule) özeti: en yüksek skorlar, reddedilen ve
+ * şüpheli işaretlenen oyunlar. Koşu bölümüyle aynı düzen; alanlar yoksa çizilmez.
+ */
+function TowerSection({ tower, onUser }) {
+    const top = arr(tower?.top);
+    const rejected = arr(tower?.rejected);
+    const suspicious = arr(tower?.suspicious);
+    return (
+        <div className="grid gap-4 xl:grid-cols-2" data-testid="game-tower">
+            <Card title="Kule: en yüksek skorlar" subtitle="Herkesler Yükseliyor, tüm zamanlar">
+                {top.length ? (
+                    <ol className="divide-y divide-[var(--p-border)]">
+                        {top.map((r, i) => (
+                            <li key={r.run_id ?? i} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                                <span className="text-xs font-bold p-muted tabular-nums w-5 shrink-0">{i + 1}.</span>
+                                <RunnerUserCell user={r.user} sub={r.at ? formatDateTime(r.at) : null} onUser={onUser} />
+                                <span className="ml-auto flex shrink-0 items-center gap-2">
+                                    <Badge tone="accent">{formatNumber(r.score ?? 0)} puan</Badge>
+                                    <Badge tone="neutral">{formatNumber(r.floors ?? 0)} kat</Badge>
+                                </span>
+                            </li>
+                        ))}
+                    </ol>
+                ) : <p className="text-xs p-muted py-6 text-center">Henüz bitmiş kule oyunu yok.</p>}
+            </Card>
+            <div className="grid gap-4">
+                <Card title="Kule: reddedilenler" subtitle="Sunucu doğrulamasından geçemeyen son oyunlar (zaman / cevap tutarsızlığı)">
+                    {rejected.length ? (
+                        <ul className="divide-y divide-[var(--p-border)]" data-testid="game-tower-rejected">
+                            {rejected.map((r, i) => (
+                                <li key={r.run_id ?? i} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                                    <RunnerUserCell user={r.user} sub={r.run_id} onUser={onUser} />
+                                    {r.reason && <span className="text-xs font-medium p-tone-danger break-words min-w-0">{labelOf(TOWER_REJECT_REASONS, r.reason)}</span>}
+                                    {r.at && <span className="text-[11px] p-muted">{formatDateTime(r.at)}</span>}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : <p className="text-xs p-muted py-6 text-center">Reddedilen kule oyunu yok.</p>}
+                </Card>
+                <Card title="Kule: şüpheliler" subtitle="Sayılan ama incelenmesi önerilen son oyunlar">
+                    {suspicious.length ? (
+                        <ul className="divide-y divide-[var(--p-border)]" data-testid="game-tower-suspicious">
+                            {suspicious.map((r, i) => (
+                                <li key={r.run_id ?? i} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                                    <RunnerUserCell user={r.user} sub={r.at ? formatDateTime(r.at) : r.run_id} onUser={onUser} />
+                                    <span className="flex flex-wrap items-center gap-1.5">
+                                        <Badge tone="accent">{formatNumber(r.score ?? 0)} puan</Badge>
+                                        <Badge tone="neutral">{formatNumber(r.floors ?? 0)} kat</Badge>
+                                        {isNum(r.max_combo) && <Badge tone="neutral">{formatNumber(r.max_combo)} kombo</Badge>}
+                                        {arr(r.reasons).map((code) => <Badge key={code} tone="warning">{labelOf(TOWER_SUSPICION, code)}</Badge>)}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : <p className="text-xs p-muted py-6 text-center">Şüpheli kule oyunu yok.</p>}
+                </Card>
+            </div>
+        </div>
+    );
+}
+
 /** Oyun Merkezi genel bakış: /admin/game/stats. */
 export default function GameOverview() {
     const navigate = useNavigate();
@@ -102,6 +169,7 @@ export default function GameOverview() {
                     <StatCard label="Bugünkü oturum" value={t.sessions_today ?? 0} icon={FaCalendarDay} tone="warning" compact />
                     <StatCard label="Düello" value={t.duels ?? 0} icon={FaFistRaised} tone="danger" compact />
                     {isNum(t.runner_runs) && <StatCard label="Koşu" value={t.runner_runs} sub={isNum(t.runner_runs_today) ? `${formatNumber(t.runner_runs_today)} bugün` : undefined} icon={FaRunning} tone="accent" compact />}
+                    {isNum(t.tower_runs) && <StatCard label="Kule" value={t.tower_runs} sub={isNum(t.tower_runs_today) ? `${formatNumber(t.tower_runs_today)} bugün` : undefined} icon={FaBuilding} tone="info" compact />}
                 </div>
             )}
 
@@ -140,6 +208,10 @@ export default function GameOverview() {
 
             {!stats.error && s?.runner && typeof s.runner === 'object' && (
                 <RunnerSection runner={s.runner} onUser={(id) => navigate(`/cpl-manage/users/${id}`)} />
+            )}
+
+            {!stats.error && s?.tower && typeof s.tower === 'object' && (
+                <TowerSection tower={s.tower} onUser={(id) => navigate(`/cpl-manage/users/${id}`)} />
             )}
 
             {!stats.error && (

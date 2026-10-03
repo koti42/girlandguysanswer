@@ -13,6 +13,8 @@ export const EMPTY_HUD = Object.freeze({
     multiplier: 1,
     speedKmh: 0,
     magnetPct: 0,
+    // Süper Zıplama kalan süresi (%), v2 motoru onHud.superPct.
+    superPct: 0,
     shield: false,
     stumbling: false,
     tick: 0,
@@ -38,6 +40,7 @@ export function sanitizeHud(h) {
         multiplier: Math.floor(num(h.multiplier, 1, 5)) || 1,
         speedKmh: Math.round(num(h.speedKmh, 0, 999)),
         magnetPct: Math.round(num(h.magnetPct, 0, 100)),
+        superPct: Math.round(num(h.superPct, 0, 100)),
         shield: Boolean(h.shield),
         stumbling: Boolean(h.stumbling),
         tick: Math.floor(num(h.tick)),

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../services/api', () => {
     const ok = () => Promise.resolve({ data: { data: { ok: true } } });
-    return { default: { get: vi.fn(ok), post: vi.fn(ok) } };
+    return { default: { get: vi.fn(ok), post: vi.fn(ok), put: vi.fn(ok) } };
 });
 
 import api from '../../../services/api';
@@ -30,5 +30,39 @@ describe('gameApi koşu uçları', () => {
         await gameApi.runnerGate('r1', { gate: 2, lane: 1, paused: true });
         expect(api.post.mock.calls[0][1]).toEqual({ gate: 1, lane: 0 });
         expect(api.post.mock.calls[1][1]).toEqual({ gate: 2, lane: 1 });
+    });
+});
+
+describe('gameApi karakter / mağaza yönlendirmeleri', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it('sözleşme adları avatarApi / shopApi uçlarına gider (tek kaynak)', async () => {
+        await gameApi.getAvatar();
+        await gameApi.saveAvatar({ v: 1 });
+        await gameApi.buyAvatarItem('hair:mohawk');
+        await gameApi.getShop();
+        await gameApi.buyShopItem('frame:neon-gece');
+        await gameApi.equipCosmetics({ frame: null });
+        await gameApi.getWalletTransactions(2);
+        await gameApi.checkMessageTicket('ayse');
+        await gameApi.sendTicketMessage({ username: 'ayse', body: 'Merhaba' });
+
+        expect(api.get.mock.calls.map((c) => c[0])).toEqual([
+            '/game/avatar',
+            '/game/shop',
+            '/game/wallet/transactions',
+            '/game/shop/tickets/message/check',
+        ]);
+        expect(api.post.mock.calls.map((c) => [c[0], c[1]])).toEqual([
+            ['/game/avatar/buy', { item: 'hair:mohawk' }],
+            ['/game/shop/buy', { item: 'frame:neon-gece' }],
+            ['/game/shop/tickets/message', { username: 'ayse', body: 'Merhaba' }],
+        ]);
+        expect(api.put.mock.calls.map((c) => [c[0], c[1]])).toEqual([
+            ['/game/avatar', { avatar: { v: 1 } }],
+            ['/game/shop/equip', { frame: null }],
+        ]);
+        // Para harcayan istekler taze anahtarla gider.
+        api.post.mock.calls.forEach((c) => expect(c[2].headers['Idempotency-Key']).toBeTruthy());
     });
 });

@@ -1,0 +1,199 @@
+/*
+ * Herkesler Yükseliyor: oyun ekranı ve lobi görsel ayrıntıları.
+ * Genel oyun dili (game-hero, game-card, game-press...) game.css'te.
+ */
+
+/* Oyun sahnesi: dokunuş sayfayı kaydırmasın, uzun basış menü açmasın. */
+.tower-stage {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* 3-2-1 sayacı */
+@keyframes tower-count {
+  0% { opacity: 0; transform: scale(1.8); }
+  25% { opacity: 1; transform: scale(1); }
+  80% { opacity: 1; transform: scale(0.96); }
+  100% { opacity: 0; transform: scale(0.85); }
+}
+.tower-count { display: inline-block; animation: tower-count 950ms ease-out both; }
+
+/*
+ * "Mükemmel!" yazısı: yükselip söner. Sürenin çoğunda tam opak kalır (yarı
+ * saydam kaldığı uzun bir sönüş açık gökte okunurluğu düşürüyordu); yalnızca
+ * son ~%30'da söner.
+ */
+@keyframes tower-perfect {
+  0% { opacity: 0; transform: translate(-50%, 12px) scale(0.7); }
+  16% { opacity: 1; transform: translate(-50%, 0) scale(1.12); }
+  30% { opacity: 1; transform: translate(-50%, -4px) scale(1); }
+  70% { opacity: 1; transform: translate(-50%, -34px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -54px) scale(1); }
+}
+.tower-perfect { animation: tower-perfect 1100ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards; }
+
+/*
+ * Okunurluk: açık gün batımı gökyüzünde, güneş diskinde ve pastel katların
+ * önünde de okunsun diye yazı koyu yarı saydam bir hap (pill) içinde; metin
+ * kalın, ince koyu kontur + gölgeli. Renkler değişkenlerde: kontrast testi
+ * (__tests__/perfectPopContrast.test.js) bunları en kötü zemin olan saf
+ * beyazın üstünde WCAG AA (4,5:1) için denetler.
+ */
+.tower-perfect-pill {
+  --tower-pop-bg: rgba(12, 9, 34, 0.78);
+  --tower-pop-word: #ffffff;
+  --tower-pop-combo: #ffd66e;
+  --tower-pop-grew: #a7f3d0;
+  --tower-pop-stroke: rgba(12, 9, 34, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.35rem 1.15rem 0.45rem;
+  border-radius: 9999px;
+  background: var(--tower-pop-bg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px rgba(8, 6, 24, 0.35);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.tower-perfect-pill[data-lines='multi'] { border-radius: 1.75rem; padding-bottom: 0.55rem; }
+.tower-perfect-word,
+.tower-perfect-combo,
+.tower-perfect-grew {
+  -webkit-text-stroke: 1px var(--tower-pop-stroke);
+  paint-order: stroke fill;
+  text-shadow: 0 2px 0 var(--tower-pop-stroke), 0 0 2px var(--tower-pop-stroke);
+}
+.tower-perfect-word {
+  color: var(--tower-pop-word);
+  text-shadow: 0 2px 0 var(--tower-pop-stroke), 0 0 2px var(--tower-pop-stroke), 0 0 18px rgba(226, 185, 76, 0.7);
+}
+.tower-perfect-combo { color: var(--tower-pop-combo); }
+.tower-perfect-grew { color: var(--tower-pop-grew); -webkit-text-stroke-width: 0.5px; }
+
+/* Kombo rozeti: her artışta küçük zıplama (anahtar değişince yeniden oynar). */
+@keyframes tower-combo-bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+.tower-combo-bump { animation: tower-combo-bump 380ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+
+/* Kat sayacı her yeni katta hafifçe parlar. */
+@keyframes tower-floor-tick {
+  0% { text-shadow: 0 0 0 rgba(255, 214, 120, 0); transform: translateY(0); }
+  30% { text-shadow: 0 0 18px rgba(255, 214, 120, 0.85); transform: translateY(-2px); }
+  100% { text-shadow: 0 0 0 rgba(255, 214, 120, 0); transform: translateY(0); }
+}
+.tower-floor-tick { animation: tower-floor-tick 420ms ease-out; }
+
+/* Soru süresi çubuğu (süre inline style ile). */
+.tower-q-timer {
+  width: 100%;
+  transform-origin: left center;
+  animation-name: tower-q-shrink;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes tower-q-shrink {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Soru paneli alttan kayarak gelir. */
+@keyframes tower-sheet-in {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.tower-sheet-in { animation: tower-sheet-in 280ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+
+/* "Dokun" ipucu: el ikonu hafifçe basar. */
+@keyframes tower-tap {
+  0%, 100% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(3px) scale(0.92); }
+}
+.tower-tap { animation: tower-tap 1.1s ease-in-out infinite; }
+
+/* Lobi kahramanı: üst üste binen pastel katlar (yalnızca CSS). */
+/* :where → sıfır özgüllük: lobide verilen Tailwind `absolute` sınıfı (CSS yükleme
+   sırasından bağımsız) bunu ezebilsin; aksi halde sanat başlığın üstüne akıyordu. */
+:where(.tower-hero-art) {
+  position: relative;
+}
+.tower-hero-art {
+  width: 132px;
+  height: 196px;
+}
+.tower-hero-art .tower-hero-floor {
+  position: absolute;
+  left: 50%;
+  height: 22px;
+  border-radius: 6px;
+  transform: translateX(-50%);
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.18), 0 6px 18px -6px rgba(0, 0, 0, 0.45);
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0) 0 9px, rgba(255, 244, 200, 0.85) 9px 15px);
+  background-size: 100% 8px;
+  background-position: 0 7px;
+  background-repeat: no-repeat;
+}
+.tower-hero-art .tower-hero-top {
+  animation: tower-hero-slide 2.4s ease-in-out infinite;
+}
+@keyframes tower-hero-slide {
+  0% { transform: translateX(-118%); }
+  42% { transform: translateX(-50%); }
+  58% { transform: translateX(-50%); }
+  100% { transform: translateX(18%); }
+}
+.tower-hero-art .tower-hero-ring {
+  position: absolute;
+  left: 50%;
+  border: 2px solid rgba(255, 230, 160, 0.9);
+  border-radius: 8px;
+  transform: translateX(-50%);
+  animation: tower-hero-ring 2.4s ease-out infinite;
+  opacity: 0;
+}
+@keyframes tower-hero-ring {
+  0%, 42% { opacity: 0; transform: translateX(-50%) scale(1); }
+  46% { opacity: 1; }
+  70% { opacity: 0; transform: translateX(-50%) scale(1.45); }
+  100% { opacity: 0; }
+}
+
+/*
+ * Yatay telefon (alçak ekran): soru paneli ekranı kaplamasın; şıklar yan
+ * yana, boşluklar küçük.
+ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .tower-qpanel.tower-qpanel { max-width: 44rem; padding: 0.5rem 0.75rem; }
+  .tower-qpanel .tower-qpanel-q { font-size: 0.95rem; line-height: 1.25; margin-top: 0.125rem; }
+  .tower-qpanel .tower-qpanel-opts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0.4rem; }
+  .tower-qpanel .tower-qpanel-opt { min-height: 48px; padding-top: 0.3rem; padding-bottom: 0.3rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tower-count,
+  .tower-combo-bump,
+  .tower-floor-tick,
+  .tower-sheet-in,
+  .tower-tap,
+  .tower-hero-art .tower-hero-top,
+  .tower-hero-art .tower-hero-ring {
+    animation: none !important;
+  }
+  .tower-hero-art .tower-hero-top { transform: translateX(-50%); }
+  .tower-perfect {
+    animation: none !important;
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  /* Kayarak küçülmek yerine kesik adımlarla azalır: kalan süre yine görünür. */
+  .tower-q-timer {
+    animation-timing-function: steps(8, end) !important;
+  }
+}

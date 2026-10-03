@@ -22,7 +22,10 @@ vi.mock('../../../services/gameApi', () => ({
     gameErrorMessage: (_err, fallback) => fallback || 'Hata',
 }));
 
+vi.mock('../../../services/shopApi', () => ({ shopApi: { get: vi.fn() } }));
+
 import { gameApi } from '../../../services/gameApi';
+import { shopApi } from '../../../services/shopApi';
 import GameHubPage from '../../../pages/game/GameHubPage';
 
 const CATEGORIES = [
@@ -41,6 +44,7 @@ describe('GameHubPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         Object.values(gameApi).forEach((fn) => fn.mockReset());
+        shopApi.get.mockReset();
         Object.assign(auth, { isAuthenticated: false, user: null, loading: false });
     });
 
@@ -61,11 +65,22 @@ describe('GameHubPage', () => {
         expect(locked.length).toBeGreaterThan(1);
         expect(screen.getByText('Bilgi Arenası').closest('a')).toHaveAttribute('href', '/login');
 
-        // Yeni 3D koşu kartı misafirde de kilitsiz: antrenmana götürür.
-        const runner = screen.getByRole('link', { name: /Herkesler Koşuyor/ });
+        // 3D oyun kartları misafirde de kilitsiz: antrenmana götürür.
+        const runner = screen.getByRole('link', { name: /Herkesler Koşuyor 2\.0/ });
         expect(runner).toHaveAttribute('href', '/oyun/kosu');
-        expect(within(runner).getByText('Yeni · 3D')).toBeInTheDocument();
+        expect(within(runner).getByText('2.0 · Yeni')).toBeInTheDocument();
         expect(within(runner).getByText('Antrenmana başla')).toBeInTheDocument();
+        const tower = screen.getByRole('link', { name: /Herkesler Yükseliyor/ });
+        expect(tower).toHaveAttribute('href', '/oyun/kule');
+        expect(within(tower).getByText('Antrenmana başla')).toBeInTheDocument();
+
+        // Mağaza (sabit vitrin ürünü) ve Karakterim kartları misafire de görünür.
+        const shop = screen.getByRole('link', { name: /^Mağaza:/ });
+        expect(shop).toHaveAttribute('href', '/oyun/magaza');
+        expect(within(shop).getByText('Yıldız Tozu')).toBeInTheDocument();
+        expect(within(shop).getAllByTestId('shop-art').length).toBeGreaterThan(0);
+        expect(screen.getByRole('link', { name: /^Karakterim:/ })).toHaveAttribute('href', '/oyun/karakter');
+        expect(shopApi.get).not.toHaveBeenCalled();
 
         // Auth isteyen uçlar çağrılmaz
         expect(gameApi.overview).not.toHaveBeenCalled();
@@ -80,7 +95,25 @@ describe('GameHubPage', () => {
     });
 
     it('giriş yapmış oyuncuya oyuncu kartı, günlük durum ve bekleyen davetleri gösterir', async () => {
-        Object.assign(auth, { isAuthenticated: true, user: { id: 'u1', username: 'ayse' } });
+        Object.assign(auth, {
+            isAuthenticated: true,
+            user: {
+                id: 'u1',
+                username: 'ayse',
+                gender: 'female',
+                detail: { game_avatar: { v: 1, body: 'kiz', skin: 1, hair: { style: 'mohawk', color: 2 }, top: { style: 'hoodie', color: 0 }, bottom: { style: 'jean', color: 0 }, shoes: { style: 'spor', color: 0 }, acc: 'none', trail: 'none' } },
+            },
+        });
+        shopApi.get.mockResolvedValue({
+            wallet: { balance: 4321, earned_total: 5000, spent_total: 679 },
+            featured: [
+                { key: 'hair:topuz', category: 'avatar_part', name: 'Topuz', price: 300 },
+                { key: 'mini:ejderha', category: 'mini_avatar', name: 'Ejderha', price: 9000, rarity: 'legendary' },
+            ],
+            categories: [],
+            equipped: {},
+            tickets: 0,
+        });
         gameApi.overview.mockResolvedValue({
             player: {
                 xp: 1240,
@@ -114,15 +147,35 @@ describe('GameHubPage', () => {
         expect(screen.getByText('İlk Adım')).toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'Üye ol' })).toBeNull();
         expect(screen.getByRole('link', { name: /Herkesler Koşuyor/ })).toHaveAttribute('href', '/oyun/kosu');
+        expect(screen.getByRole('link', { name: /Herkesler Yükseliyor/ })).toHaveAttribute('href', '/oyun/kule');
+
+        // Mağaza kartı: bakiye + vitrinin ilk çizilebilir ürünü (karakter parçası atlanır).
+        const shop = await screen.findByRole('link', { name: /Cüzdanında 4321 jeton var/ });
+        expect(within(shop).getByText(/Vitrinde:/)).toHaveTextContent('Ejderha');
+        expect(screen.getByRole('link', { name: /^Karakterim:.*Karakteri düzenle/ })).toHaveAttribute('href', '/oyun/karakter');
     });
 
-    it('GameNav 7 sekme içerir, Koşu sekmesi lobiye gider; dar ekran kısa etiketi erişilebilir adı bozmaz', async () => {
+    it('mağaza isteği düşerse kart sabit vitrinle çizilir, hub çalışır', async () => {
+        Object.assign(auth, { isAuthenticated: true, user: { id: 'u1', username: 'ayse' } });
+        gameApi.overview.mockResolvedValue({ player: { level: 1 }, daily: {}, categories: [], badges: [] });
+        gameApi.leaderboard.mockResolvedValue({ entries: [], me: null });
+        shopApi.get.mockRejectedValue(new Error('ağ'));
+        renderHub();
+        const shop = await screen.findByRole('link', { name: /^Mağaza:/ });
+        expect(within(shop).getByText('Yıldız Tozu')).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /^Karakterim:.*Karakterini oluştur/ })).toBeInTheDocument();
+    });
+
+    it('GameNav 10 sekme içerir (Koşu, Kule, Mağaza, Karakter dahil); dar ekran kısa etiketi erişilebilir adı bozmaz', async () => {
         gameApi.categories.mockResolvedValue({ categories: [] });
         renderHub();
         const nav = screen.getByRole('navigation', { name: 'Oyun Merkezi bölümleri' });
         const links = within(nav).getAllByRole('link');
-        expect(links).toHaveLength(7);
+        expect(links).toHaveLength(10);
         expect(within(nav).getByRole('link', { name: 'Koşu' })).toHaveAttribute('href', '/oyun/kosu');
+        expect(within(nav).getByRole('link', { name: 'Kule' })).toHaveAttribute('href', '/oyun/kule');
+        expect(within(nav).getByRole('link', { name: 'Mağaza' })).toHaveAttribute('href', '/oyun/magaza');
+        expect(within(nav).getByRole('link', { name: 'Karakter' })).toHaveAttribute('href', '/oyun/karakter');
         expect(within(nav).getByRole('link', { name: 'Liderlik' })).toHaveAttribute('href', '/oyun/liderlik');
         expect(within(nav).getByRole('link', { name: 'Merkez' })).toHaveAttribute('aria-current', 'page');
     });

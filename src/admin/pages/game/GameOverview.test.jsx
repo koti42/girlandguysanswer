@@ -59,3 +59,51 @@ describe('GameOverview - Herkesler Koşuyor', () => {
         expect(screen.getByText('Reddedilen koşu yok.')).toBeInTheDocument();
     });
 });
+
+describe('GameOverview - Herkesler Yükseliyor (kule)', () => {
+    beforeEach(() => api.stats.mockReset());
+
+    it('kule sayılarını, en yüksek skorları, reddedilen ve şüpheli oyunları gösterir', async () => {
+        api.stats.mockImplementation(() => ok({
+            ...base,
+            totals: { ...base.totals, tower_runs: 820, tower_runs_today: 14 },
+            tower: {
+                top: [{ user: { id: 'u3', username: 'kuleci' }, run_id: 't1', score: 45678, floors: 87, correct_count: 6, at: '2026-10-02T10:00:00Z' }],
+                rejected: [{ user: { id: 'u4', username: 'zamanci' }, run_id: 't2', reason: 'answer', at: '2026-10-02T11:00:00Z' }],
+                suspicious: [{ user: { id: 'u5', username: 'kombocu' }, run_id: 't3', score: 99000, floors: 140, perfects: 120, max_combo: 95, reasons: ['combo', 'yeni_kod'], at: '2026-10-02T12:00:00Z' }],
+            },
+        }));
+        mount();
+        const totals = await screen.findByTestId('game-totals');
+        expect(within(totals).getByText('Kule')).toBeInTheDocument();
+        expect(within(totals).getByText('14 bugün')).toBeInTheDocument();
+
+        const tower = screen.getByTestId('game-tower');
+        expect(within(tower).getByText('@kuleci')).toBeInTheDocument();
+        expect(within(tower).getByText('45.678 puan')).toBeInTheDocument();
+        expect(within(tower).getByText('87 kat')).toBeInTheDocument();
+        const rejected = screen.getByTestId('game-tower-rejected');
+        expect(within(rejected).getByText('@zamanci')).toBeInTheDocument();
+        expect(within(rejected).getByText('Cevap uyuşmazlığı')).toBeInTheDocument();
+        const sus = screen.getByTestId('game-tower-suspicious');
+        expect(within(sus).getByText('@kombocu')).toBeInTheDocument();
+        expect(within(sus).getByText('Aşırı uzun kombo')).toBeInTheDocument();
+        expect(within(sus).getByText('yeni_kod')).toBeInTheDocument(); // bilinmeyen kod olduğu gibi
+        expect(within(sus).getByText('95 kombo')).toBeInTheDocument();
+    });
+
+    it('eski API kule alanlarını göndermiyorsa bölümü çizmez; bozuk alanlarda boş durum', async () => {
+        api.stats.mockImplementation(() => ok(base));
+        const { unmount } = mount();
+        const totals = await screen.findByTestId('game-totals');
+        expect(within(totals).queryByText('Kule')).toBeNull();
+        expect(screen.queryByTestId('game-tower')).toBeNull();
+        unmount();
+
+        api.stats.mockImplementation(() => ok({ ...base, tower: { top: 'x', rejected: null, suspicious: {} } }));
+        mount();
+        expect(await screen.findByText('Henüz bitmiş kule oyunu yok.')).toBeInTheDocument();
+        expect(screen.getByText('Reddedilen kule oyunu yok.')).toBeInTheDocument();
+        expect(screen.getByText('Şüpheli kule oyunu yok.')).toBeInTheDocument();
+    });
+});

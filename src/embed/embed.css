@@ -1,0 +1,30 @@
+/*
+ * Gömülü oyun sayfası (embed.html) temel stili. Site kabuğu (başlık,
+ * altbilgi, reklam) yok; sayfa tam ekran ve kaydırmasız. Seçim, uzun basma
+ * menüsü ve dokunma vurgusu kapalı: oyun native bir ekran gibi hissettirsin.
+ */
+html.hs-embed,
+html.hs-embed body,
+html.hs-embed #root {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+html.hs-embed body {
+    background: #0b1030;
+    color: #fff;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* Karakter önizlemesi native ekranın üstünde şeffaf çizilir (?game=avatar). */
+html.hs-embed.hs-embed-transparent,
+html.hs-embed.hs-embed-transparent body {
+    background: transparent;
+}

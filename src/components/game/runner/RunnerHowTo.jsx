@@ -1,5 +1,5 @@
 import React from 'react';
-import { LuCoins, LuHand, LuKeyboard, LuMagnet, LuShield } from 'react-icons/lu';
+import { LuBus, LuChevronsUp, LuCoins, LuHand, LuKeyboard, LuMagnet, LuShield } from 'react-icons/lu';
 import { CONTROL_ROWS } from './runnerUtils';
 
 const Key = ({ children }) => (
@@ -35,7 +35,11 @@ const RunnerHowTo = ({ ranked }) => (
                 </li>
             ))}
         </ul>
-        <ul className="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-3">
+        <p className="mt-3 flex items-start gap-2 rounded-2xl bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-400/10 dark:text-amber-100">
+            <LuBus className="mt-0.5 shrink-0" aria-hidden="true" />
+            Araçların çatısında koşabilirsin: arabanın üstüne zıpla, otobüs ve tramvaya sarı-siyah rampadan çık. Önden çarpma!
+        </p>
+        <ul className="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
             <li className="flex items-start gap-2">
                 <LuCoins className="mt-0.5 shrink-0 text-amber-500" aria-hidden="true" /> Jetonları topla, her biri puan.
             </li>
@@ -44,6 +48,9 @@ const RunnerHowTo = ({ ranked }) => (
             </li>
             <li className="flex items-start gap-2">
                 <LuShield className="mt-0.5 shrink-0 text-emerald-500" aria-hidden="true" /> Kalkan bir çarpmayı affeder.
+            </li>
+            <li className="flex items-start gap-2">
+                <LuChevronsUp className="mt-0.5 shrink-0 text-lime-500" aria-hidden="true" /> Süper Zıplama 10 sn çok yükseğe zıplatır.
             </li>
         </ul>
         <p className="mt-3 rounded-2xl bg-indigo-50 px-3 py-2 text-sm text-indigo-900 dark:bg-indigo-500/10 dark:text-indigo-100">

@@ -176,6 +176,46 @@ describe('ses: müzik ayrı kapatılır', () => {
     });
 });
 
+describe('ses: tünel yankısı', () => {
+    beforeEach(() => {
+        FakeAudioContext.initialState = 'running';
+        FakeAudioContext.last = null;
+        window.AudioContext = FakeAudioContext;
+    });
+
+    afterEach(() => {
+        delete window.AudioContext;
+        delete FakeAudioContext.prototype.createDelay;
+    });
+
+    it('createDelay yoksa yankı atlanır, ses yine çalışır', () => {
+        const audio = createAudio();
+        audio.unlock();
+        expect(() => audio.setEcho(1)).not.toThrow();
+        audio.play('landRoof');
+        audio.play('superJump');
+        expect(FakeAudioContext.last.oscillators).toBeGreaterThan(0);
+    });
+
+    it('setEcho ıslak kazancı hedefe taşır; bağlam yokken de çağrılabilir', () => {
+        FakeAudioContext.prototype.createDelay = function createDelay() {
+            return node({ delayTime: param() });
+        };
+        const early = createAudio();
+        expect(() => early.setEcho(0.8)).not.toThrow();
+        const audio = createAudio();
+        audio.unlock();
+        const ctx = FakeAudioContext.last;
+        // ensure() sırası: master, sfx, müzik, geri besleme, ıslak
+        const wet = ctx.gains[4];
+        wet.gain.setTargetAtTime = vi.fn();
+        audio.setEcho(1);
+        expect(wet.gain.setTargetAtTime).toHaveBeenCalledWith(0.5, ctx.currentTime, expect.any(Number));
+        audio.setEcho(0);
+        expect(wet.gain.setTargetAtTime).toHaveBeenLastCalledWith(0, ctx.currentTime, expect.any(Number));
+    });
+});
+
 describe('girdi: ses kilidi jestleri', () => {
     let container;
     let canvas;

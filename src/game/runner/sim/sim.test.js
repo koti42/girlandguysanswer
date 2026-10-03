@@ -3,9 +3,11 @@ import { C, createSim, gateTick, replay, stateHash } from './index.js';
 import { createPrng, randInt } from './prng.js';
 
 /*
- * Kural testleri (şartname §3.4). Pist, testin kendi verdiği öğelerle kurulur
- * (debug.override): desen kütüphanesi değişse de kurallar aynı kalmalı.
- * Chunk 2 = z 60000..90000. Testler hep V0 hızında (180 mm/tick) başlar.
+ * Kural testleri (şartname v1 §3.4, v2 §A.4). Pist, testin kendi verdiği
+ * öğelerle kurulur (debug.override): desen kütüphanesi değişse de kurallar aynı
+ * kalmalı. Chunk 2 = z 60000..90000. Testler aksi belirtilmedikçe V0 hızında
+ * (180 mm/tick) başlar. v2'ye özgü kurallar (araba, otobüs, rampa, çatı,
+ * Süper Zıplama) sim2.test.js'te.
  */
 
 const EMPTY = { items: [] };
@@ -122,7 +124,7 @@ describe('kayma', () => {
         expect(sim.state.y).toBe(C.JUMP_V);
     });
 
-    it('yeniden zıplama tick\'inde S takılı bırakmaz (vy !== 0 kuralı)', () => {
+    it('yeniden zıplama tick\'inde S takılı bırakmaz (aynı tick yere iner, kayar)', () => {
         const sim = simWith({});
         run(sim, 41, { 0: 'J', 36: 'J' }); // tick 40: yeniden zıplama, y = 0, vy = 140
         run(sim, 1, { 41: 'S' });
@@ -189,19 +191,19 @@ describe('engeller', () => {
 
     it('çarpma tick\'inde toplama ve sayaçlar atlanır', () => {
         const items = {
-            2: { items: [{ t: 'block', lane: 1, z: 10000, len: 4000 }, { t: 'coins', lane: 1, z: 10600, n: 1, step: 0 }] },
+            2: { items: [{ t: 'bus', lane: 1, z: 10000, len: 8000 }, { t: 'coins', lane: 1, z: 10600, n: 1, step: 0 }] },
         };
         const sim = simWith(items, { startZ: 66000 });
         run(sim, 30);
         expect(sim.state.crashed).toBe(true);
-        // Jeton blokla aynı tick'te menzile girer: çarpma önce, jeton alınmaz.
+        // Jeton otobüsle aynı tick'te menzile girer: çarpma önce, jeton alınmaz.
         expect(sim.state.coins).toBe(0);
     });
 });
 
 describe('yan çarpma ve sendeleme', () => {
-    // Sağ şeritte uzun blok: z 69000..85000. Oyuncu orta şeritte yanında koşar.
-    const track = { 2: { items: [{ t: 'block', lane: 2, z: 9000, len: 16000 }] } };
+    // Sağ şeritte uzun otobüs: z 69000..85000. Oyuncu orta şeritte yanında koşar.
+    const track = { 2: { items: [{ t: 'bus', lane: 2, z: 9000, len: 16000 }] } };
 
     it('yana kayınca sendeler, önceki şeride döner', () => {
         const sim = simWith(track, { startZ: 70000 });
@@ -224,9 +226,9 @@ describe('yan çarpma ve sendeleme', () => {
     });
 
     it('sendeleme bitince yeni yan çarpma yine sadece sendeletir', () => {
-        // Art arda iki blok: sağ şerit z 61000..89000 boyunca kapalı.
+        // Art arda iki otobüs: sağ şerit z 61000..89000 boyunca kapalı.
         const longTrack = {
-            2: { items: [{ t: 'block', lane: 2, z: 1000, len: 16000 }, { t: 'block', lane: 2, z: 17000, len: 12000 }] },
+            2: { items: [{ t: 'bus', lane: 2, z: 1000, len: 16000 }, { t: 'bus', lane: 2, z: 17000, len: 12000 }] },
         };
         const sim = simWith(longTrack, { startZ: 61500 });
         run(sim, 120, { 0: 'R', 100: 'R' });
@@ -236,7 +238,7 @@ describe('yan çarpma ve sendeleme', () => {
 
     it('kalkan yan çarpmada harcanmaz', () => {
         const items = {
-            2: { items: [{ t: 'power', lane: 1, z: 1000 }, { t: 'block', lane: 2, z: 9000, len: 16000 }], power: 'shield' },
+            2: { items: [{ t: 'power', lane: 1, z: 1000 }, { t: 'bus', lane: 2, z: 9000, len: 16000 }], power: 'shield' },
         };
         const sim = simWith(items, { startZ: 60000 });
         run(sim, 60);

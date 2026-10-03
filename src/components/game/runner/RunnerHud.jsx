@@ -1,13 +1,18 @@
 import React, { memo, useSyncExternalStore } from 'react';
-import { LuCoins, LuMagnet, LuPause, LuShield, LuVolume2, LuVolumeX } from 'react-icons/lu';
+import { LuChevronsUp, LuCoins, LuMagnet, LuPause, LuShield, LuVolume2, LuVolumeX } from 'react-icons/lu';
 import { formatNumber } from '../gameUtils';
 import { MULT_STYLES } from './runnerUtils';
 
-const MagnetRing = ({ pct }) => {
+/*
+ * Süreli güçlendirme halkası (mıknatıs / Süper Zıplama): kalan süre halka
+ * olarak azalır. Son %20'de halka yanıp söner (hareket azaltıldıysa durur,
+ * game.css'teki animate-pulse tercihine uyar).
+ */
+const PowerRing = ({ pct, color, title, icon: Icon, iconClass, testId }) => {
     const r = 7;
     const c = 2 * Math.PI * r;
     return (
-        <span className="relative inline-flex h-5 w-5 items-center justify-center" title="Mıknatıs">
+        <span className={`relative inline-flex h-5 w-5 items-center justify-center ${pct <= 20 ? 'motion-safe:animate-pulse' : ''}`} title={title} data-testid={testId}>
             <svg viewBox="0 0 18 18" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden="true">
                 <circle cx="9" cy="9" r={r} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.2" />
                 <circle
@@ -15,15 +20,17 @@ const MagnetRing = ({ pct }) => {
                     cy="9"
                     r={r}
                     fill="none"
-                    stroke="#38bdf8"
+                    stroke={color}
                     strokeWidth="2.2"
                     strokeLinecap="round"
                     strokeDasharray={c}
                     strokeDashoffset={c * (1 - pct / 100)}
                 />
             </svg>
-            <LuMagnet className="relative text-[10px] text-sky-200" aria-hidden="true" />
-            <span className="sr-only">Mıknatıs %{pct}</span>
+            <Icon className={`relative text-[10px] ${iconClass}`} aria-hidden="true" />
+            <span className="sr-only">
+                {title} %{pct}
+            </span>
         </span>
     );
 };
@@ -41,7 +48,7 @@ const RunnerHud = ({ store, muted, onToggleMute, onPause, practice = false, canP
     const mult = hud.multiplier;
 
     return (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 pl-[max(0.75rem,env(safe-area-inset-left))] pt-[max(0.5rem,env(safe-area-inset-top))] pr-[max(0.75rem,env(safe-area-inset-right))]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 pl-[max(0.75rem,var(--hs-safe-left,env(safe-area-inset-left)))] pt-[max(0.5rem,var(--hs-safe-top,env(safe-area-inset-top)))] pr-[max(0.75rem,var(--hs-safe-right,env(safe-area-inset-right)))]">
             <div className="flex items-start gap-2">
                 {/* Skor kutusu içeriği kadar: yatayda / masaüstünde ekran boyu bulanık şerit olmasın. */}
                 <div className="min-w-0 max-w-xs rounded-2xl bg-slate-950/45 px-3 py-1.5 text-white ring-1 ring-white/10 backdrop-blur-sm">
@@ -61,7 +68,10 @@ const RunnerHud = ({ store, muted, onToggleMute, onPause, practice = false, canP
                             {formatNumber(hud.coins)}
                             <span className="sr-only">jeton</span>
                         </span>
-                        {hud.magnetPct > 0 && <MagnetRing pct={hud.magnetPct} />}
+                        {hud.magnetPct > 0 && <PowerRing pct={hud.magnetPct} color="#38bdf8" title="Mıknatıs" icon={LuMagnet} iconClass="text-sky-200" />}
+                        {hud.superPct > 0 && (
+                            <PowerRing pct={hud.superPct} color="#a3e635" title="Süper Zıplama" icon={LuChevronsUp} iconClass="text-lime-200" testId="runner-super" />
+                        )}
                         {hud.shield && (
                             <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/40 text-[11px] text-emerald-100 ring-1 ring-emerald-300/80" title="Kalkan">
                                 <LuShield aria-hidden="true" />

@@ -261,18 +261,21 @@ describe('hash (FNV-1a 32)', () => {
         expect(fnv1aBytes(new TextEncoder().encode('foobar'))).toBe(0xbf9cf968);
     });
 
-    it('stateHash alanları sırayla "|" ile birleştirir', () => {
+    it('stateHash alanları sırayla "|" ile birleştirir (v2: grounded, superTicks)', () => {
         const s = {
-            tick: 12, z: 3456, x: -2500, lane: 0, y: 140, vy: -7, slideTicks: 0, jumpBuffer: 3,
-            stumbleTicks: 0, invulnTicks: 0, magnetTicks: 599, shield: true, crashed: false,
+            tick: 12, z: 3456, x: -2500, lane: 0, y: 140, vy: -7, grounded: false, slideTicks: 0, jumpBuffer: 3,
+            stumbleTicks: 0, invulnTicks: 0, magnetTicks: 599, superTicks: 77, shield: true, crashed: false,
             coins: 4, gates: [{}, {}],
         };
-        expect(stateHash(s)).toBe(fnv1a('12|3456|-2500|0|140|-7|0|3|0|0|599|1|0|4|2'));
+        expect(stateHash(s)).toBe(fnv1a('12|3456|-2500|0|140|-7|0|0|3|0|0|599|77|1|0|4|2'));
+        expect(stateHash(s)).toBe(3754951552); // PHP portu aynı sayıyı üretmeli (Python ile de doğrulandı)
+        expect(stateHash({ ...s, grounded: true, y: 2700, vy: 0 })).toBe(fnv1a('12|3456|-2500|0|2700|0|1|0|3|0|0|599|77|1|0|4|2'));
     });
 
     it('başlangıç durumunun hash\'i', () => {
         const sim = createSim({ seed: 1, gateCount: 0 });
-        expect(stateHash(sim.state)).toBe(fnv1a('0|0|0|1|0|0|0|0|0|0|0|0|0|0|0'));
+        expect(stateHash(sim.state)).toBe(fnv1a('0|0|0|1|0|0|1|0|0|0|0|0|0|0|0|0|0'));
+        expect(stateHash(sim.state)).toBe(3864159127);
     });
 });
 

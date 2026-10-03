@@ -44,7 +44,6 @@ import {
     finishFailureText,
     gateFailureReason,
     isRetryable,
-    loadCharacter,
     loadMusicEnabled,
     loadPending,
     multiplierFrom,
@@ -177,6 +176,13 @@ describe('RunnerResult', () => {
         unmount();
         renderResult({ result: RESULT });
         expect(screen.queryByText(/50 metreden kısa/)).toBeNull();
+    });
+
+    it('puan dağılımı satırı JETON kartıyla karışmaz: puan olarak etiketlenir', () => {
+        renderResult({ result: RESULT });
+        const line = screen.getByTestId('runner-score-breakdown');
+        expect(line).toHaveTextContent('Puan dağılımı: Mesafe +1.900 · Jeton toplama +180 · Kapı +420');
+        expect(line.textContent).not.toMatch(/·\s*Jeton\s+\d/);
     });
 
     it('Tekrar Koş ve Lobiye dön butonları geri çağrıları tetikler', () => {
@@ -378,15 +384,6 @@ describe('runnerUtils', () => {
         expect(normalizeRun({ ...ok, gates: [{ index: 1, question: ok.gates[0].question }], gate_count: 1 })).toBeNull();
         expect(normalizeRun({ ...ok, gates: [{ index: 0, question: { text: 'S', options: ['a', 'b'] } }] })).toBeNull();
         expect(normalizeRun(null)).toBeNull();
-    });
-
-    it('karakter: bozuk kayıt varsayılana düşer, cinsiyete göre tip', () => {
-        localStorage.setItem(STORAGE_KEYS.character, '{bozuk');
-        expect(loadCharacter('male')).toEqual({ body: 'erkek', palette: 0 });
-        localStorage.setItem(STORAGE_KEYS.character, JSON.stringify({ body: 'kiz', palette: 7 }));
-        expect(loadCharacter('female')).toEqual({ body: 'kiz', palette: 0 });
-        localStorage.setItem(STORAGE_KEYS.character, JSON.stringify({ body: 'kiz', palette: 3 }));
-        expect(loadCharacter('male')).toEqual({ body: 'kiz', palette: 3 });
     });
 
     it('misafir rekoru yalnızca aşılınca yenilenir', () => {

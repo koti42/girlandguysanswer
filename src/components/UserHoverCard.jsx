@@ -6,6 +6,7 @@ import { usersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 import { notificationToast } from '../utils/notificationToast';
+import { canOfferBlock } from '../utils/systemAccount';
 
 const HOVER_DELAY_MS = 400;
 const LEAVE_DELAY_MS = 200;
@@ -214,6 +215,8 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
                                     >
                                         <FaEnvelope className="text-sm" />
                                     </button>
+                                    {/* Sistem hesabı engellenemez: engelle düğmesi gösterilmez. */}
+                                    {canOfferBlock(username, hasBlocked) && (
                                     <button
                                         type="button"
                                         onClick={handleBlock}
@@ -223,6 +226,7 @@ const UserHoverCard = ({ username, categoryName, categoryColor, user: initialUse
                                     >
                                         <FaBan className="text-sm" />
                                     </button>
+                                    )}
                                 </div>
                             )}
                         </div>

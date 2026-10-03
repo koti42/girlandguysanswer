@@ -1,18 +1,26 @@
 /*
- * Pist üretimi (şartname §3.3). Chunk c yalnızca (seed, gateCount, c) ile
- * belirlenir; her chunk kendi PRNG akışını kullanır, üretim sırası önemsiz.
- * PHP karşılığı TrackGenerator.php — aynı patterns.json'ı okur.
+ * Pist üretimi (şartname §3.3, v2 §A.1). Chunk c yalnızca (seed, gateCount, c)
+ * ile belirlenir; her chunk kendi PRNG akışını kullanır, üretim sırası önemsiz.
+ * PHP karşılığı TrackGenerator.php — desenlerin kanonik JSON kopyasını
+ * (patterns.json, scripts/runner-golden.mjs yazar) okur.
  *
  * Dönen chunk (sim.getChunk biçimi):
- *   { index, kind, obstacles:[{id,type,lane,z0,z1}], coins:[{id,lane,z,y,taken}],
+ *   { index, kind, obstacles:[{id,type,lane,z0,z1,top}], coins:[{id,lane,z,y,taken}],
  *     powers:[{id,kind,lane,z,y,taken}] }
- * Engel nesneleri değişmez; jeton/güçlendirme `taken` alanını simülasyon yazar.
+ * type: 'barrier' | 'bar' | 'car' | 'bus' | 'ramp'. top: üst yüzey (bariyer 900,
+ * tabela 1600, araba 1200, otobüs ve rampa 2700 — rampanın z'deki yüksekliği
+ * rampHeight ile). Engel nesneleri değişmez; jeton/güçlendirme `taken` alanını
+ * simülasyon yazar.
+ *
+ * Desenler JSON değil JS modülü (patterns.js): `with { type: 'json' }` içe
+ * aktarımı Metro'da (mobil) çalışmıyor.
  */
 import { C } from './constants.js';
 import { chunkPrng, randInt } from './prng.js';
-import patternsFile from './patterns.json' with { type: 'json' };
+import patternsFile from './patterns.js';
 
-const ITEM_TYPES = ['barrier', 'bar', 'block', 'coins', 'power'];
+const ITEM_TYPES = ['barrier', 'bar', 'car', 'bus', 'ramp', 'coins', 'power'];
+const OBSTACLE_TYPES = ['barrier', 'bar', 'car', 'bus', 'ramp'];
 
 function isInt(v, min, max) {
     return Number.isInteger(v) && v >= min && v <= max;
@@ -23,7 +31,7 @@ function isInt(v, min, max) {
  * üretmek yerine modül yüklenirken hata verir (PHP de aynısını yapar).
  */
 export function validatePatterns(data) {
-    if (!data || data.version !== 1 || !Array.isArray(data.patterns) || data.patterns.length === 0) {
+    if (!data || data.version !== 2 || !Array.isArray(data.patterns) || data.patterns.length === 0) {
         throw new Error('Koşu desen dosyası geçersiz.');
     }
     const ids = new Set();
@@ -43,13 +51,19 @@ export function validatePatterns(data) {
             if (!it || ITEM_TYPES.indexOf(it.t) < 0 || !isInt(it.lane, 0, 2) || !isInt(it.z, 0, C.CHUNK_LEN - 1)) {
                 fail('öğe türü/lane/z');
             }
-            if (it.t === 'block' && !isInt(it.len, 1, 100000)) fail('blok uzunluğu');
+            if (it.t === 'bus' && !isInt(it.len, 1, C.CHUNK_LEN)) fail('otobüs uzunluğu');
+            if (it.t === 'ramp') {
+                // Rampa tek başına durmaz: hemen ardından aynı şeritte otobüs çatısı başlar.
+                const roof = p.items.some((b) => b && b.t === 'bus' && b.lane === it.lane && b.z === it.z + C.RAMP_LEN);
+                if (!roof) fail('rampanın ardında otobüs yok');
+            }
             if (it.t === 'coins') {
                 if (!isInt(it.n, 1, 64) || !isInt(it.step, 0, C.CHUNK_LEN)) fail('jeton hattı');
                 if (it.arc !== undefined && typeof it.arc !== 'boolean') fail('jeton yayı');
+                if (it.base !== undefined && !isInt(it.base, 0, 10000)) fail('jeton yüksekliği');
                 coins += it.n;
             }
-            if (it.t === 'barrier' || it.t === 'bar' || it.t === 'block') obstacles++;
+            if (OBSTACLE_TYPES.indexOf(it.t) >= 0) obstacles++;
         }
         // id aralıkları (c*64+i, c*256+j) çakışmasın
         if (obstacles > C.OBSTACLE_ID_STRIDE || coins > C.COIN_ID_STRIDE) {
@@ -60,6 +74,9 @@ export function validatePatterns(data) {
 }
 
 export const PATTERNS = validatePatterns(patternsFile);
+
+/** Desen dosyasının kendisi (fikstür üreticisi kanonik JSON'unu PHP'ye yazar). */
+export const PATTERN_FILE = patternsFile;
 
 /** Zorluk katmanı: c < 12 → 0; c < 30 → 1; c < 60 → 2; c < 100 → 3; aksi 4. */
 export function tierOf(c) {
@@ -85,6 +102,17 @@ for (let tier = 0; tier <= C.TIER_STARTS.length; tier++) {
     ELIGIBLE.push({ list, total });
 }
 
+// Giriş rampası deseni (v3): katman 0'da olmalı, yoksa modül yüklenirken hata.
+const INTRO_PATTERN = PATTERNS.findIndex((p) => p.id === C.INTRO_RAMP_PATTERN);
+if (INTRO_PATTERN < 0 || PATTERNS[INTRO_PATTERN].minTier !== 0) {
+    throw new Error('Koşu desen kütüphanesinde katman 0 giriş rampası (' + C.INTRO_RAMP_PATTERN + ') yok.');
+}
+
+/** Giriş rampasının chunk'ı: INTRO_RAMP_FROM + seed % INTRO_RAMP_SPAN (3..5). */
+export function introRampChunk(seed) {
+    return C.INTRO_RAMP_FROM + ((seed >>> 0) % C.INTRO_RAMP_SPAN);
+}
+
 /** 'start' | 'approach' | 'exit' | 'normal' */
 export function chunkKind(c, gateCount) {
     if (c < C.START_CHUNKS) return 'start';
@@ -99,6 +127,17 @@ export function chunkKind(c, gateCount) {
         }
     }
     return 'normal';
+}
+
+/**
+ * Görsel tünel (§A.6): saf fonksiyon, PRNG akışına dokunmaz, simülasyonu
+ * etkilemez (PHP'de yok). c >= 14, c % 26 ∈ [16, 19] ve chunk türü normal ise;
+ * kapı chunk'ları (yaklaşma/çıkış) asla tünel değildir.
+ */
+export function tunnelAt(c, gateCount) {
+    if (!Number.isInteger(c) || c < C.TUNNEL_FROM_CHUNK) return false;
+    const ph = c % C.TUNNEL_CYCLE;
+    return ph >= C.TUNNEL_PHASE_FROM && ph <= C.TUNNEL_PHASE_TO && chunkKind(c, gateCount) === 'normal';
 }
 
 /** Ağırlıklı seçim: r = randInt(W), birikimli tarama (dosya sırası). */
@@ -158,10 +197,14 @@ export function buildChunk(seed, gateCount, c, override) {
         power = forced.power || null;
     } else {
         const prng = chunkPrng(seed, c);
-        items = PATTERNS[pickPattern(prng, tierOf(c))].items;
+        const picked = pickPattern(prng, tierOf(c)); // zar giriş chunk'ında da atılır
+        items = PATTERNS[c === introRampChunk(seed) ? INTRO_PATTERN : picked].items;
         mirror = randInt(prng, 2) === 1;
         const p = randInt(prng, C.POWER_ROLL);
-        power = p < C.POWER_MAGNET_BELOW ? 'magnet' : (p < C.POWER_SHIELD_BELOW ? 'shield' : null);
+        if (p < C.POWER_MAGNET_BELOW) power = 'magnet';
+        else if (p < C.POWER_SHIELD_BELOW) power = 'shield';
+        else if (p < C.POWER_SUPER_BELOW) power = 'superjump';
+        else power = null;
     }
 
     const base = c * C.CHUNK_LEN;
@@ -170,25 +213,44 @@ export function buildChunk(seed, gateCount, c, override) {
         const it = items[i];
         const lane = mirror ? 2 - it.lane : it.lane;
         const z0 = base + it.z;
-        if (it.t === 'barrier' || it.t === 'bar' || it.t === 'block') {
-            const depth = it.t === 'block' ? it.len : (it.t === 'barrier' ? C.BARRIER_DEPTH : C.BAR_DEPTH);
+        if (it.t === 'coins') {
+            const base = it.base === undefined ? 0 : it.base;
+            for (let j = 0; j < it.n; j++) {
+                out.coins.push({
+                    id: c * C.COIN_ID_STRIDE + out.coins.length,
+                    lane,
+                    z: z0 + j * it.step,
+                    y: base + (it.arc === true ? C.ARC[j < 7 ? j : 7] : C.COIN_Y_GROUND),
+                    taken: false,
+                });
+            }
+        } else if (it.t !== 'power') {
+            let depth;
+            let top;
+            if (it.t === 'barrier') {
+                depth = C.BARRIER_DEPTH;
+                top = C.BARRIER_TOP;
+            } else if (it.t === 'bar') {
+                depth = C.BAR_DEPTH;
+                top = C.BAR_TOP;
+            } else if (it.t === 'car') {
+                depth = C.CAR_DEPTH;
+                top = C.CAR_TOP;
+            } else if (it.t === 'ramp') {
+                depth = C.RAMP_LEN;
+                top = C.BUS_TOP;
+            } else {
+                depth = it.len;
+                top = C.BUS_TOP;
+            }
             out.obstacles.push({
                 id: c * C.OBSTACLE_ID_STRIDE + out.obstacles.length,
                 type: it.t,
                 lane,
                 z0,
                 z1: z0 + depth,
+                top,
             });
-        } else if (it.t === 'coins') {
-            for (let j = 0; j < it.n; j++) {
-                out.coins.push({
-                    id: c * C.COIN_ID_STRIDE + out.coins.length,
-                    lane,
-                    z: z0 + j * it.step,
-                    y: it.arc === true ? C.ARC[j < 7 ? j : 7] : C.COIN_Y_GROUND,
-                    taken: false,
-                });
-            }
         } else {
             // Yalnızca İLK slot, zar tuttuysa güçlendirmeye dönüşür; diğerleri yok sayılır.
             if (!slotUsed && power !== null) {

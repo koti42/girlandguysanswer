@@ -10,7 +10,7 @@ import { controlsHintText } from './runnerUtils';
  */
 const RunnerControlsHint = ({ touch = false }) => (
     <div
-        className="pointer-events-none absolute inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 flex justify-center px-[max(0.75rem,env(safe-area-inset-left))]"
+        className="pointer-events-none absolute inset-x-0 bottom-[max(1rem,var(--hs-safe-bottom,env(safe-area-inset-bottom)))] z-20 flex justify-center px-[max(0.75rem,var(--hs-safe-left,env(safe-area-inset-left)))]"
         aria-hidden="true"
         data-testid="runner-controls-hint"
     >

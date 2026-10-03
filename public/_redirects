@@ -1,4 +1,7 @@
 /ads.txt    /ads.txt    200
 /robots.txt /robots.txt 200
 /sitemap.xml /sitemap.xml 200
+/embed.html /embed.html 200
+/embed      /embed.html 200
+/embed/*    /embed.html 200
 /*    /index.html   200

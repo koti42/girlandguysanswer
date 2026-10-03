@@ -1,5 +1,5 @@
 /*
- * Renk paleti (three bağımsız; arayüz karakter seçicide de kullanabilir).
+ * Renk paleti (three bağımsız).
  *
  * Sitenin coral (#FF6B6B) / gold (#E2B94C) vurguları ve Oyun Merkezi'nin
  * lacivert -> mor zemini üzerine kurulu bir gün batımı/neon cadde.
@@ -25,19 +25,26 @@ export const SCENE_COLORS = {
 };
 
 /*
- * Karakter paletleri (0..3). hoodie = arayüzde renk örneği olarak gösterilebilecek ana renk.
+ * Gökyüzü/ortam paletleri: altın saat (gündüz), alacakaranlık (v1'in
+ * gün batımı) ve gece. Motor gece payına (0..1) göre aralarında geçiş yapar
+ * (bkz. ambience.js, stage.setAmbience). Işık şiddetleri de burada.
  */
-export const CHARACTER_PALETTES = [
-    { name: 'Mercan', hoodie: 0xff6b6b, trim: 0xffe1d6, pants: 0x2b2d5c, shoes: 0xffffff, sole: 0xe2b94c, skin: 0xf1c3a1, hair: 0x3b2418, cap: 0x2b2d5c },
-    { name: 'Altın', hoodie: 0xe2b94c, trim: 0x3a2a12, pants: 0x1c1c28, shoes: 0xff6b6b, sole: 0xffffff, skin: 0xd59a72, hair: 0x15110f, cap: 0xff6b6b },
-    { name: 'Nane', hoodie: 0x2dd4bf, trim: 0xe7fffb, pants: 0x4c2a85, shoes: 0xf8fafc, sole: 0x2dd4bf, skin: 0xffd7bd, hair: 0x8a3b1c, cap: 0x4c2a85 },
-    { name: 'Lavanta', hoodie: 0x8b5cf6, trim: 0xf3e8ff, pants: 0x3f4458, shoes: 0xff4fa3, sole: 0xffffff, skin: 0x8e5a3c, hair: 0xe9c46a, cap: 0xff4fa3 },
-];
-
-/** Geçersiz karakter girdisini güvenli varsayılana çevirir. */
-export function normalizeCharacter(character) {
-    const body = character?.body === 'erkek' ? 'erkek' : 'kiz';
-    const p = Number(character?.palette);
-    const palette = Number.isInteger(p) && p >= 0 && p < CHARACTER_PALETTES.length ? p : 0;
-    return { body, palette };
-}
+export const SKY_PALETTES = {
+    day: {
+        skyTop: 0x3f6fd6, skyMid: 0x86a2ee, skyLow: 0xf3b3cc, horizon: 0xffc27a, fog: 0xd99fb6,
+        hemiSky: 0xc7d4ff, hemiGround: 0x9a7068, hemi: 2.5, key: 0xfff0dc, keyI: 1.9, rim: 0xffc68a, rimI: 1.1,
+        windows: 0.4, road: 1.18, sun: 1, stars: 0, moon: 0,
+    },
+    dusk: {
+        skyTop: SCENE_COLORS.skyTop, skyMid: SCENE_COLORS.skyMid, skyLow: SCENE_COLORS.skyLow, horizon: SCENE_COLORS.horizon, fog: SCENE_COLORS.fog,
+        hemiSky: 0x9d8cff, hemiGround: 0x5a2a3a, hemi: 2.1, key: 0xc7d2ff, keyI: 1.5, rim: 0xff8a7a, rimI: 1.6,
+        windows: 1.15, road: 0.85, sun: 1, stars: 0.75, moon: 0,
+    },
+    night: {
+        skyTop: 0x03061a, skyMid: 0x0f0c36, skyLow: 0x2c1250, horizon: 0xb93a74, fog: 0x231040,
+        hemiSky: 0x7466ff, hemiGround: 0x3a1a3a, hemi: 1.75, key: 0xa9b8ff, keyI: 1.15, rim: 0xff6ad5, rimI: 1.45,
+        windows: 1.45, road: 0.72, sun: 0, stars: 1, moon: 1,
+    },
+    // Tünel içi: koyu mor sis, düşük ortam ışığı.
+    tunnelFog: 0x0d0a24,
+};

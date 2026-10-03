@@ -1,221 +1,164 @@
 /*
- * Oyuncu karakteri: primitiflerden kurulu kız/erkek, 4 renk paleti.
+ * Oyuncu karakteri: avatar yapılandırmasından (catalog) kurulan 3D karakter
+ * (avatar/build3d.js) + koşu izi + Süper Zıplama ayak parıltısı + blob gölge.
  *
- * Her uzuv tek mesh (köşe renkli, tek ortak malzeme) ve bir pivot düğümüne
- * bağlı. Animasyon tamamen prosedürel: hedef eklem açıları durumdan
- * hesaplanır (koşu, zıplama, kayma, şerit eğilmesi, sendeleme, çarpma) ve
- * eklemler hedefe üstel sönümle yaklaşır; pozlar arası geçiş yumuşak olur.
+ * Animasyon tamamen prosedürel: her karede durumdan bir hedef poz yazılır
+ * (avatar poz yardımcıları: koşu, zıplama, kayma, düşüş, bekleme; çarpma ve
+ * sendeleme burada) ve gerçek iskelet hedefe üstel sönümle yaklaşır; pozlar
+ * arası geçiş yumuşak olur. Kayma takla dönüşü ve Süper Zıplama saltosu
+ * sönümsüz (ilerlemeye bağlı) eklenir.
  *
  * Karakter -z yönüne koşar; kamera arkasında olduğundan sırt detayları
- * (kapüşon, atkuyruğu, ters şapka) özenli.
+ * (kapüşon, saç, forma numarası) özenli. v2'de y "ayak yüksekliği": araç
+ * çatısında y > 0 iken de koşu pozu sürer (havada olmak = grounded false).
  */
 import * as THREE from 'three';
-import { GeoBuilder, createTemplates } from './geoBuilder.js';
-import { CHARACTER_PALETTES } from './palette.js';
+import {
+    buildAvatar,
+    createPoseTarget,
+    blendPose,
+    poseIdle,
+    poseRun,
+    poseJump,
+    poseSlide,
+    poseFall,
+} from '../../avatar/build3d.js';
+import { normalizeAvatar } from '../../avatar/catalog.js';
+import { createTrail } from './trail.js';
 import { clamp, damp } from './mathUtils.js';
 
-const SCALE = 0.93;
+const FLIP_S = 0.7;
+// Koşu kamerasında karakter okunaklı olsun diye hafif büyük (çarpışma kutusu sim'de).
+const RUNNER_SCALE = 1.06;
+const SUPER_GLOW = 0x5dff8a;
 
-// Eklem dizisi indeksleri (hedef ve mevcut açılar Float32Array'de tutulur).
-const J = {
-    hipsY: 0, hipsRX: 1, bodyRZ: 2, bodyRY: 3, torsoRX: 4, torsoRY: 5, headRX: 6,
-    shLX: 7, shLZ: 8, shRX: 9, shRZ: 10, elL: 11, elR: 12,
-    thL: 13, thR: 14, knL: 15, knR: 16, tailRX: 17, tailRZ: 18, hipsZ: 19,
-};
-const JOINTS = 20;
-
-// Not: şablon kapsül (createTemplates) yarıçap 1, toplam boy 3; y ölçeği = istenen boy / 3.
-export function createPlayer(scene, { body, palette, glowTexture }) {
-    const pal = CHARACTER_PALETTES[palette] || CHARACTER_PALETTES[0];
-    const isGirl = body !== 'erkek';
-    const T = createTemplates();
-    const geos = [];
-    const material = new THREE.MeshLambertMaterial({ vertexColors: true });
-    const build = (fn) => {
-        const b = new GeoBuilder();
-        fn(b);
-        const g = b.build();
-        geos.push(g);
-        return g;
-    };
+export function createPlayer(scene, { avatar: avatarCfg, glowTexture, detail = 'high' }) {
+    let cfg = normalizeAvatar(avatarCfg);
+    const avatar = buildAvatar(cfg, { detail });
+    const rig = avatar.rig;
+    const target = createPoseTarget(rig);
 
     const root = new THREE.Group();
-    root.scale.setScalar(SCALE);
+    root.scale.setScalar(RUNNER_SCALE);
     scene.add(root);
-    const bodyNode = new THREE.Group();
-    root.add(bodyNode);
-    const hips = new THREE.Group();
-    hips.position.y = 0.92;
-    bodyNode.add(hips);
+    // Şerit eğilmesi ve çarpma savrulması bu ara düğümde (rig'e dokunmaz).
+    const body = new THREE.Group();
+    root.add(body);
+    body.add(avatar.root);
 
-    // Pelvis
-    hips.add(new THREE.Mesh(build((b) => {
-        b.add(T.capsule, pal.pants, [0, -0.02, 0], [0, 0, Math.PI / 2], [0.12, 0.11, 0.11]);
-    }), material));
-
-    // Gövde (hoodie) + kapüşon + cep
-    const torso = new THREE.Group();
-    torso.position.y = 0.06;
-    hips.add(torso);
-    torso.add(new THREE.Mesh(build((b) => {
-        b.add(T.capsule, pal.hoodie, [0, 0.25, 0], null, [isGirl ? 0.185 : 0.2, 0.17, 0.15]);
-        // Etek ucu ribanası
-        b.add(T.cyl, pal.trim, [0, 0.04, 0], null, [isGirl ? 0.185 : 0.2, 0.06, 0.15]);
-        // Kanguru cebi (önde, -z)
-        b.box(0, 0.14, -0.145, 0.24, 0.11, 0.03, pal.trim);
-        // Kapüşon (sırtta)
-        b.add(T.sphere, pal.hoodie, [0, 0.47, 0.11], null, [0.16, 0.11, 0.1]);
-        b.add(T.sphere, pal.trim, [0, 0.49, 0.06], null, [0.12, 0.08, 0.07]);
-        // Sırt baskısı: küçük "?" amblemi yerine iki renkli şerit
-        b.box(0, 0.3, 0.152, 0.2, 0.035, 0.01, pal.trim);
-        b.box(0, 0.25, 0.152, 0.14, 0.035, 0.01, pal.trim);
-        // İpler (önde)
-        b.box(-0.05, 0.38, -0.15, 0.015, 0.12, 0.015, pal.trim);
-        b.box(0.05, 0.38, -0.15, 0.015, 0.12, 0.015, pal.trim);
-    }), material));
-
-    // Baş
-    const head = new THREE.Group();
-    head.position.y = 0.52;
-    torso.add(head);
-    head.add(new THREE.Mesh(build((b) => {
-        b.add(T.cyl, pal.skin, [0, 0.04, 0], null, [0.055, 0.1, 0.055]);
-        b.add(T.sphereSmooth, pal.skin, [0, 0.2, 0], null, [0.16, 0.17, 0.16]);
-        // Kulaklar
-        b.add(T.sphere, pal.skin, [-0.16, 0.19, 0.01], null, [0.03, 0.045, 0.03]);
-        b.add(T.sphere, pal.skin, [0.16, 0.19, 0.01], null, [0.03, 0.045, 0.03]);
-        // Gözler ve ağız (önde, -z)
-        b.add(T.sphere, 0x1b1530, [-0.055, 0.21, -0.145], null, [0.022, 0.032, 0.015]);
-        b.add(T.sphere, 0x1b1530, [0.055, 0.21, -0.145], null, [0.022, 0.032, 0.015]);
-        b.box(0, 0.14, -0.155, 0.05, 0.012, 0.01, 0xb0505a);
-        if (isGirl) {
-            b.add(T.sphere, 0xff9fb0, [-0.09, 0.16, -0.13], null, [0.025, 0.015, 0.01]);
-            b.add(T.sphere, 0xff9fb0, [0.09, 0.16, -0.13], null, [0.025, 0.015, 0.01]);
-            // Saç: kafa üstü + kahkül + yanlar
-            b.add(T.sphereSmooth, pal.hair, [0, 0.235, 0.012], null, [0.172, 0.165, 0.172]);
-            b.add(T.sphereSmooth, pal.hair, [0, 0.3, -0.06], [0.5, 0, 0], [0.15, 0.07, 0.11]);
-            b.add(T.sphereSmooth, pal.hair, [-0.13, 0.17, 0.03], null, [0.05, 0.12, 0.09]);
-            b.add(T.sphereSmooth, pal.hair, [0.13, 0.17, 0.03], null, [0.05, 0.12, 0.09]);
-        } else {
-            // Kısa saç + ters şapka (siperlik arkada)
-            b.add(T.sphereSmooth, pal.hair, [0, 0.22, 0.015], null, [0.168, 0.15, 0.168]);
-            b.add(T.sphereSmooth, pal.cap, [0, 0.27, 0.0], null, [0.172, 0.12, 0.172]);
-            b.add(T.cyl12, pal.cap, [0, 0.29, 0.0], null, [0.172, 0.04, 0.172]);
-            b.box(0, 0.27, 0.2, 0.2, 0.025, 0.14, pal.cap);
-            b.add(T.sphere, pal.trim, [0, 0.39, 0], null, [0.025, 0.02, 0.025]);
-        }
-    }), material));
-
-    // Atkuyruğu (kızda) - ayrı pivot, koşuda sallanır
-    let tail = null;
-    if (isGirl) {
-        tail = new THREE.Group();
-        tail.position.set(0, 0.3, 0.13);
-        head.add(tail);
-        tail.add(new THREE.Mesh(build((b) => {
-            b.add(T.torus, pal.cap, [0, 0, 0.02], [Math.PI / 2, 0, 0], [0.04, 0.04, 0.04]);
-            b.add(T.sphereSmooth, pal.hair, [0, -0.07, 0.05], null, [0.065, 0.09, 0.065]);
-            b.add(T.sphereSmooth, pal.hair, [0, -0.18, 0.07], null, [0.055, 0.1, 0.055]);
-            b.add(T.sphereSmooth, pal.hair, [0, -0.28, 0.07], null, [0.035, 0.07, 0.035]);
-        }), material));
+    // Süper Zıplama: ayaklarda neon yeşil hale (yalnızca etkinken görünür).
+    const shoeGlowMat = new THREE.SpriteMaterial({
+        map: glowTexture,
+        color: SUPER_GLOW,
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+    });
+    const shoeGlows = [];
+    for (const foot of [rig.footL, rig.footR]) {
+        const sp = new THREE.Sprite(shoeGlowMat);
+        sp.scale.set(0.42, 0.3, 1);
+        sp.position.set(0, -0.06, -0.03);
+        sp.visible = false;
+        foot.add(sp);
+        shoeGlows.push(sp);
     }
 
-    // Kollar
-    const armGeoUpper = build((b) => {
-        b.add(T.capsule, pal.hoodie, [0, -0.12, 0], null, [0.066, 0.095, 0.066]);
-    });
-    const armGeoLower = build((b) => {
-        b.add(T.capsule, pal.hoodie, [0, -0.1, 0], null, [0.058, 0.07, 0.058]);
-        b.add(T.cyl, pal.trim, [0, -0.2, 0], null, [0.054, 0.04, 0.054]);
-        b.add(T.sphere, pal.skin, [0, -0.27, 0], null, [0.055, 0.06, 0.05]);
-    });
-    const makeArm = (side) => {
-        const sh = new THREE.Group();
-        sh.position.set(side * 0.235, 0.44, 0);
-        torso.add(sh);
-        sh.add(new THREE.Mesh(armGeoUpper, material));
-        const el = new THREE.Group();
-        el.position.y = -0.26;
-        sh.add(el);
-        el.add(new THREE.Mesh(armGeoLower, material));
-        return { sh, el };
-    };
-    const armL = makeArm(-1);
-    const armR = makeArm(1);
-
-    // Bacaklar
-    const thighGeo = build((b) => {
-        b.add(T.capsule, pal.pants, [0, -0.2, 0], null, [0.095, 0.15, 0.095]);
-    });
-    const shinGeo = build((b) => {
-        b.add(T.capsule, pal.pants, [0, -0.18, 0], null, [0.08, 0.135, 0.08]);
-        b.box(0, -0.41, -0.045, 0.15, 0.12, 0.29, pal.shoes);
-        b.box(0, -0.475, -0.045, 0.16, 0.04, 0.31, pal.sole);
-        b.box(0, -0.38, 0.06, 0.135, 0.03, 0.06, pal.sole);
-    });
-    const makeLeg = (side) => {
-        const th = new THREE.Group();
-        th.position.set(side * 0.105, -0.06, 0);
-        hips.add(th);
-        th.add(new THREE.Mesh(thighGeo, material));
-        const kn = new THREE.Group();
-        kn.position.y = -0.4;
-        th.add(kn);
-        kn.add(new THREE.Mesh(shinGeo, material));
-        return { th, kn };
-    };
-    const legL = makeLeg(-1);
-    const legR = makeLeg(1);
-
-    // Blob gölge (gerçek gölge yok)
+    // Blob gölge (gerçek gölge yok): üzerinde durulan yüzeye (zemin/çatı) düşer.
     const shadowGeo = new THREE.PlaneGeometry(1, 1);
     shadowGeo.rotateX(-Math.PI / 2);
     const shadowMat = new THREE.MeshBasicMaterial({ map: glowTexture, color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false });
     const shadow = new THREE.Mesh(shadowGeo, shadowMat);
     shadow.renderOrder = 1;
     scene.add(shadow);
-    geos.push(shadowGeo);
-    T.dispose();
 
-    const cur = new Float32Array(JOINTS);
-    const tgt = new Float32Array(JOINTS);
-    cur[J.hipsY] = 0.92;
+    const trail = createTrail(scene, { kind: cfg.trail });
+
     let phase = 0;
     let crashT = -1;
     let stumbleT = 0;
     let landT = 1;
+    let landHeavy = 0;
     let blinkVisible = true;
     let roll = 0;
     let rollBase = 0;
     let lastSlideP = 0;
+    let flipT = -1;
+    let airFromJump = false;
+    let superOn = false;
+    let shadowY = 0;
+    let appliedRoll = 0; // rig'e eklenmiş takla açısı (sönümlü pozdan ayrı tutulur)
+    const _a = new THREE.Vector3();
 
-    function setTarget(i, v) {
-        tgt[i] = v;
+    /** Çarpma: geriye savrulup sırtüstü düşer, kollar açılır (hedefe yazar). */
+    function poseCrash(t, k) {
+        poseFall(t);
+        const y0 = t.rest.hipsY;
+        t.hips.position.y = y0 - (y0 - 0.3) * k;
+        t.hips.rotation.x = 1.45 * k;
+        t.spine.rotation.x = 0.1;
+        t.chest.rotation.x = 0.1;
+        t.head.rotation.x = -0.3;
+        t.armL.rotation.x = 2.2;
+        t.armR.rotation.x = 2.0;
+        t.armL.rotation.z = -1.2;
+        t.armR.rotation.z = 1.2;
+        t.foreArmL.rotation.x = 0.3;
+        t.foreArmR.rotation.x = 0.3;
+        t.legL.rotation.x = 0.5;
+        t.legR.rotation.x = 0.9;
+        t.shinL.rotation.x = -0.6;
+        t.shinR.rotation.x = -0.2;
+        t.hair.rotation.x = 1.2;
+        t.hair.rotation.z = 0.3;
     }
 
     return {
         root,
+        rig,
         get phase() {
             return phase;
         },
 
-        land() {
+        /** Yere/çatıya iniş: çatıda daha derin çökme. */
+        land(onRoof = false) {
             landT = 0;
+            landHeavy = onRoof ? 1 : 0;
+            flipT = -1;
+        },
+        /** Zıplama başladı; süper zıplamada salto. */
+        jump(isSuper = false) {
+            airFromJump = true;
+            if (isSuper) flipT = 0;
         },
         stumble() {
             stumbleT = 0.0001;
         },
         crash() {
             crashT = 0;
+            flipT = -1;
         },
         reset() {
             crashT = -1;
             stumbleT = 0;
         },
+        setAvatar(next) {
+            cfg = normalizeAvatar(next);
+            avatar.setConfig(cfg);
+            trail.setKind(cfg.trail);
+        },
+        setLite(on) {
+            trail.setLite(on);
+        },
+        setPixelScale(heightPx, fovDeg) {
+            trail.setPixelScale(heightPx, fovDeg);
+        },
 
         /**
-         * s: { x, y (m), vy (mm/tick), speed (m/s), sliding, slideProgress (0..1), laneVel (m/s), stumbling,
-         *      running (bool), idle (bool), invuln (bool), time }
+         * s: { x, y (ayak, m), vy (mm/tick), grounded, supportY (m), speed (m/s), sliding,
+         *      slideProgress (0..1), laneVel (m/s), running, idle, invuln, time,
+         *      superLeft (s, 0 = kapalı), pzM (dünya z, m) }
          */
         update(dt, s) {
             const t = s.time;
@@ -223,135 +166,51 @@ export function createPlayer(scene, { body, palette, glowTexture }) {
             if (stumbleT > 0) stumbleT += dt;
             if (stumbleT > 1.5) stumbleT = 0;
             landT += dt;
+            if (s.grounded) airFromJump = false;
 
-            const air = s.y > 0.001 && crashT < 0;
-            const sp = Math.sin(phase);
-            const cp = Math.cos(phase);
+            const air = !s.grounded && crashT < 0;
             const lean = clamp(s.laneVel / 12, -1, 1);
             let lambda = 16;
+            let leanZ = 0;
+            let leanY = 0;
 
             if (crashT >= 0) {
-                // Çarpma: geriye savrulup sırtüstü düşer, kollar açılır.
                 crashT += dt;
-                const k = Math.min(1, crashT / 0.45);
-                setTarget(J.hipsY, 0.92 - 0.62 * k);
-                setTarget(J.hipsRX, 1.45 * k);
-                setTarget(J.hipsZ, 0.9 * k);
-                setTarget(J.torsoRX, 0.2);
-                setTarget(J.torsoRY, 0);
-                setTarget(J.headRX, -0.3);
-                setTarget(J.shLX, 2.2);
-                setTarget(J.shRX, 2.0);
-                setTarget(J.shLZ, -1.2);
-                setTarget(J.shRZ, 1.2);
-                setTarget(J.elL, 0.3);
-                setTarget(J.elR, 0.3);
-                setTarget(J.thL, 0.5);
-                setTarget(J.thR, 0.9);
-                setTarget(J.knL, -0.6);
-                setTarget(J.knR, -0.2);
-                setTarget(J.bodyRZ, 0.15);
-                setTarget(J.bodyRY, 0);
-                setTarget(J.tailRX, 1.2);
-                setTarget(J.tailRZ, 0.3);
+                poseCrash(target, Math.min(1, crashT / 0.45));
                 lambda = 10;
             } else if (s.idle) {
-                // Bekleme: nefes alma, hafif sallanma
-                const br = Math.sin(t * 2.2);
-                setTarget(J.hipsY, 0.92 + br * 0.008);
-                setTarget(J.hipsRX, 0);
-                setTarget(J.hipsZ, 0);
-                setTarget(J.torsoRX, -0.04 + br * 0.02);
-                setTarget(J.torsoRY, Math.sin(t * 0.7) * 0.12);
-                setTarget(J.headRX, 0.05);
-                setTarget(J.shLX, 0.1);
-                setTarget(J.shRX, 0.1);
-                setTarget(J.shLZ, -0.12 - br * 0.03);
-                setTarget(J.shRZ, 0.12 + br * 0.03);
-                setTarget(J.elL, 0.35);
-                setTarget(J.elR, 0.35);
-                setTarget(J.thL, 0.04);
-                setTarget(J.thR, -0.04);
-                setTarget(J.knL, -0.06);
-                setTarget(J.knR, -0.06);
-                setTarget(J.bodyRZ, 0);
-                setTarget(J.bodyRY, 0);
-                setTarget(J.tailRX, 0.15);
-                setTarget(J.tailRZ, Math.sin(t * 1.3) * 0.08);
+                poseIdle(target, t);
                 lambda = 8;
             } else if (s.sliding) {
-                // Kayma = öne takla: top gibi toplanır, kalçanın etrafında bir tur döner
-                // (dönüş açısı aşağıda, sönümsüz). Arkadan bakan kamerada okunaklı.
-                setTarget(J.hipsY, 0.42);
-                setTarget(J.hipsRX, 0);
-                setTarget(J.hipsZ, 0);
-                setTarget(J.torsoRX, -0.95);
-                setTarget(J.torsoRY, 0);
-                setTarget(J.headRX, -0.5);
-                setTarget(J.shLX, 1.3);
-                setTarget(J.shRX, 1.3);
-                setTarget(J.shLZ, -0.25);
-                setTarget(J.shRZ, 0.25);
-                setTarget(J.elL, 1.5);
-                setTarget(J.elR, 1.5);
-                setTarget(J.thL, 2.3);
-                setTarget(J.thR, 2.25);
-                setTarget(J.knL, -2.5);
-                setTarget(J.knR, -2.45);
-                setTarget(J.bodyRZ, -lean * 0.2);
-                setTarget(J.bodyRY, 0);
-                setTarget(J.tailRX, 0.4);
-                setTarget(J.tailRZ, 0);
+                // Kayma = öne takla: top gibi toplanır (dönüş aşağıda, sönümsüz).
+                poseSlide(target, s.slideProgress);
+                leanZ = -lean * 0.2;
                 // Top pozu dönüş başlamadan otursun diye hızlı sönüm.
                 lambda = 45;
             } else if (air) {
-                // Zıplama: yükselirken sıçrama adımı, inerken toplanma
-                const rise = clamp(s.vy / 140, -1, 1);
-                const up = rise > 0 ? rise : 0;
-                setTarget(J.hipsY, 0.92);
-                setTarget(J.hipsRX, 0);
-                setTarget(J.hipsZ, 0);
-                setTarget(J.torsoRX, -0.25 + up * 0.1);
-                setTarget(J.torsoRY, 0);
-                setTarget(J.headRX, 0.2);
-                setTarget(J.thL, 1.25 * up + 0.7 * (1 - up));
-                setTarget(J.knL, -0.35 * up - 1.3 * (1 - up));
-                setTarget(J.thR, -0.55 * up + 0.35 * (1 - up));
-                setTarget(J.knR, -1.4 * up - 1.1 * (1 - up));
-                setTarget(J.shLX, -0.8 * up + 2.4 * (1 - up));
-                setTarget(J.shRX, 1.5 * up + 2.4 * (1 - up));
-                setTarget(J.shLZ, -0.25 - 0.4 * (1 - up));
-                setTarget(J.shRZ, 0.25 + 0.4 * (1 - up));
-                setTarget(J.elL, 0.6);
-                setTarget(J.elR, 0.9);
-                setTarget(J.bodyRZ, -lean * 0.35);
-                setTarget(J.bodyRY, -lean * 0.25);
-                setTarget(J.tailRX, 0.3 - rise * 0.6);
-                setTarget(J.tailRZ, 0);
-                lambda = 14;
+                if (flipT >= 0 && flipT < FLIP_S) {
+                    // Süper zıplama saltosu: havada toplanır.
+                    poseSlide(target, 0.5);
+                    target.hips.position.y = target.rest.hipsY * 0.85;
+                    lambda = 30;
+                } else if (!airFromJump && s.vy <= 0) {
+                    // Çatı kenarından düşüş
+                    poseFall(target);
+                    target.armL.rotation.z -= Math.sin(t * 18) * 0.2;
+                    target.armR.rotation.z += Math.sin(t * 18 + 1) * 0.2;
+                    lambda = 10;
+                } else {
+                    poseJump(target, s.vy / 140);
+                    lambda = 14;
+                }
+                leanZ = -lean * 0.35;
+                leanY = -lean * 0.25;
             } else {
-                // Koşu döngüsü
-                const amp = 0.95;
-                setTarget(J.hipsY, 0.9 + Math.abs(cp) * 0.06 - (landT < 0.15 ? (0.15 - landT) * 0.9 : 0));
-                setTarget(J.hipsRX, 0);
-                setTarget(J.hipsZ, 0);
-                setTarget(J.torsoRX, -0.22);
-                setTarget(J.torsoRY, sp * 0.18);
-                setTarget(J.headRX, 0.16);
-                setTarget(J.thL, sp * amp);
-                setTarget(J.thR, -sp * amp);
-                setTarget(J.knL, -(0.25 + 1.15 * Math.max(0, cp)));
-                setTarget(J.knR, -(0.25 + 1.15 * Math.max(0, -cp)));
-                setTarget(J.shLX, -sp * 0.9);
-                setTarget(J.shRX, sp * 0.9);
-                setTarget(J.shLZ, -0.12);
-                setTarget(J.shRZ, 0.12);
-                setTarget(J.elL, 1.2 + Math.max(0, -sp) * 0.4);
-                setTarget(J.elR, 1.2 + Math.max(0, sp) * 0.4);
-                setTarget(J.bodyRZ, -lean * 0.32);
-                setTarget(J.bodyRY, -lean * 0.3);
-                setTarget(J.tailRX, 0.55 + Math.sin(phase * 2) * 0.18);
-                setTarget(J.tailRZ, -sp * 0.35 - lean * 0.4);
+                poseRun(target, phase, clamp((s.speed - 10.8) / 14.4, 0, 1));
+                // İniş çökmesi (çatıda daha derin)
+                if (landT < 0.18) target.hips.position.y -= (0.18 - landT) * (0.8 + landHeavy * 0.9);
+                leanZ = -lean * 0.32;
+                leanY = -lean * 0.3;
                 lambda = 26;
             }
 
@@ -360,12 +219,13 @@ export function createPlayer(scene, { body, palette, glowTexture }) {
             if (stumbleT > 0 && crashT < 0) {
                 const k = Math.max(0, 1 - stumbleT / 0.9);
                 wobble = Math.sin(stumbleT * 26) * 0.35 * k;
-                tgt[J.torsoRX] += 0.35 * k;
-                tgt[J.shLZ] -= 1.1 * k * (0.6 + 0.4 * Math.sin(stumbleT * 30));
-                tgt[J.shRZ] += 1.1 * k * (0.6 + 0.4 * Math.cos(stumbleT * 28));
+                target.chest.rotation.x += 0.35 * k;
+                target.armL.rotation.z -= 1.1 * k * (0.6 + 0.4 * Math.sin(stumbleT * 30));
+                target.armR.rotation.z += 1.1 * k * (0.6 + 0.4 * Math.cos(stumbleT * 28));
             }
 
-            for (let i = 0; i < JOINTS; i++) cur[i] = damp(cur[i], tgt[i], lambda, dt);
+            rig.hips.rotation.x -= appliedRoll;
+            blendPose(rig, target, 1 - Math.exp(-lambda * dt));
 
             // Takla açısı: kayma ilerlemesine bağlı tam tur (-2π = öne). Kayma yarıda
             // kesilirse (zıplama) en yakın tam tura yumuşakça tamamlanır.
@@ -376,61 +236,66 @@ export function createPlayer(scene, { body, palette, glowTexture }) {
                 else if (lastSlideP === 0) rollBase = Math.round(roll / (Math.PI * 2)) * Math.PI * 2;
                 lastSlideP = p;
                 roll = rollBase - Math.PI * 2 * (p * p * (3 - 2 * p));
+            } else if (flipT >= 0 && crashT < 0 && !s.grounded) {
+                if (flipT === 0) rollBase = Math.round(roll / (Math.PI * 2)) * Math.PI * 2;
+                flipT += dt;
+                const p = Math.min(1, flipT / FLIP_S);
+                roll = rollBase - Math.PI * 2 * (p * p * (3 - 2 * p));
+                lastSlideP = 0;
+                if (p >= 1) flipT = -1;
             } else if (roll !== 0) {
                 lastSlideP = 0;
-                const target = Math.round(roll / (Math.PI * 2)) * Math.PI * 2;
-                roll = damp(roll, target, 14, dt);
-                if (Math.abs(roll - target) < 0.01) roll = 0;
+                const tg = Math.round(roll / (Math.PI * 2)) * Math.PI * 2;
+                roll = damp(roll, tg, 14, dt);
+                if (Math.abs(roll - tg) < 0.01) roll = 0;
             } else {
                 lastSlideP = 0;
             }
+            rig.hips.rotation.x += roll;
+            appliedRoll = roll;
 
             root.position.set(s.x, s.y, crashT >= 0 ? Math.min(1, crashT * 3) * 0.9 : 0);
-            hips.position.y = cur[J.hipsY];
-            hips.position.z = 0;
-            hips.rotation.x = cur[J.hipsRX] + roll;
-            bodyNode.rotation.z = cur[J.bodyRZ] + wobble;
-            bodyNode.rotation.y = cur[J.bodyRY];
-            bodyNode.position.y = crashT >= 0 ? Math.max(0, Math.sin(Math.min(crashT, 0.6) / 0.6 * Math.PI)) * 0.25 : 0;
-            torso.rotation.x = cur[J.torsoRX];
-            torso.rotation.y = cur[J.torsoRY];
-            head.rotation.x = cur[J.headRX];
-            armL.sh.rotation.x = cur[J.shLX];
-            armL.sh.rotation.z = cur[J.shLZ];
-            armR.sh.rotation.x = cur[J.shRX];
-            armR.sh.rotation.z = cur[J.shRZ];
-            armL.el.rotation.x = cur[J.elL];
-            armR.el.rotation.x = cur[J.elR];
-            legL.th.rotation.x = cur[J.thL];
-            legR.th.rotation.x = cur[J.thR];
-            legL.kn.rotation.x = cur[J.knL];
-            legR.kn.rotation.x = cur[J.knR];
-            if (tail) {
-                tail.rotation.x = cur[J.tailRX];
-                tail.rotation.z = cur[J.tailRZ];
-            }
-            if (crashT >= 0) bodyNode.rotation.y = cur[J.hipsZ] * 0.4;
+            body.rotation.z = crashT >= 0 ? 0.15 : leanZ + wobble;
+            body.rotation.y = crashT >= 0 ? Math.min(1, crashT / 0.45) * 0.36 : leanY;
+            body.position.y = crashT >= 0 ? Math.max(0, Math.sin((Math.min(crashT, 0.6) / 0.6) * Math.PI)) * 0.25 : 0;
 
             // Dokunulmazlıkta yanıp sönme
             const vis = !s.invuln || Math.floor(t * 12) % 2 === 0;
             if (vis !== blinkVisible) {
                 blinkVisible = vis;
-                bodyNode.visible = vis;
+                body.visible = vis;
             }
 
-            // Gölge: yükseldikçe küçülür ve solar
-            const hgt = s.y;
+            // Süper Zıplama ayak parıltısı (son 2 sn yanıp söner)
+            const sOn = s.superLeft > 0 && crashT < 0 && (s.superLeft > 2 || Math.floor(t * 8) % 2 === 0);
+            if (sOn !== superOn) {
+                superOn = sOn;
+                shoeGlows[0].visible = sOn;
+                shoeGlows[1].visible = sOn;
+            }
+            if (sOn) shoeGlowMat.opacity = 0.7 + 0.3 * Math.sin(t * 14);
+
+            // Gölge: üzerinde durulan yüzeyde; yükseldikçe küçülür ve solar
+            shadowY = s.grounded || Math.abs(shadowY - s.supportY) > 0.5 ? s.supportY : damp(shadowY, s.supportY, 20, dt);
+            const hgt = Math.max(0, s.y - s.supportY);
             const sc = clamp(1.1 - hgt * 0.22, 0.45, 1.1) * (s.sliding ? 0.9 : 1);
-            shadow.position.set(s.x, 0.02, root.position.z - 0.05);
+            shadow.position.set(s.x, shadowY + 0.02, root.position.z - 0.05);
             shadow.scale.set(sc * 1.15, 1, sc * 1.15);
             shadowMat.opacity = clamp(0.6 - hgt * 0.15, 0.2, 0.6);
+
+            // Koşu izi: çapanın dünya konumundan
+            root.updateMatrixWorld(true);
+            rig.trailAnchor.getWorldPosition(_a);
+            trail.update(dt, _a.x, _a.y, _a.z, s.pzM, s.running && crashT < 0 && !s.idle, crashT < 0 ? s.speed : 0);
         },
 
         dispose() {
             scene.remove(root, shadow);
-            for (const g of geos) g.dispose();
-            material.dispose();
+            trail.dispose();
+            avatar.dispose();
+            shadowGeo.dispose();
             shadowMat.dispose();
+            shoeGlowMat.dispose();
         },
     };
 }

@@ -10,6 +10,9 @@ import BadgeGrid from '../../components/game/BadgeGrid';
 import Countdown from '../../components/game/Countdown';
 import LeagueBadge from '../../components/game/LeagueBadge';
 import RunnerFeatureCard from '../../components/game/runner/RunnerFeatureCard';
+import TowerFeatureCard from '../../components/game/tower/TowerFeatureCard';
+import ShopHubCard from '../../components/game/shop/ShopHubCard';
+import AvatarHubCard from '../../components/game/avatar/AvatarHubCard';
 import UserAvatar from '../../components/UserAvatar';
 import { categoryIcon } from '../../components/game/gameIcons';
 import { formatNumber, nextIstanbulMidnight } from '../../components/game/gameUtils';
@@ -82,6 +85,28 @@ const MiniLeaderboard = ({ entries, me }) => (
     </section>
 );
 
+/*
+ * Öne çıkan bölüm (misafir + üye): iki 3D oyun yan yana (dar ekranda alt
+ * alta), altında "kazan -> harca" döngüsünü gösteren Mağaza ve Karakterim.
+ * Karakter: user.detail.game_avatar (yoksa cinsiyete göre varsayılan).
+ */
+const FeaturedGames = ({ guest = false, user = null }) => {
+    const avatar = user?.detail?.game_avatar ?? null;
+    const gender = guest ? 'female' : user?.gender;
+    return (
+        <>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <RunnerFeatureCard guest={guest} avatar={avatar} gender={gender} />
+                <TowerFeatureCard guest={guest} />
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <ShopHubCard member={!guest} />
+                <AvatarHubCard guest={guest} avatar={avatar} gender={gender} />
+            </div>
+        </>
+    );
+};
+
 const GuestHub = () => {
     const { data, error: catError, reload } = useAsync(gameApi.categories);
     const categories = data?.categories || [];
@@ -95,8 +120,8 @@ const GuestHub = () => {
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Herkesler Soruyor</p>
                 <h1 className="mt-2 text-3xl sm:text-4xl font-black leading-tight">Oyun Merkezi</h1>
                 <p className="mt-2 max-w-xl text-white/80">
-                    Tek hesap, farklı oyunlar, ortak oyuncu profili. Bilgini yarıştır, düelloda arkadaşını yen, ikilemlerde kadınlar ve
-                    erkekler neyi seçiyor gör.
+                    Tek hesap, farklı oyunlar, ortak oyuncu profili. 3D koşuda ve kulede jeton kazan, mağazada harca; bilgini yarıştır,
+                    düelloda arkadaşını yen, ikilemlerde kadınlar ve erkekler neyi seçiyor gör.
                 </p>
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
                     <Link
@@ -114,9 +139,10 @@ const GuestHub = () => {
                 </div>
             </section>
 
-            <h2 className="mt-8 mb-3 text-lg font-extrabold">Modlar</h2>
-            {/* Yeni 3D oyun misafire de açık: antrenman modunda oynanır. */}
-            <RunnerFeatureCard guest />
+            <h2 className="mt-8 mb-3 text-lg font-extrabold">3D oyunlar</h2>
+            {/* Yeni 3D oyunlar misafire de açık: antrenman modunda oynanır. */}
+            <FeaturedGames guest />
+            <h2 className="mt-8 mb-3 text-lg font-extrabold">Bilgi oyunları</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <ModeCard locked title="Bilgi Arenası" description="10 soru, soru başına 15 saniye. Kategori seç ya da karışık oyna." icon={LuBrain} gradient="from-coral to-orange-400" />
                 <ModeCard locked title="Günün Sorusu" description="Her gün herkese aynı 5 soru. Serini bozma!" icon={LuCalendarCheck} gradient="from-amber-400 to-gold" />
@@ -162,7 +188,8 @@ const PlayerHub = ({ user }) => {
             <PlayerCard user={user} player={player} />
 
             <h2 className="mt-7 mb-3 text-lg font-extrabold">Ne oynamak istersin?</h2>
-            <RunnerFeatureCard />
+            <FeaturedGames user={user} />
+            <h2 className="mt-8 mb-3 text-lg font-extrabold">Bilgi oyunları</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <ModeCard
                     to="/oyun/arena"

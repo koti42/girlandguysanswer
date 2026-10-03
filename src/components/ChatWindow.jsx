@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { FaArrowLeft, FaTrash, FaSearch, FaFilePdf, FaBook, FaClock, FaLock, FaUnlock, FaTag, FaEllipsisV } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { notificationToast } from '../utils/notificationToast';
@@ -9,6 +9,13 @@ import { messagesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel } from '../services/pusherClient';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
+import useTicketCheck from './game/shop/useTicketCheck';
+
+// Bilet şeridi ve diyaloğu yalnız gerektiğinde yüklenir: sohbet penceresi
+// (FloatingMessagesDock) her sayfada, misafirde de bağlı; diyalog mağaza
+// tasarım kayıt defterini, ShopArt'ı ve ikon paketini çeker.
+const MessageTicketBanner = lazy(() => import('./game/shop/MessageTicketBanner'));
+const MessageTicketDialog = lazy(() => import('./game/shop/MessageTicketDialog'));
 
 const TYPING_RESET_MS = 3000;
 
@@ -103,6 +110,40 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
     const navigate = useNavigate();
 
     const canExportPdf = user?.username === 'Koti42' || permissions?.is_super_admin;
+
+    // Mesaj Bileti (F.6): yeni sohbette (ilk mesaj) ya da gönderim 403 aldıktan
+    // sonra alıcının mesaj kabul edip etmediği sorulur; kapalıysa mesaj kutusu
+    // yerine bilet şeridi çıkar. Uç yoksa/hata verirse akış eskisi gibi kalır.
+    const otherUsername = conversation?.other_user?.username || null;
+    const [ticketProbeFor, setTicketProbeFor] = useState(null);
+    const [ticketOpen, setTicketOpen] = useState(false);
+    // Bilet mesajı gönderilmiş ve karşı taraf henüz yanıtlamamışsa (yüklü mesajların hepsi
+    // benim ve biri biletle) da sorulur: mesaj kutusu baştan "yanıt bekleniyor" şeridine döner,
+    // kullanıcı 403 alacağı ikinci mesajı yazmaya uğraşmaz.
+    const awaitingTicketReply = messages.length > 0
+        && messages.every(m => m.sender_id === user?.id)
+        && messages.some(m => m.via_ticket);
+    const ticketEnabled = !!otherUsername && (!conversation?.id || ticketProbeFor === otherUsername || awaitingTicketReply);
+    const ticket = useTicketCheck(otherUsername, ticketEnabled);
+    const ticketBlocked = ticketEnabled && !!ticket.data?.needs_ticket;
+    const refreshTicket = ticket.refresh;
+
+    const handleTicketSent = (res) => {
+        const msg = res?.message;
+        if (msg?.id) {
+            setMessages(prev => upsertMessage(prev, { ...msg, via_ticket: msg.via_ticket ?? true }));
+        }
+        const convId = res?.conversation_id ?? msg?.conversation_id ?? null;
+        const conversationData = convId ? { id: convId, other_user: conversationRef.current?.other_user } : null;
+        if (msg && onNewMessage) onNewMessage(msg, conversationData);
+        if (conversationRef.current && !conversationRef.current.id && conversationData?.id) {
+            conversationRef.current = { ...conversationRef.current, id: conversationData.id };
+        }
+        // Gönderen ikinci bilet mesajı atamaz: şerit "zaten kullandın" durumuna geçsin
+        setTicketProbeFor(conversationRef.current?.other_user?.username || null);
+        refreshTicket();
+        setTimeout(() => scrollToBottom(true), 100);
+    };
 
 
     useEffect(() => {
@@ -544,6 +585,11 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
             }
             const errorMsg = error.response?.data?.message || 'Mesaj gönderilemedi. Lütfen tekrar deneyin.';
             notificationToast.error(errorMsg);
+            if (status === 403 && conversationRef.current?.other_user?.username) {
+                // Mesaj kapalı / yalnız takipçiler: bilet seçeneği var mı sor
+                setTicketProbeFor(conversationRef.current.other_user.username);
+                refreshTicket();
+            }
         }
     };
 
@@ -1382,9 +1428,25 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         )}
                     </div>
                 )}
+                {ticketBlocked && (
+                    <Suspense fallback={null}>
+                        <MessageTicketBanner check={ticket.data} username={otherUsername} onUse={() => setTicketOpen(true)} />
+                    </Suspense>
+                )}
+                {ticketOpen && (
+                    <Suspense fallback={null}>
+                        <MessageTicketDialog
+                            open
+                            username={otherUsername}
+                            showChatLink={false}
+                            onClose={() => setTicketOpen(false)}
+                            onSent={handleTicketSent}
+                        />
+                    </Suspense>
+                )}
                 <MessageInput
                     onSendMessage={handleSendMessage}
-                    disabled={false}
+                    disabled={ticketBlocked}
                     replyingTo={replyingTo}
                     onCancelReply={() => setReplyingTo(null)}
                     onTyping={conversation?.id ? (typing) => messagesAPI.sendTyping(conversation.id, typing).catch(() => { }) : undefined}

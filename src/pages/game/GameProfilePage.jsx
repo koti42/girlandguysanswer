@@ -6,6 +6,9 @@ import GameLayout from '../../components/game/GameLayout';
 import { GameEmpty, GameError, GameLoading } from '../../components/game/GameStates';
 import PlayerCard from '../../components/game/PlayerCard';
 import BadgeGrid from '../../components/game/BadgeGrid';
+import AvatarCard from '../../components/game/avatar/AvatarCard';
+import ProfilePreview from '../../components/game/shop/ProfilePreview';
+import { normalizeCosmetics } from '../../game/shop';
 import useAsync from '../../components/game/useAsync';
 import { MODE_LABELS, formatDate, formatNumber, mergeBadges } from '../../components/game/gameUtils';
 import { gameApi, gameErrorMessage, gameErrorStatus } from '../../services/gameApi';
@@ -34,6 +37,9 @@ const GameProfilePage = () => {
     const isMe = me?.username && me.username === username;
     const p = data?.player;
     const earned = (data?.badges || []).filter((b) => b.earned_at).length;
+    // Mağaza kozmetikleri (çerçeve / mini avatar / unvan); kendi profilinde sunucu alanı yoksa oturumdaki
+    const cosmetics = normalizeCosmetics(data?.cosmetics ?? (isMe ? me?.detail?.game_cosmetics : null));
+    const hasCosmetics = !!(cosmetics.frame || cosmetics.mini_avatar || cosmetics.title);
 
     return (
         <GameLayout docTitle={`${username} oyuncu profili`} back={{ to: '/oyun', label: 'Oyun Merkezi' }} maxWidth="max-w-4xl">
@@ -48,6 +54,26 @@ const GameProfilePage = () => {
             ) : (
                 <>
                     <PlayerCard user={data.user} player={p} showStats={false} linkToProfile={false} />
+
+                    {(hasCosmetics || isMe) && (
+                        <section className="mt-4 game-card rounded-3xl p-4" aria-labelledby="game-profile-cosmetics" data-testid="game-profile-cosmetics">
+                            <div className="mb-2 flex items-center justify-between gap-2">
+                                <h2 id="game-profile-cosmetics" className="text-sm font-extrabold">Profil görünümü</h2>
+                                {isMe && (
+                                    <Link to="/oyun/magaza" className="inline-flex min-h-[44px] items-center text-sm font-bold text-coral hover:underline">
+                                        {hasCosmetics ? 'Mağazada değiştir' : 'Mağazaya göz at'}
+                                    </Link>
+                                )}
+                            </div>
+                            <ProfilePreview user={{ username: data.user?.username || username, avatar: data.user?.avatar }} cosmetics={cosmetics} />
+                        </section>
+                    )}
+
+                    {(data.game_avatar || isMe) && (
+                        <div className="mt-4">
+                            <AvatarCard variant="game" avatar={data.game_avatar ?? null} gender={data.user?.gender} username={username} isOwn={!!isMe} />
+                        </div>
+                    )}
 
                     <div className="mt-4 flex flex-wrap gap-2">
                         {!isMe && (

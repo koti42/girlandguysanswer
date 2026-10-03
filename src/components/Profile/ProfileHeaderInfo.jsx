@@ -2,6 +2,8 @@ import React from 'react';
 import { FaCrown, FaStar, FaMapMarkerAlt, FaCalendarAlt, FaTrophy } from 'react-icons/fa';
 import ProfileBadges from '../ProfileBadges';
 import { getProfileColor } from '../../utils/userColor';
+import MiniAvatarBadge from '../game/shop/MiniAvatarBadge';
+import TitlePill from '../game/shop/TitlePill';
 
 const ProfileHeaderInfo = ({ profileData, isVIP, gender, viewerPrefs }) => {
     const contentCreator = { gender };
@@ -10,6 +12,8 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender, viewerPrefs }) => {
     const isMale = gender === 'male' || gender === 'erkek' || gender === 'man';
     const featureTag = profileData.feature_tag;
     const featureColor = featureTag?.color || '#FACC15';
+    // Mağaza kozmetikleri (F.1): mini avatar adın yanında, unvan adın altında
+    const cosmetics = profileData.cosmetics || {};
 
     return (
         <div className="flex-1">
@@ -20,6 +24,9 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender, viewerPrefs }) => {
                     }`}>
                     {profileData.name}
                 </h1>
+                {cosmetics.mini_avatar && (
+                    <MiniAvatarBadge itemKey={cosmetics.mini_avatar} size={30} />
+                )}
                 {isVIP && (
                     <div className="relative inline-flex items-center">
                         <FaCrown className="text-amber-500 text-2xl animate-bounce-slow" />
@@ -27,6 +34,12 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender, viewerPrefs }) => {
                     </div>
                 )}
             </div>
+
+            {cosmetics.title && (
+                <div className="mt-1.5">
+                    <TitlePill itemKey={cosmetics.title} size="sm" />
+                </div>
+            )}
 
             <div className="flex flex-wrap items-center gap-2 mt-1">
                 <p className="text-gray-500 dark:text-gray-400">@{profileData.username}</p>

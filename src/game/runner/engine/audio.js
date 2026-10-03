@@ -38,6 +38,8 @@ export function createAudio({ muted = false, musicEnabled: musicEnabledIn = true
     let step = 0;
     let coinStreak = 0;
     let lastCoinAt = 0;
+    let echoWet = null;
+    let echoAmount = 0;
 
     function ensure() {
         if (closed) return null;
@@ -64,6 +66,30 @@ export function createAudio({ muted = false, musicEnabled: musicEnabledIn = true
         musicGain = ctx.createGain();
         musicGain.gain.value = musicEnabled ? MUSIC : 0;
         musicGain.connect(master);
+        // Tünel yankısı: efektler ve müzik kısa bir geri beslemeli gecikmeden geçer
+        // (ıslak kazanç tünel dışında 0).
+        // Yankı zorunlu değil: düğüm kurulamazsa sessizce atlanır.
+        try {
+            const delay = ctx.createDelay(1);
+            delay.delayTime.value = 0.12;
+            const feedback = ctx.createGain();
+            feedback.gain.value = 0.38;
+            const damp = ctx.createBiquadFilter();
+            damp.type = 'lowpass';
+            damp.frequency.value = 2600;
+            const wet = ctx.createGain();
+            wet.gain.value = echoAmount * 0.5;
+            sfxGain.connect(delay);
+            musicGain.connect(delay);
+            delay.connect(damp);
+            damp.connect(feedback);
+            feedback.connect(delay);
+            damp.connect(wet);
+            wet.connect(master);
+            echoWet = wet;
+        } catch {
+            echoWet = null;
+        }
         // 1 sn beyaz gürültü (kayma, çarpma, hi-hat)
         noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
         const data = noise.getChannelData(0);
@@ -134,6 +160,21 @@ export function createAudio({ muted = false, musicEnabled: musicEnabledIn = true
         },
         land(t) {
             tone('sine', 140, 60, t, 0.1, 0.12);
+        },
+        // Araç çatısına iniş: tok gümleme + metalik çın
+        landRoof(t) {
+            tone('sine', 110, 45, t, 0.16, 0.3);
+            noiseHit(t, 0.12, 0.16, 'lowpass', 1400, 300);
+            tone('triangle', 620, 540, t + 0.01, 0.14, 0.05);
+        },
+        // Süper Zıplama: yükselen parıltılı süpürme
+        superJump(t) {
+            tone('square', 260, 1040, t, 0.28, 0.07);
+            tone('sine', 520, 1560, t + 0.04, 0.3, 0.08);
+            [1318.5, 1568, 2093].forEach((f, i) => tone('triangle', f, f, t + 0.1 + i * 0.05, 0.12, 0.04));
+        },
+        fall(t) {
+            noiseHit(t, 0.22, 0.08, 'bandpass', 900, 2400);
         },
         power(t) {
             [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone('triangle', f, f, t + i * 0.06, 0.18, 0.12));
@@ -247,6 +288,19 @@ export function createAudio({ muted = false, musicEnabled: musicEnabledIn = true
         },
         isMusicEnabled() {
             return musicEnabled;
+        },
+        /** Tünel yankısı: 0 (yok) .. 1 (tünel içi). */
+        setEcho(amount) {
+            const a = amount > 0 ? Math.min(1, amount) : 0;
+            if (Math.abs(a - echoAmount) < 0.02) return;
+            echoAmount = a;
+            if (echoWet && ctx) {
+                try {
+                    echoWet.gain.setTargetAtTime(a * 0.5, ctx.currentTime, 0.12);
+                } catch {
+                    echoWet.gain.value = a * 0.5;
+                }
+            }
         },
         suspend() {
             if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});

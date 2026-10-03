@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -13,6 +14,13 @@ export default defineConfig({
     target: 'es2020',
     cssCodeSplit: true,
     rollupOptions: {
+      // Çok sayfalı giriş: site (index.html) + mobil uygulamanın gömülü oyun
+      // sayfası (embed.html; site kabuğu ve reklam yok). Ortak parçalar
+      // (react, axios, oyun motoru) paylaşılır, embed'e özel kod siteye girmez.
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        embed: fileURLToPath(new URL('./embed.html', import.meta.url)),
+      },
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],

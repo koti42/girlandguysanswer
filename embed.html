@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="tr" class="hs-embed dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- Mobil uygulama WebView'ı için gömülü oyun sayfası (site kabuğu ve reklam yok). -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1030" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="preconnect" href="https://herkeslersoruyor.panalix.com.tr" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <title>Herkesler Soruyor · Oyun</title>
+  <style>
+    /* İlk karede beyaz parlama olmasın; karakter önizlemesi şeffaf. */
+    html, body { margin: 0; height: 100%; background: #0b1030; }
+    html.hs-embed-transparent, html.hs-embed-transparent body { background: transparent; }
+  </style>
+  <script>
+    if (/[?&]game=avatar(&|$)/.test(location.search)) document.documentElement.classList.add('hs-embed-transparent');
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/embed/main.jsx"></script>
+</body>
+
+</html>

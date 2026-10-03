@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LuTrophy } from 'react-icons/lu';
 import UserAvatar from '../../UserAvatar';
+import MiniAvatarBadge from '../shop/MiniAvatarBadge';
 import useAsync from '../useAsync';
 import { formatNumber } from '../gameUtils';
 import { gameApi } from '../../../services/gameApi';
@@ -75,7 +76,10 @@ const RunnerLeaderboard = ({ reloadKey = 0 }) => {
                                         {e.rank >= 1 && e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : e.rank}
                                     </span>
                                     <UserAvatar user={e.user} size="sm" />
-                                    <span className="min-w-0 flex-1 truncate text-sm font-semibold">{e.user?.username || 'Oyuncu'}</span>
+                                    <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                                        <span className="min-w-0 truncate text-sm font-semibold">{e.user?.username || 'Oyuncu'}</span>
+                                        <MiniAvatarBadge itemKey={e.user?.cosmetics?.mini_avatar} size={20} animate={false} label={false} />
+                                    </span>
                                     <span className="shrink-0 text-right">
                                         <span className="block text-sm font-extrabold tabular-nums">{formatNumber(e.score)}</span>
                                         {e.distance != null && (

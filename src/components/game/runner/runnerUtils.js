@@ -6,12 +6,13 @@
  * içinde; gizli sekme ya da kapalı site verisi oyunu düşürmemeli.
  */
 import { gameApi, gameErrorMessage, gameErrorStatus } from '../../../services/gameApi';
+// Yalnızca sabitler modülü (bağımlılığı yok): sim'in kendisi lobi paketine girmez.
+import { SIM_VERSION } from '../../../game/runner/sim/constants.js';
 
-/** İstemcinin konuştuğu simülasyon sürümü (şartname §3, SIM_VERSION). */
-export const RUNNER_SIM_VERSION = 1;
+/** İstemcinin konuştuğu simülasyon sürümü (v2 şartname §A, SIM_VERSION) — sim ile tek kaynak. */
+export const RUNNER_SIM_VERSION = SIM_VERSION;
 
 export const STORAGE_KEYS = {
-    character: 'hs_runner_character',
     muted: 'hs_runner_muted',
     music: 'hs_runner_music',
     guestBest: 'hs_runner_best_guest',
@@ -21,24 +22,6 @@ export const STORAGE_KEYS = {
 
 /** Sunucu koşuyu 2 saat sonra kabul etmiyor; bekleyen kayıt da o kadar yaşar. */
 export const PENDING_TTL_MS = 2 * 60 * 60 * 1000;
-
-/*
- * Karakter paletleri: renkleri motor belirler (engine/palette.js
- * CHARACTER_PALETTES); burada yalnızca seçicideki önizleme renkleri var.
- * Sıra motorla birebir aynı olmalı (index 0..3). Motoru lobi paketine
- * sokmamak için değerler kopya.
- */
-export const PALETTES = [
-    { name: 'Mercan', hoodie: '#FF6B6B', accent: '#FFE1D6' },
-    { name: 'Altın', hoodie: '#E2B94C', accent: '#FF6B6B' },
-    { name: 'Nane', hoodie: '#2DD4BF', accent: '#4C2A85' },
-    { name: 'Lavanta', hoodie: '#8B5CF6', accent: '#FF4FA3' },
-];
-
-export const BODIES = [
-    { key: 'kiz', label: 'Kız' },
-    { key: 'erkek', label: 'Erkek' },
-];
 
 /*
  * Şerit adları ve kapı renkleri (pembe / mor / mavi), şartname §6.
@@ -67,8 +50,13 @@ export const MULT_MAX = 5;
  * yuvarlak köşe ve iOS ana ekran çubuğu (viewport-fit=cover ile env() dolar,
  * yoksa 0 olur ve 1rem kalır). Tailwind sınıfları taranabilsin diye düz metin.
  */
+/*
+ * Mobil uygulama gömmesinde (embed.html) native güvenli alanı
+ * --hs-safe-top/right/bottom/left CSS değişkenleriyle verir (Android
+ * WebView env()'i çoğu cihazda 0 bildiriyor); değişken yoksa env() kullanılır.
+ */
 export const SAFE_AREA_PAD =
-    'pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))]';
+    'pt-[max(1rem,var(--hs-safe-top,env(safe-area-inset-top)))] pr-[max(1rem,var(--hs-safe-right,env(safe-area-inset-right)))] pb-[max(1rem,var(--hs-safe-bottom,env(safe-area-inset-bottom)))] pl-[max(1rem,var(--hs-safe-left,env(safe-area-inset-left)))]';
 
 function storageGet(key) {
     try {
@@ -103,22 +91,6 @@ function readJson(key) {
     } catch {
         return null;
     }
-}
-
-const intIn = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
-
-/** Kayıtlı karakter; yoksa ya da bozuksa kullanıcının cinsiyetine göre varsayılan. */
-export function loadCharacter(gender) {
-    const saved = readJson(STORAGE_KEYS.character);
-    if (saved && (saved.body === 'kiz' || saved.body === 'erkek') && intIn(saved.palette, 0, PALETTES.length - 1)) {
-        return { body: saved.body, palette: saved.palette };
-    }
-    return { body: gender === 'male' ? 'erkek' : 'kiz', palette: 0 };
-}
-
-export function saveCharacter(character) {
-    if (!character) return;
-    storageSet(STORAGE_KEYS.character, JSON.stringify({ body: character.body, palette: character.palette }));
 }
 
 export function loadMuted() {
@@ -413,10 +385,11 @@ export const RUNNER_RETRY = {
  */
 const inflightFinish = new Map();
 
-export function finishRunOnce(runId, payload) {
+export function finishRunOnce(runId, payload, client = gameApi) {
     const running = inflightFinish.get(runId);
     if (running) return running;
-    const p = withRetry(() => gameApi.finishRunner(runId, payload), RUNNER_RETRY.finish).finally(() => {
+    // client: SPA'da gameApi; mobil gömmede kendi axios örneğiyle çalışan eşdeğeri (src/embed/embedApi.js).
+    const p = withRetry(() => client.finishRunner(runId, payload), RUNNER_RETRY.finish).finally(() => {
         inflightFinish.delete(runId);
     });
     inflightFinish.set(runId, p);

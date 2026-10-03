@@ -59,3 +59,17 @@ export function gateNearFade(distM, far = GATE_FADE_FAR_M, near = GATE_FADE_NEAR
     if (!Number.isFinite(distM)) return 1;
     return smoothstep(near, far, distM);
 }
+
+/**
+ * Kamera yükseklik hedefi (oyuncuya göre ek, m). py: ayak yüksekliği,
+ * support: yumuşatılmış destek yüksekliği (zemin 0, araba 1.2, otobüs 2.7).
+ * Desteğin büyük kısmını izler (çatıda karakter kadrajda kalsın), çatıdayken
+ * +0.35 m fazladan yükselir (önündeki çatı ve iniş alanı görünsün); zıplamanın
+ * yalnızca %32'sini izler.
+ */
+export function cameraHeightTarget(py, support) {
+    const s = Number.isFinite(support) && support > 0 ? support : 0;
+    const y = Number.isFinite(py) ? py : 0;
+    const lift = smoothstep(0.4, 1.6, s) * 0.35;
+    return s * 0.88 + lift + Math.max(0, y - s) * 0.32;
+}

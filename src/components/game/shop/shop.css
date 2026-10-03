@@ -1,0 +1,208 @@
+/*
+ * Jeton Mağazası görselleri (SPEC_V2 §F.2, §F.8).
+ *
+ * Tasarım animasyonları (ShopArt): spin / pulse / shimmer / float / twinkle.
+ * transform-box: view-box + %50 köken → çerçevede (100,100), mini avatarda
+ * (32,32) merkez etrafında döner/büyür. Animasyonlu öğede SVG transform yok
+ * (designs kuralı), dönüşüm yalnız CSS'ten gelir.
+ * prefers-reduced-motion'da her şey durur; tasarım statik hâliyle eksiksiz.
+ */
+
+.shop-art {
+  overflow: visible;
+}
+
+.shop-anim {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+
+@keyframes shop-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes shop-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.03); opacity: 0.85; }
+}
+@keyframes shop-shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@keyframes shop-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+@keyframes shop-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.shop-anim-spin { animation: shop-spin 24s linear infinite; }
+.shop-anim-pulse { animation: shop-pulse 2.4s ease-in-out infinite; }
+.shop-anim-shimmer { animation: shop-shimmer 2s ease-in-out infinite; }
+.shop-anim-twinkle { animation: shop-twinkle 1.6s ease-in-out infinite; }
+.shop-anim-float { animation: shop-float 3s ease-in-out infinite; }
+
+.shop-art-static .shop-anim {
+  animation: none !important;
+}
+
+/* ---------------------------------------------------------------- unvan rozeti */
+
+.shop-pill {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.shop-pill-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.55) 45%, transparent 70%);
+  transform: translateX(-120%);
+  animation: shop-sheen 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.shop-pill-pulse {
+  animation: shop-pill-pulse 2.4s ease-in-out infinite;
+}
+@keyframes shop-sheen {
+  0%, 55% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+@keyframes shop-pill-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.03); filter: brightness(1.08); }
+}
+
+/* ---------------------------------------------------------------- kartlar */
+
+.shop-card {
+  --shop-glow: rgba(163, 171, 189, 0.5);
+  position: relative;
+  transition: transform 160ms ease, box-shadow 220ms ease;
+}
+.shop-card:hover {
+  transform: translateY(-2px);
+}
+.shop-card[data-rarity='rare'] { --shop-glow: rgba(90, 162, 255, 0.55); }
+.shop-card[data-rarity='epic'] {
+  --shop-glow: rgba(180, 124, 255, 0.6);
+  box-shadow: 0 10px 28px -12px var(--shop-glow);
+}
+.shop-card[data-rarity='legendary'] {
+  --shop-glow: rgba(255, 201, 77, 0.65);
+  box-shadow: 0 12px 34px -12px var(--shop-glow);
+}
+
+/* Efsanevi: kenarda kayan altın parıltı (2 katmanlı arka plan: iç dolgu
+   padding-box, altın gradyan yalnızca saydam kenarlıkta görünür) */
+.shop-card.shop-legendary-edge {
+  --shop-card-bg: #ffffff;
+  border-color: transparent;
+  background:
+    linear-gradient(var(--shop-card-bg), var(--shop-card-bg)) padding-box,
+    linear-gradient(115deg, #ffd86b, #ff6b6b, #e2b94c, #fff3b0, #ffd86b) border-box;
+  background-size: 100% 100%, 300% 100%;
+  animation: shop-edge 6s linear infinite;
+}
+.dark .shop-card.shop-legendary-edge {
+  --shop-card-bg: #1a1442;
+}
+@keyframes shop-edge {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 0 0, 300% 0; }
+}
+
+/* Önizleme alanında yumuşak sheen (efsanevi kart) */
+.shop-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.shop-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.18) 48%, transparent 66%);
+  transform: translateX(-120%);
+  animation: shop-sheen 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Vitrin şeridi: yatay kaydırma + yakalama, ince kaydırma çubuğu */
+.shop-strip {
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 1rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.shop-strip > * {
+  scroll-snap-align: start;
+}
+
+/* ---------------------------------------------------------------- kutlama */
+
+.shop-celebrate-pop {
+  animation: shop-celebrate-pop 620ms cubic-bezier(0.2, 0.9, 0.3, 1.35) both;
+}
+@keyframes shop-celebrate-pop {
+  0% { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.08) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.shop-rays {
+  background: repeating-conic-gradient(from 0deg, rgba(255, 216, 107, 0.28) 0deg 10deg, transparent 10deg 24deg);
+  -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 20%, transparent 68%);
+  animation: shop-spin 18s linear infinite;
+}
+
+.shop-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.shop-confetti > span {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--c, #ffd34d);
+  opacity: 0;
+  animation: shop-confetti 1500ms cubic-bezier(0.15, 0.7, 0.4, 1) var(--d, 0ms) forwards;
+}
+@keyframes shop-confetti {
+  0% { transform: translate(-50%, 0) rotate(0); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--x, 0px)), var(--y, 160px)) rotate(var(--r, 360deg)); opacity: 0; }
+}
+
+/* ---------------------------------------------------------------- hareket azaltma */
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-anim,
+  .shop-pill-shimmer::after,
+  .shop-pill-pulse,
+  .shop-card.shop-legendary-edge,
+  .shop-sheen::after,
+  .shop-celebrate-pop,
+  .shop-rays {
+    animation: none !important;
+  }
+  .shop-pill-shimmer::after,
+  .shop-sheen::after {
+    display: none;
+  }
+  .shop-confetti {
+    display: none;
+  }
+  .shop-card,
+  .shop-card:hover {
+    transition: none;
+    transform: none;
+  }
+}

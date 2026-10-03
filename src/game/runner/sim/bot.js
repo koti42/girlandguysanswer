@@ -1,5 +1,5 @@
 /*
- * İleriye bakan arama botu (şartname §3.9).
+ * İleriye bakan arama botu (şartname §3.9, v2 §A.7).
  *
  * YALNIZCA testler ve fikstür üreticisi (scripts/runner-golden.mjs) içindir;
  * index.js'ten dışa aktarılmaz, üretim paketine girmez.
@@ -11,6 +11,13 @@
  * geçen ilk planı seçer. Bulamazsa en uzun hayatta kalanı uygular. Boşta orta
  * şeride döner (iki yana da kaçabilsin), güçlendirme görürse onun şeridine,
  * kapı yaklaşırken seed'li rastgele bir şeride geçer.
+ *
+ * v2: arama aynı (arabaya zıplayıp çıkmak, araba çatısından otobüse ya da
+ * Süper Zıplamayla otobüse çıkmak da birer J zamanlamasıdır). Ek olarak
+ * `roofs` açıkken (varsayılan) öndeki rampanın şeridine geçip çatıya tırmanır,
+ * çatıdayken şerit değiştirmez: geçilebilirlik testleri çatı düşüşlerini ve
+ * iniş alanlarını da sınasın. Süper Zıplama varken tepe daha geç geldiğinden
+ * zıplama penceresi genişler.
  */
 import { C, laneX, zGate } from './constants.js';
 import { createPrng, randInt } from './prng.js';
@@ -19,6 +26,13 @@ import { createPrng, randInt } from './prng.js';
 const ACTIONS = [['L'], ['R'], ['J'], ['S'], ['L', 'J'], ['R', 'J'], ['L', 'S'], ['R', 'S'], ['L', 'L'], ['R', 'R']];
 const NO_RECORD = { record: false };
 const NONE = [];
+// J'nin işe yarayabileceği en erken an (kötü andan geriye, tick): normal tepe
+// ≈ 20, otobüs çatısına Süper Zıplama 18..40 tick sonra yetişir.
+const JUMP_WINDOW = 36;
+const SUPER_WINDOW = 44;
+// Rampa arama aralığı (mm, oyuncunun önü).
+const ROOF_MIN_AHEAD = 6000;
+const ROOF_MAX_AHEAD = 40000;
 
 /**
  * Planı (sıralı [tick, kod] listesi, pi'den itibaren) untilTick'e kadar uygular.
@@ -43,7 +57,7 @@ function rollout(sim, plan, pi, untilTick) {
     return -1;
 }
 
-function actionAllowed(a, lane, t, bad) {
+function actionAllowed(a, lane, t, bad, jumpWin) {
     let l = lane;
     for (let i = 0; i < a.length; i++) {
         if (a[i] === 'L') {
@@ -57,14 +71,14 @@ function actionAllowed(a, lane, t, bad) {
     const hasJ = a.indexOf('J') >= 0;
     const hasS = a.indexOf('S') >= 0;
     // Zıplama ancak tepe penceresi kötü ana denk gelirse işe yarar; kayma 40 tick sürer.
-    if (hasJ && (t < bad - 36 || t > bad - 1)) return false;
+    if (hasJ && (t < bad - jumpWin || t > bad - 1)) return false;
     if (hasS && t < bad - 40) return false;
     return true;
 }
 
-function candidateTimes(t0, bad) {
+function candidateTimes(t0, bad, win) {
     const out = [];
-    const near = bad - 40 > t0 ? bad - 40 : t0;
+    const near = bad - win - 4 > t0 ? bad - win - 4 : t0;
     for (let t = t0; t < near; t += 4) out.push(t);
     for (let t = near; t <= bad; t += 2) out.push(t);
     return out;
@@ -83,14 +97,15 @@ function search(base, hEnd, depth, ctx, floorBad) {
 
     const t0 = base.state.tick;
     const cur = base.clone(NO_RECORD);
-    const times = candidateTimes(t0, bad);
+    const times = candidateTimes(t0, bad, base.state.superTicks > 0 ? SUPER_WINDOW : JUMP_WINDOW);
     for (let ti = 0; ti < times.length; ti++) {
         const t = times[ti];
         while (cur.state.tick < t && !cur.state.crashed && cur.state.tick < C.MAX_TICKS) cur.step();
         if (cur.state.crashed || cur.state.tick !== t) break;
         for (let ai = 0; ai < ACTIONS.length; ai++) {
             const a = ACTIONS[ai];
-            if (!actionAllowed(a, cur.state.lane, t, bad)) continue;
+            const jumpWin = cur.state.superTicks > 0 ? SUPER_WINDOW : JUMP_WINDOW;
+            if (!actionAllowed(a, cur.state.lane, t, bad, jumpWin)) continue;
             const c = cur.clone(NO_RECORD);
             for (let k = 0; k < a.length; k++) c.input(a[k]);
             const sub = search(c, hEnd, depth - 1, ctx, bad);
@@ -136,6 +151,19 @@ function desiredLane(sim, bot) {
         }
         return bot.gateLane;
     }
+    // Çatıdayken yerinde kal: çatının sonunda kendiliğinden düşer.
+    if (s.grounded && s.y > 0) return -1;
+    if (bot.roofs) {
+        const c0 = Math.floor(s.z / C.CHUNK_LEN);
+        for (let c = c0; c <= c0 + 1; c++) {
+            const obs = sim.getChunk(c).obstacles;
+            for (let i = 0; i < obs.length; i++) {
+                const o = obs[i];
+                // Şerit değiştirip rampanın önüne yetişecek kadar uzaktaki ilk rampa.
+                if (o.type === 'ramp' && o.z0 - s.z > ROOF_MIN_AHEAD && o.z0 - s.z < ROOF_MAX_AHEAD) return o.lane;
+            }
+        }
+    }
     if (bot.chase) {
         const c0 = Math.floor(s.z / C.CHUNK_LEN);
         for (let c = c0; c <= c0 + 1; c++) {
@@ -146,13 +174,16 @@ function desiredLane(sim, bot) {
             }
         }
     }
-    return 1;
+    return bot.homeLane;
 }
 
 /**
  * Botu sim üzerinde koşturur. Durma koşulları: crash, maxTicks, untilZ ya da
  * stop(sim) true. Girdiler sim'in kaydına normal yoldan (sim.input) girer.
- * Dönen: { crashed, stumbles, shieldBreaks, replans, failedPlans }.
+ * Seçenekler: horizon, checkEvery, replanWithin, botSeed, chase (güçlendirme
+ * kovala), roofs (rampalara tırman), homeLane (boştayken dönülen şerit, -1:
+ * olduğu yerde kal), stop, stopOnFail.
+ * Dönen: { crashed, stumbles, shieldBreaks, replans, failedPlans, roofLandings }.
  */
 export function runBot(sim, opts = {}) {
     const s = sim.state;
@@ -165,6 +196,8 @@ export function runBot(sim, opts = {}) {
     const bot = {
         rng: createPrng(opts.botSeed ?? 1),
         chase: opts.chase !== false,
+        roofs: opts.roofs !== false,
+        homeLane: opts.homeLane ?? 1,
         gateFor: -1,
         gateLane: 1,
     };
@@ -219,5 +252,6 @@ export function runBot(sim, opts = {}) {
         shieldBreaks: s.shieldBreaks,
         replans,
         failedPlans,
+        roofLandings: s.roofLandings,
     };
 }

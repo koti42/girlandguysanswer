@@ -17,6 +17,9 @@ import ProfileTabContent from '../components/Profile/ProfileTabContent';
 import ModerationActionsPanel from '../components/Moderation/ModerationActionsPanel';
 import AccountStatusBanner from '../components/AccountStatusBanner';
 import SEO from '../components/SEO';
+import AvatarCard from '../components/game/avatar/AvatarCard';
+import ProfileAvatarFrame from '../components/Profile/ProfileAvatarFrame';
+import { normalizeCosmetics } from '../game/shop';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 
 const ProfilePage = () => {
@@ -180,6 +183,10 @@ const ProfilePage = () => {
                     allow_following: data.allow_following !== undefined ? data.allow_following : true,
                     allow_messaging: data.allow_messaging !== undefined ? data.allow_messaging : true,
                     messaging_mode: data.messaging_mode || 'everyone',
+                    // Mağaza kozmetikleri: kendi profilinde sunucu alanı yoksa oturumdaki değer
+                    cosmetics: normalizeCosmetics(
+                        data.cosmetics ?? (isOwnProfile ? currentUser?.detail?.game_cosmetics : null)
+                    ),
                     hasBlocked: data.hasBlocked || false,
                     isBlocked: data.isBlocked || false,
                     accountStatus: data.accountStatus || null,
@@ -512,13 +519,15 @@ const ProfilePage = () => {
 
                                 <div className="p-6">
                                     <div className="flex flex-col md:flex-row gap-6">
-                                        <ProfileAvatar
-                                            avatar={profileData.avatar}
-                                            username={profileData.username}
-                                            featureTag={profileData.feature_tag}
-                                            onAvatarUpload={isOwnProfile ? handleAvatarUpload : null}
-                                            onAvatarRemove={isOwnProfile ? handleAvatarRemove : null}
-                                        />
+                                        <ProfileAvatarFrame frameKey={profileData.cosmetics?.frame}>
+                                            <ProfileAvatar
+                                                avatar={profileData.avatar}
+                                                username={profileData.username}
+                                                featureTag={profileData.feature_tag}
+                                                onAvatarUpload={isOwnProfile ? handleAvatarUpload : null}
+                                                onAvatarRemove={isOwnProfile ? handleAvatarRemove : null}
+                                            />
+                                        </ProfileAvatarFrame>
 
                                         {isEditing ? (
                                             <div className="flex-1 space-y-3">
@@ -583,6 +592,15 @@ const ProfilePage = () => {
 
                             {/* Main Content */}
                             <div className="flex flex-col gap-6">
+                                {/* Oyun karakteri: kayıtlıysa herkese, kayıtlı değilse yalnız kendi profilinde çağrı */}
+                                <AvatarCard
+                                    avatar={profileData.game_avatar ?? (isOwnProfile ? currentUser?.detail?.game_avatar : null) ?? null}
+                                    gender={profileData.gender}
+                                    username={profileData.username}
+                                    isOwn={!!isOwnProfile}
+                                    level={Number.isInteger(profileData.game_level) ? profileData.game_level : null}
+                                />
+
                                 {/* Account Status Banner - Only for own profile */}
                                 {isOwnProfile && profileData?.accountStatus && (
                                     <AccountStatusBanner accountStatus={profileData.accountStatus} />

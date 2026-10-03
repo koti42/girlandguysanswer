@@ -1,28 +1,42 @@
 /*
- * Deterministik koşu simülasyonu (şartname §3.4, §3.6).
+ * Deterministik koşu simülasyonu (şartname v1 §3.4, §3.6 + v2 §A.2–§A.5).
  *
  * Saf modül: DOM, three, zaman ya da Math.random yok; yalnızca tamsayı
  * aritmetiği. PHP karşılığı RunnerSim.php satır satır bu dosyanın portudur:
  * aynı seed + aynı girdiler ⇒ iki tarafta bit-bit aynı durum (golden.json).
  *
+ * v2: y "ayak yüksekliği"; zemin 0 ya da üzerinde durulan araba/otobüs/rampa
+ * yüzeyi (groundAt). Arabaya zıplayıp çıkılır, otobüse rampadan, araba
+ * çatısından ya da Süper Zıplamayla; çatıda koşulur, çatı bitince düşülür.
+ *
  * Şartnamenin açık bıraktığı ve burada seçilen yorumlar (PHP ile aynı olmalı):
- *  - Adım 6–7'deki chunk aralığının alt sınırı 0'a kırpılır (z küçükken -1 çıkar).
+ *  - Adım 4 (groundAt) ve 6–7'deki chunk aralığı: floor((z-1000)/30000) ..
+ *    floor((z+7000)/30000), alt sınır 0'a kırpılır. Engeller chunk sınırını
+ *    aşmadığından (desen kuralı) bu aralık her şeyi kapsar.
+ *  - groundAt'te ignoreObstacleId dikkate alınmaz (yalnızca destroyed): yandan
+ *    sürtünen otobüs de çatısına iniş için destek verir.
  *  - Crash olunca adımın geri kalanı (toplama VE sayaçlar) atlanır, yalnızca tick artar.
  *  - Toplamada önce aralıktaki tüm jetonlar (id sırasıyla), sonra güçlendirmeler:
  *    aynı tick'te alınan mıknatıs o tick'in jetonlarını etkilemez.
  *  - crashTick = çarpmanın olduğu adımın tick'i (artıştan önceki); endTick = atılan adım.
- *  - Dikey adımın koşulu `y > 0 || vy !== 0` (şartnamede `vy > 0`). Neden: aynı
- *    tick'te J sonra S (ya da yeniden zıplama tick'inde S) gelirse y = 0 iken
- *    vy = -42 kalıyordu; `vy > 0` ile bu durumdan hiç çıkılamıyor, oyuncu koşunun
- *    geri kalanında bir daha zıplayamıyordu. `vy !== 0` ile aynı tick'te yere
- *    "iner" ve tamponlanan kaymaya geçer. Başka hiçbir durumda fark yaratmaz
- *    (yerdeyken vy her zaman 0'dır).
+ *  - ŞARTNAMEDEN SAPMA (§A.4 adım 4): iniş koşulu `y <= g && prevY >= g - LAND_TOL`
+ *    (şartnamede ayrıca `y <= prevY`). Neden: rampada ya da rampanın hemen önünde
+ *    zıplayınca yüksek hızda (> 311 mm/tick) rampa yüzeyi tick başına zıplamadan
+ *    hızlı yükselir (0,45 × hız); `y <= prevY` ile oyuncu rampanın "içine" girip
+ *    rampa önden çarpmadığı için orada kalıyor, ardından otobüsün önüne çarpıp
+ *    ölüyordu. Bu koşulla yüzey oyuncuyu yakalar (zıplama yutulur). Başka tek
+ *    fark: yükselirken üst yüzeyin en fazla 200 mm altındaki oyuncu (araba ya da
+ *    otobüs kenarını yükselirken yakalama) hemen çatıya iner; eski kuralla tepe
+ *    noktasından sonra inecekti. Zıplamanın ilk tick'inde y = g + vy > g
+ *    olduğundan zıplama kendi yüzeyine geri inmez.
+ *  - Rampa yan çarpma dışında çarpmaz; yan çarpma değilse aramaya devam edilir
+ *    (sonraki engel yine çarpabilir), "ilk çarpmada dur" yalnızca gerçek çarpmalar için.
  *  - MAX_TICKS'e ulaşınca step() hiçbir şey yapmaz (motor koşuyu bitirir).
  *  - prevLane başlangıçta 0 (şartname: "hepsi 0"); yalnızca bir şerit değişiminden
  *    sonra okunduğundan sonuca etkisi yoktur.
  */
-import { C, GATE_LANE_EDGE, HIT_X, laneX, speedAt, zGate } from './constants.js';
-import { buildChunk } from './generator.js';
+import { C, GATE_LANE_EDGE, HIT_X, laneX, rampHeight, speedAt, zGate } from './constants.js';
+import { buildChunk, tunnelAt } from './generator.js';
 import { stateHash } from './hash.js';
 import { decodeInputs, encodeInputs } from './inputs.js';
 
@@ -48,14 +62,16 @@ function initialState() {
         x: 0,
         lane: 1, // hedef şerit
         prevLane: 0,
-        y: 0,
+        y: 0, // ayak yüksekliği
         vy: 0,
+        grounded: true, // bir yüzeyde (zemin ya da çatı) duruyor
         slideTicks: 0,
         slideBuffer: false,
         jumpBuffer: 0,
         stumbleTicks: 0,
         invulnTicks: 0,
         magnetTicks: 0,
+        superTicks: 0, // Süper Zıplama kalan süresi
         shield: false,
         ignoreObstacleId: -1,
         crashed: false,
@@ -64,9 +80,11 @@ function initialState() {
         gates: [], // [{index, lane, tick}]
         segMm: [0],
         destroyed: new Set(),
-        // Hash'e girmeyen sayaçlar (bot, testler ve HUD için)
+        // Hash'e girmeyen alanlar (motor, bot, testler ve HUD için)
+        ground: 0, // son adımdaki destek yüksekliği (groundAt): gölge/kamera
         stumbles: 0,
         shieldBreaks: 0,
+        roofLandings: 0,
     };
 }
 
@@ -84,12 +102,14 @@ function copyState(s) {
         prevLane: s.prevLane,
         y: s.y,
         vy: s.vy,
+        grounded: s.grounded,
         slideTicks: s.slideTicks,
         slideBuffer: s.slideBuffer,
         jumpBuffer: s.jumpBuffer,
         stumbleTicks: s.stumbleTicks,
         invulnTicks: s.invulnTicks,
         magnetTicks: s.magnetTicks,
+        superTicks: s.superTicks,
         shield: s.shield,
         ignoreObstacleId: s.ignoreObstacleId,
         crashed: s.crashed,
@@ -98,8 +118,10 @@ function copyState(s) {
         gates,
         segMm: s.segMm.slice(),
         destroyed: new Set(s.destroyed),
+        ground: s.ground,
         stumbles: s.stumbles,
         shieldBreaks: s.shieldBreaks,
+        roofLandings: s.roofLandings,
     };
 }
 
@@ -192,7 +214,6 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
     }
 
     function applyInput(code) {
-        const grounded = s.y === 0 && s.vy === 0;
         if (code === 'L' || code === 'R') {
             const nl = s.lane + (code === 'L' ? -1 : 1);
             if (nl >= 0 && nl < C.LANE_COUNT) {
@@ -203,17 +224,19 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
                 s.lane = nl;
             }
         } else if (code === 'J') {
-            if (grounded) {
-                s.vy = C.JUMP_V;
+            if (s.grounded) {
+                const sup = s.superTicks > 0;
+                s.vy = sup ? C.SUPER_JUMP_V : C.JUMP_V;
+                s.grounded = false;
                 s.slideTicks = 0;
                 s.slideBuffer = false;
-                emit('jump');
+                emit('jump').kind = sup ? 'super' : null;
             } else {
                 s.jumpBuffer = C.JUMP_BUFFER;
             }
         } else {
             // 'S'
-            if (grounded) {
+            if (s.grounded) {
                 s.slideTicks = C.SLIDE_TICKS;
                 s.jumpBuffer = 0;
             } else {
@@ -225,6 +248,51 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
         }
     }
 
+    // groundAt'in son çağrısında desteği veren engelin türü ('ground' = zemin).
+    let groundType = 'ground';
+
+    /**
+     * Destek yüksekliği (§A.3): z menzilindeki, yok edilmemiş car/bus/ramp
+     * nesnelerinden |x - laneX| < 1450 ve z örtüşmesi (±300) olanların yüzey
+     * yüksekliklerinin en büyüğü; hiçbiri yoksa 0. Allocation yok.
+     */
+    function groundAt(x, z, cFrom, cTo) {
+        let g = 0;
+        groundType = 'ground';
+        for (let c = cFrom; c <= cTo; c++) {
+            const obs = chunkAt(c).obstacles;
+            for (let i = 0; i < obs.length; i++) {
+                const o = obs[i];
+                const t = o.type;
+                if (t === 'barrier' || t === 'bar') continue;
+                if (!(z - C.PLAYER_HALF_D < o.z1 && z + C.PLAYER_HALF_D > o.z0)) continue;
+                if (Math.abs(x - laneX(o.lane)) >= HIT_X || s.destroyed.has(o.id)) continue;
+                const top = t === 'ramp' ? rampHeight(o, z) : o.top;
+                if (top > g) {
+                    g = top;
+                    groundType = t;
+                }
+            }
+        }
+        return g;
+    }
+
+    /**
+     * Motor için (gölge, kamera): (x, z)'deki destek yüksekliği (mm). Simülasyon
+     * durumunu değiştirmez; ara değerli (kesirli) x/z de kabul edilir.
+     */
+    function groundAtPublic(x, z) {
+        if (!Number.isFinite(x) || !Number.isFinite(z) || z < 0) return 0;
+        const cFrom = z >= 1000 ? Math.floor((z - 1000) / C.CHUNK_LEN) : 0;
+        const cTo = Math.floor((z + C.PLAYER_HALF_D) / C.CHUNK_LEN);
+        // Atılmış (çok geride) chunk'ı yalnızca gölge için yeniden üretme.
+        if (cTo > MAX_CHUNK || cFrom < Math.floor(s.z / C.CHUNK_LEN) - 2) return 0;
+        const saved = groundType;
+        const g = groundAt(x, z, cFrom, cTo);
+        groundType = saved;
+        return g;
+    }
+
     function crash(tick, id, kind) {
         s.crashed = true;
         s.crashTick = tick;
@@ -233,7 +301,17 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
         e.kind = kind;
     }
 
-    /** Bir tick (adım sırası SABİT). Olay dizisini döner (yeniden kullanılır). */
+    /**
+     * Bir tick (adım sırası SABİT, §A.4). Olay dizisini döner (yeniden kullanılır):
+     *   {type:'jump', kind: 'super'|null}   zıplama (yerden, çatıdan ya da tamponla inişte)
+     *   {type:'land', kind: 'ground'|'car'|'bus'|'ramp'}  havadan bir yüzeye iniş
+     *   {type:'fall'}                       yüzey bitti (çatı/araba sonu), düşüş başlıyor
+     *   {type:'slide'} {type:'lane',from,to} {type:'coin',id}
+     *   {type:'power',kind:'magnet'|'shield'|'superjump',id}
+     *   {type:'stumble',id} {type:'shieldBreak',id} {type:'crash',id,kind:'head'|'side'}
+     *   {type:'gate',index,lane}
+     * Rampadan çatıya çıkış yüzey takibidir: 'land' olayı üretmez.
+     */
     function step() {
         events.length = 0;
         if (s.crashed || s.tick >= C.MAX_TICKS) {
@@ -245,9 +323,9 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
         // 1. Girdiler (geldiği sırayla)
         for (let i = 0; i < pendingLen; i++) applyInput(pending[i]);
         pendingLen = 0;
-        const prevX = s.x;
 
         // 2. Yatay
+        const prevX = s.x;
         const tx = laneX(s.lane);
         if (s.x < tx) {
             s.x = s.x + C.LANE_SPEED < tx ? s.x + C.LANE_SPEED : tx;
@@ -255,26 +333,58 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
             s.x = s.x - C.LANE_SPEED > tx ? s.x - C.LANE_SPEED : tx;
         }
         if (s.x === tx) s.ignoreObstacleId = -1;
+        const x = s.x;
 
-        // 3. Dikey (koşul neden `vy !== 0`: dosya başındaki nota bak)
+        // 3. İleri
+        const v = speedAt(tick);
+        const prevZ = s.z;
+        s.z += v;
+        const z = s.z;
+        s.segMm[s.segMm.length - 1] += v;
+
+        // Adım 4 ve 6–7 yalnızca yakın chunk'lara bakar (alt sınır 0'a kırpılır).
+        // Destek için z + 300'ün ötesine bakmak gerekmez (sonuç aynı, iş az).
+        const cFrom = z >= 1000 ? Math.floor((z - 1000) / C.CHUNK_LEN) : 0;
+        const cTo = Math.floor((z + C.MAGNET_REACH_AHEAD) / C.CHUNK_LEN);
+
+        // 4. Dikey
+        const g = groundAt(x, z, cFrom, Math.floor((z + C.PLAYER_HALF_D) / C.CHUNK_LEN));
+        s.ground = g;
         let landed = false;
-        if (s.y > 0 || s.vy !== 0) {
+        if (s.grounded) {
+            if (g > s.y) {
+                // Rampa/basamak takibi; daha yüksek yüzey (duvar) adım 6'da çarpar.
+                if (g - s.y <= C.STEP_UP) s.y = g;
+            } else if (g < s.y) {
+                // Yüzey bitti: bu tick y değişmez, düşüş sonraki tick başlar.
+                s.grounded = false;
+                s.vy = 0;
+                emit('fall');
+            }
+        } else {
+            const prevY = s.y;
             s.y += s.vy;
             s.vy -= C.GRAVITY;
-            if (s.y <= 0) {
-                s.y = 0;
+            // İniş koşulunda şartnamedeki `y <= prevY` (düşüyor olma) şartı YOK:
+            // dosya başındaki nota bak.
+            if (s.y <= g && prevY >= g - C.LAND_TOL) {
+                s.y = g;
                 s.vy = 0;
+                s.grounded = true;
                 landed = true;
             }
         }
         if (landed) {
-            emit('land');
+            emit('land').kind = groundType;
+            if (g > 0) s.roofLandings++;
             if (s.jumpBuffer > 0) {
-                // Yeniden zıplama: y = 0 kalır, sonraki tick yükselir.
-                s.vy = C.JUMP_V;
+                // Yeniden zıplama: y = g kalır, sonraki tick yükselir.
+                const sup = s.superTicks > 0;
+                s.vy = sup ? C.SUPER_JUMP_V : C.JUMP_V;
+                s.grounded = false;
                 s.jumpBuffer = 0;
                 s.slideBuffer = false;
-                emit('jump');
+                emit('jump').kind = sup ? 'super' : null;
             } else if (s.slideBuffer) {
                 s.slideTicks = C.SLIDE_TICKS;
                 s.slideBuffer = false;
@@ -282,20 +392,14 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
         }
         if (s.jumpBuffer > 0) s.jumpBuffer--;
         if (s.slideTicks > 0) s.slideTicks--;
-
-        // 4. İleri
-        const v = speedAt(tick);
-        const prevZ = s.z;
-        s.z += v;
-        const z = s.z;
-        s.segMm[s.segMm.length - 1] += v;
+        const y = s.y;
 
         // 5. Kapı
         const k = s.gates.length;
         if (k < gateCount) {
             const zg = zGate(k);
             if (prevZ < zg && zg <= z) {
-                const gl = s.x <= -GATE_LANE_EDGE ? 0 : (s.x >= GATE_LANE_EDGE ? 2 : 1);
+                const gl = x <= -GATE_LANE_EDGE ? 0 : (x >= GATE_LANE_EDGE ? 2 : 1);
                 s.gates.push({ index: k, lane: gl, tick });
                 s.segMm.push(0);
                 const e = emit('gate');
@@ -304,16 +408,10 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
             }
         }
 
-        // Adım 6–7 yalnızca yakın chunk'lara bakar (alt sınır 0'a kırpılır).
-        const cFrom = z >= 1000 ? Math.floor((z - 1000) / C.CHUNK_LEN) : 0;
-        const cTo = Math.floor((z + C.MAGNET_REACH_AHEAD) / C.CHUNK_LEN);
-        const x = s.x;
-        const y = s.y;
-
         // 6. Çarpışma (id sırasıyla, ilk çarpmada dur)
         const h = (s.slideTicks > 0 || s.slideBuffer) ? C.SLIDE_H : C.STAND_H;
         let stop = false;
-        for (let c = cFrom; c <= cTo && !stop; c++) {
+        for (let c = cFrom; c <= cTo && !stop && s.invulnTicks === 0; c++) {
             const obs = chunkAt(c).obstacles;
             for (let i = 0; i < obs.length; i++) {
                 const o = obs[i];
@@ -323,13 +421,16 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
                 if (Math.abs(x - ox) >= HIT_X) continue;
                 let hit;
                 if (o.type === 'barrier') hit = y < C.BARRIER_TOP;
-                else if (o.type === 'bar') hit = y + h > C.BAR_BOTTOM;
-                else hit = true;
-                if (!hit || s.invulnTicks > 0) continue;
+                else if (o.type === 'bar') hit = y < C.BAR_TOP && y + h > C.BAR_BOTTOM;
+                else if (o.type === 'ramp') hit = y < rampHeight(o, z) - C.STEP_UP;
+                else hit = y < o.top - C.LAND_TOL; // car / bus
+                if (!hit) continue;
 
                 // Yan çarpma: önceki tick'te z örtüşmesi vardı, önceki x'te x örtüşmesi yoktu.
                 const side = prevZ - C.PLAYER_HALF_D < o.z1 && prevZ + C.PLAYER_HALF_D > o.z0
                     && Math.abs(prevX - ox) >= HIT_X;
+                // Rampaya önden girilir (yüzey takibi); yalnızca yandan çarpılabilir.
+                if (o.type === 'ramp' && !side) continue;
                 if (side) {
                     if (s.stumbleTicks > 0) {
                         crash(tick, o.id, 'side');
@@ -388,6 +489,7 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
                     && Math.abs(o.y - headY) <= C.COIN_REACH_Y) {
                     o.taken = true;
                     if (o.kind === 'magnet') s.magnetTicks = C.MAGNET_TICKS;
+                    else if (o.kind === 'superjump') s.superTicks = C.SUPER_TICKS;
                     else s.shield = true;
                     const e = emit('power');
                     e.kind = o.kind;
@@ -400,6 +502,7 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
         if (s.stumbleTicks > 0) s.stumbleTicks--;
         if (s.invulnTicks > 0) s.invulnTicks--;
         if (s.magnetTicks > 0) s.magnetTicks--;
+        if (s.superTicks > 0) s.superTicks--;
 
         // 9.
         s.tick++;
@@ -449,6 +552,8 @@ function makeSim(seed, gateCount, override, state, chunks, recorded, pendingInit
         pruneBehind,
         clone,
         gateZ: zGate,
+        groundAt: groundAtPublic,
+        tunnelAt: (c) => tunnelAt(c, gateCount),
         isDestroyed: (id) => s.destroyed.has(id),
         encodeInputs: () => encodeInputs(recorded),
         inputCount: () => recorded.length,

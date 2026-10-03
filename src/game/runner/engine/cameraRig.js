@@ -7,10 +7,14 @@
  *    (ikisi de reducedMotion'da kapalı).
  *  - Başlangıç geri sayımında karakterin önünden arkasına süzülen tanıtım
  *    çekimi (reducedMotion'da doğrudan arkadan).
+ *  - Yükseklik (v2): kamera üzerinde durulan yüzeyi (zemin/araç çatısı)
+ *    yumuşakça izler; çatıdayken biraz daha yükselir (önü görünsün),
+ *    çatıdan düşerken aşağı yumuşak iner (ani sıçrama yok). Zıplamanın
+ *    yalnızca bir kısmını izler (ekran sallanmasın).
  */
 import * as THREE from 'three';
 import { clamp, damp, easeOutCubic, lerp } from './mathUtils.js';
-import { baseVerticalFov, cameraFraming } from './cameraMath.js';
+import { baseVerticalFov, cameraFraming, cameraHeightTarget } from './cameraMath.js';
 
 const _look = new THREE.Vector3();
 const _frame = {};
@@ -18,6 +22,7 @@ const _frame = {};
 export function createCameraRig(camera, { reducedMotion }) {
     let camX = 0;
     let camY = 0;
+    let supportCam = 0;
     let fovKick = 0;
     let crashPull = 0;
     let intro = reducedMotion ? 0 : 1; // 1 = önden, 0 = arkadan
@@ -45,7 +50,8 @@ export function createCameraRig(camera, { reducedMotion }) {
         },
 
         /**
-         * st: { dt, aspect, px, py (oyuncu, m), speedNorm, crashed, shake:{x,y,roll}, idleTime }
+         * st: { dt, aspect, px, py (oyuncu ayak, m), groundY (destek yüksekliği, m),
+         *       speedNorm, crashed, shake:{x,y,roll}, idleTime }
          */
         update(st) {
             const dt = st.dt;
@@ -55,7 +61,10 @@ export function createCameraRig(camera, { reducedMotion }) {
             const { back, height, lookAhead, lookY, fovOffset, kick } = cameraFraming(st.aspect, _frame);
 
             camX = damp(camX, st.px * 0.72, 9, dt);
-            camY = damp(camY, st.py * 0.32, 6, dt);
+            // Destek: çıkarken çabuk, inerken (çatıdan düşüş) yumuşak.
+            const g = st.groundY || 0;
+            supportCam = damp(supportCam, g, g > supportCam ? 5 : 2.6, dt);
+            camY = damp(camY, cameraHeightTarget(st.py, supportCam), 6, dt);
             crashPull = damp(crashPull, st.crashed ? 1 : 0, 3, dt);
 
             if (introT >= 0) {

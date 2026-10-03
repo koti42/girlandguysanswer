@@ -27,7 +27,7 @@ const BadgeGrid = ({ badges = [], limit, compact = false }) => {
                         <span
                             className={`flex h-11 w-11 items-center justify-center rounded-full text-xl ${
                                 earned
-                                    ? 'bg-gradient-to-br from-gold to-coral text-white shadow-md'
+                                    ? 'bg-gradient-to-br from-gold to-coral text-slate-950 shadow-md'
                                     : 'bg-slate-200 text-slate-500 dark:bg-white/10 dark:text-slate-400'
                             }`}
                         >

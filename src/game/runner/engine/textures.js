@@ -172,6 +172,49 @@ export function createRoadTexture(anisotropy) {
     pool(-3.6, 0);
     pool(-3.6, 20);
     pool(3.6, 10);
+    // Islak asfalt: lamba ışığının z boyunca uzayan yansıma çizgileri ve
+    // birkaç su birikintisi parlaması (gözlemciye doğru uzayan dikey lekeler).
+    const streak = (xm, zm, lenM, color, alpha) => {
+        const cx = X(xm);
+        const cy = Z(zm);
+        const rw = 0.55 * pxPerM;
+        const rh = (lenM / ROAD_TILE_M) * H;
+        g.save();
+        g.translate(cx, cy);
+        g.scale(1, rh / rw);
+        const gr = g.createRadialGradient(0, 0, 0, 0, 0, rw);
+        gr.addColorStop(0, color.replace('A', String(alpha)));
+        gr.addColorStop(1, color.replace('A', '0'));
+        g.fillStyle = gr;
+        g.beginPath();
+        g.arc(0, 0, rw, 0, Math.PI * 2);
+        g.fill();
+        g.restore();
+    };
+    streak(-3.45, 1.5, 3.2, 'rgba(255,205,150,A)', 0.42);
+    streak(-3.45, 18.5, 3.2, 'rgba(255,205,150,A)', 0.42);
+    streak(3.45, 11.5, 3.2, 'rgba(255,205,150,A)', 0.42);
+    // Neon tabela yansımaları (kenarlara yakın, pembe/camgöbeği)
+    streak(-3.9, 7, 2.2, 'rgba(255,90,190,A)', 0.22);
+    streak(3.9, 16, 2.2, 'rgba(90,220,255,A)', 0.22);
+    streak(-3.95, 13.5, 1.6, 'rgba(170,110,255,A)', 0.18);
+    for (let i = 0; i < 7; i++) {
+        const px = -3.6 + rnd() * 7.2;
+        const pz = rnd() * ROAD_TILE_M;
+        const pr = (0.5 + rnd() * 0.9) * pxPerM;
+        g.save();
+        g.translate(X(px), Z(pz));
+        g.scale(1.6, 0.8);
+        const pg = g.createRadialGradient(0, 0, 0, 0, 0, pr);
+        pg.addColorStop(0, 'rgba(150,140,220,0.16)');
+        pg.addColorStop(0.7, 'rgba(120,110,200,0.08)');
+        pg.addColorStop(1, 'rgba(120,110,200,0)');
+        g.fillStyle = pg;
+        g.beginPath();
+        g.arc(0, 0, pr, 0, Math.PI * 2);
+        g.fill();
+        g.restore();
+    }
     // Kenar çizgileri (coral)
     g.fillStyle = '#ff6b6b';
     g.fillRect(X(-4.05), 0, 0.14 * pxPerM, H);
@@ -222,6 +265,129 @@ export function createSkylineTexture(seed, color, windowAlpha) {
         x += w + (rnd() < 0.3 ? rnd() * 6 : 0);
     }
     const t = toTexture(c, { repeat: true });
+    t.wrapT = THREE.ClampToEdgeWrapping;
+    return t;
+}
+
+/*
+ * İstanbul esintili uzak silüet (şeffaf zemin): ortada büyük kubbeli cami
+ * (yarım kubbeler, dört minare), solda Galata'yı andıran konik külahlı
+ * yuvarlak kule, sağda küçük bir cami ve aralarda alçak binalar. Marka/logo
+ * yok; yalnızca geometrik silüet. Doku tekrarlanmaz (cadde ucunda tek sahne);
+ * kenarlar şeffafa yumuşar. Beyaz çizilip malzeme rengiyle boyanırsa ortamla
+ * (gündüz pus, gece koyu mor) renk değiştirebilir.
+ */
+export function createIstanbulSkylineTexture(color, windowAlpha) {
+    const W = 2048;
+    const H = 256;
+    const c = makeCanvas(W, H);
+    const g = c.getContext('2d');
+    const rnd = seededRandom(1453);
+    const base = H;
+    g.fillStyle = color;
+    // Alçak bina dokusu (tüm genişlik)
+    let x = 0;
+    while (x < W) {
+        const w = 14 + rnd() * 34;
+        const h = 18 + rnd() * 46;
+        g.fillRect(x, base - h, w, h);
+        if (rnd() < 0.35) {
+            // Kırma çatı
+            g.beginPath();
+            g.moveTo(x - 1, base - h);
+            g.lineTo(x + w / 2, base - h - 8 - rnd() * 6);
+            g.lineTo(x + w + 1, base - h);
+            g.fill();
+        }
+        x += w;
+    }
+    const dome = (cx, by, r, k = 1) => {
+        g.beginPath();
+        g.ellipse(cx, by, r, r * 0.92 * k, 0, Math.PI, 0);
+        g.fill();
+    };
+    const minaret = (mx, top, w = 7) => {
+        g.fillRect(mx - w / 2, top, w, base - top);
+        g.fillRect(mx - w / 2 - 2, top + (base - top) * 0.32, w + 4, 3); // şerefe
+        g.fillRect(mx - w / 2 - 2, top + (base - top) * 0.55, w + 4, 3);
+        g.beginPath();
+        g.moveTo(mx - w / 2, top);
+        g.lineTo(mx, top - w * 4.2);
+        g.lineTo(mx + w / 2, top);
+        g.fill();
+        g.fillRect(mx - 0.75, top - w * 4.2 - 7, 1.5, 7); // alem
+    };
+    const mosque = (cx, s) => {
+        g.fillRect(cx - 150 * s, base - 70 * s, 300 * s, 70 * s);
+        g.fillRect(cx - 105 * s, base - 108 * s, 210 * s, 40 * s);
+        dome(cx - 112 * s, base - 70 * s, 34 * s);
+        dome(cx + 112 * s, base - 70 * s, 34 * s);
+        dome(cx - 64 * s, base - 106 * s, 44 * s);
+        dome(cx + 64 * s, base - 106 * s, 44 * s);
+        g.fillRect(cx - 60 * s, base - 130 * s, 120 * s, 26 * s);
+        dome(cx, base - 128 * s, 66 * s);
+        g.fillRect(cx - 1.5 * s, base - 200 * s, 3 * s, 12 * s);
+        for (const k of [-1, 1]) {
+            minaret(cx + k * 170 * s, base - 168 * s, 8 * s);
+            minaret(cx + k * 215 * s, base - 138 * s, 7 * s);
+        }
+    };
+    // Galata'yı andıran kule: gövde + taç galerisi + konik külah
+    const tower = (cx, s) => {
+        g.fillRect(cx - 26 * s, base - 150 * s, 52 * s, 150 * s);
+        g.fillRect(cx - 31 * s, base - 158 * s, 62 * s, 12 * s);
+        g.fillRect(cx - 28 * s, base - 182 * s, 56 * s, 26 * s);
+        g.beginPath();
+        g.moveTo(cx - 31 * s, base - 182 * s);
+        g.lineTo(cx, base - 236 * s);
+        g.lineTo(cx + 31 * s, base - 182 * s);
+        g.fill();
+        g.fillRect(cx - 1 * s, base - 246 * s, 2 * s, 12 * s);
+    };
+    // Cadde ucundan görünen dar açıya (± ~130 px) kule ve büyük cami birlikte sığsın.
+    mosque(W / 2 + 70, 0.78);
+    tower(W / 2 - 118, 0.9);
+    mosque(W / 2 + 470, 0.5);
+    mosque(W / 2 - 520, 0.45);
+    tower(W / 2 + 820, 0.55);
+    mosque(W / 2 - 860, 0.38);
+    // Pencere ışıkları (seyrek; windowAlpha 0 ise yok)
+    g.fillStyle = `rgba(255,200,140,${windowAlpha})`;
+    for (let i = 0; i < 420 && windowAlpha > 0; i++) {
+        const wx = rnd() * W;
+        const wy = base - 6 - rnd() * 50;
+        g.fillRect(wx, wy, 2, 3);
+    }
+    // Galata kulesi taç galerisinde ışık halkası
+    g.fillStyle = `rgba(255,214,150,${Math.min(1, windowAlpha * 2.2)})`;
+    for (let i = 0; i < 6 && windowAlpha > 0; i++) g.fillRect(W / 2 - 118 - 22 + i * 8, base - 176 * 0.9 - 3, 4, 6);
+    // Kenarları yumuşat (doku tekrar etmiyor; uçlar sise karışsın)
+    g.globalCompositeOperation = 'destination-in';
+    const fade = g.createLinearGradient(0, 0, W, 0);
+    fade.addColorStop(0, 'rgba(0,0,0,0)');
+    fade.addColorStop(0.08, 'rgba(0,0,0,1)');
+    fade.addColorStop(0.92, 'rgba(0,0,0,1)');
+    fade.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = fade;
+    g.fillRect(0, 0, W, H);
+    const t = toTexture(c);
+    t.wrapS = THREE.ClampToEdgeWrapping;
+    t.wrapT = THREE.ClampToEdgeWrapping;
+    return t;
+}
+
+/** Islak yol parlaması: uzağa doğru artan yumuşak degrade (gökyüzü yansıması). */
+export function createSheenTexture() {
+    const c = makeCanvas(4, 256);
+    const g = c.getContext('2d');
+    const gr = g.createLinearGradient(0, 0, 0, 256);
+    gr.addColorStop(0, 'rgba(255,255,255,1)');
+    gr.addColorStop(0.35, 'rgba(255,255,255,0.45)');
+    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr;
+    g.fillRect(0, 0, 4, 256);
+    const t = toTexture(c, { mipmaps: false });
+    t.wrapS = THREE.ClampToEdgeWrapping;
     t.wrapT = THREE.ClampToEdgeWrapping;
     return t;
 }
@@ -306,10 +472,10 @@ export function createCoinTexture() {
     return toTexture(c);
 }
 
-/** Yüksek engel tabelası: koyu panel, neon çerçeve, büyük "?" ve aşağı oklar. */
+/** Tabela levhası (2.2 x 0.48 m): koyu panel, neon çerçeve, "?" ve aşağı oklar ("altından kay"). */
 export function createSignTexture() {
     const W = 512;
-    const H = 256;
+    const H = 112;
     const c = makeCanvas(W, H);
     const g = c.getContext('2d');
     g.fillStyle = '#140b2e';
@@ -324,27 +490,29 @@ export function createSignTexture() {
         fn();
         g.restore();
     };
-    neon('#ff4fa3', 18, 8, () => g.strokeRect(14, 14, W - 28, H - 28));
-    neon('#ffd1ea', 6, 3, () => g.strokeRect(14, 14, W - 28, H - 28));
+    neon('#ff4fa3', 14, 6, () => g.strokeRect(8, 8, W - 16, H - 16));
+    neon('#ffd1ea', 4, 2, () => g.strokeRect(8, 8, W - 16, H - 16));
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    neon('#38bdf8', 22, 4, () => {
-        g.font = `700 170px ${FONT_STACK}`;
-        g.fillText('?', W / 2, H / 2 + 10);
-    });
-    g.fillStyle = '#e0f7ff';
-    g.font = `700 150px ${FONT_STACK}`;
-    g.fillText('?', W / 2, H / 2 + 10);
+    for (const x of [W / 2 - 120, W / 2, W / 2 + 120]) {
+        neon('#38bdf8', 16, 3, () => {
+            g.font = `700 78px ${FONT_STACK}`;
+            g.fillText('?', x, H / 2 + 4);
+        });
+        g.fillStyle = '#e0f7ff';
+        g.font = `700 70px ${FONT_STACK}`;
+        g.fillText('?', x, H / 2 + 4);
+    }
     // Aşağı oklar: "altından kay" ipucu
-    neon('#ffd34d', 14, 10, () => {
-        for (const x of [100, W - 100]) {
+    neon('#ffd34d', 10, 7, () => {
+        for (const x of [62, W - 62, W / 2 - 60, W / 2 + 60]) {
             g.beginPath();
-            g.moveTo(x - 40, 90);
-            g.lineTo(x, 140);
-            g.lineTo(x + 40, 90);
-            g.moveTo(x - 40, 130);
-            g.lineTo(x, 180);
-            g.lineTo(x + 40, 130);
+            g.moveTo(x - 20, 30);
+            g.lineTo(x, 52);
+            g.lineTo(x + 20, 30);
+            g.moveTo(x - 20, 56);
+            g.lineTo(x, 78);
+            g.lineTo(x + 20, 56);
             g.stroke();
         }
     });

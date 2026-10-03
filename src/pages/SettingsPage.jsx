@@ -15,6 +15,10 @@ const Toggle = ({ enabled, onChange, label, description }) => (
             {description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description}</p>}
         </div>
         <button
+            type="button"
+            role="switch"
+            aria-checked={!!enabled}
+            aria-label={label}
             onClick={() => onChange(!enabled)}
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${enabled ? 'bg-coral' : 'bg-gray-200 dark:bg-gray-700'
                 }`}
@@ -40,6 +44,7 @@ const SettingsPage = () => {
         allow_audio_messages: true,
         privacy_hide_online_from_others: false,
         privacy_hide_read_receipts_from_others: false,
+        allow_ticket_messages: true,
         allow_following: true,
         allow_mention_notifications: true,
         profile_color: null,
@@ -137,6 +142,7 @@ const SettingsPage = () => {
                     allow_audio_messages: detail.allow_audio_messages !== undefined ? detail.allow_audio_messages : true,
                     privacy_hide_online_from_others: !!detail.privacy_hide_online_from_others,
                     privacy_hide_read_receipts_from_others: !!detail.privacy_hide_read_receipts_from_others,
+                    allow_ticket_messages: detail.allow_ticket_messages !== undefined ? !!detail.allow_ticket_messages : true,
                     allow_following: detail.allow_following !== undefined ? detail.allow_following : true,
                     allow_mention_notifications: detail.allow_mention_notifications !== undefined ? detail.allow_mention_notifications : true,
                     profile_color: detail.profile_color || null,
@@ -176,6 +182,7 @@ const SettingsPage = () => {
                     allow_mention_notifications: backendSettings.allow_mention_notifications,
                     privacy_hide_online_from_others: backendSettings.privacy_hide_online_from_others ?? false,
                     privacy_hide_read_receipts_from_others: backendSettings.privacy_hide_read_receipts_from_others ?? false,
+                    allow_ticket_messages: backendSettings.allow_ticket_messages ?? settings.allow_ticket_messages,
                     profile_color: backendSettings.profile_color || null,
                     profile_color_female: backendSettings.profile_color_female || null,
                     profile_color_male: backendSettings.profile_color_male || null
@@ -206,6 +213,7 @@ const SettingsPage = () => {
                 allow_audio_messages: settings.allow_audio_messages,
                 privacy_hide_online_from_others: settings.privacy_hide_online_from_others,
                 privacy_hide_read_receipts_from_others: settings.privacy_hide_read_receipts_from_others,
+                allow_ticket_messages: settings.allow_ticket_messages,
             });
 
             if (response.data.data?.settings) {
@@ -221,6 +229,7 @@ const SettingsPage = () => {
                     allow_mention_notifications: backendSettings.allow_mention_notifications ?? settings.allow_mention_notifications,
                     privacy_hide_online_from_others: backendSettings.privacy_hide_online_from_others ?? false,
                     privacy_hide_read_receipts_from_others: backendSettings.privacy_hide_read_receipts_from_others ?? false,
+                    allow_ticket_messages: backendSettings.allow_ticket_messages ?? settings.allow_ticket_messages,
                     profile_color: backendSettings.profile_color || null,
                     profile_color_female: backendSettings.profile_color_female || null,
                     profile_color_male: backendSettings.profile_color_male || null
@@ -252,6 +261,7 @@ const SettingsPage = () => {
                 allow_audio_messages: settings.allow_audio_messages,
                 privacy_hide_online_from_others: settings.privacy_hide_online_from_others,
                 privacy_hide_read_receipts_from_others: settings.privacy_hide_read_receipts_from_others,
+                allow_ticket_messages: settings.allow_ticket_messages,
             });
             showSuccess(`Mesaj tercihiniz güncellendi.`);
         } catch (error) {
@@ -275,6 +285,7 @@ const SettingsPage = () => {
                 allow_audio_messages: next.allow_audio_messages,
                 privacy_hide_online_from_others: next.privacy_hide_online_from_others,
                 privacy_hide_read_receipts_from_others: next.privacy_hide_read_receipts_from_others,
+                allow_ticket_messages: next.allow_ticket_messages,
             });
             showSuccess('Mesajlaşma gizliliği güncellendi.');
         } catch (error) {
@@ -296,6 +307,7 @@ const SettingsPage = () => {
                 allow_audio_messages: next.allow_audio_messages,
                 privacy_hide_online_from_others: next.privacy_hide_online_from_others,
                 privacy_hide_read_receipts_from_others: next.privacy_hide_read_receipts_from_others,
+                allow_ticket_messages: next.allow_ticket_messages,
             });
             updateUser({ [key]: newValue, detail: { ...(user?.detail || {}), [key]: newValue } });
             showSuccess(successText);
@@ -786,6 +798,12 @@ const SettingsPage = () => {
                                 description="Açıkken gönderdiğiniz mesajlarda karşı taraf okundu tiklerini görmez."
                                 enabled={settings.privacy_hide_read_receipts_from_others}
                                 onChange={(v) => handleMessagingPrivacyToggle('privacy_hide_read_receipts_from_others', v)}
+                            />
+                            <Toggle
+                                label="Mesaj Bileti ile gelen mesajlara izin ver"
+                                description="Mesajlarını kapattığında ya da yalnız takipçilere açtığında bile, Oyun Merkezi'nden Mesaj Bileti alan biri sana tek bir mesaj gönderebilir. Kapatırsan bilet kullanılamaz ve kimsenin bileti harcanmaz."
+                                enabled={settings.allow_ticket_messages}
+                                onChange={(v) => handleMessagingCapabilityToggle('allow_ticket_messages', v, `Mesaj Bileti ile gelen mesajlar ${v ? 'açıldı' : 'kapatıldı'}.`)}
                             />
                         </div>
                     </div>

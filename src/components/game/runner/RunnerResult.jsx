@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import CoinReward from '../CoinReward';
+import ResultReviewNote from '../ResultReviewNote';
+import useResultGuard from '../useResultGuard';
 import ReactConfetti from 'react-confetti';
 import toast from 'react-hot-toast';
-import { LuCheck, LuCoins, LuHouse, LuLogIn, LuRotateCcw, LuShare2, LuTrophy, LuX } from 'react-icons/lu';
+import { LuCheck, LuCoins, LuDoorOpen, LuHouse, LuLogIn, LuRotateCcw, LuShare2, LuTrophy, LuX } from 'react-icons/lu';
 import BadgeGrid from '../BadgeGrid';
 import { XpBar } from '../PlayerCard';
 import { formatNumber, prefersReducedMotion, shareOrCopy } from '../gameUtils';
@@ -15,6 +18,8 @@ const Stat = ({ label, value, accent = 'text-white' }) => (
         <dd className={`text-lg font-extrabold tabular-nums ${accent}`}>{value}</dd>
     </div>
 );
+
+const ctaBtn = 'inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl px-5 font-bold game-press';
 
 const headline = (r) => {
     if (r.new_best) return 'Yeni rekor! 🏆';
@@ -52,9 +57,17 @@ const viewportSize = () => {
 
 const confettiPieces = (w) => Math.max(120, Math.min(380, Math.round((Number(w) || 0) * 0.3)));
 
-const RunnerResult = ({ result, explanations = {}, onAgain, onLobby, busy = false, guest = false }) => {
+/*
+ * lobbyLabel: çıkış butonunun metni (gömmede "Oyundan çık"). share: paylaş
+ * butonu (mobil gömmede yok). onLogin: verilirse misafir çağrısı bağlantı
+ * yerine bu işlevi çağıran butonlar olur (gömme, Router'sız). onShop: aynı
+ * şekilde "Mağazaya git" (gömmede native'e openUrl).
+ */
+const RunnerResult = ({ result, explanations = {}, onAgain, onLobby, lobbyLabel = 'Lobiye dön', share: canShare = true, onLogin, onShop, busy = false, guest = false }) => {
     const reduced = prefersReducedMotion();
     const score = useCountUp(result?.score, { animate: !reduced });
+    // İlk 600 ms düğmeler tıklamaya kapalı: oyunun son dokunuşları yanlış düğmeye gitmesin.
+    const { guardProps } = useResultGuard();
     const [confetti, setConfetti] = useState(false);
     const [size, setSize] = useState(viewportSize);
     const [sharing, setSharing] = useState(false);
@@ -100,6 +113,8 @@ const RunnerResult = ({ result, explanations = {}, onAgain, onLobby, busy = fals
     const gates = Array.isArray(result.gates) ? result.gates : [];
     const badges = Array.isArray(result.badges_earned) ? result.badges_earned : [];
     const bd = result.breakdown || {};
+    // Cüzdana eklenen jeton (sunucu; sayılmayan koşuda 0). Eski yanıtta alan yoksa toplanan jeton.
+    const coinsEarned = result.coins_earned ?? (result.counted === false ? 0 : result.coins);
 
     /*
      * Paylaşım sayfası açıkken ikinci dokunuş navigator.share'i InvalidStateError
@@ -123,7 +138,7 @@ const RunnerResult = ({ result, explanations = {}, onAgain, onLobby, busy = fals
     };
 
     return (
-        <div className="mx-auto w-full max-w-2xl pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[max(1rem,env(safe-area-inset-top))]">
+        <div className="mx-auto w-full max-w-2xl pb-[max(1.5rem,var(--hs-safe-bottom,env(safe-area-inset-bottom)))] pl-[max(1rem,var(--hs-safe-left,env(safe-area-inset-left)))] pr-[max(1rem,var(--hs-safe-right,env(safe-area-inset-right)))] pt-[max(1rem,var(--hs-safe-top,env(safe-area-inset-top)))]" {...guardProps}>
             {confetti && (
                 <ReactConfetti
                     width={size.w}
@@ -178,9 +193,12 @@ const RunnerResult = ({ result, explanations = {}, onAgain, onLobby, busy = fals
                     </p>
                 )}
 
+                <ResultReviewNote result={result} />
+
                 {!practice && (bd.dist_points != null || bd.coin_points != null || bd.gate_points != null) && (
-                    <p className="mt-3 text-xs text-white/60 tabular-nums">
-                        Mesafe {formatNumber(bd.dist_points)} · Jeton {formatNumber(bd.coin_points)} · Kapı {formatNumber(bd.gate_points)}
+                    <p className="mt-3 text-xs text-white/60 tabular-nums" data-testid="runner-score-breakdown">
+                        {/* Puan birimi: üstteki MESAFE (m) / JETON (adet) kartlarıyla karışmasın diye ayrı adlar */}
+                        Puan dağılımı: Mesafe +{formatNumber(bd.dist_points)} · Jeton toplama +{formatNumber(bd.coin_points)} · Kapı +{formatNumber(bd.gate_points)}
                     </p>
                 )}
 
@@ -202,6 +220,7 @@ const RunnerResult = ({ result, explanations = {}, onAgain, onLobby, busy = fals
                                 <span className="rounded-full bg-white/10 px-3 py-1 font-semibold text-white/85 tabular-nums">Haftalık sıran: #{result.weekly_rank}</span>
                             )}
                         </div>
+                        <CoinReward coins={coinsEarned} balance={result.wallet?.balance} capped={result.coins_capped === true} onShop={onShop} />
                         {result.level_up && (
                             <div className="mt-4 rounded-2xl bg-gradient-to-r from-gold/30 to-coral/30 px-4 py-3 text-white game-pop-in" role="status">
                                 <p className="font-extrabold">
@@ -223,20 +242,25 @@ const RunnerResult = ({ result, explanations = {}, onAgain, onLobby, busy = fals
                     <p className="font-bold">Soru kapıları, XP ve haftalık sıralama seni bekliyor!</p>
                     <p className="mt-1 text-sm text-white/70">Giriş yap; doğru şeritten geç, çarpanı x5&apos;e çıkar, liderliğe yerleş.</p>
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-center">
-                        <Link
-                            to="/login"
-                            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-coral to-orange-400 px-5 font-bold text-white game-press"
-                        >
-                            <LuLogIn aria-hidden="true" /> Giriş yap
-                        </Link>
-                        <Link to="/signup" className="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-white/15 px-5 font-bold text-white ring-1 ring-white/20 game-press">
-                            Üye ol
-                        </Link>
+                        {onLogin ? (
+                            <button type="button" onClick={onLogin} className={`${ctaBtn} bg-gradient-to-r from-coral to-orange-400 text-white`}>
+                                <LuLogIn aria-hidden="true" /> Giriş yap / Üye ol
+                            </button>
+                        ) : (
+                            <>
+                                <Link to="/login" className={`${ctaBtn} bg-gradient-to-r from-coral to-orange-400 text-white`}>
+                                    <LuLogIn aria-hidden="true" /> Giriş yap
+                                </Link>
+                                <Link to="/signup" className={`${ctaBtn} bg-white/15 text-white ring-1 ring-white/20`}>
+                                    Üye ol
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </section>
             )}
 
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className={`mt-4 grid grid-cols-1 gap-3 ${canShare ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
                 <button
                     type="button"
                     onClick={onAgain}
@@ -250,17 +274,19 @@ const RunnerResult = ({ result, explanations = {}, onAgain, onLobby, busy = fals
                     onClick={onLobby}
                     className="flex min-h-[56px] items-center justify-center gap-2 rounded-2xl bg-white/10 px-5 py-3 font-bold text-white ring-1 ring-white/15 game-press focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                 >
-                    <LuHouse aria-hidden="true" /> Lobiye dön
+                    {lobbyLabel === 'Lobiye dön' ? <LuHouse aria-hidden="true" /> : <LuDoorOpen aria-hidden="true" />} {lobbyLabel}
                 </button>
-                <button
-                    type="button"
-                    onClick={share}
-                    disabled={sharing}
-                    aria-busy={sharing || undefined}
-                    className="flex min-h-[56px] items-center justify-center gap-2 rounded-2xl bg-white/10 px-5 py-3 font-bold text-white ring-1 ring-white/15 game-press disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-                >
-                    <LuShare2 aria-hidden="true" /> Paylaş
-                </button>
+                {canShare && (
+                    <button
+                        type="button"
+                        onClick={share}
+                        disabled={sharing}
+                        aria-busy={sharing || undefined}
+                        className="flex min-h-[56px] items-center justify-center gap-2 rounded-2xl bg-white/10 px-5 py-3 font-bold text-white ring-1 ring-white/15 game-press disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+                    >
+                        <LuShare2 aria-hidden="true" /> Paylaş
+                    </button>
+                )}
             </div>
 
             {badges.length > 0 && (

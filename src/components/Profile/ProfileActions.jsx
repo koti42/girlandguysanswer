@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaEdit, FaEllipsisH, FaFlag, FaBan } from 'react-icons/fa';
+import MessageTicketDialog from '../game/shop/MessageTicketDialog';
+import { canOfferBlock } from '../../utils/systemAccount';
 
 const ProfileActions = ({
     profileData,
@@ -13,6 +15,7 @@ const ProfileActions = ({
     setShowActionsMenu,
     actionsMenuRef
 }) => {
+    const [ticketOpen, setTicketOpen] = useState(false);
 
     if (isOwnProfile) {
         // Edit button hidden temporarily as per request
@@ -32,21 +35,40 @@ const ProfileActions = ({
         */
     }
 
+    // Profil yanıtı mesaj ayarlarını taşımıyorsa (eski sunucu) açık sayılır;
+    // sohbet ekranı gerekirse bilet şeridini kendisi gösterir.
+    const messagingOpen = profileData.allow_messaging !== false &&
+        (profileData.messaging_mode !== 'followers' || profileData.isFollowing);
+    // Sistem hesabı engellenemez (sunucu da reddeder): seçenek hiç gösterilmez.
+    const showBlockOption = canOfferBlock(profileData.username, profileData.hasBlocked);
+
     return (
         <div className="flex items-center gap-2">
             {/* Message Button */}
-            {profileData.allow_messaging &&
-                (profileData.messaging_mode === 'everyone' ||
-                    (profileData.messaging_mode === 'followers' && profileData.isFollowing)) && (
-                    <Link to={`/messages/${profileData.username}`}>
-                        <button className={`px-4 py-2 rounded-xl transition-all ${isVIP
-                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl hover:scale-105 font-semibold'
-                            : 'border-2 border-coral text-coral hover:bg-coral hover:text-white'
-                            }`}>
-                            Mesaj
-                        </button>
-                    </Link>
-                )}
+            {messagingOpen ? (
+                <Link to={`/messages/${profileData.username}`}>
+                    <button className={`px-4 py-2 rounded-xl transition-all ${isVIP
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl hover:scale-105 font-semibold'
+                        : 'border-2 border-coral text-coral hover:bg-coral hover:text-white'
+                        }`}>
+                        Mesaj
+                    </button>
+                </Link>
+            ) : !profileData.hasBlocked && !profileData.isBlocked && (
+                /* Mesajları kapalı: Mesaj Bileti akışı (F.6) — kurallar pencerede sunucudan sorulur */
+                <button
+                    type="button"
+                    onClick={() => setTicketOpen(true)}
+                    title="Bu kişi mesaj almıyor"
+                    aria-label="Bu kişi mesaj almıyor. Mesaj Bileti kullan"
+                    className="px-4 py-2 rounded-xl transition-all border-2 border-amber-400 text-amber-600 hover:bg-amber-400 hover:text-white dark:text-amber-300 inline-flex items-center gap-1.5"
+                >
+                    <span aria-hidden="true">🎟️</span> Mesaj Bileti
+                </button>
+            )}
+            {ticketOpen && (
+                <MessageTicketDialog open username={profileData.username} onClose={() => setTicketOpen(false)} />
+            )}
 
             {/* Follow Button */}
             <button
@@ -105,6 +127,7 @@ const ProfileActions = ({
                                 <FaFlag className="text-yellow-500" />
                                 Şikayet Et
                             </button>
+                            {showBlockOption && (
                             <button
                                 onClick={() => {
                                     setShowActionsMenu(false);
@@ -119,6 +142,7 @@ const ProfileActions = ({
                                 <FaBan />
                                 {profileData.hasBlocked ? 'Engeli Kaldır' : 'Kullanıcıyı Engelle'}
                             </button>
+                            )}
                         </div>
                     </div>
                 )}

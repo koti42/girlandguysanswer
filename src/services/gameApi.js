@@ -1,4 +1,6 @@
 import api from './api';
+import avatarApi from './avatarApi';
+import shopApi from './shopApi';
 
 /*
  * Oyun Merkezi istemcisi.
@@ -105,26 +107,24 @@ export const gameApi = {
     abandonRunner: (runId) => api.post(`/game/runner/${encodeURIComponent(runId)}/abandon`, {}, runnerCfg(10000)).then(unwrap),
     runnerLeaderboard: ({ period = 'weekly', gender = 'all', limit = 10 } = {}) =>
         api.get('/game/runner/leaderboard', { params: { period, gender, limit }, timeout: 15000 }).then(unwrap),
+
+    /*
+     * Karakter, mağaza ve Mesaj Bileti: asıl uygulama avatarApi.js / shopApi.js'te
+     * (tek kaynak; zaman aşımı ve Idempotency-Key kuralları orada). Burada
+     * sözleşmedeki adlarla yalnızca yönlendirilir, kopya kod yok. Kule için
+     * towerApi.js ayrı kalır.
+     */
+    getAvatar: (...a) => avatarApi.get(...a),
+    saveAvatar: (...a) => avatarApi.save(...a),
+    buyAvatarItem: (...a) => avatarApi.buy(...a),
+    getShop: (...a) => shopApi.get(...a),
+    buyShopItem: (...a) => shopApi.buy(...a),
+    equipCosmetics: (...a) => shopApi.equip(...a),
+    getWalletTransactions: (...a) => shopApi.transactions(...a),
+    checkMessageTicket: (...a) => shopApi.checkMessageTicket(...a),
+    sendTicketMessage: (...a) => shopApi.sendTicketMessage(...a),
 };
 
-export const gameErrorStatus = (err) => err?.response?.status ?? null;
-
-export const gameErrorData = (err) => err?.response?.data?.data ?? null;
-
-export function gameErrorMessage(err, fallback = 'Bir şeyler ters gitti. Lütfen tekrar dene.') {
-    const status = gameErrorStatus(err);
-    const serverMsg = err?.response?.data?.message;
-    if (serverMsg && typeof serverMsg === 'string') return serverMsg;
-    const firstValidation = err?.response?.data?.errors
-        ? Object.values(err.response.data.errors).flat()[0]
-        : null;
-    if (firstValidation) return firstValidation;
-    if (!err?.response) return 'Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip tekrar dene.';
-    if (status === 401) return 'Oynamak için giriş yapmalısın.';
-    if (status === 404) return 'Aradığın içerik bulunamadı.';
-    if (status === 429) return 'Çok hızlı gidiyorsun, birkaç saniye bekleyip tekrar dene.';
-    if (status >= 500) return 'Sunucuda bir sorun oluştu. Birazdan tekrar dene.';
-    return fallback;
-}
+export { gameErrorStatus, gameErrorData, gameErrorMessage } from './gameErrors';
 
 export default gameApi;

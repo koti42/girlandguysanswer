@@ -7,7 +7,7 @@ import GameLayout from '../../../components/game/GameLayout';
 import { GameLoading } from '../../../components/game/GameStates';
 import useAsync from '../../../components/game/useAsync';
 import { formatNumber } from '../../../components/game/gameUtils';
-import CharacterPicker from '../../../components/game/runner/CharacterPicker';
+import RunnerAvatarCard from '../../../components/game/runner/RunnerAvatarCard';
 import RunnerLeaderboard from '../../../components/game/runner/RunnerLeaderboard';
 import RunnerHowTo from '../../../components/game/runner/RunnerHowTo';
 import {
@@ -17,13 +17,11 @@ import {
     detectWebGL,
     finishFailureText,
     finishRunOnce,
-    loadCharacter,
     loadGuestBest,
     loadMusicEnabled,
     loadMuted,
     loadPending,
     normalizeRun,
-    saveCharacter,
     saveMusicEnabled,
     saveMuted,
 } from '../../../components/game/runner/runnerUtils';
@@ -114,13 +112,12 @@ const GuestLeaderboardCta = () => (
 );
 
 /*
- * Lobi: kahraman alanı + karakter + karne + liderlik + nasıl oynanır.
+ * Lobi: kahraman alanı + karakter özeti + karne + liderlik + nasıl oynanır.
  * Üye "Koşmaya Başla" ile sunucuda dereceli koşu açar; misafir doğrudan
  * antrenmana geçer (sunucuya hiçbir şey gitmez).
  */
 const Lobby = ({ member, user }) => {
     const navigate = useNavigate();
-    const [character, setCharacter] = useState(() => loadCharacter(user?.gender));
     const [muted, setMuted] = useState(loadMuted);
     const [musicEnabled, setMusicEnabled] = useState(loadMusicEnabled);
     const [webgl] = useState(detectWebGL);
@@ -184,11 +181,6 @@ const Lobby = ({ member, user }) => {
         };
     }, [member, user?.id, pendingAttempt]);
 
-    const changeCharacter = (c) => {
-        setCharacter(c);
-        saveCharacter(c);
-    };
-
     const toggleMute = () => {
         const next = !muted;
         setMuted(next);
@@ -203,13 +195,11 @@ const Lobby = ({ member, user }) => {
     };
 
     const playPractice = () => {
-        saveCharacter(character);
         navigate(PLAY_PATH, { state: { mode: 'practice' } });
     };
 
     const start = async () => {
         if (starting || startingRef.current || !webgl) return;
-        saveCharacter(character);
         if (!member) {
             playPractice();
             return;
@@ -251,12 +241,12 @@ const Lobby = ({ member, user }) => {
                 </span>
                 <div className="relative z-10 max-w-xl">
                     <span className="inline-flex items-center rounded-full bg-gradient-to-r from-gold to-coral px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-950">
-                        Yeni · 3D
+                        2.0 · 3D
                     </span>
                     <h1 className="mt-2 text-3xl sm:text-4xl font-black leading-tight">Herkesler Koşuyor</h1>
                     <p className="mt-2 text-white/80">
-                        Gün batımında neon caddede koş; bariyerin üstünden zıpla, tabelanın altından kay, jetonları topla. Soru kapısında doğru
-                        şıkkın şeridinden geç, çarpanını x5&apos;e çıkar!
+                        Gün batımında İstanbul caddesinde koş; arabaların üstünden zıpla, rampadan otobüs çatısına tırman, Süper Zıplama
+                        ayakkabısıyla uç. Soru kapısında doğru şıkkın şeridinden geç, çarpanını x5&apos;e çıkar!
                     </p>
 
                     {!member && (
@@ -358,7 +348,7 @@ const Lobby = ({ member, user }) => {
             </section>
 
             <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <CharacterPicker value={character} onChange={changeCharacter} />
+                <RunnerAvatarCard user={member ? user : null} />
                 {member ? <MemberStats data={overview.data} error={overview.error} onRetry={overview.reload} /> : <GuestStats best={guestBest} />}
                 {member ? <RunnerLeaderboard reloadKey={reloadKey} /> : <GuestLeaderboardCta />}
                 <RunnerHowTo ranked={member} />

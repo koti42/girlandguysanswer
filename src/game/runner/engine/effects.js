@@ -30,6 +30,11 @@ const PRESETS = {
     shield: { colors: [0x5ad8ff, 0xffffff, 0x8fb8ff], life: [0.4, 0.7], speed: [2, 4.5], size: [0.28, 0.45], gravity: 0, drag: 2.5, follow: 0.95 },
     crash: { colors: [0xffffff, 0xffd34d, 0xff6b6b], life: [0.5, 0.9], speed: [3, 7], size: [0.3, 0.55], gravity: -8, drag: 1.4, follow: 0 },
     stars: { colors: [0xffe066, 0xffffff], life: [0.8, 1.2], speed: [0.6, 1.2], size: [0.3, 0.45], gravity: 0, drag: 0.5, follow: 0 },
+    // Çatıya iniş tozu: geniş, yatay yayılan, ağır
+    roofDust: { colors: [0xc9bde8, 0xa898d0, 0xe6dcff], life: [0.35, 0.6], speed: [2.2, 4.2], size: [0.4, 0.7], gravity: 1.2, drag: 3.2, follow: 0.85, alpha: 0.42 },
+    // Süper Zıplama: ayaklardan neon yeşil kıvılcım
+    super: { colors: [0x5dff8a, 0xb6ffcc, 0xffffff], life: [0.25, 0.45], speed: [0.6, 1.6], size: [0.14, 0.26], gravity: -1.5, drag: 2, follow: 0.7 },
+    superBurst: { colors: [0x5dff8a, 0x39ff6a, 0xeaffef], life: [0.4, 0.7], speed: [2.5, 5], size: [0.25, 0.42], gravity: -4, drag: 1.8, follow: 0.9 },
 };
 
 const _color = new THREE.Color();
@@ -199,6 +204,20 @@ export function createEffects(scene, camera, { glowTexture, reducedMotion }) {
     camera.add(lines);
     disposables.push(lgeo, lmat);
 
+    // --- Darbe halkası (çatıya iniş): yerde genişleyip sönen halka ---
+    const impactGeo = new THREE.RingGeometry(0.72, 1, 40);
+    impactGeo.rotateX(-Math.PI / 2);
+    const impactMat = new THREE.MeshBasicMaterial({ color: 0xe6dcff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    const impact = new THREE.Mesh(impactGeo, impactMat);
+    impact.visible = false;
+    impact.renderOrder = 3;
+    scene.add(impact);
+    disposables.push(impactGeo, impactMat);
+    let impactT = -1;
+    let impactX = 0;
+    let impactY = 0;
+    let impactZ = 0; // dünya z (m)
+
     // --- Kalkan baloncuğu ---
     const shieldGeo = new THREE.SphereGeometry(1, 24, 16);
     const shieldMat = new THREE.ShaderMaterial({
@@ -314,6 +333,13 @@ export function createEffects(scene, camera, { glowTexture, reducedMotion }) {
         shieldBreak() {
             shieldPop = 0.0001;
         },
+        /** Çatıya iniş darbesi: yüzeyde genişleyen halka (zW: dünya z, m). */
+        impact(x, y, zW) {
+            impactT = 0;
+            impactX = x;
+            impactY = y + 0.03;
+            impactZ = zW;
+        },
         setPixelScale(heightPx, fovDeg) {
             // Partikül boyutu: dünya birimi -> piksel
             pmat.uniforms.uScale.value = heightPx / (2 * Math.tan((fovDeg * Math.PI) / 360));
@@ -394,6 +420,22 @@ export function createEffects(scene, camera, { glowTexture, reducedMotion }) {
                 magnetGroup.visible = false;
             }
 
+            // Darbe halkası
+            if (impactT >= 0) {
+                impactT += dt;
+                const k = impactT / 0.38;
+                if (k >= 1) {
+                    impactT = -1;
+                    impact.visible = false;
+                } else {
+                    impact.visible = true;
+                    const r = 0.5 + k * 1.6;
+                    impact.scale.set(r, 1, r);
+                    impact.position.set(impactX, impactY, -(impactZ - st.pzM));
+                    impactMat.opacity = (1 - k) * 0.8;
+                }
+            }
+
             // Flaş
             if (flashAmt > 0.001) {
                 flashAmt = Math.max(0, flashAmt - dt * flashDecay);
@@ -420,7 +462,7 @@ export function createEffects(scene, camera, { glowTexture, reducedMotion }) {
 
         dispose() {
             camera.remove(lines);
-            scene.remove(points, shield, magnetGroup, flash);
+            scene.remove(points, shield, magnetGroup, flash, impact);
             for (const d of disposables) d.dispose();
         },
     };

@@ -32,12 +32,12 @@ vi.mock('../../../../services/gameApi', () => ({
 import toast from 'react-hot-toast';
 import { gameApi } from '../../../../services/gameApi';
 import RunnerLobbyPage from '../RunnerLobbyPage';
-import { RUNNER_RETRY, STORAGE_KEYS } from '../../../../components/game/runner/runnerUtils';
+import { RUNNER_RETRY, RUNNER_SIM_VERSION, STORAGE_KEYS } from '../../../../components/game/runner/runnerUtils';
 
 const RUN = {
     id: 'run-9',
     seed: 77,
-    sim_version: 1,
+    sim_version: RUNNER_SIM_VERSION,
     gate_count: 1,
     started_at: '2026-10-02T10:00:00Z',
     gates: [{ index: 0, question: { id: 1, text: 'Soru?', options: ['A', 'B', 'C'], category: null, difficulty: 1 } }],
@@ -47,7 +47,7 @@ const OVERVIEW = {
     stats: { best_score: 9876, best_distance: 2100, total_runs: 14, total_distance_m: 15400, total_coins: 900, total_gates_correct: 37, weekly_best: 5400 },
     weekly_rank: 3,
     top: [],
-    sim_version: 1,
+    sim_version: RUNNER_SIM_VERSION,
 };
 
 const BOARD = (period) => ({
@@ -107,11 +107,14 @@ describe('RunnerLobbyPage', () => {
         expect(gameApi.runnerLeaderboard).not.toHaveBeenCalled();
     });
 
-    it('karakter ve ses tercihini saklar', () => {
+    it('misafire varsayılan karakter özetini ve giriş çağrısını gösterir; ses tercihini saklar', () => {
         renderLobby();
-        fireEvent.click(screen.getByLabelText('Erkek'));
-        fireEvent.click(screen.getByLabelText('Nane renk'));
-        expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.character))).toEqual({ body: 'erkek', palette: 2 });
+        const card = screen.getByTestId('runner-avatar-card');
+        expect(within(card).getByRole('img', { name: 'Oyun karakterin' })).toBeInTheDocument();
+        expect(within(card).getByRole('link', { name: /Giriş yap/ })).toHaveAttribute('href', '/login');
+        expect(within(card).queryByRole('link', { name: /Karakteri düzenle/ })).toBeNull();
+        // v1 seçicisi kalktı.
+        expect(screen.queryByLabelText('Erkek')).toBeNull();
         fireEvent.click(screen.getByRole('button', { name: 'Oyun sesini kapat' }));
         expect(localStorage.getItem(STORAGE_KEYS.muted)).toBe('1');
         expect(screen.getByRole('button', { name: 'Oyun sesini aç' })).toBeInTheDocument();
@@ -181,6 +184,16 @@ describe('RunnerLobbyPage', () => {
             expect(gameApi.runnerLeaderboard).toHaveBeenCalledWith({ period: 'all', gender: 'all', limit: 5 });
         });
 
+        it('karakter özeti sunucudaki avatarı gösterir; "Karakteri düzenle" editöre götürür', async () => {
+            auth.user = { ...auth.user, detail: { game_avatar: { v: 1, body: 'kiz', skin: 3, hair: { style: 'mohawk', color: 7 }, top: { style: 'ceket', color: 2 }, bottom: { style: 'etek', color: 1 }, shoes: { style: 'neon', color: 6 }, acc: 'tac', trail: 'gokkusagi' } } };
+            renderLobby();
+            const card = screen.getByTestId('runner-avatar-card');
+            expect(within(card).getByText('Mohawk · Deri Ceket · Neon Sneaker · Taç')).toBeInTheDocument();
+            expect(within(card).getByText('Koşu izi: Gökkuşağı')).toBeInTheDocument();
+            expect(within(card).getByRole('link', { name: /Karakteri düzenle/ })).toHaveAttribute('href', '/oyun/karakter');
+            await screen.findByText('9.876');
+        });
+
         it('kurallarda mola cezası yazmaz (mola kapıyı etkilemiyor)', async () => {
             renderLobby();
             expect(await screen.findByText(/Soru kapısı yaklaşınca soru ekranın üstünde belirir/)).toBeInTheDocument();
@@ -206,7 +219,7 @@ describe('RunnerLobbyPage', () => {
         });
 
         it('sunucu farklı simülasyon sürümü bildirirse dereceli başlatmayı kapatır', async () => {
-            gameApi.runnerOverview.mockResolvedValue({ ...OVERVIEW, sim_version: 2 });
+            gameApi.runnerOverview.mockResolvedValue({ ...OVERVIEW, sim_version: RUNNER_SIM_VERSION + 1 });
             renderLobby();
             expect(await screen.findByText(/Oyun güncellendi/)).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /Koşmaya Başla/ })).toBeDisabled();

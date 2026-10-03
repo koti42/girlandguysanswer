@@ -7,6 +7,7 @@ import { FaEllipsisV, FaCheck, FaCheckDouble, FaEye, FaLock, FaImage, FaMicropho
 import { messagesAPI } from '../services/api';
 import { getProfileColor } from '../utils/userColor';
 import LinkRedirectModal from './LinkRedirectModal';
+import TicketBadge from './game/shop/TicketBadge';
 
 const EPHEMERAL_DURATION = 10; // seconds
 const EDIT_DELETE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
@@ -167,7 +168,8 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
     const [reactionPickerPosition, setReactionPickerPosition] = useState({ top: 0, left: 0 });
 
     const canEditOrDelete = canEditOrDeleteMessage(message, isMine);
-    const canEdit = canEditOrDelete && message.type === 'text' && onEdit;
+    // Mesaj Bileti ile gönderilen mesaj düzenlenemez (sunucu 403 döner); silinebilir.
+    const canEdit = canEditOrDelete && message.type === 'text' && !message.via_ticket && onEdit;
     const canDelete = canEditOrDelete && onDelete;
 
     const updateMenuPosition = useCallback(() => {
@@ -665,6 +667,9 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
                             </div>
                         );
                     })()}
+
+                    {/* Mesaj Bileti ile gelen mesaj (F.6) */}
+                    {message.via_ticket && <TicketBadge mine={isMine} />}
 
                     {/* Time + Menu */}
                     <div className="flex justify-between items-start mb-1.5 opacity-80 gap-2">

@@ -15,6 +15,7 @@ import {
     LuTv, LuUsers, LuUtensils, LuVolleyball, LuZap,
     LuActivity, LuCoins, LuGauge, LuInfinity, LuMagnet, LuMilestone, LuPersonStanding, LuRoute,
     LuShieldCheck, LuWind,
+    LuCloud, LuLayers, LuSplit, LuShoppingBag, LuTicket,
 } from 'react-icons/lu';
 
 const ICONS = {
@@ -39,6 +40,11 @@ const ICONS = {
     route: LuRoute, milestone: LuMilestone, gauge: LuGauge, activity: LuActivity, coins: LuCoins,
     magnet: LuMagnet, 'shield-check': LuShieldCheck, wind: LuWind, infinity: LuInfinity,
     'person-standing': LuPersonStanding, runner: LuPersonStanding,
+    // İkilem (dilemma_10) ve Herkesler Yükseliyor rozetleri (config/game.php badges:
+    // building, star, sparkles, plane yukarıda); olası yeni adlar için yedekler.
+    split: LuSplit, layers: LuLayers, cloud: LuCloud, tower: LuBuilding2,
+    // Mağaza
+    'shopping-bag': LuShoppingBag, shop: LuShoppingBag, ticket: LuTicket,
 };
 
 /*

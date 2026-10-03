@@ -50,12 +50,25 @@ export const ACTION_LABELS = {
     cache_clear: 'Önbellek temizlendi',
     job_retry: 'İş tekrarlandı',
     job_forget: 'İş silindi',
+    // Oyun Merkezi (soru / kategori / ikilem) ve Jeton Mağazası
+    game_question_create: 'Oyun sorusu eklendi',
+    game_question_update: 'Oyun sorusu düzenlendi',
+    game_question_deactivate: 'Oyun sorusu pasifleştirildi',
+    game_category_update: 'Oyun kategorisi düzenlendi',
+    game_dilemma_create: 'İkilem eklendi',
+    game_dilemma_update: 'İkilem düzenlendi',
+    game_dilemma_deactivate: 'İkilem pasifleştirildi',
+    game_dilemma_delete: 'İkilem silindi',
+    game_shop_item_create: 'Mağaza ürünü eklendi',
+    game_shop_item_update: 'Mağaza ürünü düzenlendi',
+    game_wallet_grant: 'Jeton verildi',
+    game_wallet_deduct: 'Jeton kesildi',
 };
 
 /** Renk sınıfı: ceza kırmızı, geri alma yeşil, bilgi mavi, nötr gri. */
 export function actionTone(action) {
     if (['ban', 'remove', 'delete', 'auto_hide', 'community_delete'].includes(action)) return 'danger';
-    if (['freeze', 'hide', 'warn', 'complaint_accepted', 'community_close', 'revoke_tokens'].includes(action)) return 'warning';
+    if (['freeze', 'hide', 'warn', 'complaint_accepted', 'community_close', 'revoke_tokens', 'game_wallet_deduct'].includes(action)) return 'warning';
     if (['unban', 'unfreeze', 'unhide', 'restore', 'restore_user', 'verify', 'community_reopen', 'complaint_rejected'].includes(action)) return 'success';
     if (['note', 'export'].includes(action)) return 'neutral';
     return 'info';

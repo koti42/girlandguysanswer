@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 const Ctx = createContext(null);
 
@@ -18,11 +18,28 @@ const TONES = {
 export function ToastProvider({ children }) {
     const [items, setItems] = useState([]);
     const counter = useRef(0);
+    /*
+     * Bildirim kapanış zamanlayıcıları: sağlayıcı sökülünce hepsi temizlenir
+     * (sayfa değişiminde/testte söküldükten sonra setState çağrılmasın).
+     */
+    const timers = useRef(new Set());
+
+    useEffect(() => {
+        const pending = timers.current;
+        return () => {
+            pending.forEach((t) => window.clearTimeout(t));
+            pending.clear();
+        };
+    }, []);
 
     const push = useCallback((message, tone = 'info', ttl = 4000) => {
         const id = ++counter.current;
         setItems((list) => [...list, { id, message, tone }]);
-        window.setTimeout(() => setItems((list) => list.filter((t) => t.id !== id)), ttl);
+        const timer = window.setTimeout(() => {
+            timers.current.delete(timer);
+            setItems((list) => list.filter((t) => t.id !== id));
+        }, ttl);
+        timers.current.add(timer);
     }, []);
 
     const api = useMemo(() => ({

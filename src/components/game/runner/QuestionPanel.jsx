@@ -80,7 +80,7 @@ const QuestionPanel = ({ gate, total, frozen = false, hidden = false }) => {
 
     return (
         <div
-            className={`pointer-events-none absolute inset-x-0 top-[calc(max(0.5rem,env(safe-area-inset-top))+4.25rem)] z-10 flex justify-center pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] ${hidden ? 'invisible' : ''}`}
+            className={`pointer-events-none absolute inset-x-0 top-[calc(max(0.5rem,var(--hs-safe-top,env(safe-area-inset-top)))+4.25rem)] z-10 flex justify-center pl-[max(0.75rem,var(--hs-safe-left,env(safe-area-inset-left)))] pr-[max(0.75rem,var(--hs-safe-right,env(safe-area-inset-right)))] ${hidden ? 'invisible' : ''}`}
             data-testid="runner-qpanel-wrap"
         >
             <section
