@@ -36,15 +36,29 @@ export const InterestChips = ({ categories, selected, onToggle, max = 10 }) => (
 );
 
 /** İlk giriş penceresi: 3–5 ilgi alanı seç; isteğe bağlı, kapatılabilir. */
-const InterestPicker = ({ isOpen, onClose, onSaved, initialSelected = [] }) => {
+const EMPTY = [];
+
+const InterestPicker = ({ isOpen, onClose, onSaved, initialSelected = EMPTY }) => {
     const [categories, setCategories] = useState([]);
     const [selected, setSelected] = useState(initialSelected);
     const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(false);
 
+    // Pencere açılınca bir kez: seçim sıfırlanır ve kategoriler çekilir.
+    // initialSelected varsayılanı sabit (EMPTY); her çizimde yeni dizi gelseydi
+    // effect sürekli tetiklenir, liste boşalırdı.
     useEffect(() => {
         if (!isOpen) return;
         setSelected(initialSelected);
-        categoriesAPI.getAll().then((r) => setCategories(r.data?.data?.categories || [])).catch(() => {});
+        setLoading(true);
+        categoriesAPI.getAll()
+            .then((r) => {
+                const d = r.data?.data;
+                const list = Array.isArray(d?.categories) ? d.categories : Array.isArray(d) ? d : [];
+                setCategories(list);
+            })
+            .catch(() => setCategories([]))
+            .finally(() => setLoading(false));
     }, [isOpen, initialSelected]);
 
     if (!isOpen) return null;
@@ -81,7 +95,13 @@ const InterestPicker = ({ isOpen, onClose, onSaved, initialSelected = [] }) => {
                     <h2 id="interest-title" className="text-xl font-bold text-ink dark:text-white">Nelerle ilgileniyorsun?</h2>
                     <p className="text-sm text-ink-muted dark:text-gray-400 mt-1 mb-5">3–5 konu seç; "Sana Özel" akışında önce bunlar gelsin. İstediğin zaman Ayarlar'dan değiştirebilirsin.</p>
                     <div className="max-h-[42vh] overflow-y-auto pr-1">
-                        <InterestChips categories={categories} selected={selected} onToggle={toggle} />
+                        {loading ? (
+                            <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-blue border-t-transparent" /></div>
+                        ) : categories.length === 0 ? (
+                            <p className="text-sm text-ink-muted py-6 text-center">Kategoriler yüklenemedi. Daha sonra Ayarlar › İlgi alanları bölümünden seçebilirsin.</p>
+                        ) : (
+                            <InterestChips categories={categories} selected={selected} onToggle={toggle} />
+                        )}
                     </div>
                     <div className="flex items-center justify-between gap-3 mt-6">
                         <button type="button" onClick={dismiss} className="text-sm font-semibold text-ink-muted hover:text-ink dark:hover:text-white">Şimdi değil</button>
