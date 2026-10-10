@@ -14,6 +14,7 @@ const Communities = lazy(() => import('./pages/Communities.jsx'));
 const Catalog = lazy(() => import('./pages/Catalog.jsx'));
 const Gamification = lazy(() => import('./pages/Gamification.jsx'));
 const Roles = lazy(() => import('./pages/Roles.jsx'));
+const Moderators = lazy(() => import('./pages/Moderators.jsx'));
 const SpecialDays = lazy(() => import('./pages/SpecialDays.jsx'));
 const Game = lazy(() => import('./pages/Game.jsx'));
 const Settings = lazy(() => import('./pages/Settings.jsx'));
@@ -41,6 +42,7 @@ export default function AdminApp() {
                         <Route path="catalog" element={<Suspense fallback={<Fallback />}><Catalog /></Suspense>} />
                         <Route path="gamification" element={<Suspense fallback={<Fallback />}><Gamification /></Suspense>} />
                         <Route path="roles" element={<Suspense fallback={<Fallback />}><Roles /></Suspense>} />
+                        <Route path="moderators" element={<Suspense fallback={<Fallback />}><Moderators /></Suspense>} />
                         <Route path="special-days" element={<Suspense fallback={<Fallback />}><SpecialDays /></Suspense>} />
                         <Route path="game" element={<Suspense fallback={<Fallback />}><Game /></Suspense>} />
                         <Route path="game/:tab" element={<Suspense fallback={<Fallback />}><Game /></Suspense>} />

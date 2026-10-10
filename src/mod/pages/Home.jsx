@@ -3,7 +3,12 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { FaBan, FaBolt, FaClock, FaEyeSlash, FaSync } from 'react-icons/fa';
 import { BarRows, Button, Card, Donut, Kbd, PageHeader, Skeleton, StatCard, Timeline } from '../../panel/ui';
 import { CONTENT_LABELS } from '../../panel/lib/moderation';
+import { ADMIN_LEVEL, CAPABILITY_LABELS, MAX_LEVEL } from '../../panel/lib/modLevels';
 import { hoursLabel } from '../../panel/lib/format';
+import { Badge } from '../../panel/ui';
+
+/** Dakika sınırını kısa etikete çevirir (1440 -> "en fazla 1 gün"). */
+const limitLabel = (m) => (m >= 1440 ? `en fazla ${Math.round(m / 1440)} gün` : `en fazla ${Math.round(m / 60)} saat`);
 
 /** Moderatör özet ekranı: kuyruk ne durumda, ben bugün ne yaptım. */
 export default function Home() {
@@ -22,6 +27,17 @@ export default function Home() {
                         <StatCard label="Gizli içerik" value={d.queue.hidden_content} sub="şu an gizli" icon={FaEyeSlash} tone="warning" onClick={() => navigate('/mod/content')} />
                         <StatCard label="Yaptırımlı hesap" value={d.queue.banned_users + d.queue.frozen_users} sub={`${d.queue.banned_users} banlı · ${d.queue.frozen_users} donuk`} icon={FaBan} tone="danger" onClick={() => navigate('/mod/users?status=banned')} />
                     </div>
+                    {d.me?.level != null && (
+                        <Card title={d.me.level === ADMIN_LEVEL ? 'Yetki: Yönetici (sınırsız)' : `Seviye ${d.me.level}/${MAX_LEVEL}: ${d.me.level_name}`} subtitle="Kademeli moderasyon — yetkiler bir üst seviyede genişler; seviyeyi yönetim, şikâyet ve iptal oranına göre belirler.">
+                            <div className="flex flex-wrap gap-1.5">
+                                {Object.keys(CAPABILITY_LABELS).map((cap) => {
+                                    const has = (d.me.capabilities || []).includes(cap);
+                                    const lim = d.me.limits?.[cap];
+                                    return <Badge key={cap} tone={has ? (lim != null ? 'warning' : 'success') : 'neutral'} className={has ? '' : 'opacity-50 line-through'}>{CAPABILITY_LABELS[cap]}{has && lim != null ? ` · ${limitLabel(lim)}` : ''}</Badge>;
+                                })}
+                            </div>
+                        </Card>
+                    )}
                     <div className="grid gap-4 lg:grid-cols-3">
                         <Card title="Kuyruk: türe göre">
                             <Donut segments={Object.entries(d.queue.by_type || {}).map(([k, v]) => ({ label: CONTENT_LABELS[k] || k, value: v }))} centerLabel={String(d.queue.pending)} />

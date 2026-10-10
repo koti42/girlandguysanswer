@@ -230,7 +230,8 @@ export const AuthProvider = ({ children }) => {
         getCurrentUser,
         markWelcomeGuideSeen,
         isAuthenticated: !!user,
-        canModerate: permissions.can_moderate
+        canModerate: permissions.can_moderate,
+        isAdmin: permissions.is_admin
     };
 
     return (

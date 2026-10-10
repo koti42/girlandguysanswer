@@ -85,6 +85,13 @@ export const adminApi = {
     userConversations: (id, params) => client.get(`/admin/users/${id}/conversations`, { params: clean(params) }),
     conversationMessages: (id, params) => client.get(`/admin/conversations/${id}/messages`, { params: clean(params) }),
 
+    /** Kademeli moderasyon: rapor, seviye atama, değerlendirme (admin). */
+    moderatorReport: (params) => client.get('/admin/moderators', { params: clean(params) }),
+    setModeratorLevel: (id, body) => client.put(`/admin/moderators/${id}/level`, body),
+    reviewModerators: (body) => client.post('/admin/moderators/review', body),
+    /** Yönetici hesabından kullanıcıya özel mesaj; kapalı kutu/engel sunucuda aşılır. */
+    sendMessage: (body) => client.post('/messages/send', body),
+
     roles: () => client.get('/admin/roles'),
     createRole: (body) => client.post('/admin/roles', body),
     updateRole: (id, body) => client.put(`/admin/roles/${id}`, body),

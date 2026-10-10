@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { FaCheckCircle, FaKey, FaSave, FaTrash, FaTrashRestore } from 'react-icons/fa';
+import { FaCheckCircle, FaKey, FaPaperPlane, FaSave, FaTrash, FaTrashRestore } from 'react-icons/fa';
 import { adminApi } from '../../panel/api/endpoints';
 import { errorMessage } from '../../panel/api/client';
 import { useQuery } from '../../panel/hooks/useQuery';
 import { useToast } from '../../panel/hooks/useToast';
 import { usePanelAuth } from '../../panel/auth/PanelAuthContext';
-import { Avatar, Badge, Button, ConfirmDialog, Drawer, Field, Input, Select, Skeleton, Tabs, Timeline } from '../../panel/ui';
+import { Avatar, Badge, Button, ConfirmDialog, Drawer, Field, Input, Modal, Select, Skeleton, Tabs, Textarea, Timeline } from '../../panel/ui';
 import { USER_STATUS, userStatusOf } from '../../panel/lib/moderation';
 import { formatDateTime, formatNumber, relativeTime } from '../../panel/lib/format';
 import UserActions from '../../panel/features/UserActions';
@@ -26,7 +26,18 @@ export default function UserDrawer({ id, onClose, onChanged, roles = [] }) {
     const [featureTag, setFeatureTag] = useState('');
     const [busy, setBusy] = useState(false);
     const [confirm, setConfirm] = useState(null);
+    const [dm, setDm] = useState(null); // null | metin: yöneticiden kullanıcıya özel mesaj
     const tags = useQuery(() => adminApi.catalog('feature-tags'), [], { enabled: !!id });
+
+    const sendDm = async () => {
+        setBusy(true);
+        try {
+            await adminApi.sendMessage({ receiver_id: user.id, content: dm.trim(), type: 'text' });
+            toast.success('Mesaj gönderildi.');
+            setDm(null);
+        } catch (e) { toast.error(errorMessage(e)); }
+        finally { setBusy(false); }
+    };
 
     useEffect(() => {
         if (!user) return;
@@ -57,6 +68,7 @@ export default function UserDrawer({ id, onClose, onChanged, roles = [] }) {
                 <>
                     <UserActions user={user} onChanged={refresh} />
                     <div className="ml-auto flex gap-2">
+                        {me?.id !== user.id && !user.is_bot && <Button size="sm" variant="secondary" icon={FaPaperPlane} onClick={() => setDm('')}>Mesaj gönder</Button>}
                         {user.deleted_at
                             ? <Button size="sm" variant="success" icon={FaTrashRestore} loading={busy} onClick={() => run(() => adminApi.restoreUser(user.id), 'Hesap geri getirildi.')}>Geri getir</Button>
                             : me?.id !== user.id && <Button size="sm" variant="danger" icon={FaTrash} onClick={() => setConfirm('delete')}>Hesabı sil</Button>}
@@ -136,7 +148,11 @@ export default function UserDrawer({ id, onClose, onChanged, roles = [] }) {
 
             <ConfirmDialog open={confirm === 'delete'} onClose={() => setConfirm(null)} title="Hesap silinsin mi?" message={`@${user?.username} hesabı yumuşak silinir; içerikleri gizlenmez ama profil erişilemez olur. Geri getirilebilir.`} confirmLabel="Sil" danger confirmText={user?.username} loading={busy}
                 onConfirm={() => run(() => adminApi.deleteUser(user.id, { reason: 'Yönetici sildi' }), 'Hesap silindi.')} />
-        </Drawer>
+                    <Modal open={dm !== null} onClose={() => setDm(null)} title={`@${user?.username} kişisine mesaj`} subtitle="Kendi hesabınızdan gider. Kullanıcının mesaj kutusu kapalı ya da sizi engellemiş olsa da ulaşır."
+                footer={<><Button variant="ghost" onClick={() => setDm(null)}>Vazgeç</Button><Button variant="primary" icon={FaPaperPlane} disabled={!dm || dm.trim().length < 2} loading={busy} onClick={sendDm}>Gönder</Button></>}>
+                <Field label="Mesaj"><Textarea value={dm || ''} onChange={(e) => setDm(e.target.value)} rows={5} maxLength={5000} placeholder="Merhaba, hesabınızla ilgili…" /></Field>
+            </Modal>
+</Drawer>
     );
 }
 

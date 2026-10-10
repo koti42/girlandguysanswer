@@ -31,6 +31,8 @@ export const ACTION_LABELS = {
     complaint_accepted: 'Şikâyet kabul',
     complaint_rejected: 'Şikâyet ret',
     role_change: 'Rol değişikliği',
+    mod_level_change: 'Moderatör seviyesi',
+    mod_level_auto: 'Moderatör seviyesi (otomatik)',
     feature_tag: 'Fenomen etiketi',
     verify: 'Doğrulandı',
     unverify: 'Doğrulama kaldırıldı',

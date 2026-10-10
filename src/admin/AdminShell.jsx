@@ -23,6 +23,7 @@ const NAV = [
         { to: '/cpl-manage/content', label: 'İçerik', icon: FaLayerGroup },
         { to: '/cpl-manage/complaints', label: 'Şikâyetler', icon: FaExclamationTriangle, badge: 'pending' },
         { to: '/cpl-manage/communities', label: 'Topluluk odaları', icon: FaComments },
+        { to: '/cpl-manage/moderators', label: 'Moderatörler', icon: FaShieldAlt },
     ] },
     { group: 'Oyun', items: [
         { to: '/cpl-manage/game', label: 'Oyun merkezi', icon: FaChartBar, end: true },

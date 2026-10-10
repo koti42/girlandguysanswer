@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaEdit, FaEllipsisH, FaFlag, FaBan } from 'react-icons/fa';
 import MessageTicketDialog from '../game/shop/MessageTicketDialog';
 import { canOfferBlock } from '../../utils/systemAccount';
+import { useAuth } from '../../context/AuthContext';
 
 const ProfileActions = ({
     profileData,
@@ -16,6 +17,7 @@ const ProfileActions = ({
     actionsMenuRef
 }) => {
     const [ticketOpen, setTicketOpen] = useState(false);
+    const { isAdmin } = useAuth();
 
     if (isOwnProfile) {
         // Edit button hidden temporarily as per request
@@ -37,8 +39,10 @@ const ProfileActions = ({
 
     // Profil yanıtı mesaj ayarlarını taşımıyorsa (eski sunucu) açık sayılır;
     // sohbet ekranı gerekirse bilet şeridini kendisi gösterir.
-    const messagingOpen = profileData.allow_messaging !== false &&
-        (profileData.messaging_mode !== 'followers' || profileData.isFollowing);
+    // Yöneticiler her hesaba yazabilir (sunucu da kapıyı açar): kapalı kutu,
+    // yalnız takipçiler ve engel yöneticiyi durdurmaz.
+    const messagingOpen = isAdmin || (profileData.allow_messaging !== false &&
+        (profileData.messaging_mode !== 'followers' || profileData.isFollowing));
     // Sistem hesabı engellenemez (sunucu da reddeder): seçenek hiç gösterilmez.
     const showBlockOption = canOfferBlock(profileData.username, profileData.hasBlocked);
 

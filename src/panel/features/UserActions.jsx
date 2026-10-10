@@ -4,7 +4,7 @@ import { modApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
 import { useToast } from '../hooks/useToast';
 import { usePanelAuth } from '../auth/PanelAuthContext';
-import { can } from '../lib/permissions';
+import { can, canDo, limitFor } from '../lib/permissions';
 import { userStatusOf } from '../lib/moderation';
 import { Button, ReasonDialog, Modal, Textarea, Field } from '../ui';
 import { MOD_DATA_CHANGED, emit } from '../lib/events';
@@ -23,6 +23,11 @@ export default function UserActions({ user, onChanged, size = 'sm', compact = fa
 
     if (!user || !can.sanction(me, user)) return null;
     const status = userStatusOf(user);
+    // Kademeli moderasyon: seviyenin kapsamadığı düğmeler görünmez; süre
+    // sınırı diyaloğa iner. Asıl kapı sunucuda (ModeratorLevelService).
+    const allowed = (cap) => canDo(me, cap);
+    const banMax = limitFor(me, 'ban');
+    const freezeMax = limitFor(me, 'freeze');
 
     const run = async (fn, okMsg) => {
         setBusy(true);
@@ -42,17 +47,17 @@ export default function UserActions({ user, onChanged, size = 'sm', compact = fa
     return (
         <div className={`flex flex-wrap gap-2 ${compact ? '' : ''}`}>
             {status === 'banned'
-                ? <Button size={size} variant="success" icon={FaUnlock} loading={busy} onClick={() => run(() => modApi.unban(user.id), 'Ban kaldırıldı.')}>Banı kaldır</Button>
-                : <Button size={size} variant="danger" icon={FaBan} onClick={() => setDialog('ban')}>Banla</Button>}
+                ? allowed('unban') && <Button size={size} variant="success" icon={FaUnlock} loading={busy} onClick={() => run(() => modApi.unban(user.id), 'Ban kaldırıldı.')}>Banı kaldır</Button>
+                : allowed('ban') && <Button size={size} variant="danger" icon={FaBan} onClick={() => setDialog('ban')}>Banla</Button>}
             {status === 'frozen'
-                ? <Button size={size} variant="success" icon={FaUnlock} loading={busy} onClick={() => run(() => modApi.unfreeze(user.id), 'Dondurma kaldırıldı.')}>Çöz</Button>
-                : status !== 'banned' && <Button size={size} variant="warning" icon={FaSnowflake} onClick={() => setDialog('freeze')}>Dondur</Button>}
-            <Button size={size} variant="secondary" icon={FaExclamation} onClick={() => setDialog('warn')}>Uyar</Button>
-            <Button size={size} variant="ghost" icon={FaStickyNote} onClick={() => { setNote(''); setDialog('note'); }}>Not</Button>
+                ? allowed('unfreeze') && <Button size={size} variant="success" icon={FaUnlock} loading={busy} onClick={() => run(() => modApi.unfreeze(user.id), 'Dondurma kaldırıldı.')}>Çöz</Button>
+                : status !== 'banned' && allowed('freeze') && <Button size={size} variant="warning" icon={FaSnowflake} onClick={() => setDialog('freeze')}>Dondur</Button>}
+            {allowed('warn') && <Button size={size} variant="secondary" icon={FaExclamation} onClick={() => setDialog('warn')}>Uyar</Button>}
+            {allowed('note') && <Button size={size} variant="ghost" icon={FaStickyNote} onClick={() => { setNote(''); setDialog('note'); }}>Not</Button>}
 
-            <ReasonDialog open={dialog === 'ban'} onClose={() => setDialog(null)} title={`@${user.username} banlansın mı?`} description="Kullanıcı sisteme giremez, tüm oturumları kapanır." submitLabel="Banla" danger withDuration loading={busy}
+            <ReasonDialog open={dialog === 'ban'} onClose={() => setDialog(null)} title={`@${user.username} banlansın mı?`} description="Kullanıcı sisteme giremez, tüm oturumları kapanır." submitLabel="Banla" danger withDuration maxMinutes={banMax === false ? null : banMax} loading={busy}
                 onSubmit={({ reason, minutes }) => run(() => modApi.ban(user.id, { reason, minutes }), 'Kullanıcı banlandı.')} />
-            <ReasonDialog open={dialog === 'freeze'} onClose={() => setDialog(null)} title={`@${user.username} dondurulsun mu?`} description="Okuyabilir ama içerik üretemez, mesaj atamaz." submitLabel="Dondur" withDuration loading={busy}
+            <ReasonDialog open={dialog === 'freeze'} onClose={() => setDialog(null)} title={`@${user.username} dondurulsun mu?`} description="Okuyabilir ama içerik üretemez, mesaj atamaz." submitLabel="Dondur" withDuration maxMinutes={freezeMax === false ? null : freezeMax} loading={busy}
                 onSubmit={({ reason, minutes }) => run(() => modApi.freeze(user.id, { reason, minutes }), 'Kullanıcı donduruldu.')} />
             <ReasonDialog open={dialog === 'warn'} onClose={() => setDialog(null)} title={`@${user.username} uyarılsın mı?`} description="Yaptırım yok; kullanıcıya mesaj gider ve geçmişe işlenir." submitLabel="Uyar" loading={busy}
                 onSubmit={({ reason }) => run(() => modApi.warn(user.id, { reason }), 'Uyarı gönderildi.')} />

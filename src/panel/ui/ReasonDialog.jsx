@@ -7,11 +7,18 @@ import { DURATION_PRESETS, REASON_PRESETS } from '../lib/moderation';
  * Sebep + (isteğe bağlı) süre isteyen moderasyon diyaloğu. Gizleme, ban,
  * dondurma, kaldırma hep bunu kullanır; sebep zorunlu, ön ayarlar hızlı.
  */
-export default function ReasonDialog({ open, onClose, onSubmit, title, submitLabel = 'Uygula', withDuration = false, danger = false, loading = false, presets = REASON_PRESETS, description }) {
+export default function ReasonDialog({ open, onClose, onSubmit, title, submitLabel = 'Uygula', withDuration = false, danger = false, loading = false, presets = REASON_PRESETS, description, maxMinutes = null }) {
     const [reason, setReason] = useState('');
     const [minutes, setMinutes] = useState(null);
 
-    useEffect(() => { if (open) { setReason(''); setMinutes(withDuration ? 1440 : null); } }, [open, withDuration]);
+    // Kademeli moderasyon: seviyenin süre sınırı varsa (maxMinutes) daha uzun
+    // ve "süresiz" seçenekleri hiç sunulmaz; sunucu zaten reddeder.
+    const durations = maxMinutes == null
+        ? DURATION_PRESETS
+        : DURATION_PRESETS.filter((d) => d.minutes != null && d.minutes <= maxMinutes);
+    const defaultMinutes = durations.some((d) => d.minutes === 1440) ? 1440 : (durations[0]?.minutes ?? null);
+
+    useEffect(() => { if (open) { setReason(''); setMinutes(withDuration ? defaultMinutes : null); } }, [open, withDuration, defaultMinutes]);
 
     const canSubmit = reason.trim().length >= 3;
 
@@ -54,10 +61,11 @@ export default function ReasonDialog({ open, onClose, onSubmit, title, submitLab
                     <div>
                         <div className="text-xs font-semibold p-muted mb-2">Süre</div>
                         <div className="flex flex-wrap gap-1.5">
-                            {DURATION_PRESETS.map((d) => (
+                            {durations.map((d) => (
                                 <button key={d.label} type="button" onClick={() => setMinutes(d.minutes)} className={`text-xs rounded-full border px-2.5 py-1 transition-colors p-ring ${minutes === d.minutes ? 'p-accent-bg border-transparent' : 'border-[var(--p-border)] p-hover'}`}>{d.label}</button>
                             ))}
                         </div>
+                        {maxMinutes != null && <p className="text-[11px] p-muted mt-1.5">Seviyeniz en fazla {maxMinutes >= 1440 ? `${Math.round(maxMinutes / 1440)} gün` : `${Math.round(maxMinutes / 60)} saat`} uygulayabilir.</p>}
                     </div>
                 )}
             </div>

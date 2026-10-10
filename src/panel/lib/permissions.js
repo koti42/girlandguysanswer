@@ -32,6 +32,8 @@ export const can = {
     system: (u) => rankOf(u) >= 3,
 };
 
+export { levelOf, levelName, capabilitiesOf, limitFor, canDo } from './modLevels';
+
 /** Menü/rota için hangi panellere girebilir. */
 export function panelsFor(user) {
     const out = [];

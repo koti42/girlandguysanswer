@@ -19,13 +19,22 @@ function generateIdempotencyKey() {
 const IDEMP_TTL_MS = 15000;
 const idempotencyCache = new Map();
 
-function getRequestFingerprint(config) {
+export function getRequestFingerprint(config) {
     const method = (config.method || 'get').toLowerCase();
     const url = config.url || '';
 
     let body = config.data;
-    if (body instanceof FormData) {
-        body = 'form-data';
+    if (typeof FormData !== 'undefined' && body instanceof FormData) {
+        // Dosyalı istekler (fotoğraf / ses mesajı): parmak izi alanlardan ve
+        // dosyanın boyutu/adından üretilir. Eskiden sabit 'form-data' idi; bu
+        // yüzden 15 sn içinde gönderilen İKİNCİ dosya mesajı ilk istekle aynı
+        // Idempotency-Key'i alıyor, sunucu onu "tekrar" sayıp ilk mesajın
+        // yanıtını geri veriyor ve ikinci mesaj hiç kaydedilmiyordu.
+        const parts = [];
+        for (const [k, v] of body.entries()) {
+            parts.push(typeof Blob !== 'undefined' && v instanceof Blob ? `${k}:blob:${v.size}:${v.name || ''}` : `${k}=${String(v)}`);
+        }
+        body = parts.join('&');
     } else if (typeof body === 'string') {
         // Zaten metin: JSON.stringify'a sokulursa tırnak eklenir ve parmak izi
         // her seferinde değişirdi. `body = body` yazılıydı - aynı işi yapan
