@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaHeart, FaThumbsDown, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret, FaEyeSlash, FaPoll, FaCheckCircle } from 'react-icons/fa';
+import { FaHeart, FaThumbsDown, FaComment, FaEye, FaMars, FaVenus, FaPaperPlane, FaUserSecret, FaEyeSlash, FaPoll, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
 import UserAvatar from './UserAvatar';
 import UserHoverCard from './UserHoverCard';
 import QuestionActionsMenu from './QuestionActionsMenu';
@@ -42,6 +42,8 @@ const QuestionCard = ({ question, onModerationAction }) => {
     const [isDisliked, setIsDisliked] = useState(question.is_disliked || false);
     const [likesCount, setLikesCount] = useState(question.likes_count || question.stats?.likes || question.likes || 0);
     const [dislikesCount, setDislikesCount] = useState(question.dislikes_count || 0);
+    // Beğeni ikonundaki tek seferlik geri bildirim; yalnızca kullanıcı beğendiğinde tetiklenir.
+    const [likeBump, setLikeBump] = useState(false);
 
     useEffect(() => {
         setIsLiked(question.is_liked || false);
@@ -78,6 +80,7 @@ const QuestionCard = ({ question, onModerationAction }) => {
 
         setIsLiked(!oldIsLiked);
         setLikesCount(prev => oldIsLiked ? prev - 1 : prev + 1);
+        if (!oldIsLiked) setLikeBump(true);
 
         try {
             const response = await questionsAPI.toggleLike({
@@ -193,94 +196,115 @@ const QuestionCard = ({ question, onModerationAction }) => {
             : null;
 
     return (
-        <div className="rounded-2xl md:rounded-3xl p-4 md:p-6 transition-shadow duration-300 border flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}40` }}>
+        <article
+            className="relative overflow-hidden flex flex-col gap-4 p-5 md:p-6 rounded-[20px] md:rounded-[24px] bg-white dark:bg-gray-800 border border-line dark:border-gray-700 shadow-card hover:shadow-card-hover transition-shadow duration-200 motion-reduce:transition-none"
+        >
+            {/* İnce üst vurgu çizgisi: kart yüzeyi nötr kalır, kimlik rengi yalnızca burada */}
+            <span
+                aria-hidden="true"
+                className="absolute inset-x-0 top-0 h-[3px] pointer-events-none"
+                style={{ background: `linear-gradient(to right, ${themeStyles.accentColor}, ${themeStyles.accentColor}99 70%, transparent)` }}
+            />
+
             {/* Header */}
-            <div className="flex justify-between items-start">
-                <UserHoverCard
-                    username={question.user?.username}
-                    categoryName={question.category?.name}
-                    categoryColor={question.category?.color}
-                    user={question.user}
-                >
-                    <div className="flex items-center gap-3">
-                        <Link to={isOwnerAnonymous ? '#' : `/profile/${question.user?.username}`} className={isOwnerAnonymous ? 'cursor-default' : ''}>
-                            <div className="relative inline-flex">
-                                {featureTag && (
-                                    <div
-                                        className="feature-tag-ring"
-                                        style={{ borderColor: featureColor, boxShadow: `${featureColor}66 0 0 18px` }}
-                                    />
-                                )}
-                                <UserAvatar
-                                    user={question.user}
-                                    size="md"
-                                    className="shadow-sm border-2 border-white md:w-12 md:h-12 w-10 h-10 relative"
-                                />
-                            </div>
-                        </Link>
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
-                                <span className="font-bold text-gray-900 dark:text-white text-base md:text-lg line-clamp-1">
-                                    {displayName}
-                                </span>
-                                {question.user?.gender === 'female' ? (
-                                    <FaVenus className="text-base md:text-lg" style={{ color: themeStyles.accentColor }} />
-                                ) : (
-                                    <FaMars className="text-base md:text-lg" style={{ color: themeStyles.accentColor }} />
-                                )}
-                            </div>
-                            {(ageRange || levelName || featureTag) && (
-                                <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                                    {ageRange && (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                                            Yaş: {ageRange}
-                                        </span>
-                                    )}
-                                    {levelName && (
-                                        <span
-                                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-                                            style={levelColor ? { color: levelColor, backgroundColor: `${levelColor}20` } : {}}
-                                        >
-                                            {levelName}
-                                        </span>
-                                    )}
+            <div className="flex items-start gap-3">
+                {/* [&>div]:w-full: UserHoverCard'ın inline-flex sarmalayıcısı içerik genişliğine
+                    göre büyümesin; uzun kullanıcı adları böylece kart içinde kırpılır. */}
+                <div className="min-w-0 flex-1 [&>div]:w-full">
+                    <UserHoverCard
+                        username={question.user?.username}
+                        categoryName={question.category?.name}
+                        categoryColor={question.category?.color}
+                        user={question.user}
+                    >
+                        <div className="flex items-start gap-3 min-w-0">
+                            <Link
+                                to={isOwnerAnonymous ? '#' : `/profile/${question.user?.username}`}
+                                className={`shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800 ${isOwnerAnonymous ? 'cursor-default' : ''}`}
+                                aria-label={isOwnerAnonymous ? 'Gizli Üye' : `${displayName} profili`}
+                            >
+                                <div className="relative inline-flex">
                                     {featureTag && (
-                                        <span
-                                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border"
-                                            style={{ color: featureColor, borderColor: `${featureColor}`, backgroundColor: `${featureColor}14` }}
-                                        >
-                                            {featureTag.name}
+                                        <div
+                                            className="feature-tag-ring"
+                                            style={{ borderColor: featureColor, boxShadow: `${featureColor}66 0 0 18px` }}
+                                        />
+                                    )}
+                                    <UserAvatar
+                                        user={question.user}
+                                        size="md"
+                                        className="relative w-11 h-11 md:w-12 md:h-12 text-base border-2 border-white dark:border-gray-700 shadow-sm"
+                                    />
+                                </div>
+                            </Link>
+
+                            <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <span className="font-bold text-[15px] md:text-base text-ink dark:text-white leading-tight truncate">
+                                        {displayName}
+                                    </span>
+                                    {question.user?.gender === 'female' ? (
+                                        <FaVenus className="shrink-0 text-sm" style={{ color: themeStyles.accentColor }} aria-label="Kadın" />
+                                    ) : (
+                                        <FaMars className="shrink-0 text-sm" style={{ color: themeStyles.accentColor }} aria-label="Erkek" />
+                                    )}
+                                </div>
+
+                                {(ageRange || levelName || featureTag) && (
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                        {ageRange && (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                                Yaş: {ageRange}
+                                            </span>
+                                        )}
+                                        {levelName && (
+                                            <span
+                                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 whitespace-nowrap max-w-full truncate"
+                                                style={levelColor ? { color: levelColor, backgroundColor: `${levelColor}1F` } : {}}
+                                            >
+                                                {levelName}
+                                            </span>
+                                        )}
+                                        {featureTag && (
+                                            <span
+                                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap max-w-full truncate"
+                                                style={{ color: featureColor, backgroundColor: `${featureColor}1F` }}
+                                            >
+                                                {featureTag.name}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted dark:text-gray-400 min-w-0">
+                                    {question.category?.name && (() => {
+                                        const categoryName = question.category.name;
+                                        const categoryColor = question.category.color;
+                                        const IconComponent = getCategoryIcon(categoryName);
+                                        const hexColor = getCategoryColor(categoryColor);
+                                        return (
+                                            <span
+                                                style={{ color: hexColor, backgroundColor: `${hexColor}1A` }}
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold max-w-full"
+                                            >
+                                                <IconComponent className="shrink-0 text-[13px]" />
+                                                <span className="truncate">{categoryName}</span>
+                                            </span>
+                                        );
+                                    })()}
+                                    {formatQuestionDate(question.created_at) && (
+                                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span aria-hidden="true" className="w-1 h-1 rounded-full bg-current opacity-60" />
+                                            <span>Sorulma: {formatQuestionDate(question.created_at)}</span>
                                         </span>
                                     )}
                                 </div>
-                            )}
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500 dark:text-gray-400 text-[10px] md:text-xs mt-1.5">
-                                {question.category?.name && (() => {
-                                    const categoryName = question.category.name;
-                                    const categoryColor = question.category.color;
-                                    const IconComponent = getCategoryIcon(categoryName);
-                                    const hexColor = getCategoryColor(categoryColor);
-                                    return (
-                                        <span 
-                                            style={{ backgroundColor: hexColor }}
-                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white font-bold"
-                                        >
-                                            <IconComponent className="text-sm" />
-                                            {categoryName}
-                                        </span>
-                                    );
-                                })()}
-                                {formatQuestionDate(question.created_at) && (
-                                    <>
-                                        {question.category?.name && <span>•</span>}
-                                        <span>Sorulma: {formatQuestionDate(question.created_at)}</span>
-                                    </>
-                                )}
                             </div>
                         </div>
-                    </div>
-                </UserHoverCard>
-                <div className="flex items-center gap-2">
+                    </UserHoverCard>
+                </div>
+
+                <div className="flex items-center shrink-0 -mr-2 -mt-1">
                     {(canModerate || question.canModerate) && (
                         <QuestionModerationMenu
                             question={question}
@@ -295,52 +319,67 @@ const QuestionCard = ({ question, onModerationAction }) => {
             </div>
 
             {/* Content */}
-            <div>
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    {(question.moderation?.is_hidden || question.is_hidden) && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-semibold">
-                            <FaEyeSlash />
-                            Gizlendi
-                        </span>
-                    )}
-                    {(question.has_poll || question.poll) && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
-                            <FaPoll />
-                            Anket
-                        </span>
-                    )}
-                    {answerRestrictionLabel && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
-                            {answerRestrictionLabel}
-                        </span>
-                    )}
-                </div>
-                <Link to={`/question/${question.slug || question.id}`}>
-                    <h3 className="text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 md:mb-3 leading-snug hover:text-coral transition-colors cursor-pointer line-clamp-2 md:line-clamp-none">
+            <div className="flex flex-col gap-3 min-w-0">
+                {((question.moderation?.is_hidden || question.is_hidden) || (question.has_poll || question.poll) || answerRestrictionLabel) && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {(question.moderation?.is_hidden || question.is_hidden) && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-semibold">
+                                <FaEyeSlash />
+                                Gizlendi
+                            </span>
+                        )}
+                        {(question.has_poll || question.poll) && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-soft dark:bg-blue-900/30 text-brand-blue dark:text-blue-300 text-xs font-semibold">
+                                <FaPoll />
+                                Anket
+                            </span>
+                        )}
+                        {answerRestrictionLabel && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-soft dark:bg-blue-900/30 text-brand-blue dark:text-blue-300 text-xs font-semibold">
+                                {answerRestrictionLabel}
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                <Link
+                    to={`/question/${question.slug || question.id}`}
+                    className="block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
+                >
+                    <h3 className="text-[22px] md:text-2xl font-bold leading-[1.35] tracking-[-0.01em] text-ink dark:text-gray-50 break-words [overflow-wrap:anywhere] hover:text-brand-blue dark:hover:text-blue-300 transition-colors motion-reduce:transition-none line-clamp-4 md:line-clamp-none">
                         {question.title}
                     </h3>
                 </Link>
 
-                <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
-                    {question.tags.map((tag, idx) => {
-                        const displayTag = tag.startsWith('#') ? tag : `#${tag}`;
-                        return (
-                            <span key={idx} className="px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold transition-colors" style={{ backgroundColor: themeStyles.bgColorStrong, color: themeStyles.accentColor }}>
-                                {displayTag}
-                            </span>
-                        );
-                    })}
-                </div>
+                {question.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 md:gap-2 min-w-0">
+                        {question.tags.map((tag, idx) => {
+                            const displayTag = tag.startsWith('#') ? tag : `#${tag}`;
+                            return (
+                                <span
+                                    key={idx}
+                                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold max-w-full truncate"
+                                    style={{ backgroundColor: themeStyles.bgColorStrong, color: themeStyles.accentColor }}
+                                >
+                                    {displayTag}
+                                </span>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {question.image && (
-                    <Link to={`/question/${question.slug || question.id}`}>
-                        <div className="rounded-xl md:rounded-2xl overflow-hidden mb-3 md:mb-4 shadow-sm cursor-pointer group">
+                    <Link
+                        to={`/question/${question.slug || question.id}`}
+                        className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
+                    >
+                        <div className="rounded-2xl overflow-hidden border border-line dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
                             <img
                                 src={question.image}
-                                alt="Question"
+                                alt="Soru görseli"
                                 loading="lazy"
                                 decoding="async"
-                                className="w-full h-56 md:h-72 object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
+                                className="w-full h-56 md:h-72 object-cover"
                             />
                         </div>
                     </Link>
@@ -348,54 +387,68 @@ const QuestionCard = ({ question, onModerationAction }) => {
             </div>
 
             {/* Footer / Stats */}
-            <div className="pt-3 md:pt-4 border-t border-gray-100/50 dark:border-gray-700/50">
-                <div className="flex items-center justify-between text-gray-500 text-xs md:text-sm mb-3 md:mb-4">
-                    <div className="flex gap-4 md:gap-6">
+            <div className="pt-3.5 md:pt-4 border-t border-line dark:border-gray-700 flex flex-col gap-3.5 md:gap-4">
+                <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="flex items-center gap-1 -ml-2">
                         <button
+                            type="button"
                             onClick={handleLike}
-                            className={`flex items-center gap-1.5 md:gap-2 transition-colors group ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
                             disabled={loading}
+                            aria-pressed={isLiked}
+                            aria-label={isLiked ? 'Beğeniyi geri al' : 'Beğen'}
+                            className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-xl font-semibold tabular-nums transition-colors motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-pink/60 disabled:opacity-60 disabled:cursor-not-allowed ${isLiked
+                                ? 'text-brand-pink'
+                                : 'text-ink-muted dark:text-gray-400 hover:text-brand-pink hover:bg-pink-soft dark:hover:bg-pink-900/20'
+                                }`}
                         >
-                            <div className={`p-1.5 md:p-2 rounded-full transition-colors ${isLiked ? 'bg-red-100 text-red-500' : 'bg-red-50 text-red-400 group-hover:bg-red-100 group-hover:text-red-500'}`}>
-                                <FaHeart />
-                            </div>
-                            <span className="font-semibold">{likesCount}</span>
+                            <FaHeart className={`text-[17px] ${likeBump ? 'q-like-pop' : ''}`} onAnimationEnd={() => setLikeBump(false)} />
+                            <span>{likesCount}</span>
                         </button>
                         <button
+                            type="button"
                             onClick={handleDislike}
-                            className={`flex items-center gap-1.5 md:gap-2 transition-colors group ${isDisliked ? 'text-slate-600 dark:text-slate-300' : 'hover:text-slate-600 dark:hover:text-slate-300'}`}
                             disabled={loading}
+                            aria-pressed={isDisliked}
+                            aria-label={isDisliked ? 'Beğenmemeyi geri al' : 'Beğenme'}
+                            className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-xl font-semibold tabular-nums transition-colors motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/60 disabled:opacity-60 disabled:cursor-not-allowed ${isDisliked
+                                ? 'text-slate-700 dark:text-slate-200'
+                                : 'text-ink-muted dark:text-gray-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-gray-700/60'
+                                }`}
                         >
-                            <div className={`p-1.5 md:p-2 rounded-full transition-colors ${isDisliked ? 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-slate-100 dark:group-hover:bg-slate-700'}`}>
-                                <FaThumbsDown />
-                            </div>
-                            <span className="font-semibold">{dislikesCount}</span>
+                            <FaThumbsDown className="text-[17px]" />
+                            <span>{dislikesCount}</span>
                         </button>
-                        <Link to={`/question/${question.slug || question.id}`} className="flex items-center gap-1.5 md:gap-2 hover:text-blue-500 transition-colors group">
-                            <div className="p-1.5 md:p-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-400 dark:text-blue-300 group-hover:bg-blue-100 transition-colors">
-                                <FaComment />
-                            </div>
-                            <span className="font-semibold">{question.answers_count !== undefined ? question.answers_count : (question.stats?.comments || question.commentsCount || 0)}</span>
+                        <Link
+                            to={`/question/${question.slug || question.id}`}
+                            aria-label="Cevapları gör"
+                            className="inline-flex items-center gap-1.5 h-10 px-2.5 rounded-xl font-semibold tabular-nums text-ink-muted dark:text-gray-400 hover:text-brand-blue hover:bg-blue-soft dark:hover:bg-blue-900/20 transition-colors motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/60"
+                        >
+                            <FaComment className="text-[17px] text-brand-blue" />
+                            <span>{question.answers_count !== undefined ? question.answers_count : (question.stats?.comments || question.commentsCount || 0)}</span>
                         </Link>
                     </div>
-                    <div className="flex items-center gap-1.5 md:gap-2 text-gray-400">
-                        <FaEye /> <span>{question.views_count !== undefined ? question.views_count : (question.stats?.views || question.views || 0)}</span>
+                    <div className="inline-flex items-center gap-1.5 shrink-0 text-ink-muted dark:text-gray-400 tabular-nums" title="Görüntülenme">
+                        <FaEye className="text-[17px]" aria-hidden="true" />
+                        <span>{question.views_count !== undefined ? question.views_count : (question.stats?.views || question.views || 0)}</span>
+                        <span className="sr-only">görüntülenme</span>
                     </div>
                 </div>
 
                 {/* Reply Button - Only if not owner */}
                 {!isQuestionOwner && canAnswerByRestriction && (
                     <button
+                        type="button"
                         onClick={() => setShowReplyBox(!showReplyBox)}
-                        className="w-full py-2.5 md:py-3 px-4 rounded-xl text-white font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.99] flex items-center justify-center gap-2 text-sm md:text-base"
-                                        style={{ background: `linear-gradient(to right, ${themeStyles.accentColor}, ${themeStyles.accentColor}dd)` }}
+                        aria-expanded={showReplyBox}
+                        className="w-full h-12 px-4 rounded-2xl bg-brand-pink text-white font-semibold text-[15px] md:text-base inline-flex items-center justify-center gap-2 shadow-sm hover:bg-[#D63C8A] active:bg-[#C5347E] active:scale-[0.99] transition-[background-color,transform] duration-150 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-pink focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        <FaComment />
-                        {showReplyBox ? 'Vazgeç' : 'Cevapla'}
+                        <FaComment className="text-base" />
+                        <span>{showReplyBox ? 'Vazgeç' : 'Cevapla'}</span>
+                        {!showReplyBox && <FaArrowRight className="text-sm opacity-90" aria-hidden="true" />}
                     </button>
                 )}
                 {!isQuestionOwner && !canAnswerByRestriction && answerRestrictionLabel && (
-                    <div className="w-full py-2.5 px-4 rounded-xl bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-300 text-sm font-medium text-center">
+                    <div className="w-full h-12 px-4 rounded-2xl bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-300 text-sm font-medium inline-flex items-center justify-center text-center">
                         {answerRestrictionLabel}
                     </div>
                 )}
@@ -421,10 +474,10 @@ const QuestionCard = ({ question, onModerationAction }) => {
 
             {/* Quick Reply Box */}
             {showReplyBox && !isQuestionOwner && canAnswerByRestriction && (
-                <form onSubmit={handleSubmitReply} className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700">
+                <form onSubmit={handleSubmitReply} className="pt-4 border-t border-line dark:border-gray-700">
                     {hasAnswered ? (
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600">
-                            <FaCheckCircle className="text-gray-500 dark:text-gray-300" />
+                        <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-700/60 border border-line dark:border-gray-600">
+                            <FaCheckCircle className="text-success shrink-0" />
                             <p className="text-sm text-gray-600 dark:text-gray-300">Daha önce yorum yaptınız.</p>
                         </div>
                     ) : (
@@ -435,38 +488,41 @@ const QuestionCard = ({ question, onModerationAction }) => {
                                     value={replyText}
                                     onChange={(e) => setReplyText(e.target.value)}
                                     placeholder="Hızlı cevap yaz..."
-                                    className="flex-1 px-3 md:px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 transition-all text-sm"
+                                    aria-label="Hızlı cevap"
+                                    className="flex-1 min-w-0 h-11 px-4 rounded-xl border border-line dark:border-gray-600 bg-white dark:bg-gray-700 text-ink dark:text-white placeholder:text-ink-muted/80 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-colors motion-reduce:transition-none text-sm disabled:opacity-60"
                                     autoFocus
                                     disabled={loading}
                                 />
                                 <button
                                     type="submit"
                                     disabled={!replyText.trim() || loading}
-                                    className="bg-gradient-to-r from-coral to-orange-400 text-white p-2 md:p-2.5 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[40px] md:min-w-[44px]"
+                                    aria-label="Cevabı gönder"
+                                    className="shrink-0 w-11 h-11 rounded-xl bg-brand-pink text-white inline-flex items-center justify-center hover:bg-[#D63C8A] active:bg-[#C5347E] transition-colors motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-pink focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-b-transparent"></div> : <FaPaperPlane />}
                                 </button>
                             </div>
-                            <div className="flex items-center justify-between mt-2 md:mt-3">
+                            <div className="flex items-center justify-between gap-2 mt-2.5">
                                 <button
                                     type="button"
                                     onClick={() => setIsAnonymous(!isAnonymous)}
                                     disabled={loading}
-                                    className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-medium transition-all ${isAnonymous
-                                        ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-800'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                                    aria-pressed={isAnonymous}
+                                    className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-xs md:text-sm font-medium border transition-colors motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/60 disabled:opacity-60 ${isAnonymous
+                                        ? 'bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                        : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-line dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                                         }`}
                                 >
-                                    <FaUserSecret className="text-base md:text-lg" />
-                                    <span className="text-xs md:text-sm">{isAnonymous ? 'Gizli' : 'Gizli Üye ol'}</span>
+                                    <FaUserSecret className="text-sm" />
+                                    <span>{isAnonymous ? 'Gizli' : 'Gizli Üye ol'}</span>
                                 </button>
-                                <p className="text-[10px] md:text-xs text-gray-500 hidden md:block">Detaylı cevap için soruya tıklayın</p>
+                                <p className="text-xs text-ink-muted dark:text-gray-400 hidden md:block">Detaylı cevap için soruya tıklayın</p>
                             </div>
                         </>
                     )}
                 </form>
             )}
-        </div>
+        </article>
     );
 };
 
