@@ -1,40 +1,44 @@
 import React from 'react';
-import { FaChevronRight } from 'react-icons/fa';
+import { FaThLarge } from 'react-icons/fa';
 import { getCategoryIcon, getCategoryColor } from '../utils/categoryIcons';
 
+/*
+ * Kategori rayı: büyük renkli kartlar yerine yatay kaydırılan kompakt chip'ler.
+ * Seçili kategori dolu renkli; diğerleri kategori renginin yumuşak tonu.
+ * Soru kartları ekranda daha yukarı gelir, kontrol hiyerarşisi netleşir.
+ */
 const CategoryNav = ({ categories = [], selectedCategory, onSelectCategory }) => {
+    const allActive = !selectedCategory || selectedCategory.id === 0;
     return (
-        <div className="flex gap-4 overflow-x-auto pb-4 pt-2 scrollbar-hide">
-            <div
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" role="list" aria-label="Kategoriler">
+            <button
+                type="button"
                 onClick={() => onSelectCategory({ id: 0, name: 'Tümü' })}
-                className={`flex-shrink-0 w-32 h-24 rounded-2xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform shadow-md ${selectedCategory?.id === 0
-                    ? 'bg-gradient-to-br from-gray-700 to-gray-900 text-white ring-2 ring-offset-2 ring-gray-600 dark:ring-offset-gray-900'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                aria-pressed={allActive}
+                className={`shrink-0 inline-flex items-center gap-2 h-9 px-3.5 rounded-full text-[13px] font-semibold border transition-colors motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${allActive
+                    ? 'bg-ink text-white border-ink'
+                    : 'bg-white dark:bg-gray-800 text-ink dark:text-gray-200 border-line dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
             >
-                <span className="font-bold text-lg">Tümü</span>
-            </div>
-
+                <FaThLarge className="text-xs" /> Tümü
+            </button>
             {categories.map((cat) => {
                 const IconComponent = getCategoryIcon(cat.name);
-                const hexColor = getCategoryColor(cat.color); // API'den gelen color hex
-
+                const color = getCategoryColor(cat.color);
+                const active = selectedCategory?.id === cat.id;
                 return (
-                    <div
+                    <button
                         key={cat.id}
-                        onClick={() => onSelectCategory(cat)}
-                        style={{
-                            backgroundColor: hexColor
-                        }}
-                        className={`flex-shrink-0 w-44 h-24 rounded-2xl p-4 flex items-center justify-between text-white cursor-pointer hover:scale-105 transition-transform shadow-md ${selectedCategory?.id === cat.id ? 'ring-4 ring-offset-2 ring-coral/30 transform scale-105' : ''
-                            }`}
+                        type="button"
+                        onClick={() => onSelectCategory(active ? { id: 0, name: 'Tümü' } : cat)}
+                        aria-pressed={active}
+                        title={cat.name}
+                        style={active ? { backgroundColor: color, borderColor: color } : { backgroundColor: `${color}14`, borderColor: `${color}26`, color }}
+                        className={`shrink-0 inline-flex items-center gap-2 h-9 px-3.5 rounded-full text-[13px] font-semibold border max-w-[240px] transition-transform motion-reduce:transition-none hover:-translate-y-px focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${active ? 'text-white' : ''}`}
                     >
-                        <div className="flex flex-col">
-                            <span className="font-bold text-lg leading-tight">{cat.name.split(' & ')[0]}</span>
-                            <span className="text-sm opacity-90">{cat.name.split(' & ')[1] && `& ${cat.name.split(' & ')[1]}`}</span>
-                        </div>
-                        <IconComponent className="text-3xl opacity-90" />
-                    </div>
+                        <IconComponent className="text-sm shrink-0" />
+                        <span className="truncate">{cat.name}</span>
+                    </button>
                 );
             })}
         </div>

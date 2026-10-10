@@ -51,6 +51,9 @@ const NotificationsPage = () => {
         const questionSlug = notification.data?.question_slug || notification.data?.slug;
 
         switch (notification.type) {
+            case 'followed_user_question':
+                if (questionSlug) navigate(`/question/${questionSlug}`);
+                break;
             case 'answer_created':
                 if (questionSlug) {
                     const answerId = notification.data?.answer_id;

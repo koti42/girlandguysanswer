@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash, FaUser, FaAt } from 'react-icons/fa';
+import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash, FaUser, FaAt, FaBell, FaMagic } from 'react-icons/fa';
+import { InterestChips } from '../components/InterestPicker';
 import MainLayout from '../layouts/MainLayout';
 import { useAuth } from '../context/AuthContext';
-import { usersAPI } from '../services/api';
+import { usersAPI, categoriesAPI } from '../services/api';
 import { TopUsersWidget } from '../components/Widgets';
 import Toast from '../components/Toast';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -131,6 +132,8 @@ const SettingsPage = () => {
                 const detail = userData.detail;
                 const remaining = response.data.data.username_changes_remaining;
                 setCurrentEmail(userData.email || user?.email || '');
+                setNotifPrefs(response.data.data.notification_preferences || {});
+                setInterestIds((response.data.data.interests || []).map((c) => c.id));
                 setUsernameChangesRemaining(remaining !== undefined ? remaining : 3);
 
                 setSettings({
@@ -347,6 +350,51 @@ const SettingsPage = () => {
         } finally {
             setUsernameSubmitting(false);
         }
+    };
+
+    // Bildirim tercihleri (sunucu: NotificationPreferences::KEYS ile birebir)
+    const NOTIF_KEYS = [
+        ['answer_created', 'Soruma cevap gelince', 'Sorduğun soruya yeni bir cevap yazıldığında.'],
+        ['comment_created', 'Soruma / cevabıma yorum gelince', 'İçeriğine yorum yapıldığında.'],
+        ['comment_reply', 'Yorumuma yanıt gelince', 'Bir yorumuna yanıt yazıldığında.'],
+        ['best_answer', 'Cevabım en iyi görüş seçilince', 'Soru sahibi cevabını en iyi görüş seçtiğinde.'],
+        ['followed', 'Yeni takipçi ve takip istekleri', 'Biri seni takip ettiğinde ya da istek gönderdiğinde.'],
+        ['followed_user_question', 'Takip ettiğim biri soru sorunca', 'Takip ettiğin üyeler yeni soru paylaştığında.'],
+        ['push_enabled', 'Anlık (push) bildirimler', 'Kapalıysa telefona/tarayıcıya anlık bildirim gitmez; uygulama içi bildirimler kalır.'],
+    ];
+    const [notifPrefs, setNotifPrefs] = useState({});
+    const [interestIds, setInterestIds] = useState([]);
+    const [savedInterestIds, setSavedInterestIds] = useState(null);
+    const [allCategories, setAllCategories] = useState([]);
+    const [interestSaving, setInterestSaving] = useState(false);
+    useEffect(() => {
+        categoriesAPI.getAll().then((r) => setAllCategories(r.data?.data?.categories || [])).catch(() => {});
+    }, []);
+    useEffect(() => { if (savedInterestIds === null && interestIds.length) setSavedInterestIds(interestIds); }, [interestIds, savedInterestIds]);
+
+    const handleNotifPrefToggle = async (key, value) => {
+        const prev = notifPrefs;
+        setNotifPrefs((p) => ({ ...p, [key]: value }));
+        try {
+            const r = await usersAPI.updateNotificationPreferences({ [key]: value });
+            if (r.data?.data?.notification_preferences) setNotifPrefs(r.data.data.notification_preferences);
+            showSuccess('Bildirim tercihi güncellendi.');
+        } catch (error) {
+            setNotifPrefs(prev);
+            showToast(error.response?.data?.message || 'Tercih güncellenemedi.', 'error');
+        }
+    };
+
+    const saveInterests = async () => {
+        setInterestSaving(true);
+        try {
+            const r = await usersAPI.updateInterests(interestIds);
+            const ids = (r.data?.data?.interests || []).map((c) => c.id);
+            setInterestIds(ids); setSavedInterestIds(ids);
+            showSuccess('İlgi alanların kaydedildi.');
+        } catch (error) {
+            showToast(error.response?.data?.message || 'Kaydedilemedi.', 'error');
+        } finally { setInterestSaving(false); }
     };
 
     const handleMentionToggle = async (newValue) => {
@@ -846,6 +894,43 @@ const SettingsPage = () => {
                             enabled={settings.allow_mention_notifications}
                             onChange={handleMentionToggle}
                         />
+                    </div>
+
+                    {/* Bildirim tercihleri */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-amber-600 dark:text-amber-400">
+                                <FaBell className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Bildirim Tercihleri</h2>
+                                <p className="text-xs text-gray-500">Yalnızca gerçekten ilgilendiğin gelişmeler için bildirim al</p>
+                            </div>
+                        </div>
+                        {NOTIF_KEYS.map(([key, label, description]) => (
+                            <Toggle key={key} label={label} description={description} enabled={notifPrefs[key] !== false} onChange={(v) => handleNotifPrefToggle(key, v)} />
+                        ))}
+                    </div>
+
+                    {/* İlgi alanları */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-blue-soft dark:bg-blue-900/30 rounded-lg text-brand-blue">
+                                <FaMagic className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">İlgi Alanları</h2>
+                                <p className="text-xs text-gray-500">"Sana Özel" akışında önce bu konular gelir (en fazla 10)</p>
+                            </div>
+                        </div>
+                        <InterestChips categories={allCategories} selected={interestIds} onToggle={(id) => setInterestIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))} />
+                        <div className="flex items-center justify-between mt-4">
+                            <span className="text-xs text-gray-500">{interestIds.length} seçili</span>
+                            <button type="button" onClick={saveInterests} disabled={interestSaving || JSON.stringify([...interestIds].sort()) === JSON.stringify([...(savedInterestIds || [])].sort())}
+                                className="h-10 px-5 rounded-xl bg-brand-pink text-white text-sm font-semibold disabled:opacity-50 hover:bg-[#D63C8A] transition-colors">
+                                {interestSaving ? 'Kaydediliyor…' : 'Kaydet'}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Change Password */}

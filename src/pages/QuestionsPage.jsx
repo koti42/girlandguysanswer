@@ -4,11 +4,13 @@ import HeroSection from '../components/HeroSection';
 import CategoryNav from '../components/CategoryNav';
 import FeedTabs from '../components/FeedTabs';
 import QuestionCard from '../components/QuestionCard';
-import { TrendsWidget, TopUsersWidget, AnnouncementsWidget } from '../components/Widgets';
-import { FaMars, FaVenus, FaGlobe, FaRobot } from 'react-icons/fa';
-import { questionsAPI, categoriesAPI } from '../services/api';
+import { TrendsWidget, TopUsersWidget, AnnouncementsWidget, UnansweredWidget } from '../components/Widgets';
+import InterestPicker, { INTERESTS_PROMPT_KEY } from '../components/InterestPicker';
+import { FaMars, FaVenus, FaGlobe, FaRobot, FaCommentDots, FaPen, FaTimes } from 'react-icons/fa';
+import { questionsAPI, categoriesAPI, usersAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 const QuestionsPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -20,7 +22,20 @@ const QuestionsPage = () => {
     const [selectedCategory, setSelectedCategory] = useState({ id: 0, title: 'Tümü' });
     const [genderFilter, setGenderFilter] = useState('all');
     const [aiFilter, setAiFilter] = useState(false);
+    const [unansweredFilter, setUnansweredFilter] = useState(searchParams.get('unanswered') === '1');
     const [sortBy, setSortBy] = useState('popular');
+    const { isAuthenticated, user } = useAuth();
+    // İlgi alanı penceresi: giriş yapmış, ilgi alanı seçmemiş ve daha önce kapatmamış kullanıcıya bir kez.
+    const [interestOpen, setInterestOpen] = useState(false);
+    useEffect(() => {
+        if (!isAuthenticated) return;
+        let dismissed = false;
+        try { dismissed = localStorage.getItem(INTERESTS_PROMPT_KEY) === '1'; } catch { dismissed = true; }
+        if (dismissed) return;
+        usersAPI.getInterests().then((r) => {
+            if ((r.data?.data?.interests || []).length === 0) setInterestOpen(true);
+        }).catch(() => {});
+    }, [isAuthenticated]);
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -63,15 +78,18 @@ const QuestionsPage = () => {
         }
 
         try {
+            // "Takip ettiklerim" sekmesi: following=true + en yeni sırası.
             const params = {
                 search: searchQuery || undefined,
                 category: selectedCategory.id !== 0 ? selectedCategory.name : undefined,
                 gender: genderFilter !== 'all' ? genderFilter : undefined,
-                sort: sortBy,
+                sort: sortBy === 'following' ? 'newest' : sortBy,
                 page: page,
                 limit: 10,
+                ...(sortBy === 'following' ? { following: 'true' } : {}),
                 ...(tagFilter ? { tag: tagFilter } : {}),
                 ...(aiFilter ? { has_ai_answers: true } : {}),
+                ...(unansweredFilter ? { no_answers: 1 } : {}),
             };
 
             const response = await questionsAPI.getAll(params);
@@ -93,7 +111,7 @@ const QuestionsPage = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [searchQuery, selectedCategory, genderFilter, sortBy, tagFilter, aiFilter]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy, tagFilter, aiFilter, unansweredFilter]);
 
     // Ref tazeleme çizimde değil efektte: çizim sırasında ref yazmak React'in
     // önerdiği kullanım değil (bkz. react-hooks/refs).
@@ -133,7 +151,7 @@ const QuestionsPage = () => {
         setCurrentPage(1);
         setQuestions([]);
         fetchQuestions(1, false);
-    }, [searchQuery, selectedCategory, genderFilter, sortBy, tagFilter, aiFilter]);
+    }, [searchQuery, selectedCategory, genderFilter, sortBy, tagFilter, aiFilter, unansweredFilter]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -163,6 +181,7 @@ const QuestionsPage = () => {
 
     const SidebarContent = (
         <>
+            <UnansweredWidget />
             <TrendsWidget />
             <TopUsersWidget />
             <AnnouncementsWidget />
@@ -174,58 +193,56 @@ const QuestionsPage = () => {
             <div className="flex flex-col gap-8">
                 <HeroSection />
 
-                <div className="flex flex-col gap-6">
-                    {/* CategoryNav - API'den gelen kategorileri göster */}
+                <InterestPicker isOpen={interestOpen} onClose={() => setInterestOpen(false)} onSaved={() => setSortBy('forYou')} />
+
+                {/* Soru sorma çağrısı: ilk etkileşimi kolaylaştır */}
+                <Link to="/ask" className="group flex items-center gap-4 rounded-[20px] bg-white dark:bg-gray-800 border border-line dark:border-gray-700 shadow-card hover:shadow-card-hover transition-shadow p-4 sm:p-5">
+                    <span className="shrink-0 w-11 h-11 rounded-2xl bg-pink-soft text-brand-pink flex items-center justify-center"><FaCommentDots className="text-lg" /></span>
+                    <span className="flex-1 min-w-0">
+                        <span className="block font-bold text-ink dark:text-white">Aklında bir soru mu var{user?.username ? `, ${user.username}` : ''}?</span>
+                        <span className="block text-sm text-ink-muted dark:text-gray-400 truncate">Toplulukla paylaş, farklı bakış açılarını keşfet. Cevap yazan herkes puan kazanır.</span>
+                    </span>
+                    <span className="shrink-0 inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-brand-pink text-white text-sm font-semibold group-hover:bg-[#D63C8A] transition-colors"><FaPen className="text-xs" /> Soru sor</span>
+                </Link>
+
+                <div className="flex flex-col gap-4">
+                    {/* Kategori rayı: kompakt chip'ler */}
                     <CategoryNav categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
 
-                    <div className="flex flex-col gap-4">
-                        <FeedTabs activeTab={sortBy} onTabChange={setSortBy} />
+                    <div className="flex flex-col gap-3">
+                        <FeedTabs activeTab={sortBy} onTabChange={setSortBy} showFollowing={isAuthenticated} />
 
-                        {/* Gender Filter Buttons */}
-                        <div className="flex gap-2 flex-wrap">
-                            <button
-                                onClick={() => setGenderFilter('all')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${genderFilter === 'all'
-                                    ? 'bg-gradient-to-r from-coral to-orange-400 text-white shadow-lg'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                    }`}
-                            >
-                                <FaGlobe />
-                                <span>Tüm Sorular</span>
+                        {/* Hızlı filtreler: kim soruyor + tür */}
+                        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1" role="group" aria-label="Filtreler">
+                            {[
+                                { key: 'all', label: 'Herkes', icon: FaGlobe, color: '#202B3C' },
+                                { key: 'female', label: 'Kadınlar', icon: FaVenus, color: '#E74798' },
+                                { key: 'male', label: 'Erkekler', icon: FaMars, color: '#3978E8' },
+                            ].map((g) => {
+                                const active = genderFilter === g.key;
+                                return (
+                                    <button key={g.key} type="button" onClick={() => setGenderFilter(g.key)} aria-pressed={active}
+                                        style={active ? { backgroundColor: g.color, borderColor: g.color } : { color: g.color }}
+                                        className={`shrink-0 inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-semibold border transition-colors motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${active ? 'text-white' : 'bg-white dark:bg-gray-800 border-line dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                                        <g.icon className="text-xs" /> {g.label}
+                                    </button>
+                                );
+                            })}
+                            <span className="shrink-0 w-px h-6 self-center bg-line dark:bg-gray-700 mx-1" aria-hidden="true" />
+                            <button type="button" onClick={() => setUnansweredFilter((p) => !p)} aria-pressed={unansweredFilter}
+                                className={`shrink-0 inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-semibold border transition-colors motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${unansweredFilter ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white dark:bg-gray-800 border-line dark:border-gray-700 text-amber-600 hover:bg-amber-50 dark:hover:bg-gray-700'}`}>
+                                <FaCommentDots className="text-xs" /> Cevapsız
                             </button>
-                            <button
-                                onClick={() => setGenderFilter('female')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${genderFilter === 'female'
-                                    ? 'bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-lg'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-pink-50 dark:hover:bg-gray-700'
-                                    }`}
-                            >
-                                <FaVenus className="text-pink-500" />
-                                <span>Kadınlar Soruyor</span>
+                            <button type="button" onClick={() => setAiFilter((prev) => !prev)} aria-pressed={aiFilter}
+                                className={`shrink-0 inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-semibold border transition-colors motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue ${aiFilter ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-white dark:bg-gray-800 border-line dark:border-gray-700 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-gray-700'}`}>
+                                <FaRobot className="text-xs" /> AI Soruları
                             </button>
-                            <button
-                                onClick={() => setGenderFilter('male')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${genderFilter === 'male'
-                                    ? 'bg-gradient-to-r from-blue-400 to-blue-500 text-white shadow-lg'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700'
-                                    }`}
-                            >
-                                <FaMars className="text-blue-500" />
-                                <span>Erkekler Soruyor</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setAiFilter((prev) => !prev)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${
-                                    aiFilter
-                                        ? 'bg-gradient-to-r from-indigo-500 to-sky-500 text-white shadow-lg'
-                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700'
-                                }`}
-                            >
-                                <FaRobot className={aiFilter ? 'text-white' : 'text-indigo-500'} />
-                                <span>AI Soruları</span>
-                            </button>
+                            {(genderFilter !== 'all' || aiFilter || unansweredFilter || selectedCategory.id !== 0) && (
+                                <button type="button" onClick={() => { setGenderFilter('all'); setAiFilter(false); setUnansweredFilter(false); setSelectedCategory({ id: 0, name: 'Tümü' }); }}
+                                    className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[13px] font-semibold bg-gray-100 dark:bg-gray-700 text-ink-muted hover:text-ink dark:hover:text-white">
+                                    <FaTimes className="text-xs" /> Temizle
+                                </button>
+                            )}
                         </div>
 
                         {searchQuery && (
@@ -272,9 +289,16 @@ const QuestionsPage = () => {
                                     </div>
                                 </>
                             ) : (
-                                <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center">
-                                    <p className="text-gray-400 text-lg">Bu kriterlere uygun soru bulunamadı</p>
-                                    <p className="text-gray-500 text-sm mt-2">Filtreleri değiştirmeyi deneyin</p>
+                                <div className="bg-white dark:bg-gray-800 rounded-[20px] border border-line dark:border-gray-700 p-12 text-center">
+                                    <p className="text-ink dark:text-white text-lg font-semibold">
+                                        {sortBy === 'following' ? 'Takip ettiklerinden henüz soru yok' : sortBy === 'forYou' ? 'Sana Özel akış için ilgi alanı seç' : 'Bu kriterlere uygun soru bulunamadı'}
+                                    </p>
+                                    <p className="text-ink-muted text-sm mt-2">
+                                        {sortBy === 'following' ? 'Yeni üyeleri takip et; soruları burada görünsün.' : sortBy === 'forYou' ? 'Ayarlar › İlgi alanları bölümünden 3–5 konu seçebilirsin.' : 'Filtreleri değiştirmeyi deneyin'}
+                                    </p>
+                                    {sortBy === 'forYou' && isAuthenticated && (
+                                        <button type="button" onClick={() => setInterestOpen(true)} className="mt-4 h-10 px-5 rounded-xl bg-brand-blue text-white text-sm font-semibold">İlgi alanlarımı seç</button>
+                                    )}
                                 </div>
                             )}
                         </div>

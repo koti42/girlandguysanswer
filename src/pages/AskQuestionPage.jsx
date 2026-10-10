@@ -638,6 +638,25 @@ const AskQuestionPage = () => {
                                 {errors.title && <span className="text-red-500 text-sm">{errors.title}</span>}
                                 <span className="text-gray-400 dark:text-gray-500 text-sm ml-auto">{formData.title.length}/200</span>
                             </div>
+                            {!formData.title && (
+                                <div className="mt-3">
+                                    <p className="text-xs font-semibold text-ink-muted mb-2">Ne soracağını bilmiyor musun? Birini seç, düzenle:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            'Bugün seni en çok düşündüren şey ne?',
+                                            'İlk buluşmada en çok nelere dikkat edersiniz?',
+                                            'Yeni bir işe başlarken ilk hafta ne yapmalı?',
+                                            'Stresli günlerde sizi ne rahatlatıyor?',
+                                            'Kendinize söylemek istediğiniz bir tavsiye var mı?',
+                                        ].map((s) => (
+                                            <button key={s} type="button" onClick={() => setFormData((prev) => ({ ...prev, title: s }))}
+                                                className="text-xs font-medium px-3 py-1.5 rounded-full bg-blue-soft text-brand-blue hover:bg-brand-blue hover:text-white transition-colors">
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Category */}

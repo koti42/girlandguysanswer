@@ -246,3 +246,42 @@ export const PopularQuestionsWidget = () => {
         </div>
     );
 };
+
+/** Cevap bekleyen sorular: henüz cevap almamış en yeni sorular; ilk cevabı sen ver. */
+export const UnansweredWidget = () => {
+    const [items, setItems] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        questionsAPI.getAll({ no_answers: 1, sort: 'newest', limit: 5 })
+            .then((r) => { setItems(r.data?.data?.questions || []); setTotal(r.data?.data?.pagination?.total || 0); })
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading || items.length === 0) return null;
+
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-soft border border-line dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg flex items-center gap-2 text-ink dark:text-white">
+                    <span className="w-1 h-6 bg-brand-blue rounded-full"></span>
+                    Cevap bekliyor
+                </h3>
+                {total > 0 && <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-soft text-brand-blue">{total}</span>}
+            </div>
+            <div className="flex flex-col gap-2">
+                {items.map((q) => (
+                    <Link key={q.id} to={`/question/${q.slug || q.id}`} className="group flex items-start gap-2 rounded-xl px-2 py-2 -mx-2 hover:bg-blue-soft/60 dark:hover:bg-gray-700/60 transition-colors">
+                        <UserAvatar user={q.user} size="xs" className="mt-0.5 shrink-0" />
+                        <span className="text-sm text-ink dark:text-gray-200 line-clamp-2 group-hover:text-brand-blue">{q.title}</span>
+                    </Link>
+                ))}
+            </div>
+            <Link to="/questions?unanswered=1" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:underline">
+                Hepsini gör <FaChevronRight className="text-xs" />
+            </Link>
+        </div>
+    );
+};
