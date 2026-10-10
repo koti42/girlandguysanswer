@@ -91,6 +91,19 @@ const FollowersList = ({ followers: initialFollowers, type = 'followers', isOwnP
                         className="group bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-5 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-coral/30 dark:hover:border-coral/30 hover:scale-[1.02]"
                     >
                         <div className="flex items-start gap-4">
+                            {/* Gizli üye (anonim beğeni): profil bağlantısı yok, kimlik görünmez */}
+                            {(user.is_anonymous || user.username === 'anonim') ? (
+                                <>
+                                    <div className="flex-shrink-0">
+                                        <UserAvatar user={{ username: 'anonim', gender: user.gender }} size="xl" className="ring-2 ring-gray-100 dark:ring-gray-700" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate">Gizli Üye</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm truncate">Kimliği gizli</p>
+                                    </div>
+                                </>
+                            ) : (
+                            <>
                             <Link to={`/profile/${user.username}`} className="flex-shrink-0">
                                 <div className="relative">
                                     <UserAvatar
@@ -144,6 +157,8 @@ const FollowersList = ({ followers: initialFollowers, type = 'followers', isOwnP
                                     </div>
                                 )}
                             </div>
+                            </>
+                            )}
                         </div>
                     </div>
                 ))}
