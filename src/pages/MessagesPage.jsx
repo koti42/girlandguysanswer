@@ -8,6 +8,7 @@ import MainLayout from '../layouts/MainLayout';
 import { messagesAPI, usersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel } from '../services/pusherClient';
+import { isSystemAccount } from '../utils/systemAccount';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import OnlineIndicator from '../components/OnlineIndicator';
@@ -451,6 +452,7 @@ const MessagesPage = () => {
                                             <div className="flex justify-between items-baseline mb-1">
                                                 <h3 className="font-semibold text-gray-800 dark:text-gray-100 truncate">
                                                     {conversation.nickname || conversation.other_user.username}
+                                                    {isSystemAccount(conversation.other_user) && <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-blue-soft text-brand-blue text-[10px] font-semibold align-middle">✓ Sistem</span>}
                                                     {conversation.nickname && (
                                                         <span className="ml-1.5 text-xs font-normal text-gray-400">@{conversation.other_user.username}</span>
                                                     )}

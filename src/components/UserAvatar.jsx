@@ -1,6 +1,7 @@
 import React from 'react';
-import { FaUserSecret } from 'react-icons/fa';
+import { FaUserSecret, FaShieldAlt } from 'react-icons/fa';
 import { normalizeAvatarUrl } from '../utils/avatarUrl';
+import { isSystemAccount } from '../utils/systemAccount';
 
 const UserAvatar = ({ user, size = "md", className = "" }) => {
     const sizeClasses = {
@@ -60,6 +61,15 @@ const UserAvatar = ({ user, size = "md", className = "" }) => {
                 title="Gizli Üye"
             >
                 <FaUserSecret className="text-white" />
+            </div>
+        );
+    }
+
+    // Resmî sistem hesabı: görseli yoksa marka rengiyle kalkan (eski sunucu / cache)
+    if (isSystemAccount(user) && !(user?.avatar || user?.profile_photo_url)) {
+        return (
+            <div className={`${currentSizeClass} rounded-full flex items-center justify-center text-white shadow-sm border border-white/30 bg-gradient-to-br from-brand-blue to-brand-pink ${className}`} title="Herkesler Soruyor sistem hesabı">
+                <FaShieldAlt />
             </div>
         );
     }

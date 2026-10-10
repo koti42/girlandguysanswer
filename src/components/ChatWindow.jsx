@@ -8,6 +8,7 @@ import ConfirmationModal from './ConfirmationModal';
 import { messagesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel } from '../services/pusherClient';
+import { isSystemAccount } from '../utils/systemAccount';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
 import useTicketCheck from './game/shop/useTicketCheck';
 
@@ -880,8 +881,9 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                         className="flex-1 min-w-0 cursor-pointer"
                         onClick={() => navigate(`/profile/${conversation.other_user.username}`)}
                     >
-                        <h3 className="font-bold text-white truncate">
-                            {conversation.other_user.username}
+                        <h3 className="font-bold text-white truncate flex items-center gap-1.5">
+                            <span className="truncate">{conversation.other_user.username}</span>
+                            {isSystemAccount(conversation.other_user) && <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-semibold">✓ Sistem</span>}
                             {nickname ? <span className="ml-1.5 text-xs font-normal text-white/70">({nickname})</span> : null}
                         </h3>
                         <p className="text-xs text-white/80">

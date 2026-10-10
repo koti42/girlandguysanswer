@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaCrown, FaStar, FaMapMarkerAlt, FaCalendarAlt, FaTrophy } from 'react-icons/fa';
+import { FaCrown, FaStar, FaMapMarkerAlt, FaCalendarAlt, FaTrophy, FaShieldAlt, FaCheckCircle } from 'react-icons/fa';
 import ProfileBadges from '../ProfileBadges';
 import { getProfileColor } from '../../utils/userColor';
 import MiniAvatarBadge from '../game/shop/MiniAvatarBadge';
@@ -49,6 +49,20 @@ const ProfileHeaderInfo = ({ profileData, isVIP, gender, viewerPrefs }) => {
                     </span>
                 )}
 
+                {/* Resmî sistem hesabı */}
+                {profileData.is_system && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-brand-blue to-brand-pink text-white shadow-sm border border-white/20" title="Herkesler Soruyor resmî sistem hesabı">
+                        <FaCheckCircle className="text-[11px]" />
+                        Resmî Sistem Hesabı
+                    </span>
+                )}
+                {/* Moderatör rozeti (+ kademe) */}
+                {!profileData.is_system && profileData.is_moderator && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-sm border border-white/10" title={profileData.mod_level_name ? `Moderatör · ${profileData.mod_level_name}` : 'Moderatör'}>
+                        <FaShieldAlt className="text-[10px]" />
+                        Moderatör{profileData.mod_level_name ? ` · ${profileData.mod_level_name}` : ''}
+                    </span>
+                )}
                 {/* Admin / Super Admin Badge */}
                 {profileData.roles && Array.isArray(profileData.roles) && profileData.roles.length > 0 && (
                     <>

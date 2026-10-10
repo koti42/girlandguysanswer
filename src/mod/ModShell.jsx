@@ -74,6 +74,7 @@ export default function ModShell() {
                         <div className="flex items-center gap-2 pl-2 border-l border-[var(--p-border)]">
                             <Avatar user={user} size={28} />
                             <span className="hidden md:block text-sm font-medium">{user?.username}</span>
+                            {dash.data?.me?.level_name && <span className="hidden md:inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold p-tone-success" title="Moderasyon seviyen">{dash.data.me.level === 99 ? 'Yönetici' : `S${dash.data.me.level} · ${dash.data.me.level_name}`}</span>}
                             <NavLink to="/mod/security" className="h-9 w-9 rounded-lg grid place-items-center p-muted hover:text-[var(--p-text)] p-hover p-ring" aria-label="Güvenlik" title="Güvenlik / passkey"><FaFingerprint /></NavLink>
                             <button type="button" onClick={() => logout().then(() => navigate('/mod/login'))} className="h-9 w-9 rounded-lg grid place-items-center p-muted hover:p-tone-danger hover:bg-rose-500/10 p-ring" aria-label="Çıkış yap" title="Çıkış"><FaSignOutAlt /></button>
                         </div>

@@ -4,6 +4,8 @@ import { modApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
 import { usePagedQuery, useQuery } from '../hooks/useQuery';
 import { useToast } from '../hooks/useToast';
+import { usePanelAuth } from '../auth/PanelAuthContext';
+import { canDo } from '../lib/permissions';
 import { useHotkeys } from '../hooks/useHotkeys';
 import { Avatar, Badge, Button, Card, EmptyState, Kbd, ReasonDialog, SearchInput, Select, Tabs, Timeline, Skeleton } from '../ui';
 import { COMPLAINT_STATUS, CONTENT_LABELS, RISK_TONE, urgencyOf } from '../lib/moderation';
@@ -21,6 +23,7 @@ import { MOD_DATA_CHANGED, emit } from '../lib/events';
  */
 export default function ComplaintQueue({ keyboard = true, initialStatus = 'pending' }) {
     const toast = useToast();
+    const { user: me } = usePanelAuth();
     const [status, setStatus] = useState(initialStatus);
     const [type, setType] = useState('');
     const [reason, setReason] = useState('');
@@ -81,8 +84,8 @@ export default function ComplaintQueue({ keyboard = true, initialStatus = 'pendi
         k: () => move(-1), ArrowUp: () => move(-1),
         a: () => complaint?.status === 'pending' && resolve({ status: 'accepted' }),
         r: () => complaint?.status === 'pending' && setDialog({ status: 'rejected' }),
-        h: () => complaint?.status === 'pending' && setDialog({ status: 'accepted', action: 'hide' }),
-        b: () => complaint?.status === 'pending' && complaint?.reported_user && setDialog({ status: 'accepted', action: 'ban' }),
+        h: () => complaint?.status === 'pending' && canDo(me, 'hide') && setDialog({ status: 'accepted', action: 'hide' }),
+        b: () => complaint?.status === 'pending' && complaint?.reported_user && canDo(me, 'ban') && setDialog({ status: 'accepted', action: 'ban' }),
         x: () => activeId && setSelection((s) => toggleOne(s, activeId)),
         Escape: () => setDialog(null),
     } : {}, [items, activeIndex, complaint, activeId, keyboard]);
@@ -172,8 +175,8 @@ export default function ComplaintQueue({ keyboard = true, initialStatus = 'pendi
                             actions={complaint.status === 'pending' && (
                                 <div className="flex gap-2 flex-wrap justify-end">
                                     <Button size="sm" variant="success" icon={FaCheck} loading={busy} onClick={() => resolve({ status: 'accepted' })}>Kabul {keyboard && <Kbd>a</Kbd>}</Button>
-                                    <Button size="sm" variant="warning" onClick={() => setDialog({ status: 'accepted', action: 'hide' })}>Kabul + gizle {keyboard && <Kbd>h</Kbd>}</Button>
-                                    {complaint.reported_user && <Button size="sm" variant="danger" onClick={() => setDialog({ status: 'accepted', action: 'ban' })}>Kabul + ban {keyboard && <Kbd>b</Kbd>}</Button>}
+                                    {canDo(me, 'hide') && <Button size="sm" variant="warning" onClick={() => setDialog({ status: 'accepted', action: 'hide' })}>Kabul + gizle {keyboard && <Kbd>h</Kbd>}</Button>}
+                                    {complaint.reported_user && canDo(me, 'ban') && <Button size="sm" variant="danger" onClick={() => setDialog({ status: 'accepted', action: 'ban' })}>Kabul + ban {keyboard && <Kbd>b</Kbd>}</Button>}
                                     <Button size="sm" variant="secondary" icon={FaTimes} onClick={() => setDialog({ status: 'rejected' })}>Ret {keyboard && <Kbd>r</Kbd>}</Button>
                                 </div>
                             )}

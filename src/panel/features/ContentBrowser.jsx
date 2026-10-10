@@ -4,6 +4,8 @@ import { modApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
 import { usePagedQuery } from '../hooks/useQuery';
 import { useToast } from '../hooks/useToast';
+import { usePanelAuth } from '../auth/PanelAuthContext';
+import { canDo } from '../lib/permissions';
 import { Avatar, Badge, Button, Card, DataTable, Drawer, ReasonDialog, SearchInput, Select, Tabs, Timeline } from '../ui';
 import { CONTENT_LABELS, CONTENT_TYPES } from '../lib/moderation';
 import { relativeTime, truncate } from '../lib/format';
@@ -17,6 +19,7 @@ import { emptySelection } from '../ui/selection';
  */
 export default function ContentBrowser({ initialType = 'question', userId = null }) {
     const toast = useToast();
+    const { user: me } = usePanelAuth();
     const [type, setType] = useState(initialType);
     const [state, setState] = useState('all');
     const [search, setSearch] = useState('');
@@ -69,7 +72,7 @@ export default function ContentBrowser({ initialType = 'question', userId = null
                 <Select value={sort} onChange={(e) => setSort(e.target.value)} className="w-auto" aria-label="Sıralama">
                     <option value="newest">En yeni</option><option value="oldest">En eski</option><option value="reported">Çok şikâyetli</option>
                 </Select>
-                {selection.size > 0 && (
+                {selection.size > 0 && canDo(me, 'bulk') && (
                     <div className="ml-auto flex items-center gap-2 text-xs rounded-xl p-fill px-3 py-2">
                         <b>{selection.size} seçili</b>
                         <Button size="xs" variant="warning" icon={FaEyeSlash} onClick={() => setBulkDialog('hide')}>Gizle</Button>
