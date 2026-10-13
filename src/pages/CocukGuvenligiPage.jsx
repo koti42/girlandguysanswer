@@ -207,8 +207,8 @@ const CocukGuvenligiPage = () => {
                             </div>
                             <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                                 <h4 className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-2">E-posta Bildirimi</h4>
-                                <a href="mailto:guvenlik@herkeslersoruyor.com" className="text-xs text-purple-600 dark:text-purple-400 hover:underline break-all">
-                                    guvenlik@herkeslersoruyor.com
+                                <a href="mailto:42mehmetkucuk@gmail.com" className="text-xs text-purple-600 dark:text-purple-400 hover:underline break-all">
+                                    42mehmetkucuk@gmail.com
                                 </a>
                             </div>
                             <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
@@ -230,9 +230,9 @@ const CocukGuvenligiPage = () => {
                     <section className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Güvenlik Ekibi İletişim</h2>
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <a href="mailto:guvenlik@herkeslersoruyor.com" className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">
+                            <a href="mailto:42mehmetkucuk@gmail.com" className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">
                                 <FaEnvelope className="text-green-500 flex-shrink-0" />
-                                guvenlik@herkeslersoruyor.com
+                                42mehmetkucuk@gmail.com
                             </a>
                             <Link to="/iletisim" className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">
                                 <FaPhone className="text-green-500 flex-shrink-0" />
