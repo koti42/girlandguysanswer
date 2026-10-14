@@ -96,6 +96,7 @@ const TowerGameScreen = ({
     initialMusic,
     onSettings,
     sessionRef,
+    accessibility = false,
     className = 'fixed inset-0 z-[95] h-[100dvh]',
 }) => {
     const containerRef = useRef(null);
@@ -103,7 +104,7 @@ const TowerGameScreen = ({
     const exitLabel = embedded ? 'Oyundan çık' : 'Lobiye dön';
     const ExitIcon = embedded ? LuDoorOpen : LuHouse;
     const laterWhere = embedded ? 'bir sonraki oyunda' : 'lobide';
-    const s = useTowerSession({ entry, user, avatar, containerRef, onExit, onHaptic, onResult, onSettings, initialMuted, initialMusic, api });
+    const s = useTowerSession({ entry, user, avatar, containerRef, onExit, onHaptic, onResult, onSettings, initialMuted, initialMusic, api, accessibility });
     const { actions: a, phase, paused, playing, ranked, question, countdown } = s;
     const guardRef = useRef(false);
     const phaseRef = useRef(phase);
@@ -171,7 +172,7 @@ const TowerGameScreen = ({
             {playing && <TowerPerfectPop fx={s.placeFx} />}
 
             {playing && question && (
-                <TowerQuestionPanel question={question} total={s.questionTotal} frozen={paused || (countdown != null && countdown > 0)} hidden={paused} onAnswer={a.answer} />
+                <TowerQuestionPanel question={question} total={s.questionTotal} frozen={paused || (countdown != null && countdown > 0)} timerPaused={s.held} hidden={paused} onAnswer={a.answer} />
             )}
 
             {playing && <TowerCountdown value={countdown} />}

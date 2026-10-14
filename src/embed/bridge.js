@@ -63,6 +63,9 @@ const OUTGOING = {
     error: (m) => typeof m.message === 'string' && m.message.length > 0 && m.message.length <= 500,
     openUrl: (m) => isSafeInternalPath(m.url),
     login: () => true,
+    // Erişilebilirlik: native TTS ile oku / okumayı durdur (web'de speechSynthesis kullanılır).
+    speak: (m) => typeof m.text === 'string' && m.text.trim().length > 0 && m.text.length <= 600,
+    speakStop: () => true,
 };
 
 const INCOMING = {
@@ -149,6 +152,8 @@ function configFromQuery(search) {
         music: q.get('music') !== '0',
         haptics: q.get('haptics') !== '0',
         avatar: null,
+        // ?a11y=1: erişilebilirlik modu (soru seslendirilir, okunurken oyun bekler).
+        accessibility: q.get('a11y') === '1',
         native: false,
     };
 }
@@ -171,6 +176,7 @@ export function readNativeConfig(win = typeof window !== 'undefined' ? window : 
         music: raw.music !== false,
         haptics: raw.haptics !== false,
         avatar: sanitizeAvatar(raw.avatar),
+        accessibility: raw.accessibility === true,
         native: true,
     };
 }

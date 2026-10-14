@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { isAccessibilityOn } from '../../../utils/accessibility';
 import { useGameTitle } from '../../../components/game/useNow';
 import ErrorBoundary from '../../../components/game/ErrorBoundary';
 import RunnerStage from '../../../components/game/runner/RunnerStage';
@@ -61,7 +62,7 @@ const RunnerGame = ({ entry }) => {
     // replace: geri hareketi koruma kaydı geçmişte kalmasın (lobiden geri -> boş oyun ekranı).
     const toLobby = useCallback(() => navigate(LOBBY, { replace: true }), [navigate]);
 
-    const s = useRunnerSession({ entry, api: gameApi, userId: user?.id ?? null, avatar, onExit: toLobby });
+    const s = useRunnerSession({ entry, api: gameApi, userId: user?.id ?? null, avatar, onExit: toLobby, accessibility: isAccessibilityOn(user) });
     const { phase, pause, finishNow, getPhase } = s;
     // Geçmişte en üstte geri hareketi koruma kaydımız var mı?
     const guardRef = useRef(false);

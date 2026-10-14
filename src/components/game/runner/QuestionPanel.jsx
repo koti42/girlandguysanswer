@@ -71,7 +71,7 @@ const Feedback = ({ gate }) => {
  * hidden: molada soru okunamasın. Panel sökülmez (animasyon sıfırlanırdı),
  *   `invisible` metni hem gizler hem ekran okuyucudan çıkarır.
  */
-const QuestionPanel = ({ gate, total, frozen = false, hidden = false }) => {
+const QuestionPanel = ({ gate, total, frozen = false, hidden = false, timerPaused = false }) => {
     if (!gate?.question) return null;
     const { question, status, chosenLane, correctLane, seconds } = gate;
     const answered = status !== 'asking';
@@ -103,7 +103,7 @@ const QuestionPanel = ({ gate, total, frozen = false, hidden = false }) => {
                     <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
                         <div
                             className="runner-gate-timer h-full rounded-full bg-gradient-to-r from-gold to-coral"
-                            style={{ animationDuration: `${seconds}s`, animationPlayState: frozen ? 'paused' : 'running' }}
+                            style={{ animationDuration: `${seconds}s`, animationPlayState: frozen || timerPaused ? 'paused' : 'running' }}
                             data-testid="runner-gate-timer"
                         />
                     </div>

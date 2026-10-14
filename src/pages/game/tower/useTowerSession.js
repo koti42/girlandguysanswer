@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { prefersReducedMotion, vibrate } from '../../../components/game/gameUtils';
+import { createSpeaker } from '../../../components/game/speech';
 import {
     HAPTIC_PATTERNS,
     MAX_END_TICK,
@@ -122,6 +123,8 @@ export default function useTowerSession({
     initialMusic,
     api = towerApi,
     loadEngine = loadTowerEngine,
+    // Erişilebilirlik modu: soru seslendirilir, okunurken sim bekler (held).
+    accessibility = false,
 }) {
     const [session, setSessionState] = useState(() => makeSession(entry, 1));
     const [phase, setPhaseState] = useState('loading');
@@ -134,6 +137,7 @@ export default function useTowerSession({
     const [musicEnabled, setMusicState] = useState(() => (typeof initialMusic === 'boolean' ? initialMusic : loadMusicEnabled()));
     const [busy, setBusy] = useState(false);
     const [announce, setAnnounce] = useState('');
+    const [held, setHeld] = useState(false);
     const [hudStore] = useState(() => createHudStore());
     const [reducedMotion] = useState(prefersReducedMotion);
     const [touch] = useState(isCoarsePointer);
@@ -147,6 +151,29 @@ export default function useTowerSession({
     const sessionRef = useRef(session);
     const phaseRef = useRef('loading');
     const pausedRef = useRef(false);
+    const accessibilityRef = useRef(Boolean(accessibility));
+    const speakerRef = useRef(null);
+    useEffect(() => {
+        accessibilityRef.current = Boolean(accessibility);
+        speakerRef.current?.cancel();
+        speakerRef.current = accessibility ? createSpeaker() : null;
+        return () => {
+            speakerRef.current?.cancel();
+            speakerRef.current = null;
+        };
+    }, [accessibility]);
+
+    /** Ekran okuyucu metni; erişilebilirlik modunda sesli de okunur. */
+    const say = useCallback((text, opts) => {
+        setAnnounce(text);
+        if (speakerRef.current) speakerRef.current.speak(text, opts);
+        else opts?.onEnd?.();
+    }, []);
+
+    const releaseHold = useCallback(() => {
+        safe(() => gameRef.current?.release());
+        setHeld(false);
+    }, []);
     const mutedRef = useRef(muted);
     const musicRef = useRef(musicEnabled);
     const userIdRef = useRef(user?.id ?? null);
@@ -398,10 +425,10 @@ export default function useTowerSession({
             nudgeIdRef.current += 1;
             const id = nudgeIdRef.current;
             setNudge({ id, kind });
-            setAnnounce(kind === 'late' ? 'Geç kaldın. Kat geri dönüyor, kulenin üstüne gelince bas.' : 'Erken. Kat kulenin üstüne gelince bas.');
+            say(kind === 'late' ? 'Geç kaldın. Kat geri dönüyor, kulenin üstüne gelince bas.' : 'Erken. Kat kulenin üstüne gelince bas.');
             later(() => setNudge((n) => (n && n.id === id ? null : n)), NUDGE_MS);
         },
-        [later]
+        [later, say]
     );
 
     const patchQuestion = useCallback((sessionKey, index, patch) => {
@@ -432,8 +459,15 @@ export default function useTowerSession({
             reason: null,
         });
         const o = item.question.options;
-        setAnnounce(`Soru ${index + 1}: ${item.question.text} A: ${o[0]}. B: ${o[1]}.`);
-    }, []);
+        const text = `Soru ${index + 1}: ${item.question.text} A: ${o[0]}. B: ${o[1]}.`;
+        if (accessibilityRef.current && safe(() => gameRef.current?.hold()) === true) {
+            // Soru okunurken sim bekler: 8 saniyelik süre okuma bittikten sonra başlar.
+            setHeld(true);
+            say(text, { onEnd: () => { if (sessionRef.current === s) releaseHold(); else safe(() => gameRef.current?.release()); } });
+        } else {
+            say(text);
+        }
+    }, [say, releaseHold]);
 
     /*
      * Motor cevabı kayda aldı (A/B ya da süre doldu: -1). Seçilen şık sunucuya
@@ -451,9 +485,10 @@ export default function useTowerSession({
             if (answeredRef.current.has(key)) return;
             answeredRef.current.add(key);
             const choice = info?.choice === 0 || info?.choice === 1 ? info.choice : -1;
+            releaseHold();
             if (choice < 0) {
                 patchQuestion(s.key, index, { status: 'timeout', choice: null });
-                setAnnounce('Süre doldu.');
+                say('Süre doldu.');
                 clearQuestionLater(s.key, index);
                 return;
             }
@@ -468,7 +503,7 @@ export default function useTowerSession({
                         safe(() => gameRef.current?.setAnswerResult(index, r.correct, r.correctChoice));
                         patchQuestion(s.key, index, { status: r.correct ? 'correct' : 'wrong', correctChoice: r.correctChoice });
                         const correctText = r.correctChoice != null ? s.questions[index].question.options[r.correctChoice] : null;
-                        setAnnounce(r.correct ? 'Doğru!' : `Yanlış${correctText ? `. Doğru cevap: ${correctText}` : ''}.`);
+                        say(r.correct ? 'Doğru!' : `Yanlış${correctText ? `. Doğru cevap: ${correctText}` : ''}.`);
                     },
                     (err) => {
                         if (stale()) return;
@@ -481,7 +516,7 @@ export default function useTowerSession({
                 });
             pendingAnswersRef.current.add(p);
         },
-        [patchQuestion, clearQuestionLater]
+        [patchQuestion, clearQuestionLater, say, releaseHold]
     );
 
     const submitFinish = useCallback(async () => {
@@ -935,6 +970,8 @@ export default function useTowerSession({
         musicEnabled,
         busy,
         announce,
+        held,
+        accessibility: Boolean(accessibility),
         hudStore,
         touch,
         showHint,

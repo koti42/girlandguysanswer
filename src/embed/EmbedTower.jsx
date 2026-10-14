@@ -111,6 +111,7 @@ const EmbedTowerSession = ({ entry, api, config, avatar, prefs, haptic, onExited
             api={api}
             initialMuted={prefs.muted}
             initialMusic={prefs.music}
+            accessibility={config.accessibility === true}
             onSettings={onSettings}
             onExit={onExit}
             onHaptic={haptic}

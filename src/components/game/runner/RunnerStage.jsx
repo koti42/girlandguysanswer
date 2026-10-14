@@ -118,6 +118,7 @@ const RunnerStage = ({ s, guest = false, embedded = false, onFinish, onLogin, on
                     gate={s.gate}
                     total={s.session.gates.length}
                     frozen={s.paused || (s.countdown != null && s.countdown > 0)}
+                    timerPaused={s.held}
                     hidden={s.paused}
                 />
             )}

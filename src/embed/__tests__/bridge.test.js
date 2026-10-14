@@ -203,6 +203,7 @@ describe('köprü: native yapılandırması', () => {
             music: false,
             haptics: false,
             avatar: AVATAR,
+            accessibility: false,
             native: true,
         });
     });

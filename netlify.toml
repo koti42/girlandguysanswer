@@ -16,18 +16,9 @@
   to = "/index.html"
   status = 200
 
-# Mobil uygulamanın gömülü oyun sayfası: /embed.html dosya olarak servis edilir;
-# /embed/* kısa yolları da SPA'ya (index.html) değil embed'e gider. Genel
-# fallback'ten ÖNCE olmalı.
-[[redirects]]
-  from = "/embed"
-  to = "/embed.html"
-  status = 200
-
-[[redirects]]
-  from = "/embed/*"
-  to = "/embed.html"
-  status = 200
+# Mobil uygulamanın gömülü oyun sayfası (dist/embed.html): barındırıcı temiz URL
+# ile /embed adresinde kendiliğinden sunar. "/embed -> /embed.html 200" kuralı
+# Cloudflare Pages'ta sonsuz 308 döngüsü yaratıyordu; bilerek yok.
 
 # Genel SPA fallback
 [[redirects]]

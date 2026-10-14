@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { isAccessibilityOn } from '../../../utils/accessibility';
 import { useGameTitle } from '../../../components/game/useNow';
 import ErrorBoundary from '../../../components/game/ErrorBoundary';
 import useViewportFitCover from '../../../components/game/runner/useViewportFitCover';
@@ -35,7 +36,7 @@ const TowerPlay = ({ entry }) => {
     // replace: geri hareketi koruma kaydı geçmişte kalmasın (lobiden geri -> boş oyun ekranı).
     const exitToLobby = useCallback(() => navigate(LOBBY_PATH, { replace: true }), [navigate]);
 
-    return <TowerGameScreen entry={entry} user={user} avatar={avatar} onExit={exitToLobby} historyGuard />;
+    return <TowerGameScreen entry={entry} user={user} avatar={avatar} onExit={exitToLobby} historyGuard accessibility={isAccessibilityOn(user)} />;
 };
 
 const TowerPlayPage = () => {

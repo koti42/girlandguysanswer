@@ -13,6 +13,42 @@
   body {
     @apply bg-background text-text-dark font-sans antialiased;
   }
+
+  /* Klavye kullanıcıları için her odaklanabilir öğede belirgin halka. */
+  :focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+  }
+}
+
+/* "İçeriğe atla" bağlantısı: yalnızca klavye odağında görünür. */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -100px;
+  z-index: 10000;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
+  transition: top .15s ease;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+/* Erişilebilirlik modu (ayarlardan): daha büyük temel yazı, daha kalın odak, animasyon azaltma. */
+html[data-a11y="1"] {
+  font-size: 112.5%;
+}
+html[data-a11y="1"] :focus-visible {
+  outline-width: 4px;
+  outline-color: #f59e0b;
+}
+html[data-a11y="1"] * {
+  scroll-behavior: auto !important;
 }
 
 /* Toast animation */

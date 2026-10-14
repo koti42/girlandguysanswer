@@ -166,6 +166,9 @@ export async function createTowerGame(options = {}) {
     const st = sim.state;
     let phase = 'idle';
     let paused = false;
+    // Erişilebilirlik beklemesi: soru seslendirilirken sim ilerlemez (mola menüsü
+    // açılmaz, geri sayım tekrarlanmaz); sahne çizilmeye ve ses çalmaya devam eder.
+    let held = false;
     let destroyed = false;
     let ended = false;
     let contextLost = false;
@@ -605,13 +608,18 @@ export async function createTowerGame(options = {}) {
                 emitHud();
             }
         } else if (phase === 'running') {
-            const steps = stepper.advance(frameMs);
-            for (let i = 0; i < steps; i++) {
-                doStep();
-                if (phase !== 'running') break;
-                if (st.tick >= TC.MAX_TICKS) {
-                    finish(false);
-                    break;
+            if (held) {
+                // Bekleme boyunca biriken süre serbest kalınca art arda adım atmasın.
+                stepper.reset();
+            } else {
+                const steps = stepper.advance(frameMs);
+                for (let i = 0; i < steps; i++) {
+                    doStep();
+                    if (phase !== 'running') break;
+                    if (st.tick >= TC.MAX_TICKS) {
+                        finish(false);
+                        break;
+                    }
                 }
             }
         } else if (phase === 'crashing') {
@@ -778,6 +786,20 @@ export async function createTowerGame(options = {}) {
         },
         isPaused() {
             return paused;
+        },
+        /** Erişilebilirlik: soru okunurken sim'i beklet (cevap verilebilir, mola değildir). */
+        hold() {
+            if (destroyed || ended) return false;
+            held = true;
+            return true;
+        },
+        release() {
+            if (!held) return;
+            held = false;
+            stepper.reset();
+        },
+        isHeld() {
+            return held;
         },
         /**
          * Oyunu bitirmeden o anki bitiş yükü: { endTick, inputs, localScore }.

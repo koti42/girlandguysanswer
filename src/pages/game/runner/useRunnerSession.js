@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { prefersReducedMotion, vibrate } from '../../../components/game/gameUtils';
+import { createSpeaker } from '../../../components/game/speech';
 import { createHudStore, sanitizeHud } from '../../../components/game/runner/hudStore';
 import {
     RUNNER_RETRY,
@@ -101,6 +102,8 @@ export default function useRunnerSession({
     onSettings,
     initialMuted,
     initialMusic,
+    // Erişilebilirlik modu: kapı sorusu seslendirilir, okunurken koşu bekler (held).
+    accessibility = false,
 }) {
     const [session, setSessionState] = useState(() => makeSession(entry, 1));
     const [phase, setPhaseState] = useState('loading');
@@ -114,6 +117,7 @@ export default function useRunnerSession({
     const [musicEnabled, setMusicEnabled] = useState(() => (typeof initialMusic === 'boolean' ? initialMusic : loadMusicEnabled()));
     const [busy, setBusy] = useState(false);
     const [announce, setAnnounce] = useState('');
+    const [held, setHeld] = useState(false);
     const [hudStore] = useState(() => createHudStore());
     const [reducedMotion] = useState(prefersReducedMotion);
     const [touch] = useState(isCoarsePointer);
@@ -128,6 +132,29 @@ export default function useRunnerSession({
     const sessionRef = useRef(session);
     const phaseRef = useRef('loading');
     const pausedRef = useRef(false);
+    const accessibilityRef = useRef(Boolean(accessibility));
+    const speakerRef = useRef(null);
+    useEffect(() => {
+        accessibilityRef.current = Boolean(accessibility);
+        speakerRef.current?.cancel();
+        speakerRef.current = accessibility ? createSpeaker() : null;
+        return () => {
+            speakerRef.current?.cancel();
+            speakerRef.current = null;
+        };
+    }, [accessibility]);
+
+    /** Ekran okuyucu metni; erişilebilirlik modunda sesli de okunur. */
+    const say = useCallback((text, opts) => {
+        setAnnounce(text);
+        if (speakerRef.current) speakerRef.current.speak(text, opts);
+        else opts?.onEnd?.();
+    }, []);
+
+    const releaseHold = useCallback(() => {
+        safe(() => gameRef.current?.release());
+        setHeld(false);
+    }, []);
     const mutedRef = useRef(muted);
     const musicRef = useRef(musicEnabled);
     const userIdRef = useRef(userId);
@@ -408,8 +435,15 @@ export default function useRunnerSession({
             multiplier: null,
         });
         const o = g.question.options;
-        setAnnounce(`Kapı ${index + 1}: ${g.question.text} Sol: ${o[0]}. Orta: ${o[1]}. Sağ: ${o[2]}.`);
-    }, []);
+        const text = `Kapı ${index + 1}: ${g.question.text} Sol: ${o[0]}. Orta: ${o[1]}. Sağ: ${o[2]}.`;
+        if (accessibilityRef.current && safe(() => gameRef.current?.hold()) === true) {
+            // Soru okunurken koşu bekler; okuma bitince kapıya kalan süre normal akar.
+            setHeld(true);
+            say(text, { onEnd: () => { if (sessionRef.current === s) releaseHold(); else safe(() => gameRef.current?.release()); } });
+        } else {
+            say(text);
+        }
+    }, [say, releaseHold]);
 
     const handleGateCross = useCallback(
         (info) => {
@@ -436,6 +470,7 @@ export default function useRunnerSession({
              * değerlendirir. Kapılar birbirinden bağımsız; biri düşse de
              * sonrakiler normal gönderilir.
              */
+            releaseHold();
             const stale = () => sessionRef.current !== s;
             /*
              * Açıklamalar bu koşunun kovasına yazılır: "Tekrar Koş" sonrası geç
@@ -456,9 +491,13 @@ export default function useRunnerSession({
                         gateResultsRef.current[index] = correct;
                         safe(() => gameRef.current?.setGateResult(index, correct, correctLane));
                         const mult = multiplierFrom(gateResultsRef.current);
-                        // Sonuç metni soru panelinin canlı bölgesinde duyurulur.
+                        // Sonuç metni soru panelinin canlı bölgesinde duyurulur; erişilebilirlik modunda sesli de okunur.
                         patchGate(s.key, index, { status: correct ? 'correct' : 'wrong', correctLane, multiplier: mult });
                         haptic(correct ? 'success' : 'error');
+                        if (speakerRef.current) {
+                            const correctText = correctLane != null ? g.question.options[correctLane] : null;
+                            speakerRef.current.speak(correct ? `Doğru! Çarpan ${mult}.` : `Yanlış${correctText ? `. Doğru cevap: ${correctText}` : ''}.`);
+                        }
                     },
                     (err) => {
                         // Sonuç "?" kalır; bitişte sunucu replay şeridiyle değerlendirir.
@@ -472,7 +511,7 @@ export default function useRunnerSession({
                 });
             pendingGatesRef.current.add(p);
         },
-        [later, patchGate, haptic]
+        [later, patchGate, haptic, releaseHold]
     );
 
     const handleCrash = useCallback(() => haptic('heavy'), [haptic]);
@@ -975,6 +1014,8 @@ export default function useRunnerSession({
         musicEnabled,
         busy,
         announce,
+        held,
+        accessibility: Boolean(accessibility),
         touch,
         showHint,
         ctxLost,

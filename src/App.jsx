@@ -1,4 +1,5 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { applyAccessibilityAttr, isAccessibilityOn } from './utils/accessibility';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
@@ -270,6 +271,15 @@ const RouteFallback = () => (
   </div>
 );
 
+/* Erişilebilirlik modu açık üyede <html data-a11y="1">: büyük yazı, belirgin odak (index.css). */
+const AccessibilityModeSync = () => {
+  const { user } = useAuth();
+  useEffect(() => {
+    applyAccessibilityAttr(isAccessibilityOn(user));
+  }, [user]);
+  return null;
+};
+
 function App() {
   return (
     <ThemeProvider>
@@ -279,8 +289,11 @@ function App() {
           <Router>
             <GenderCheck>
               <div className="overflow-x-hidden">
+              <a href="#icerik" className="skip-link">İçeriğe atla</a>
+              <AccessibilityModeSync />
               <RouteErrorBoundary>
               <Suspense fallback={<RouteFallback />}>
+              <main id="icerik" tabIndex={-1} className="outline-none">
               <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/questions" element={<QuestionsPage />} />
@@ -349,6 +362,7 @@ function App() {
                   <Route path="/mod/*" element={<ModApp />} />
                   <Route path="*" element={<ErrorPage code={404} />} />
               </Routes>
+              </main>
               </Suspense>
               </RouteErrorBoundary>
               <Suspense fallback={null}>

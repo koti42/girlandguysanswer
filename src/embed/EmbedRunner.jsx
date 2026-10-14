@@ -46,6 +46,7 @@ const EmbedRunnerSession = ({ entry, api, config, avatar, prefs, haptic, onExite
         avatar,
         initialMuted: prefs.muted,
         initialMusic: prefs.music,
+        accessibility: config.accessibility === true,
         onExit: () => {
             postToNative('exit');
             onExited();

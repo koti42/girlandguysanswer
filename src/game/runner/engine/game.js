@@ -201,6 +201,9 @@ export async function createRunnerGame(options = {}) {
     const st = sim.state;
     let phase = 'idle';
     let paused = false;
+    // Erişilebilirlik beklemesi: kapı sorusu seslendirilirken sim ilerlemez ve
+    // şerit girdisi alınmaz; mola menüsü açılmaz, geri sayım tekrarlanmaz.
+    let held = false;
     let destroyed = false;
     let ended = false;
     let rafId = 0;
@@ -438,8 +441,8 @@ export async function createRunnerGame(options = {}) {
         // oyun duraklar ama arayüz menüyü göstermez ve oyuncu takılı kalırdı.
         onPauseKey: callbacks.onPause ? () => api.pause() : null,
         onAction(code) {
-            // Yalnızca koşarken ve duraklatılmamışken kaydedilir.
-            if (paused || phase !== 'running' || destroyed) return;
+            // Yalnızca koşarken, duraklatılmamış ve bekletilmemişken kaydedilir.
+            if (paused || held || phase !== 'running' || destroyed) return;
             sim.input(code);
         },
     });
@@ -599,7 +602,8 @@ export async function createRunnerGame(options = {}) {
                 emitHud();
             }
         } else if (phase === 'running') {
-            const steps = stepper.advance(frameMs);
+            const steps = held ? 0 : stepper.advance(frameMs);
+            if (held) stepper.reset();
             for (let i = 0; i < steps; i++) {
                 doStep();
                 if (phase !== 'running') break;
@@ -608,7 +612,7 @@ export async function createRunnerGame(options = {}) {
                     return;
                 }
             }
-            if (phase === 'running') {
+            if (phase === 'running' && !held) {
                 checkGateApproach();
                 hudAcc += frameMs;
                 if (hudAcc >= HUD_INTERVAL_MS) {
@@ -776,6 +780,20 @@ export async function createRunnerGame(options = {}) {
         },
         isPaused() {
             return paused;
+        },
+        /** Erişilebilirlik: kapı sorusu okunurken sim'i beklet (mola değildir). */
+        hold() {
+            if (destroyed || ended) return false;
+            held = true;
+            return true;
+        },
+        release() {
+            if (!held) return;
+            held = false;
+            stepper.reset();
+        },
+        isHeld() {
+            return held;
         },
         /**
          * Oyunu bitirmeden o anki bitiş yükü: { endTick, inputs, localScore }.

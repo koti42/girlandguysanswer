@@ -197,6 +197,7 @@ export const usersAPI = {
     updateFollowing: (allowFollowing) => api.post('/user/me/settings/following', { allow_following: allowFollowing }),
     updateMention: (allowMentionNotifications) => api.post('/user/me/settings/mentions', { allow_mention_notifications: allowMentionNotifications }),
     updateNotificationPreferences: (preferences) => api.post('/user/me/settings/notifications', { preferences }),
+    updateAccessibility: (enabled) => api.post('/user/me/settings/accessibility', { accessibility_mode: !!enabled }),
     getInterests: () => api.get('/user/me/interests'),
     updateInterests: (categoryIds) => api.put('/user/me/interests', { category_ids: categoryIds }),
     updateProfileColor: (data) => api.post('/user/me/settings/profile-color', data),

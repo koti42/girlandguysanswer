@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash, FaUser, FaAt, FaBell, FaMagic } from 'react-icons/fa';
+import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash, FaUser, FaAt, FaBell, FaMagic, FaUniversalAccess } from 'react-icons/fa';
 import { InterestChips } from '../components/InterestPicker';
 import MainLayout from '../layouts/MainLayout';
 import { useAuth } from '../context/AuthContext';
+import { isAccessibilityOn } from '../utils/accessibility';
 import { usersAPI, categoriesAPI } from '../services/api';
 import { TopUsersWidget } from '../components/Widgets';
 import Toast from '../components/Toast';
@@ -371,6 +372,22 @@ const SettingsPage = () => {
         categoriesAPI.getAll().then((r) => setAllCategories(r.data?.data?.categories || [])).catch(() => {});
     }, []);
     useEffect(() => { if (savedInterestIds === null && interestIds.length) setSavedInterestIds(interestIds); }, [interestIds, savedInterestIds]);
+
+    // Erişilebilirlik modu: sunucuda saklanır (mobil uygulama da aynı ayarı kullanır).
+    const [a11yMode, setA11yMode] = useState(() => isAccessibilityOn(user));
+    useEffect(() => { setA11yMode(isAccessibilityOn(user)); }, [user]);
+    const handleAccessibilityToggle = async (value) => {
+        const prev = a11yMode;
+        setA11yMode(value);
+        try {
+            await usersAPI.updateAccessibility(value);
+            updateUser({ accessibility_mode: value, detail: { ...(user?.detail || {}), accessibility_mode: value } });
+            showSuccess(value ? 'Erişilebilirlik modu açıldı.' : 'Erişilebilirlik modu kapatıldı.');
+        } catch (error) {
+            setA11yMode(prev);
+            showToast(error.response?.data?.message || 'Ayar güncellenemedi.', 'error');
+        }
+    };
 
     const handleNotifPrefToggle = async (key, value) => {
         const prev = notifPrefs;
@@ -910,6 +927,28 @@ const SettingsPage = () => {
                         {NOTIF_KEYS.map(([key, label, description]) => (
                             <Toggle key={key} label={label} description={description} enabled={notifPrefs[key] !== false} onChange={(v) => handleNotifPrefToggle(key, v)} />
                         ))}
+                    </div>
+
+                    {/* Erişilebilirlik */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft p-6" id="erisilebilirlik">
+                        <div className="flex items-center gap-3 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
+                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400">
+                                <FaUniversalAccess className="text-xl" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Erişilebilirlik</h2>
+                                <p className="text-xs text-gray-500">Ekran okuyucu kullanıyorsan ya da görme güçlüğün varsa</p>
+                            </div>
+                        </div>
+                        <Toggle
+                            label="Erişilebilirlik modu"
+                            description="Oyunlarda sorular sesli okunur ve okunurken oyun bekler; bilgi yarışmalarında soru süresi iki katına çıkar; yazılar büyür, klavye odağı belirginleşir. Mobil uygulamada da geçerlidir."
+                            enabled={a11yMode}
+                            onChange={handleAccessibilityToggle}
+                        />
+                        {a11yMode && !('speechSynthesis' in window) && (
+                            <p className="mt-2 text-xs text-amber-600 dark:text-amber-400" role="note">Bu tarayıcı sesli okumayı desteklemiyor; sorular yine ekran okuyucuya duyurulur.</p>
+                        )}
                     </div>
 
                     {/* İlgi alanları */}

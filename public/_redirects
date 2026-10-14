@@ -1,7 +1,8 @@
 /ads.txt    /ads.txt    200
 /robots.txt /robots.txt 200
 /sitemap.xml /sitemap.xml 200
-/embed.html /embed.html 200
-/embed      /embed.html 200
-/embed/*    /embed.html 200
+# Gömülü oyun sayfası (mobil WebView): Cloudflare Pages dist/embed.html dosyasını
+# kendiliğinden /embed adresinde sunar ve /embed.html'i /embed'e 308 ile yollar.
+# Buraya "/embed /embed.html 200" yazmak sonsuz 308 döngüsü yaratıyordu
+# (yeniden yazılan .html adresi tekrar /embed'e yönlendiriliyor). Kural YOK.
 /*    /index.html   200

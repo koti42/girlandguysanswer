@@ -69,7 +69,7 @@ const Feedback = ({ q }) => {
     return null;
 };
 
-const TowerQuestionPanel = ({ question: q, total, frozen = false, hidden = false, onAnswer }) => {
+const TowerQuestionPanel = ({ question: q, total, frozen = false, hidden = false, timerPaused = false, onAnswer }) => {
     if (!q?.question) return null;
     const asking = q.status === 'asking';
     const options = q.question.options || [];
@@ -101,7 +101,7 @@ const TowerQuestionPanel = ({ question: q, total, frozen = false, hidden = false
                         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
                             <div
                                 className="tower-q-timer h-full rounded-full bg-gradient-to-r from-gold to-coral"
-                                style={{ animationDuration: `${q.seconds}s`, animationPlayState: frozen ? 'paused' : 'running' }}
+                                style={{ animationDuration: `${q.seconds}s`, animationPlayState: frozen || timerPaused ? 'paused' : 'running' }}
                                 data-testid="tower-q-timer"
                             />
                         </div>
