@@ -41,10 +41,11 @@ const SECTIONS = [
 ];
 
 /* Ayar kartı: renkli ikon, başlık, açıklama; id ile gezintiden gelen bağlantı buraya kaydırır. */
-const SettingsCard = ({ id, icon, tint, title, subtitle, danger = false, children }) => (
+const SettingsCard = ({ id, icon, tint, title, subtitle, danger = false, hidden = false, children }) => hidden ? null : (
     <section
         id={id}
-        aria-labelledby={`${id}-baslik`}
+        role="tabpanel"
+        aria-labelledby={`tab-${id}`}
         className={`scroll-mt-24 rounded-3xl border bg-white p-5 sm:p-6 shadow-[0_12px_40px_-24px_rgba(27,37,89,0.35)] dark:bg-gray-800 ${danger ? 'border-red-200/80 dark:border-red-900/40' : 'border-gray-100 dark:border-gray-700/70'}`}
     >
         <header className="mb-4 flex items-start gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
@@ -444,6 +445,19 @@ const SettingsPage = () => {
     useEffect(() => { if (savedInterestIds === null && interestIds.length) setSavedInterestIds(interestIds); }, [interestIds, savedInterestIds]);
 
     // Erişilebilirlik modu: sunucuda saklanır (mobil uygulama da aynı ayarı kullanır).
+    // Sekmeli bölümler: yalnız seçili kart görünür; #hash ile derin bağlantı korunur.
+    const [activeSection, setActiveSection] = useState(() => {
+        const h = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
+        return SECTIONS.some((x) => x.id === h) ? h : SECTIONS[0].id;
+    });
+    useEffect(() => {
+        const onHash = () => {
+            const h = window.location.hash.replace('#', '');
+            if (SECTIONS.some((x) => x.id === h)) setActiveSection(h);
+        };
+        window.addEventListener('hashchange', onHash);
+        return () => window.removeEventListener('hashchange', onHash);
+    }, []);
     const [a11yMode, setA11yMode] = useState(() => isAccessibilityOn(user));
     useEffect(() => { setA11yMode(isAccessibilityOn(user)); }, [user]);
     const handleAccessibilityToggle = async (value) => {
@@ -641,6 +655,14 @@ const SettingsPage = () => {
         </MainLayout>
     );
 
+    const showTab = (id) => {
+        setActiveSection(id);
+        try {
+            window.history.replaceState(null, '', `#${id}`);
+        } catch { /* yoksay */ }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const messagingSummary = !settings.allow_messaging ? 'Mesajlar kapalı' : settings.messaging_mode === 'followers' ? 'Yalnız takipçiler' : 'Herkes yazabilir';
     const initials = (user?.name || user?.username || '?').trim().slice(0, 1).toUpperCase();
 
@@ -687,26 +709,35 @@ const SettingsPage = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 items-start">
                         {/* Bölüm gezintisi */}
                         <nav aria-label="Ayar bölümleri" className="lg:sticky lg:top-24">
-                            <ul className="flex lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0 -mx-1 px-1 scrollbar-none">
-                                {SECTIONS.map((s) => (
-                                    <li key={s.id} className="shrink-0">
-                                        <a
-                                            href={`#${s.id}`}
-                                            className={`group flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors whitespace-nowrap border ${s.danger
-                                                ? 'text-red-600 border-red-100 bg-red-50/60 hover:bg-red-50 dark:text-red-300 dark:border-red-900/40 dark:bg-red-900/10'
-                                                : 'text-gray-600 border-gray-100 bg-white hover:bg-gray-50 hover:text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:text-white'}`}
+                            <div role="tablist" aria-orientation="vertical" className="flex lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0 -mx-1 px-1">
+                                {SECTIONS.map((s) => {
+                                    const active = activeSection === s.id;
+                                    return (
+                                        <button
+                                            key={s.id}
+                                            type="button"
+                                            role="tab"
+                                            id={`tab-${s.id}`}
+                                            aria-selected={active}
+                                            aria-controls={s.id}
+                                            onClick={() => showTab(s.id)}
+                                            className={`shrink-0 flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all whitespace-nowrap border text-left ${active
+                                                ? (s.danger ? 'bg-red-600 border-red-600 text-white shadow-md' : 'bg-gray-900 border-gray-900 text-white shadow-md dark:bg-white dark:border-white dark:text-gray-900')
+                                                : s.danger
+                                                    ? 'text-red-600 border-red-100 bg-red-50/60 hover:bg-red-50 dark:text-red-300 dark:border-red-900/40 dark:bg-red-900/10'
+                                                    : 'text-gray-600 border-gray-100 bg-white hover:bg-gray-50 hover:text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:text-white'}`}
                                         >
-                                            <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-sm ${s.tint}`}>{s.icon}</span>
+                                            <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-sm ${active ? 'bg-white/20 text-current' : s.tint}`}>{s.icon}</span>
                                             {s.label}
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </nav>
 
                         <div className="space-y-6 min-w-0">
                             {/* ───── Hesap ───── */}
-                            <SettingsCard id="hesap" icon={<FaUser />} tint="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300" title="Hesap" subtitle="Kullanıcı adın ve e-posta adresin">
+                            <SettingsCard id="hesap" hidden={activeSection !== 'hesap'} icon={<FaUser />} tint="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300" title="Hesap" subtitle="Kullanıcı adın ve e-posta adresin">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div className="rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
                                         <div className="flex items-center justify-between mb-3">
@@ -805,7 +836,7 @@ const SettingsPage = () => {
                             </SettingsCard>
 
                             {/* ───── Görünüm ───── */}
-                            <SettingsCard id="gorunum" icon={<FaPalette />} tint="bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-300" title="Profil Renkleri" subtitle="Soru, cevap, yorum, mesaj ve profiller senin ekranında bu renklerle görünür; yalnız sen görürsün">
+                            <SettingsCard id="gorunum" hidden={activeSection !== 'gorunum'} icon={<FaPalette />} tint="bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-300" title="Profil Renkleri" subtitle="Soru, cevap, yorum, mesaj ve profiller senin ekranında bu renklerle görünür; yalnız sen görürsün">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {[
                                         { gender: 'female', label: 'Kadın rengi', defaultHex: '#EC4899', settingsKey: 'profile_color_female' },
@@ -863,7 +894,7 @@ const SettingsPage = () => {
                             </SettingsCard>
 
                             {/* ───── Gizlilik ───── */}
-                            <SettingsCard id="gizlilik" icon={<FaUserSecret />} tint="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300" title="Gizlilik ve Takip" subtitle="Profilinin görünürlüğü ve takip istekleri">
+                            <SettingsCard id="gizlilik" hidden={activeSection !== 'gizlilik'} icon={<FaUserSecret />} tint="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300" title="Gizlilik ve Takip" subtitle="Profilinin görünürlüğü ve takip istekleri">
                                 <Toggle
                                     label="Gizli hesap"
                                     description="Gizliyken paylaşımlarını yalnız takipçilerin görür. Mevcut takipçilerin etkilenmez."
@@ -885,7 +916,7 @@ const SettingsPage = () => {
                             </SettingsCard>
 
                             {/* ───── Mesajlaşma ───── */}
-                            <SettingsCard id="mesajlasma" icon={<FaEnvelope />} tint="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300" title="Mesajlaşma" subtitle="Kimler yazabilir, neler gönderilebilir">
+                            <SettingsCard id="mesajlasma" hidden={activeSection !== 'mesajlasma'} icon={<FaEnvelope />} tint="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300" title="Mesajlaşma" subtitle="Kimler yazabilir, neler gönderilebilir">
                                 <Toggle
                                     label="Mesajlara izin ver"
                                     description="Kapalıysa kimse sana özel mesaj gönderemez."
@@ -957,14 +988,14 @@ const SettingsPage = () => {
                             </SettingsCard>
 
                             {/* ───── Bildirimler ───── */}
-                            <SettingsCard id="bildirimler" icon={<FaBell />} tint="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300" title="Bildirim Tercihleri" subtitle="Yalnızca ilgilendiğin gelişmeler için bildirim al">
+                            <SettingsCard id="bildirimler" hidden={activeSection !== 'bildirimler'} icon={<FaBell />} tint="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300" title="Bildirim Tercihleri" subtitle="Yalnızca ilgilendiğin gelişmeler için bildirim al">
                                 {NOTIF_KEYS.map(([key, label, description]) => (
                                     <Toggle key={key} label={label} description={description} enabled={notifPrefs[key] !== false} onChange={(v) => handleNotifPrefToggle(key, v)} />
                                 ))}
                             </SettingsCard>
 
                             {/* ───── Erişilebilirlik ───── */}
-                            <SettingsCard id="erisilebilirlik" icon={<FaUniversalAccess />} tint="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300" title="Erişilebilirlik" subtitle="Ekran okuyucu kullanıyorsan ya da görme güçlüğün varsa">
+                            <SettingsCard id="erisilebilirlik" hidden={activeSection !== 'erisilebilirlik'} icon={<FaUniversalAccess />} tint="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300" title="Erişilebilirlik" subtitle="Ekran okuyucu kullanıyorsan ya da görme güçlüğün varsa">
                                 <Toggle
                                     label="Erişilebilirlik modu"
                                     description="Oyunlarda sorular sesli okunur ve okunurken oyun bekler; bilgi yarışmalarında soru süresi iki katına çıkar; yazılar büyür, klavye odağı belirginleşir. Mobil uygulamada da geçerlidir."
@@ -977,7 +1008,7 @@ const SettingsPage = () => {
                             </SettingsCard>
 
                             {/* ───── İlgi alanları ───── */}
-                            <SettingsCard id="ilgi-alanlari" icon={<FaMagic />} tint="bg-blue-soft text-brand-blue dark:bg-blue-900/30 dark:text-blue-300" title="İlgi Alanları" subtitle='"Sana Özel" akışında önce bu konular gelir (en fazla 10)'>
+                            <SettingsCard id="ilgi-alanlari" hidden={activeSection !== 'ilgi-alanlari'} icon={<FaMagic />} tint="bg-blue-soft text-brand-blue dark:bg-blue-900/30 dark:text-blue-300" title="İlgi Alanları" subtitle='"Sana Özel" akışında önce bu konular gelir (en fazla 10)'>
                                 <InterestChips categories={allCategories} selected={interestIds} onToggle={(id) => setInterestIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))} />
                                 <div className="flex items-center justify-between mt-4">
                                     <span className="text-xs font-semibold text-gray-500">{interestIds.length}/10 seçili</span>
@@ -989,7 +1020,7 @@ const SettingsPage = () => {
                             </SettingsCard>
 
                             {/* ───── Güvenlik ───── */}
-                            <SettingsCard id="guvenlik" icon={<FaLock />} tint="bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300" title="Şifre" subtitle="Mevcut şifreni doğrulayarak yeni bir şifre belirle">
+                            <SettingsCard id="guvenlik" hidden={activeSection !== 'guvenlik'} icon={<FaLock />} tint="bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300" title="Şifre" subtitle="Mevcut şifreni doğrulayarak yeni bir şifre belirle">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <Field label="Mevcut şifre" htmlFor="mevcut-sifre">
                                         <input id="mevcut-sifre" type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Mevcut şifren" className={INPUT} />
@@ -1018,7 +1049,7 @@ const SettingsPage = () => {
                             </SettingsCard>
 
                             {/* ───── Tehlikeli bölge ───── */}
-                            <SettingsCard id="hesabi-sil" icon={<FaTrash />} tint="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300" title="Hesabı Sil" subtitle="Hesabın 14 gün sonra kalıcı olarak silinir; bu süre içinde giriş yaparsan iptal olur" danger>
+                            <SettingsCard id="hesabi-sil" hidden={activeSection !== 'hesabi-sil'} icon={<FaTrash />} tint="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300" title="Hesabı Sil" subtitle="Hesabın 14 gün sonra kalıcı olarak silinir; bu süre içinde giriş yaparsan iptal olur" danger>
                                 <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
                                     <Field label="Şifren" htmlFor="silme-sifre">
                                         <input id="silme-sifre" type="password" autoComplete="current-password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} placeholder="Onaylamak için şifreni gir" className={INPUT} />
