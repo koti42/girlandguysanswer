@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { FaBars, FaClipboardList, FaFingerprint, FaHome, FaLayerGroup, FaSearch, FaShieldAlt, FaSignOutAlt, FaUserShield, FaUsers, FaBolt } from 'react-icons/fa';
+import { FaBars, FaClipboardList, FaFingerprint, FaHome, FaLayerGroup, FaSearch, FaShieldAlt, FaSignOutAlt, FaUserShield, FaUsers, FaBolt, FaInbox } from 'react-icons/fa';
 import { usePanelAuth } from '../panel/auth/PanelAuthContext';
 import { useQuery } from '../panel/hooks/useQuery';
 import { useHotkeys } from '../panel/hooks/useHotkeys';
@@ -17,6 +17,7 @@ const NAV = [
     { to: '/mod/content', label: 'İçerik', icon: FaLayerGroup, key: '3' },
     { to: '/mod/users', label: 'Kullanıcılar', icon: FaUsers, key: '4' },
     { to: '/mod/activity', label: 'Aktivite', icon: FaClipboardList, key: '5' },
+    { to: '/mod/feedback', label: 'Geri bildirim', icon: FaInbox, key: '6' },
 ];
 
 /**

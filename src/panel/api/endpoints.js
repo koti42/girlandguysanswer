@@ -59,6 +59,11 @@ export const modApi = {
     note: (id, body) => client.post(`/mod/users/${id}/notes`, body),
 
     actions: (params) => client.get('/mod/actions', { params: clean(params) }),
+
+    /** Uygulama içi geri bildirim / güvenlik bildirimi kuyruğu (POST /feedback kayıtları). */
+    feedback: (params) => client.get('/mod/feedback', { params: clean(params) }),
+    feedbackItem: (id) => client.get(`/mod/feedback/${id}`),
+    resolveFeedback: (id, body) => client.post(`/mod/feedback/${id}/resolve`, body),
 };
 
 /* ------------------------------------------------------------------ */
