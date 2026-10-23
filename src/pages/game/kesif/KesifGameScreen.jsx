@@ -173,6 +173,19 @@ const KesifGameScreen = ({
         if (sessionRef) sessionRef.current = s;
     });
 
+    // Sağ tık oyun içi bir eylemdir (yerleştir, sandık/envanter yuvasını böl): tarayıcının sağ tık menüsü oyunu bozmasın.
+    // Portal ile çizilen paneller de kapsansın diye belge düzeyinde dinlenir; yazı alanlarında menü (yapıştır vb.) açık kalır.
+    useEffect(() => {
+        if (!running) return undefined;
+        const onContext = (e) => {
+            const t = e.target;
+            if (t && typeof t.closest === 'function' && t.closest('input, textarea, select, [contenteditable="true"]')) return;
+            if (e.cancelable) e.preventDefault();
+        };
+        document.addEventListener('contextmenu', onContext, true);
+        return () => document.removeEventListener('contextmenu', onContext, true);
+    }, [running]);
+
     // Tarayıcı geri hareketi: oyun başlayınca korumalı bir geçmiş kaydı eklenir; geri hareketi onu tüketir.
     useEffect(() => {
         if (!historyGuard || !running || guardRef.current) return;
