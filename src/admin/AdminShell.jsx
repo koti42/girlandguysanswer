@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
     FaBalanceScale, FaBars, FaCoins, FaStore, FaBell, FaChartBar, FaBullhorn, FaChevronLeft, FaClipboardList, FaCog, FaExclamationTriangle, FaFingerprint,
-    FaFlag, FaGamepad, FaHome, FaLayerGroup, FaPuzzlePiece, FaQuestionCircle, FaSearch, FaServer, FaShieldAlt, FaSignOutAlt, FaTags, FaUsers, FaUserShield, FaComments,
+    FaCube, FaFlag, FaGamepad, FaHome, FaLayerGroup, FaPuzzlePiece, FaQuestionCircle, FaSearch, FaServer, FaShieldAlt, FaSignOutAlt, FaTags, FaUsers, FaUserShield, FaComments,
 } from 'react-icons/fa';
 import { usePanelAuth } from '../panel/auth/PanelAuthContext';
 import { useQuery } from '../panel/hooks/useQuery';
@@ -32,6 +32,7 @@ const NAV = [
         { to: '/cpl-manage/game/dilemmas', label: 'İkilemler', icon: FaBalanceScale },
         { to: '/cpl-manage/game/shop', label: 'Mağaza', icon: FaStore },
         { to: '/cpl-manage/game/coins', label: 'Jeton', icon: FaCoins },
+        { to: '/mod/kesif', label: 'Keşif haritaları (moderasyon)', icon: FaCube },
     ] },
     { group: 'Yapılandırma', items: [
         { to: '/cpl-manage/catalog', label: 'Kataloglar', icon: FaTags },

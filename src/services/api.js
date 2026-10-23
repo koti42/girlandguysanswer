@@ -129,7 +129,7 @@ export const authAPI = {
     logout: () => api.post('/auth/logout'),
     getCurrentUser: () => api.get('/user/me'),
     getGoogleAuthUrl: (redirect_uri) => api.get('/auth/google', { params: { redirect_uri } }),
-    markWelcomeGuideSeen: () => api.patch('/user/me', { has_seen_welcome_guide: true }),
+    markWelcomeGuideSeen: () => api.put('/user/me/welcome-guide'),
     forgotPassword: (email) => api.post('/auth/password/forgot', { email }),
     resetPassword: (data) => api.post('/auth/password/reset', data),
 };
@@ -310,10 +310,26 @@ export const messagesAPI = {
     createNote: (conversationId, data) => api.post(`/messages/conversations/${conversationId}/notes`, data),
     updateNote: (noteId, data) => api.patch(`/messages/notes/${noteId}`, data),
     deleteNote: (noteId) => api.delete(`/messages/notes/${noteId}`),
-    sendMessage: (data) => api.post('/messages/send', data),
-    sendFile: (formData) => api.post('/messages/send', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+    // Gönderim mesaj başına tekrar-güvenlidir: client_temp_id hem gövdede hem Idempotency-Key olarak
+    // gider; aynı mesajın yeniden denemesi sunucuda aynı mesaja karşılık gelir (cift kayıt olmaz).
+    // Zaman aşımı olmazsa takılı kalan istek hiçbir zaman hata vermez ve kullanıcı sonsuza dek bekler.
+    sendMessage: (data, config = {}) => api.post('/messages/send', data, {
+        timeout: 30000,
+        ...config,
+        headers: { ...(data?.client_temp_id ? { 'Idempotency-Key': data.client_temp_id } : {}), ...(config.headers || {}) },
     }),
+    sendFile: (formData, config = {}) => {
+        const clientId = typeof formData?.get === 'function' ? formData.get('client_temp_id') : null;
+        return api.post('/messages/send', formData, {
+            timeout: 120000,
+            ...config,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                ...(clientId ? { 'Idempotency-Key': String(clientId) } : {}),
+                ...(config.headers || {}),
+            },
+        });
+    },
     markAsRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`),
     updateEphemeralSettings: (conversationId, data) => api.patch(`/messages/conversations/${conversationId}/ephemeral-settings`, data),
     deleteConversation: (conversationId) => api.delete(`/messages/conversations/${conversationId}`),

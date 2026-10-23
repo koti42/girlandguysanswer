@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    DESIGN_CATALOG, availableDesigns, designOf, formToBody, fromLocalInput, itemPatch, itemToForm, pagedList, saleWindowState,
+    DESIGN_CATALOG, SHOP_CATEGORIES, availableDesigns, categoryLabel, designOf, formToBody, fromLocalInput, itemPatch, itemToForm, pagedList, saleWindowState,
     signedAmount, toInt, toLocalInput, txTypeOf, unlockLabel, unlockOf, validateAdjust, validateItemForm,
 } from './shopUtils';
 
@@ -107,6 +107,9 @@ describe('cüzdan', () => {
         expect(signedAmount('grant', '50')).toBe(50);
         expect(signedAmount('deduct', '50')).toBe(-50);
         expect(txTypeOf('admin_grant').label).toBe('Yönetici verdi');
+        expect(txTypeOf('profile_theme').label).toBe('Profil teması');
+        expect(txTypeOf('kesif_slots').label).toBe('Keşif harita yuvası');
+        expect(txTypeOf('kesif_reward').label).toBe('Keşif ödülü');
         expect(txTypeOf('bilinmeyen')).toEqual({ label: 'bilinmeyen', tone: 'neutral' });
         expect(txTypeOf('__proto__').label).toBe('__proto__');
     });
@@ -117,5 +120,26 @@ describe('cüzdan', () => {
         expect(pagedList({ transactions: { data: [{ id: 2 }], pagination: { current_page: 2, last_page: 3 } } }, 'transactions').rows).toEqual([{ id: 2 }]);
         expect(pagedList({ transactions: { data: [], current_page: 1, last_page: 1, total: 0 } }, 'transactions').pagination).toMatchObject({ last_page: 1 });
         expect(pagedList(null, 'transactions')).toEqual({ rows: [], pagination: null });
+    });
+});
+
+describe('Keşif Koleksiyonu (yönetim)', () => {
+    it('kategori ve 29 Keşif tasarımı ile 17 yeni çerçeve/mini/unvan yönetimde seçilebilir', () => {
+        expect(SHOP_CATEGORIES.map((c) => c.key)).toEqual(['frame', 'mini_avatar', 'title', 'kesif', 'avatar_part', 'consumable']);
+        expect(categoryLabel('kesif')).toBe('Keşif Koleksiyonu');
+        expect(DESIGN_CATALOG.filter((d) => d.category === 'kesif')).toHaveLength(29);
+        expect(designOf('portal:neon-sokak')).toMatchObject({ category: 'kesif', name: 'Neon Sokak', rarity: 'rare' });
+        expect(designOf('frame:neon-meridyen')).toMatchObject({ category: 'frame', rarity: 'epic' });
+        expect(designOf('mini:holo-balina')).toMatchObject({ category: 'mini_avatar', rarity: 'legendary' });
+        expect(designOf('title:diyar-kasifi')).toMatchObject({ category: 'title', rarity: 'legendary' });
+        const keys = DESIGN_CATALOG.map((d) => d.key);
+        expect(new Set(keys).size).toBe(keys.length);
+    });
+
+    it('availableDesigns Keşif grubunu verir, mağazadakileri çıkarır', () => {
+        const groups = availableDesigns(['portal:neon-sokak']);
+        const kesif = groups.find((g) => g.key === 'kesif');
+        expect(kesif.items).toHaveLength(28);
+        expect(kesif.items.map((d) => d.key)).not.toContain('portal:neon-sokak');
     });
 });

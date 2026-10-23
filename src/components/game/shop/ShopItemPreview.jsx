@@ -13,13 +13,14 @@ import { normalizeAvatar } from '../../../game/avatar/catalog';
  *  frame       → çerçeve + nötr silüet (çekmecede kullanıcının fotoğrafı)
  *  mini_avatar → mini avatar
  *  title       → unvan rozeti
+ *  kesif       → şablondan üretilmiş 2B önizleme (portal tabancası, aletler, asa, jetpack, araç, geçiş)
  *  avatar_part → karakter portresi (saç/üst/aksesuar) ya da parça simgesi
  *  consumable  → bilet ikonu
  * Kodda tasarımı olmayan anahtar → kategori ikonu (asla sunucudan SVG değil).
  */
 
 const BUST_SLOTS = new Set(['hair', 'top', 'acc']);
-const FALLBACK_ICON = { frame: 'frame', mini_avatar: 'mini', title: 'title', avatar_part: 'avatar', consumable: 'ticket' };
+const FALLBACK_ICON = { frame: 'frame', mini_avatar: 'mini', title: 'title', kesif: 'compass', avatar_part: 'avatar', consumable: 'ticket' };
 
 const Silhouette = () => (
     <svg viewBox="0 0 200 200" className="absolute inset-0 h-full w-full" aria-hidden="true" focusable="false">
@@ -50,6 +51,9 @@ const ShopItemPreview = ({ item, variant = 'card', user = null, avatar = null, g
     }
     if (design?.category === 'title') {
         return <TitlePill itemKey={key} size={big ? 'lg' : 'sm'} animate={animate} srPrefix="" className="max-w-[94%]" />;
+    }
+    if (design?.category === 'kesif') {
+        return <ShopArt itemKey={key} animate={animate} className={`block ${big ? 'h-[88%] w-[88%]' : 'h-[82%] w-[82%]'} drop-shadow-lg`} />;
     }
     if (design?.category === 'consumable') {
         return <ShopArt itemKey={key} animate={animate} className={`block ${big ? 'h-[62%] w-[62%]' : 'h-[58%] w-[58%]'} drop-shadow-lg`} />;

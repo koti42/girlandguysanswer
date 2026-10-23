@@ -100,12 +100,18 @@ describe('desen sınırları', () => {
         expect(bad).toEqual([]);
     }, 120000);
 
-    it('katman ≥ 3 desenlerin tüm ikili birleşimleri VMAX\'ta geçilir', () => {
-        const hard = [];
-        for (let i = 0; i < PATTERNS.length; i++) if (PATTERNS[i].minTier >= 3) hard.push(i);
+    // Tek `it` 45-60 sn eşzamanlı CPU tutardı -> vitest işçisi ana sürece RPC yanıtı alamayıp
+    // "Timeout calling onTaskUpdate" ile çalışmayı kırmızıya çeviriyordu. Birinci desen başına bir test.
+    const hard = [];
+    for (let i = 0; i < PATTERNS.length; i++) if (PATTERNS[i].minTier >= 3) hard.push(i);
+
+    it('katman >= 3 desen sayısı yeterli', () => {
         expect(hard.length).toBeGreaterThanOrEqual(10);
-        const bad = [];
-        for (const a of hard) {
+    });
+
+    for (const a of hard) {
+        it('katman >= 3 ikili birleşimler VMAX icinde geçilir: ' + PATTERNS[a].id + ' -> *', () => {
+            const bad = [];
             for (const b of hard) {
                 for (const ma of [false, true]) {
                     for (const mb of [false, true]) {
@@ -115,7 +121,7 @@ describe('desen sınırları', () => {
                     }
                 }
             }
-        }
-        expect(bad).toEqual([]);
-    }, 180000);
+            expect(bad).toEqual([]);
+        }, 180000);
+    }
 });

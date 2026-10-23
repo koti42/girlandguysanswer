@@ -4,7 +4,7 @@ import { LuShirt, LuSparkles } from 'react-icons/lu';
 import GameDialog from '../avatar/GameDialog';
 import ShopItemPreview from './ShopItemPreview';
 import RarityBadge from './RarityBadge';
-import { rarityOf, slotOfCategory } from '../../../game/shop';
+import { kesifSlotOfKey, rarityOf, slotOfCategory } from '../../../game/shop';
 
 /*
  * Satın alma kutlaması: ışın halesi + konfeti + öğenin "pop" girişi.
@@ -38,12 +38,13 @@ function confettiPieces(seedKey, n = 28) {
     });
 }
 
-const BuyCelebration = ({ open, item, equipped = {}, user, avatar, gender, busy = false, onEquip, onClose }) => {
+const BuyCelebration = ({ open, item, equipped = {}, kesifLoadout = null, user, avatar, gender, busy = false, onEquip, onClose }) => {
     const pieces = useMemo(() => confettiPieces(item?.key || 'x'), [item?.key]);
     if (!item) return null;
-    const slot = slotOfCategory(item.category);
+    const kesifKind = item.category === 'kesif' ? kesifSlotOfKey(item.key) : null;
+    const slot = slotOfCategory(item.category) || (kesifKind ? `kesif:${kesifKind}` : null);
     const r = rarityOf(item.rarity);
-    const alreadyEquipped = slot && equipped?.[slot] === item.key;
+    const alreadyEquipped = kesifKind ? kesifLoadout?.[kesifKind] === item.key : slot && equipped?.[slot] === item.key;
     // Unvan rozeti yatay: kare kutuda büyük boy metin kırpılıyordu ("Gece K…").
     const wide = item.category === 'title';
 
@@ -74,11 +75,15 @@ const BuyCelebration = ({ open, item, equipped = {}, user, avatar, gender, busy 
                 <p className="mt-3 text-sm text-slate-600 dark:text-slate-300" role="status">
                     {item.category === 'consumable'
                         ? 'Bilet cüzdanına eklendi. Mesajlarını kapatmış birine yazarken kullanabilirsin.'
-                        : slot
+                        : kesifKind
                             ? alreadyEquipped
-                                ? 'Profilinde görünüyor.'
-                                : 'Koleksiyonuna eklendi. Kuşanırsan profilinde ve liderliklerde görünür.'
-                            : 'Koleksiyonuna eklendi.'}
+                                ? 'Keşif oyununda görünüyor.'
+                                : 'Koleksiyonuna eklendi. Kuşanırsan Keşif oyununda görünür; yalnız sen görürsün.'
+                            : slot
+                                ? alreadyEquipped
+                                    ? 'Profilinde görünüyor.'
+                                    : 'Koleksiyonuna eklendi. Kuşanırsan profilinde ve liderliklerde görünür.'
+                                : 'Koleksiyonuna eklendi.'}
                 </p>
 
                 <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-center">

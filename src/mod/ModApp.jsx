@@ -12,6 +12,7 @@ const Content = lazy(() => import('./pages/Content.jsx'));
 const Users = lazy(() => import('./pages/Users.jsx'));
 const Activity = lazy(() => import('./pages/Activity.jsx'));
 const Feedback = lazy(() => import('./pages/Feedback.jsx'));
+const KesifMaps = lazy(() => import('./pages/KesifMaps.jsx'));
 const Security = lazy(() => import('../panel/features/SecurityPage.jsx'));
 
 const Fallback = () => <div className="py-16 grid place-items-center"><div className="h-8 w-8 rounded-full border-2 border-[var(--p-border)] border-t-[var(--p-accent)] animate-spin" /></div>;
@@ -32,6 +33,7 @@ export default function ModApp() {
                         <Route path="users/:id" element={<S><Users /></S>} />
                         <Route path="activity" element={<S><Activity /></S>} />
                         <Route path="feedback" element={<S><Feedback /></S>} />
+                        <Route path="kesif" element={<S><KesifMaps /></S>} />
                         <Route path="security" element={<S><Security /></S>} />
                     </Route>
                     <Route path="*" element={<Navigate to="/mod" replace />} />

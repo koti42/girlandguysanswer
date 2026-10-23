@@ -65,13 +65,19 @@ export const ACTION_LABELS = {
     game_shop_item_update: 'Mağaza ürünü düzenlendi',
     game_wallet_grant: 'Jeton verildi',
     game_wallet_deduct: 'Jeton kesildi',
+    game_theme_grant: 'Profil teması verildi',
+    game_theme_revoke: 'Profil teması kaldırıldı',
+    game_kesif_map_hide: 'Keşif haritası gizlendi',
+    game_kesif_map_remove: 'Keşif haritası kaldırıldı',
+    game_kesif_map_restore: 'Keşif haritası yeniden açıldı',
+    game_kesif_report_handle: 'Keşif harita raporları işlendi',
 };
 
 /** Renk sınıfı: ceza kırmızı, geri alma yeşil, bilgi mavi, nötr gri. */
 export function actionTone(action) {
-    if (['ban', 'remove', 'delete', 'auto_hide', 'community_delete'].includes(action)) return 'danger';
-    if (['freeze', 'hide', 'warn', 'complaint_accepted', 'community_close', 'revoke_tokens', 'game_wallet_deduct'].includes(action)) return 'warning';
-    if (['unban', 'unfreeze', 'unhide', 'restore', 'restore_user', 'verify', 'community_reopen', 'complaint_rejected'].includes(action)) return 'success';
+    if (['ban', 'remove', 'delete', 'auto_hide', 'community_delete', 'game_kesif_map_remove'].includes(action)) return 'danger';
+    if (['freeze', 'hide', 'warn', 'complaint_accepted', 'community_close', 'revoke_tokens', 'game_wallet_deduct', 'game_theme_revoke', 'game_kesif_map_hide'].includes(action)) return 'warning';
+    if (['unban', 'unfreeze', 'unhide', 'restore', 'game_kesif_map_restore', 'restore_user', 'verify', 'community_reopen', 'complaint_rejected'].includes(action)) return 'success';
     if (['note', 'export'].includes(action)) return 'neutral';
     return 'info';
 }

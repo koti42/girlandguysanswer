@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FaArrowDown, FaArrowUp, FaCalendarDay, FaCalendarWeek, FaCoins, FaExternalLinkAlt, FaMinus, FaPlus, FaSync, FaTicketAlt, FaTimes } from 'react-icons/fa';
+import { FaArrowDown, FaArrowUp, FaCalendarDay, FaCalendarWeek, FaCoins, FaExternalLinkAlt, FaMinus, FaPlus, FaSync, FaTicketAlt, FaTimes, FaUmbrellaBeach } from 'react-icons/fa';
 import { gameAdminApi } from '../../gameAdminApi';
 import { errorMessage } from '../../../panel/api/client';
 import { useQuery } from '../../../panel/hooks/useQuery';
@@ -10,6 +10,7 @@ import { formatDateTime, formatNumber } from '../../../panel/lib/format';
 import { fieldErrors, listOf, toPagination } from './gameUtils';
 import { LIMITS, categoryLabel, designOf, pagedList, signedAmount, toInt, txTypeOf, validateAdjust } from './shopUtils';
 import ShopItemPreview from './ShopItemPreview';
+import { normalizeTheme, themeStatus } from '../../../components/Profile/island/themeUtils';
 
 const EMPTY_ADJUST = { mode: 'grant', amount: '', reason: '' };
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
@@ -27,6 +28,122 @@ function Amount({ value }) {
     const n = num(value);
     const tone = n > 0 ? 'p-tone-success' : n < 0 ? 'p-tone-danger' : 'p-muted';
     return <span className={`font-semibold tabular-nums ${tone}`}>{n > 0 ? '+' : ''}{formatNumber(n)}</span>;
+}
+
+const THEME_MAX_DAYS = 365;
+const EMPTY_GRANT = { mode: 'days', days: '15', reason: '' };
+
+/** Satırı (admin listesi) arayüzün tema modeline çevirir. */
+function entitlementOf(rows, userId) {
+    const row = rows.find((r) => (r.user_id === userId || r.user?.id === userId) && (r.theme || 'ada') === 'ada');
+    if (!row) return null;
+    const unlimited = row.unlimited ?? !row.expires_at;
+    return {
+        row,
+        theme: normalizeTheme({ key: 'ada', owned: true, active: row.active ?? true, enabled: row.enabled ?? true, expires_at: row.expires_at, unlimited, source: row.source }),
+    };
+}
+
+/**
+ * Profil teması (Ada Profili): seçili kullanıcının hakkı, gerekçeli "N gün ver"
+ * / "süresiz ver" ve kaldırma. Hepsi onay penceresinden geçer ve denetim
+ * kaydına yazılır (game_theme_grant / game_theme_revoke).
+ */
+function ThemePanel({ userId, username, toast }) {
+    const list = useQuery(() => gameAdminApi.themes({ user_id: userId, per_page: 50 }), [userId], { enabled: !!userId });
+    const ent = entitlementOf(listOf(list.data, 'items', 'themes', 'entitlements'), userId);
+    const status = themeStatus(ent?.theme);
+
+    const [grant, setGrant] = useState(EMPTY_GRANT);
+    const [errors, setErrors] = useState({});
+    const [confirm, setConfirm] = useState(null); // { type: 'grant' | 'revoke', days, reason }
+    const [busy, setBusy] = useState(false);
+    const setG = (k, v) => { setGrant((g) => ({ ...g, [k]: v })); setErrors((e) => ({ ...e, [k]: undefined })); };
+
+    const review = (e) => {
+        e?.preventDefault?.();
+        const errs = {};
+        const days = toInt(grant.days);
+        if (grant.mode === 'days' && (!Number.isInteger(days) || days <= 0 || days > THEME_MAX_DAYS)) errs.days = `1 ile ${THEME_MAX_DAYS} arasında tam sayı girin.`;
+        const reason = grant.reason.trim();
+        if (!reason) errs.reason = 'Gerekçe zorunlu.';
+        else if (reason.length > LIMITS.reason) errs.reason = `En fazla ${LIMITS.reason} karakter.`;
+        setErrors(errs);
+        if (Object.keys(errs).length) return;
+        setConfirm({ type: 'grant', days: grant.mode === 'days' ? days : null, reason });
+    };
+
+    const apply = async () => {
+        if (!confirm || busy) return;
+        setBusy(true);
+        try {
+            const r = confirm.type === 'revoke'
+                ? await gameAdminApi.revokeTheme(userId)
+                : await gameAdminApi.grantTheme({ user_id: userId, days: confirm.days, reason: confirm.reason });
+            toast.success(r?.data?.message || (confirm.type === 'revoke' ? 'Profil teması kaldırıldı.' : 'Profil teması verildi.'));
+            if (confirm.type === 'grant') { setGrant(EMPTY_GRANT); setErrors({}); }
+            setConfirm(null);
+            list.refetch();
+        } catch (err) {
+            setErrors(fieldErrors(err) || {});
+            setConfirm(null);
+            toast.error(errorMessage(err));
+        } finally { setBusy(false); }
+    };
+
+    const grantLabel = confirm?.days === null ? 'süresiz' : `${confirm?.days} gün`;
+
+    return (
+        <div className="rounded-xl border border-[var(--p-border)] p-4 space-y-3" data-testid="theme-admin">
+            <div className="flex flex-wrap items-center gap-2">
+                <h4 className="text-sm font-semibold inline-flex items-center gap-2"><FaUmbrellaBeach aria-hidden /> Profil teması (Ada Profili)</h4>
+                {list.loading && !list.data ? <Skeleton className="h-5 w-24" /> : !list.error && (
+                    <span data-testid="theme-admin-status"><Badge tone={status.tone === 'success' ? 'success' : status.tone === 'warning' ? 'warning' : 'neutral'}>{ent ? status.label : 'Hakkı yok'}</Badge></span>
+                )}
+            </div>
+
+            {list.error && !list.data ? <ErrorState message={list.error} onRetry={list.refetch} /> : ent && (
+                <dl className="grid gap-x-6 gap-y-1 text-xs sm:grid-cols-2" data-testid="theme-admin-details">
+                    <div className="flex gap-2"><dt className="p-muted">Kaynak</dt><dd>{ent.row.source === 'admin' ? 'Yönetici' : ent.row.source === 'purchase' ? 'Satın alma' : '—'}</dd></div>
+                    <div className="flex gap-2"><dt className="p-muted">Profilde</dt><dd>{ent.theme?.enabled ? 'Açık' : 'Kapalı'}</dd></div>
+                    <div className="flex gap-2"><dt className="p-muted">Bitiş</dt><dd>{ent.theme?.unlimited ? 'Süresiz' : formatDateTime(ent.row.expires_at)}</dd></div>
+                    <div className="flex gap-2"><dt className="p-muted">Harcanan</dt><dd className="tabular-nums">{formatNumber(ent.row.price_paid ?? 0)} jeton · {formatNumber(ent.row.purchases ?? 0)} alım</dd></div>
+                </dl>
+            )}
+
+            <form onSubmit={review} className="space-y-3" noValidate data-testid="theme-grant-form">
+                <div role="radiogroup" aria-label="Verilecek süre" className="inline-flex rounded-xl p-1 p-fill border border-[var(--p-border)]">
+                    {[{ k: 'days', label: 'Gün ver' }, { k: 'unlimited', label: 'Süresiz ver' }].map(({ k, label }) => (
+                        <button key={k} type="button" role="radio" aria-checked={grant.mode === k} onClick={() => setG('mode', k)}
+                            className={`inline-flex items-center rounded-lg px-3 h-8 text-sm font-medium p-ring ${grant.mode === k ? 'bg-emerald-500/20 p-tone-success' : 'p-muted hover:text-[var(--p-text)]'}`}>{label}</button>
+                    ))}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
+                    {grant.mode === 'days' ? (
+                        <Field label="Gün *" error={errors.days} hint={`1-${THEME_MAX_DAYS}; süre varsa üstüne eklenir.`}>
+                            <Input type="number" inputMode="numeric" min={1} max={THEME_MAX_DAYS} step={1} value={grant.days} onChange={(e) => setG('days', e.target.value)} aria-label="Gün" />
+                        </Field>
+                    ) : (
+                        <p className="text-xs p-muted self-center">Süre sınırı olmadan etkinleşir.</p>
+                    )}
+                    <Field label="Gerekçe *" error={errors.reason} hint={`${grant.reason.trim().length}/${LIMITS.reason} · Denetim kaydına yazılır.`}>
+                        <Textarea rows={2} value={grant.reason} onChange={(e) => setG('reason', e.target.value)} maxLength={LIMITS.reason} aria-label="Tema gerekçesi" />
+                    </Field>
+                </div>
+                <div className="flex flex-wrap justify-end gap-2">
+                    {ent && <Button type="button" variant="danger" icon={FaTimes} onClick={() => setConfirm({ type: 'revoke' })}>Temayı kaldır</Button>}
+                    <Button type="submit" variant="success" icon={FaPlus}>Temayı ver</Button>
+                </div>
+            </form>
+
+            <ConfirmDialog open={!!confirm} onClose={() => !busy && setConfirm(null)} loading={busy} onConfirm={apply}
+                title={confirm?.type === 'revoke' ? 'Profil teması kaldırılsın mı?' : 'Profil teması verilsin mi?'}
+                confirmLabel={confirm?.type === 'revoke' ? 'Temayı kaldır' : 'Temayı ver'} danger={confirm?.type === 'revoke'}
+                message={confirm ? (confirm.type === 'revoke'
+                    ? `@${username} kullanıcısının Ada Profili hakkı kaldırılacak; profili standart görünüme döner. İşlem adınızla denetim kaydına yazılır.`
+                    : `@${username} kullanıcısına Ada Profili ${grantLabel} verilecek. Gerekçe: "${confirm.reason}". İşlem adınızla denetim kaydına yazılır.`) : ''} />
+        </div>
+    );
 }
 
 /** Dolaşım ve kazanılan/harcanan özet kartları + en çok satanlar + Mesaj Bileti kaydı (/admin/game/shop/summary). */
@@ -239,6 +356,8 @@ export default function GameCoins() {
                                 <StatCard label="Toplam kazanılan" value={formatNumber(wallet?.earned_total ?? 0)} icon={FaArrowUp} tone="success" compact />
                                 <StatCard label="Toplam harcanan" value={formatNumber(wallet?.spent_total ?? 0)} icon={FaArrowDown} tone="danger" compact />
                             </div>
+
+                            <ThemePanel key={userId} userId={userId} username={user.username} toast={toast} />
 
                             <form onSubmit={review} className="rounded-xl border border-[var(--p-border)] p-4 space-y-3" noValidate data-testid="wallet-adjust">
                                 <div role="radiogroup" aria-label="İşlem" className="inline-flex rounded-xl p-1 p-fill border border-[var(--p-border)]">

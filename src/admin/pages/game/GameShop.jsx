@@ -255,6 +255,9 @@ export default function GameShop() {
                 </p>
                 <code className="block text-[10px] p-muted truncate">{it.key}</code>
                 <span className="text-[11px] p-muted">{categoryLabel(it.category)}</span>
+                {it.wave && it.wave_open === false && (
+                    <Badge size="xs" tone="warning" className="mt-0.5 self-start" title={`Dalga ${it.wave} kapalı: oyunculara görünmez`}>Dalga kapalı</Badge>
+                )}
             </div>
         ) },
         { key: 'rarity', label: 'Nadirlik', width: 100, render: (it) => { const r = rarityOf(it.rarity); return <Badge size="xs" tone={r.tone}>{r.label}</Badge>; } },

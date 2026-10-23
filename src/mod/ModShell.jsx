@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { FaBars, FaClipboardList, FaFingerprint, FaHome, FaLayerGroup, FaSearch, FaShieldAlt, FaSignOutAlt, FaUserShield, FaUsers, FaBolt, FaInbox } from 'react-icons/fa';
+import { FaBars, FaClipboardList, FaFingerprint, FaHome, FaLayerGroup, FaSearch, FaShieldAlt, FaSignOutAlt, FaUserShield, FaUsers, FaBolt, FaInbox, FaCube } from 'react-icons/fa';
 import { usePanelAuth } from '../panel/auth/PanelAuthContext';
 import { useQuery } from '../panel/hooks/useQuery';
 import { useHotkeys } from '../panel/hooks/useHotkeys';
@@ -18,6 +18,7 @@ const NAV = [
     { to: '/mod/users', label: 'Kullanıcılar', icon: FaUsers, key: '4' },
     { to: '/mod/activity', label: 'Aktivite', icon: FaClipboardList, key: '5' },
     { to: '/mod/feedback', label: 'Geri bildirim', icon: FaInbox, key: '6' },
+    { to: '/mod/kesif', label: 'Keşif', icon: FaCube, key: '7' },
 ];
 
 /**
@@ -59,12 +60,12 @@ export default function ModShell() {
                         <span className="h-8 w-8 rounded-lg p-accent-bg grid place-items-center"><FaShieldAlt className="text-sm" /></span>
                         <span className="hidden sm:block text-sm font-bold">Moderasyon</span>
                     </NavLink>
-                    <nav className="hidden md:flex items-center gap-1 ml-4">
+                    <nav className="hidden lg:flex items-center gap-1 ml-4">
                         {NAV.map((n) => (
-                            <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `inline-flex items-center gap-2 h-9 px-3 rounded-lg text-sm transition-colors p-ring ${isActive ? 'p-fill-strong font-semibold' : 'p-muted hover:text-[var(--p-text)] p-hover'}`}>
+                            <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `inline-flex items-center gap-2 h-9 px-3 rounded-lg text-sm whitespace-nowrap transition-colors p-ring ${isActive ? 'p-fill-strong font-semibold' : 'p-muted hover:text-[var(--p-text)] p-hover'}`}>
                                 <n.icon className="text-xs" />{n.label}
                                 {n.badge && pending > 0 && <span className="text-[10px] font-bold rounded-full bg-amber-500 text-black px-1.5 py-0.5">{pending}</span>}
-                                <Kbd>{n.key}</Kbd>
+                                <span className="hidden xl:inline-flex"><Kbd>{n.key}</Kbd></span>
                             </NavLink>
                         ))}
                     </nav>
@@ -79,11 +80,11 @@ export default function ModShell() {
                             <NavLink to="/mod/security" className="h-9 w-9 rounded-lg grid place-items-center p-muted hover:text-[var(--p-text)] p-hover p-ring" aria-label="Güvenlik" title="Güvenlik / passkey"><FaFingerprint /></NavLink>
                             <button type="button" onClick={() => logout().then(() => navigate('/mod/login'))} className="h-9 w-9 rounded-lg grid place-items-center p-muted hover:p-tone-danger hover:bg-rose-500/10 p-ring" aria-label="Çıkış yap" title="Çıkış"><FaSignOutAlt /></button>
                         </div>
-                        <button type="button" onClick={() => setMenuOpen((v) => !v)} className="md:hidden h-9 w-9 rounded-lg grid place-items-center p-hover p-ring" aria-label="Menü"><FaBars /></button>
+                        <button type="button" onClick={() => setMenuOpen((v) => !v)} className="lg:hidden h-9 w-9 rounded-lg grid place-items-center p-hover p-ring" aria-label="Menü"><FaBars /></button>
                     </div>
                 </div>
                 {menuOpen && (
-                    <nav className="md:hidden border-t border-[var(--p-border)] px-4 py-2 grid grid-cols-2 gap-1">
+                    <nav className="lg:hidden border-t border-[var(--p-border)] px-4 py-2 grid grid-cols-2 gap-1">
                         {NAV.map((n) => <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `flex items-center gap-2 h-10 px-3 rounded-lg text-sm ${isActive ? 'p-fill-strong font-semibold' : 'p-muted'}`}><n.icon className="text-xs" />{n.label}{n.badge && pending > 0 && <span className="ml-auto text-[10px] font-bold rounded-full bg-amber-500 text-black px-1.5 py-0.5">{pending}</span>}</NavLink>)}
                     </nav>
                 )}

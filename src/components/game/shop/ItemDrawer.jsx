@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LuCheck, LuClock3, LuFootprints, LuBuilding2, LuLock, LuLogIn, LuShirt, LuShoppingBag, LuX, LuMessageCircle } from 'react-icons/lu';
+import { LuCheck, LuClock3, LuCompass, LuFootprints, LuBuilding2, LuLock, LuLogIn, LuShirt, LuShoppingBag, LuX, LuMessageCircle } from 'react-icons/lu';
 import GameDialog from '../avatar/GameDialog';
 import ShopItemPreview from './ShopItemPreview';
 import ProfilePreview from './ProfilePreview';
 import RarityBadge from './RarityBadge';
 import JetonAmount from './Jeton';
-import { rarityOf, slotOfCategory } from '../../../game/shop';
+import { KESIF_KIND_INFO, getDesign, kesifSwatches, rarityOf, slotOfCategory } from '../../../game/shop';
 import { itemState, lockHint, lockText } from './shopUtils';
 import { formatCountdown, formatNumber } from '../gameUtils';
 import useNow from '../useNow';
@@ -16,6 +16,10 @@ import useNow from '../useNow';
  * büyük önizleme, açıklama, kilit/süre bilgisi, "profilinde nasıl görünür"
  * canlı önizleme (kendi fotoğraf + kullanıcı adınla, kuşandıklarınla
  * birlikte), satın al → onay adımı, kuşan / çıkar.
+ *
+ * Keşif Koleksiyonu öğelerinde profil önizlemesi yerine "Oyunda şöyle görünür"
+ * (tür açıklaması + renk çipleri) gösterilir; kuşanma `kesif:<yuva>` ile gider,
+ * Keşif yükü özeldir (yalnız sen görürsün).
  *
  * Satın alma iki adımlı: "Satın al" → fiyat/bakiye/sonra kalan özeti →
  * "Onayla". Bakiye yetmiyorsa onay kapalı, eksik miktar ve Koşu/Kule
@@ -51,6 +55,7 @@ const ItemDrawer = ({
     busy = false,
     error = null,
     errorReason = null,
+    kesifLoadout = null,
     onBuy,
     onEquip,
     onClose,
@@ -59,9 +64,14 @@ const ItemDrawer = ({
     const now = useNow(1000, open && !!item?.available_until);
     if (!item) return null;
 
-    const state = itemState(item, equipped, balance, now);
+    const state = itemState(item, equipped, balance, now, kesifLoadout);
     const r = rarityOf(item.rarity);
     const slot = slotOfCategory(item.category);
+    // Keşif öğesi: kuşanma yuvası `kesif:<tür>` (tür bilinmiyorsa kuşanılamaz)
+    const equipSlot = slot || (state.kesif && state.kind ? `kesif:${state.kind}` : null);
+    const kesifDesign = state.kesif ? getDesign(item.key) : null;
+    const kesifInfo = state.kesif ? KESIF_KIND_INFO[state.kind] : null;
+    const swatches = kesifDesign ? kesifSwatches(kesifDesign) : [];
     const leftMs = state.untilMs ? state.untilMs - now : null;
     const missing = state.price != null ? Math.max(0, state.price - balance) : 0;
     const previewCosmetics = slot ? { ...equipped, [slot]: item.key } : equipped;
@@ -116,6 +126,28 @@ const ItemDrawer = ({
                         <div>
                             <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Profilinde nasıl görünür</p>
                             <ProfilePreview user={user || { username: 'sen' }} cosmetics={previewCosmetics} />
+                        </div>
+                    )}
+                    {state.kesif && !confirming && kesifInfo && (
+                        <div data-testid="kesif-preview-note">
+                            <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Oyunda şöyle görünür</p>
+                            <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-900/70">
+                                <LuCompass className="mt-0.5 shrink-0 text-xl text-indigo-500" aria-hidden="true" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-bold text-slate-800 dark:text-white">{kesifInfo.title}</p>
+                                    <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{kesifInfo.hint}</p>
+                                    {swatches.length > 0 && (
+                                        <ul className="mt-2 flex gap-1.5" aria-label="Renkler">
+                                            {swatches.map((c, i) => (
+                                                <li key={`${c}-${i}`}>
+                                                    <span className="block h-5 w-5 rounded-full ring-2 ring-white/70 dark:ring-white/20" style={{ background: c }} data-swatch={c} />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Yalnız sen görürsün; sadece Keşif oyununda kullanılır, oynanışı değiştirmez.</p>
+                                </div>
+                            </div>
                         </div>
                     )}
                     {item.category === 'avatar_part' && !confirming && (
@@ -198,11 +230,11 @@ const ItemDrawer = ({
                             </>
                         ) : (
                             <>
-                                {slot && state.owned && (
+                                {equipSlot && state.owned && (
                                     state.equipped ? (
                                         <button
                                             type="button"
-                                            onClick={() => onEquip?.(slot, null)}
+                                            onClick={() => onEquip?.(equipSlot, null)}
                                             disabled={busy}
                                             className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border-2 border-slate-300 px-5 font-bold text-slate-700 game-press disabled:opacity-60 dark:border-white/20 dark:text-slate-200"
                                         >
@@ -211,7 +243,7 @@ const ItemDrawer = ({
                                     ) : (
                                         <button
                                             type="button"
-                                            onClick={() => onEquip?.(slot, item.key)}
+                                            onClick={() => onEquip?.(equipSlot, item.key)}
                                             disabled={busy}
                                             data-autofocus
                                             className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 font-bold text-white shadow-lg game-press disabled:opacity-60"
@@ -233,7 +265,7 @@ const ItemDrawer = ({
                                         type="button"
                                         onClick={() => setStep('confirm')}
                                         disabled={busy}
-                                        data-autofocus={state.owned && slot ? undefined : true}
+                                        data-autofocus={state.owned && equipSlot ? undefined : true}
                                         className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 to-coral px-6 font-bold text-slate-950 shadow-lg game-press disabled:opacity-60"
                                     >
                                         <LuShoppingBag aria-hidden="true" />

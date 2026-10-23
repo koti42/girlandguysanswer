@@ -1658,6 +1658,490 @@ function atesHalkasi() {
     );
 }
 
+/* ================================================================== */
+/* 16. Neon Meridyen — epic (shimmer + twinkle) — Keşif Koleksiyonu    */
+/* ================================================================== */
+function neonMeridyen() {
+    const base = 98.4; // gökdelenler dış kenardan merkeze doğru yükselir
+    const R = rng(61);
+    const shapes = [];
+    const win = { warm: [], cyan: [], pink: [] };
+    const signs = [];
+    const box = (x0, x1, y0, y1) => [['M', x0, y0], ['L', x0, y1], ['L', x1, y1], ['L', x1, y0], ['Z']];
+    const lit = (m, x, y, w = 0.85, h = 1.25) => {
+        const c = R();
+        win[c < 0.58 ? 'warm' : c < 0.8 ? 'cyan' : 'pink'].push(D(box(x, x + w, y, y + h), m));
+    };
+    const tube = (d, color, core, widths = [4, 2, 0.9], extra = {}) => [
+        path(d, { fill: 'none', stroke: color, strokeWidth: widths[0], opacity: 0.22, strokeLinecap: 'round', strokeLinejoin: 'round', ...extra }),
+        path(d, { fill: 'none', stroke: color, strokeWidth: widths[1], opacity: 0.6, strokeLinecap: 'round', strokeLinejoin: 'round', ...extra }),
+        path(d, { fill: 'none', stroke: core, strokeWidth: widths[2], strokeLinecap: 'round', strokeLinejoin: 'round', ...extra }),
+    ];
+    // gökdelenler: 104°..256° (alt yay); ortada yükselen kule, kenarlara doğru alçalır
+    const towers = [];
+    for (let deg = 104; deg <= 252; ) {
+        const w = 4.6 + R() * 3.6;
+        const step = (w / (base * Math.PI)) * 180 * 0.94;
+        const c = deg + step / 2;
+        const far = Math.min(1, Math.abs(c - 180) / 76);
+        const free = Math.abs(c - 180) > 6.2;
+        if (free) towers.push([c, w, 6 + (1 - far) * 14 + R() * 6 * (1 - far * 0.5), R() > 0.62 ? 'step' : R() > 0.5 ? 'flat' : 'slant']);
+        deg += step;
+    }
+    for (const [deg, w, h, roof] of towers) {
+        const m = inFrame(base, deg);
+        if (roof === 'slant') shapes.push(D([['M', -w / 2, -0.6], ['L', -w / 2, h], ['L', w / 2, h - 2.4], ['L', w / 2, -0.6], ['Z']], m));
+        else shapes.push(D(box(-w / 2, w / 2, -0.6, h), m));
+        if (roof === 'step') shapes.push(D(box(-w * 0.28, w * 0.28, h - 0.1, h + 2.6), m), D(box(-0.2, 0.2, h + 2.5, h + 4.4), m));
+        for (let yy = 2; yy < h - 1.6; yy += 2.5) for (let xx = -w / 2 + 0.85; xx < w / 2 - 1.1; xx += 1.95) if (R() > 0.5) lit(m, xx, yy);
+        if (R() > 0.55) signs.push(D([['M', -w / 2 + 0.7, h * 0.55], ['L', w / 2 - 0.7, h * 0.55]], m));
+    }
+    // merkez kule: 180°, gövde + taç + ışıklı ibre
+    const tm = inFrame(base, 180);
+    shapes.push(
+        D(
+            [
+                ['M', -5.6, -0.6], ['L', -5.6, 9], ['L', -4.2, 9.4], ['L', -4.2, 16], ['L', -2.6, 16.4], ['L', -2.6, 20.4], ['L', -0.35, 20.6], ['L', -0.35, 26],
+                ['L', 0.35, 26], ['L', 0.35, 20.6], ['L', 2.6, 20.4], ['L', 2.6, 16.4], ['L', 4.2, 16], ['L', 4.2, 9.4], ['L', 5.6, 9], ['L', 5.6, -0.6], ['Z'],
+            ],
+            tm,
+        ),
+    );
+    for (const y of [2.2, 5.2, 8.2, 11.4, 14.4]) for (const x of [-3.4, -1.4, 0.8, 2.4]) if (R() > 0.22 && (y < 8.5 || Math.abs(x) < 3)) lit(tm, x, y, 1, 1.4);
+    // yağmur çizgileri (binaların arkasında)
+    const rain = [];
+    for (let i = 0; i < 26; i++) {
+        const p = polar(75 + R() * 21, R() * 360);
+        rain.push(`M${P(p)} L${P([p[0] - 1.9, p[1] + 4.6])}`);
+    }
+    // yıldızlar (üst yay)
+    const stars = [];
+    for (let i = 0; i < 22; i++) {
+        const a = -88 + R() * 176;
+        stars.push(dot(polar(77 + R() * 19, a), 0.35 + R() * 0.55, { fill: R() > 0.5 ? '#FFFFFF' : '#BDE9FF', opacity: 0.5 + R() * 0.45 }));
+    }
+    const spark = (a, r, s) => {
+        const [x, y] = polar(r, a);
+        return sparkleD(x, y, s, 0.17);
+    };
+    // tepedeki meridyen simgesi
+    const mc = polar(86.4, 0);
+    const meridian = [
+        ...tube(`M${P([mc[0] - 5.2, mc[1]])} A5.2 5.2 0 1 1 ${P([mc[0] + 5.2, mc[1]])} A5.2 5.2 0 1 1 ${P([mc[0] - 5.2, mc[1]])}`, '#FF2E97', '#FFD3EC', [3.4, 1.7, 0.8]),
+        ...tube(`M${P([mc[0], mc[1] - 5.2])} L${P([mc[0], mc[1] + 5.2])} M${P([mc[0] - 2.4, mc[1] - 4.4])} Q${P([mc[0] - 3.4, mc[1]])} ${P([mc[0] - 2.4, mc[1] + 4.4])} M${P([mc[0] + 2.4, mc[1] - 4.4])} Q${P([mc[0] + 3.4, mc[1]])} ${P([mc[0] + 2.4, mc[1] + 4.4])}`, '#00E5FF', '#D9FCFF', [2.6, 1.3, 0.6]),
+    ];
+    const ringFull = (r) => `${arcD(r, 0, 180)} ${arcD(r, 180, 360)}`;
+    return frame(
+        'neon-meridyen',
+        'Neon Meridyen',
+        'epic',
+        'Gökdelen siluetleri, camgöbeği ve pembe neon halka; yağmurlu bir gece şehri.',
+        [
+            lin('nm-sky', [0.5, 0, 0.5, 1], [
+                [0, '#0A0E38'],
+                [0.4, '#1F1573'],
+                [0.72, '#7A2492'],
+                [1, '#FF5FA8'],
+            ]),
+        ],
+        [
+            ring(86.2, 26.4, url('nm-sky')),
+            ...stars,
+            path(rain.join(' '), { fill: 'none', stroke: '#A8E8FF', strokeWidth: 0.55, strokeLinecap: 'round', opacity: 0.34 }),
+            path(shapes.join(' '), { fill: '#0B0724' }),
+            path(win.warm.join(' '), { fill: '#FFD27A' }),
+            group([path(win.cyan.join(' '), { fill: '#5CF0FF' })], {}, 'twinkle'),
+            group([path(win.pink.join(' '), { fill: '#FF7AC8' })], {}, 'twinkle'),
+            path(signs.join(' '), { fill: 'none', stroke: '#FF4FB4', strokeWidth: 0.9, strokeLinecap: 'round' }),
+            dot(inFrame(base, 180)(0, 26.2), 1.1, { fill: '#FF4FB4' }),
+            group(tube(ringFull(97.6), '#00E5FF', '#D9FCFF'), {}, 'shimmer'),
+            group(tube(ringFull(74.6), '#FF2E97', '#FFD3EC', [3.4, 1.7, 0.8]), {}, 'shimmer'),
+            group(meridian, {}, 'shimmer'),
+            group([path([spark(52, 87, 3), spark(308, 85, 2.6), spark(20, 78, 1.8)].join(' '), { fill: '#FFFFFF', stroke: '#FF7AC8', strokeWidth: 0.4, strokeLinejoin: 'round' })], {}, 'twinkle'),
+        ],
+    );
+}
+
+/* ================================================================== */
+/* 17. Veri Çipi — rare — Keşif Koleksiyonu                            */
+/* ================================================================== */
+function veriCipi() {
+    const R = rng(404);
+    const traces = [];
+    const nodes = [];
+    const chips = [];
+    const pins = [];
+    const leds = [];
+    // üç eşmerkezli devre yolu: kırık yaylar + radyal bağlantılar
+    const rings = [[79.4, 0.9], [85.6, 1.1], [92.2, 0.9]];
+    rings.forEach(([r, w], idx) => {
+        let a = (idx * 17) % 40;
+        while (a < 340) {
+            const len = 18 + R() * 34;
+            const end = Math.min(a + len, 358);
+            traces.push(path(arcD(r, a, end), { fill: 'none', stroke: idx === 1 ? '#7FF0D8' : '#43C9B0', strokeWidth: w, strokeLinecap: 'round', opacity: idx === 1 ? 0.95 : 0.75 }));
+            nodes.push(dot(polar(r, a), 1.15, { fill: '#FFE58A', stroke: '#0A3F44', strokeWidth: 0.4 }));
+            nodes.push(dot(polar(r, end), 1.15, { fill: '#FFE58A', stroke: '#0A3F44', strokeWidth: 0.4 }));
+            a = end + 6 + R() * 12;
+        }
+    });
+    // radyal köprüler
+    for (let k = 0; k < 18; k++) {
+        const a = k * 20 + 6 + R() * 8;
+        const outer = k % 2 === 0;
+        const r0 = outer ? 85.6 : 79.4;
+        const r1 = outer ? 92.2 : 85.6;
+        const p0 = polar(r0, a);
+        const p1 = polar(r1, a);
+        traces.push(path(`M${P(p0)} L${P(p1)}`, { fill: 'none', stroke: '#43C9B0', strokeWidth: 0.7, strokeLinecap: 'round', opacity: 0.7 }));
+        nodes.push(dot(p1, 0.9, { fill: '#7FF0D8' }));
+    }
+    // çipler: büyük 6 + küçük 6
+    const place = (a, w, h, big) => {
+        const [cx, cy] = polar(85.6, a);
+        const m = mapAt(cx, cy, a);
+        chips.push(path(D(box(-w / 2, w / 2, -h / 2, h / 2), m), { fill: '#0F1630', stroke: '#7FF0D8', strokeWidth: 0.7, strokeLinejoin: 'round' }));
+        chips.push(path(D(box(-w / 2 + 1.1, w / 2 - 1.1, -h / 2 + 1.1, h / 2 - 1.1), m), { fill: big ? '#1C2A58' : '#17224A' }));
+        if (big) chips.push(dot(m(-w / 2 + 2.3, h / 2 - 2.1), 0.8, { fill: '#FFFFFF', opacity: 0.8 }));
+        const n = big ? 4 : 3;
+        const segs = [];
+        for (let i = 0; i < n; i++) {
+            const x = -w / 2 + ((i + 0.5) * w) / n;
+            segs.push(D([['M', x, -h / 2], ['L', x, -h / 2 - 1.5], ['M', x, h / 2], ['L', x, h / 2 + 1.5]], m));
+        }
+        pins.push(path(segs.join(' '), { fill: 'none', stroke: '#FFD76A', strokeWidth: 0.9, strokeLinecap: 'round' }));
+        leds.push(dot(m(w / 2 - 2, -h / 2 + 2), 0.75, { fill: big ? '#5CF0FF' : '#9CFFB5' }));
+    };
+    function box(x0, x1, y0, y1) {
+        return [['M', x0, y0], ['L', x0, y1], ['L', x1, y1], ['L', x1, y0], ['Z']];
+    }
+    [0, 60, 120, 180, 240, 300].forEach((a) => place(a, 15, 8.2, true));
+    [30, 90, 150, 210, 270, 330].forEach((a) => place(a, 9.5, 5.6, false));
+    return frame(
+        'veri-cipi',
+        'Veri Çipi',
+        'rare',
+        'Devre yolları ve yanıp sönen küçük çip düğümleriyle çevrili halka.',
+        [
+            lin('vc-board', [0, 0, 1, 1], [
+                [0, '#118078'],
+                [0.5, '#0A5459'],
+                [1, '#072B33'],
+            ]),
+            lin('vc-gold', [0, 0, 1, 1], [
+                [0, '#FFEFA8'],
+                [0.5, '#E3B13C'],
+                [1, '#9C6C16'],
+            ]),
+        ],
+        [
+            ring(86.2, 26.4, url('vc-board')),
+            ring(99.2, 1.3, url('vc-gold')),
+            ring(73.2, 1.3, url('vc-gold')),
+            ...traces,
+            ...nodes,
+            ...chips,
+            ...pins,
+            ...leds,
+        ],
+    );
+}
+
+/* ================================================================== */
+/* 18. Portal Halkası — epic (spin + twinkle) — Keşif Koleksiyonu      */
+/* ================================================================== */
+function portalHalkasi() {
+    const R = rng(88);
+    const portal = (deg, c) => {
+        const [cx, cy] = polar(84.4, deg);
+        const m = mapAt(cx, cy, deg);
+        const rx = 21;
+        const ry = 10.2;
+        const dashed = c.dashed;
+        const parts = [];
+        parts.push(el('ellipse', { cx: r2(cx), cy: r2(cy), rx: rx + 5, ry: ry + 3.4, fill: url(c.glow), transform: `rotate(${r2(deg)} ${r2(cx)} ${r2(cy)})` }));
+        parts.push(el('ellipse', { cx: r2(cx), cy: r2(cy), rx, ry, fill: url(c.void), stroke: url(c.rim), strokeWidth: 3.4, transform: `rotate(${r2(deg)} ${r2(cx)} ${r2(cy)})` }));
+        parts.push(el('ellipse', { cx: r2(cx), cy: r2(cy), rx: rx - 3, ry: ry - 2.8, fill: 'none', stroke: c.inner, strokeWidth: 0.8, opacity: 0.6, transform: `rotate(${r2(deg)} ${r2(cx)} ${r2(cy)})` }));
+        if (dashed) {
+            // ikinci portal: kesikli iç halka (renk körü ayrımı: şekil de farklı)
+            const segs = [];
+            for (let k = 0; k < 14; k++) {
+                const t0 = (k * 360) / 14;
+                const t1 = t0 + 13;
+                const pa = [Math.cos((t0 * Math.PI) / 180) * (rx - 7), Math.sin((t0 * Math.PI) / 180) * (ry - 5)];
+                const pb = [Math.cos((t1 * Math.PI) / 180) * (rx - 7), Math.sin((t1 * Math.PI) / 180) * (ry - 5)];
+                segs.push(D([['M', pa[0], pa[1]], ['L', pb[0], pb[1]]], m));
+            }
+            parts.push(path(segs.join(' '), { fill: 'none', stroke: '#FFF0DC', strokeWidth: 1.3, strokeLinecap: 'round' }));
+        } else {
+            parts.push(el('ellipse', { cx: r2(cx), cy: r2(cy), rx: rx - 7.4, ry: ry - 5.2, fill: 'none', stroke: '#E6F5FF', strokeWidth: 1.3, transform: `rotate(${r2(deg)} ${r2(cx)} ${r2(cy)})` }));
+        }
+        return parts;
+    };
+    const trail = (a0, a1, w, color, op) => path(taperD(a0, a1, () => 84.4, 0.4, w, 40), { fill: color, opacity: op });
+    const dust = (a0, a1, colors) => {
+        const out = [];
+        for (let i = 0; i < 14; i++) {
+            out.push(dot(polar(77.5 + R() * 14, a0 + R() * (a1 - a0)), 0.45 + R() * 0.8, { fill: colors[i % colors.length], opacity: 0.55 + R() * 0.4 }));
+        }
+        return out;
+    };
+    const sp = (a, r, s) => {
+        const [x, y] = polar(r, a);
+        return sparkleD(x, y, s, 0.17);
+    };
+    return frame(
+        'portal-halkasi',
+        'Portal Halkası',
+        'epic',
+        'Mavi ve turuncu iki portal ovali birbirini kovalar; ışıkları yavaşça döner.',
+        [
+            lin('ph-band', [0, 0, 1, 1], [
+                [0, '#231A63'],
+                [0.5, '#120D3A'],
+                [1, '#1A1048'],
+            ]),
+            radial('ph-glow-b', {}, [
+                [0, '#5BB6FF', 0.7],
+                [1, '#5BB6FF', 0],
+            ]),
+            radial('ph-glow-o', {}, [
+                [0, '#FFA24A', 0.7],
+                [1, '#FFA24A', 0],
+            ]),
+            radial('ph-void-b', {}, [
+                [0, '#050A22'],
+                [0.7, '#0E2060'],
+                [1, '#2A62D8'],
+            ]),
+            radial('ph-void-o', {}, [
+                [0, '#1E0A04'],
+                [0.7, '#5A220C'],
+                [1, '#D9661C'],
+            ]),
+            lin('ph-rim-b', [0, 0, 1, 1], [
+                [0, '#BFE3FF'],
+                [0.5, '#3AA0FF'],
+                [1, '#1E5FD6'],
+            ]),
+            lin('ph-rim-o', [0, 0, 1, 1], [
+                [0, '#FFE2B5'],
+                [0.5, '#FF9A3A'],
+                [1, '#D9561C'],
+            ]),
+        ],
+        [
+            ring(84.2, 24.4, url('ph-band')),
+            ring(72.4, 0.9, '#4C58B8'),
+            ring(96.2, 0.9, '#4C58B8'),
+            group(
+                [
+                    trail(-96, -14, 9, '#3AA0FF', 0.5),
+                    trail(-90, -16, 4, '#BFE3FF', 0.85),
+                    trail(84, 166, 9, '#FF9A3A', 0.5),
+                    trail(90, 164, 4, '#FFE2B5', 0.85),
+                    path(`${arcD(78.4, -96, -30)} ${arcD(91, -80, -26)}`, { fill: 'none', stroke: '#7FC4FF', strokeWidth: 0.7, strokeLinecap: 'round', opacity: 0.6 }),
+                    path(`${arcD(78.4, 84, 150)} ${arcD(91, 100, 154)}`, { fill: 'none', stroke: '#FFB36B', strokeWidth: 0.7, strokeLinecap: 'round', opacity: 0.6 }),
+                    ...dust(-100, -22, ['#BFE3FF', '#3AA0FF']),
+                    ...dust(80, 158, ['#FFE2B5', '#FF9A3A']),
+                    ...portal(0, { glow: 'ph-glow-b', void: 'ph-void-b', rim: 'ph-rim-b', inner: '#9FD6FF', dashed: false }),
+                    ...portal(180, { glow: 'ph-glow-o', void: 'ph-void-o', rim: 'ph-rim-o', inner: '#FFC58A', dashed: true }),
+                ],
+                {},
+                'spin',
+            ),
+            group([path([sp(90, 88, 2.6), sp(270, 88, 2.6), sp(45, 80, 1.8), sp(225, 80, 1.8)].join(' '), { fill: '#FFFFFF' })], {}, 'twinkle'),
+        ],
+    );
+}
+
+/* ================================================================== */
+/* 19. Gece Pazarı — rare — Keşif Koleksiyonu                          */
+/* ================================================================== */
+function gecePazari() {
+    const R = rng(515);
+    const awning = [];
+    const scallops = [];
+    const tone = ['#E5483C', '#FFF1D6', '#F2A33A', '#FFF1D6', '#2FB5A8', '#FFF1D6'];
+    const N = 36;
+    for (let i = 0; i < N; i++) {
+        const a0 = (i * 360) / N;
+        const a1 = a0 + 360 / N;
+        const color = tone[i % tone.length];
+        awning.push(path(`${arcD(99.2, a0, a1)} L${P(polar(91.4, a1))} ${`A91.4 91.4 0 0 0 ${P(polar(91.4, a0))}`} Z`, { fill: color }));
+        const mid = (a0 + a1) / 2;
+        const [sx, sy] = polar(91.4, mid);
+        scallops.push(dot([sx, sy], 3.05, { fill: color }));
+    }
+    const strings = [];
+    const lanterns = [];
+    const glows = [];
+    const lampColors = [
+        ['#FF5A4A', '#B5231B'],
+        ['#FFC24A', '#C57E12'],
+        ['#FF8FB4', '#C23C73'],
+        ['#FFD66B', '#CC8A18'],
+        ['#6FE0D2', '#168F86'],
+        ['#FF9A3A', '#C25A12'],
+    ];
+    const M = 12;
+    for (let i = 0; i < M; i++) {
+        const a = (i * 360) / M + 15;
+        const [sx, sy] = polar(91.8, a);
+        const [ex, ey] = polar(90.4, a);
+        const [gx, gy] = polar(83.4, a);
+        const [c0, c1] = lampColors[i % lampColors.length];
+        const m = mapAt(ex, ey, a + 180, 1.38);
+        strings.push(`M${P([sx, sy])} L${P([ex, ey])}`);
+        glows.push(circle(gx, gy, 11.5, { fill: url('gp-glow'), opacity: 0.85 }));
+        lanterns.push(
+            path(D([['M', -3.2, 0.6], ['C', -4.6, 3.6, -4.4, 7.2, -1.6, 9.4], ['L', 1.6, 9.4], ['C', 4.4, 7.2, 4.6, 3.6, 3.2, 0.6], ['Z']], m), { fill: c0, stroke: c1, strokeWidth: 0.7, strokeLinejoin: 'round' }),
+        );
+        lanterns.push(path(D([['M', -1.9, 0.4], ['L', -1.9, -1], ['L', 1.9, -1], ['L', 1.9, 0.4], ['Z']], m), { fill: '#3A2418' }));
+        lanterns.push(path(D([['M', -1.2, 1.8], ['C', -2, 4, -1.8, 6.4, -0.6, 7.8]], m), { fill: 'none', stroke: '#FFFFFF', strokeWidth: 0.8, strokeLinecap: 'round', opacity: 0.55 }));
+        lanterns.push(path(D([['M', -1.6, 9.4], ['L', -1.6, 10.8], ['M', 0, 9.4], ['L', 0, 11.2], ['M', 1.6, 9.4], ['L', 1.6, 10.8]], m), { fill: 'none', stroke: c1, strokeWidth: 0.6, strokeLinecap: 'round' }));
+    }
+    // ara bağlama telleri: iç yayda ışık zinciri
+    const bulbs = [];
+    for (let i = 0; i < 60; i++) {
+        const a = (i * 360) / 60 + 3;
+        bulbs.push(dot(polar(75.4, a), 0.9 + (i % 3 === 0 ? 0.35 : 0), { fill: i % 2 ? '#FFE9A8' : '#FFC15C', opacity: 0.95 }));
+    }
+    const warmStars = [];
+    for (let i = 0; i < 26; i++) {
+        warmStars.push(dot(polar(76.5 + R() * 11, R() * 360), 0.3 + R() * 0.4, { fill: '#FFE9A8', opacity: 0.45 + R() * 0.4 }));
+    }
+    return frame(
+        'gece-pazari',
+        'Gece Pazarı',
+        'rare',
+        'Fener dizileri ve renkli tentelerle dolu pazar sokağı; sıcak ışıklar.',
+        [
+            lin('gp-night', [0.5, 0, 0.5, 1], [
+                [0, '#2D1740'],
+                [0.6, '#4A1F4E'],
+                [1, '#6E2A4A'],
+            ]),
+            radial('gp-glow', {}, [
+                [0, '#FFD27A', 0.55],
+                [1, '#FFD27A', 0],
+            ]),
+        ],
+        [
+            ring(85.2, 28.4, url('gp-night')),
+            ...warmStars,
+            ...awning,
+            ...scallops,
+            ring(91.4, 0.9, '#3A1C2E', { opacity: 0.55 }),
+            path(strings.join(' '), { fill: 'none', stroke: '#3A2418', strokeWidth: 0.7, strokeLinecap: 'round' }),
+            ...glows,
+            ...lanterns,
+            ...bulbs,
+            ring(72.8, 1.1, '#E5B25C'),
+            ring(99.4, 1, '#3A1C2E', { opacity: 0.8 }),
+        ],
+    );
+}
+
+/* ================================================================== */
+/* 20. Diyar Işığı — legendary (pulse + spin + twinkle)                */
+/* ================================================================== */
+function diyarIsigi() {
+    const gem = (cx, cy, s, rot, fill) => {
+        const m = mapAt(cx, cy, rot, s);
+        return path(D([['M', 0, -1], ['L', 0.78, -0.18], ['L', 0.46, 0.78], ['L', -0.46, 0.78], ['L', -0.78, -0.18], ['Z']], m), { fill, stroke: '#2B0F5E', strokeWidth: 0.6, strokeLinejoin: 'round' });
+    };
+    const facet = (cx, cy, s, rot) => {
+        const m = mapAt(cx, cy, rot, s);
+        return path(D([['M', -0.78, -0.18], ['L', 0.78, -0.18], ['M', 0, -1], ['L', -0.3, -0.18], ['L', -0.46, 0.78], ['M', 0, -1], ['L', 0.3, -0.18], ['L', 0.46, 0.78]], m), { fill: 'none', stroke: '#FFFFFF', strokeWidth: 0.4, strokeLinejoin: 'round', opacity: 0.7 });
+    };
+    const studs = [];
+    for (let i = 0; i < 24; i++) studs.push(dot(polar(93.4, i * 15 + 7.5), 1.3, { fill: url('dj-gold'), stroke: '#4A1C8A', strokeWidth: 0.4 }));
+    const gems = [];
+    const facets = [];
+    for (let i = 0; i < 8; i++) {
+        const a = 45 + i * 45;
+        const [x, y] = polar(84.6, a);
+        gems.push(gem(x, y, 5.4, a, i % 2 ? url('dj-gem-v') : url('dj-gem-g')));
+        facets.push(facet(x, y, 5.4, a));
+    }
+    const rays = [];
+    for (let i = 0; i < 48; i++) {
+        const a = i * 7.5 + 3.75;
+        const long = i % 3 === 0;
+        rays.push(`M${P(polar(long ? 90.6 : 91.6, a))} L${P(polar(long ? 95.8 : 94.4, a))}`);
+    }
+    const dots = [];
+    for (let i = 0; i < 36; i++) dots.push(dot(polar(75.6, i * 10), i % 3 === 0 ? 1.1 : 0.65, { fill: '#FFE9A8', opacity: i % 3 === 0 ? 1 : 0.7 }));
+    const sp = (a, r, s) => {
+        const [x, y] = polar(r, a);
+        return sparkleD(x, y, s, 0.17);
+    };
+    const top = polar(87, 0);
+    return frame(
+        'diyar-isigi',
+        'Diyar Işığı',
+        'legendary',
+        'Gizemli ışığın rengi: altın-mor, nabız gibi atan nadir halka.',
+        [
+            lin('dj-gold', [0, 0, 1, 1], [
+                [0, '#FFF3B8'],
+                [0.45, '#F2C14B'],
+                [1, '#A8741A'],
+            ]),
+            lin('dj-violet', [0, 0, 1, 1], [
+                [0, '#8B4FE8'],
+                [0.55, '#4B22A8'],
+                [1, '#241060'],
+            ]),
+            radial('dj-aura', {}, [
+                [0, '#FFE9A8', 0],
+                [0.7, '#FFE9A8', 0],
+                [0.86, '#E6C6FF', 0.8],
+                [1, '#C28BFF', 0],
+            ]),
+            radial('dj-halo', {}, [
+                [0, '#FFE9A8', 0.8],
+                [0.5, '#C28BFF', 0.3],
+                [1, '#C28BFF', 0],
+            ]),
+            radial('dj-orb', { fx: 0.36, fy: 0.3 }, [
+                [0, '#FFFFFF'],
+                [0.5, '#FFE9A8'],
+                [1, '#E2A93C'],
+            ]),
+            lin('dj-gem-g', [0, 0, 1, 1], [
+                [0, '#FFF0A0'],
+                [1, '#E0A12C'],
+            ]),
+            lin('dj-gem-v', [0, 0, 1, 1], [
+                [0, '#D2A8FF'],
+                [1, '#7A3FD8'],
+            ]),
+        ],
+        [
+            ring(85.4, 24.4, url('dj-violet')),
+            group([ring(85.4, 24.4, url('dj-aura'), { opacity: 0.9 })], {}, 'pulse'),
+            ring(79.4, 6.6, url('dj-gold')),
+            ring(76.4, 0.8, '#7A4E0C'),
+            ring(82.4, 0.8, '#7A4E0C'),
+            ring(89.2, 0.9, '#FFE9A8'),
+            ring(98.4, 2.2, url('dj-gold')),
+            ring(96.9, 0.6, '#7A4E0C'),
+            ...studs,
+            path(rays.join(' '), { fill: 'none', stroke: '#FFE9A8', strokeWidth: 0.6, strokeLinecap: 'round', opacity: 0.75 }),
+            group(dots, {}, 'spin'),
+            ...gems,
+            ...facets,
+            circle(top[0], top[1], 9.4, { fill: url('dj-halo') }),
+            group([circle(top[0], top[1], 5.2, { fill: url('dj-orb'), stroke: '#8A5A12', strokeWidth: 0.8 })], {}, 'pulse'),
+            dot([top[0] - 1.6, top[1] - 1.8], 1.3, { fill: '#FFFFFF', opacity: 0.9 }),
+            group([path([sp(60, 87, 3), sp(300, 87, 3), sp(135, 79, 2), sp(225, 79, 2)].join(' '), { fill: '#FFFFFF', stroke: '#C28BFF', strokeWidth: 0.4, strokeLinejoin: 'round' })], {}, 'twinkle'),
+            group([path([sp(110, 91, 2.2), sp(250, 91, 2.2), sp(20, 80, 1.8), sp(340, 80, 1.8)].join(' '), { fill: '#FFE9A8' })], {}, 'twinkle'),
+        ],
+    );
+}
+
 export const FRAMES = [
     gumusInci(),
     gunBatimi(),
@@ -1674,6 +2158,11 @@ export const FRAMES = [
     iznikCini(),
     yildizTozu(),
     atesHalkasi(),
+    neonMeridyen(),
+    veriCipi(),
+    portalHalkasi(),
+    gecePazari(),
+    diyarIsigi(),
 ];
 
 export default FRAMES;

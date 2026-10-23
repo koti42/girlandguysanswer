@@ -4,9 +4,9 @@
  * Native -> web, sayfa yüklenmeden önce: window.__HS_NATIVE__ = { v, platform,
  * token, user, safeArea, muted, music, haptics, avatar }.
  * Native -> web, çalışırken: window.__hsNativeReceive({ type, ... })
- * (pause | resume | back | setAvatar | setMuted | setMusic).
+ * (pause | resume | back | setAvatar | setMuted | setMusic | safeArea | photoSaved).
  * Web -> native: window.ReactNativeWebView.postMessage(JSON.stringify({ type, ... }))
- * (ready | haptic | exit | result | settings | error | openUrl | login).
+ * (ready | haptic | exit | result | settings | error | openUrl | login | speak | speakStop | savePhoto | savePhotoPart).
  *
  * Her iki yönde de mesajlar şemayla doğrulanır; bilinmeyen tip ve bozuk
  * alan sessizce yok sayılır. ReactNativeWebView yoksa (normal tarayıcı,
@@ -17,7 +17,7 @@
  * Token yalnızca bellekte tutulur; localStorage'a yazılmaz.
  */
 export const BRIDGE_VERSION = 1;
-export const GAMES = ['kosu', 'kule', 'avatar'];
+export const GAMES = ['kosu', 'kule', 'kesif', 'avatar'];
 export const HAPTIC_STYLES = ['light', 'medium', 'heavy', 'success', 'warning', 'error', 'selection'];
 
 // Aynı titreşim stili bu süreden sık gönderilmez (jeton hattında köprüyü boğmasın).
@@ -33,6 +33,12 @@ const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isBool = (v) => typeof v === 'boolean';
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const isShortStr = (v, max = 200) => typeof v === 'string' && v.length <= max;
+
+// Foto kaydı (savePhoto): sınırlar embed/photoBridge.js ile paylaşılır.
+export const PHOTO_PART_CHARS = 3000; // 4'ün katı: parça başına 2250 bayt
+export const PHOTO_MAX_BYTES = 2500000;
+export const PHOTO_MAX_PARTS = 1200;
+const isPhotoId = (v) => typeof v === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(v);
 
 /*
  * Site içi göreli yol: "/oyun/kosu", "/profile/ayse?tab=badges". Protokol,
@@ -66,6 +72,11 @@ const OUTGOING = {
     // Erişilebilirlik: native TTS ile oku / okumayı durdur (web'de speechSynthesis kullanılır).
     speak: (m) => typeof m.text === 'string' && m.text.trim().length > 0 && m.text.length <= 600,
     speakStop: () => true,
+    // Keşif foto modu (Neon Meridyen): fotoğrafı cihaza kaydet. Üstbilgi + sıralı base64 parçaları (tek iletiyi 4096 karakter sınırı aşar); bkz. embed/photoBridge.js.
+    savePhoto: (m) => isPhotoId(m.id) && /^[\w.-]{1,64}\.jpe?g$/i.test(m.name || '') && m.mime === 'image/jpeg' && Number.isInteger(m.bytes) && m.bytes >= 1
+        && m.bytes <= PHOTO_MAX_BYTES && Number.isInteger(m.parts) && m.parts >= 1 && m.parts <= PHOTO_MAX_PARTS,
+    savePhotoPart: (m) => isPhotoId(m.id) && Number.isInteger(m.index) && m.index >= 0 && m.index < PHOTO_MAX_PARTS && typeof m.data === 'string'
+        && m.data.length >= 4 && m.data.length <= PHOTO_PART_CHARS && /^[A-Za-z0-9+/]+={0,2}$/.test(m.data),
 };
 
 const INCOMING = {
@@ -75,6 +86,11 @@ const INCOMING = {
     setAvatar: (m) => m.avatar === null || isObj(m.avatar),
     setMuted: (m) => isBool(m.muted),
     setMusic: (m) => isBool(m.music),
+    // Döndürme sonrası güvenli alan (yatay kilitli oyun): her kenar 0-200 px.
+    safeArea: (m) => ['top', 'right', 'bottom', 'left'].every((k) => isNum(m[k]) && m[k] >= 0 && m[k] <= 200),
+    // savePhoto sonucu: native fotoğrafı albüme yazdı mı? (id = savePhoto üstbilgisindeki kimlik). status (isteğe bağlı, eski
+    // uygulamalarda yok): working | saved | permission_denied | too_large | cancelled | busy | failed; bilinmeyen değer photoBridge'de failed sayılır.
+    photoSaved: (m) => isPhotoId(m.id) && isBool(m.ok) && (m.status === undefined || (typeof m.status === 'string' && /^[a-z_]{1,24}$/.test(m.status))),
 };
 
 export const OUTGOING_TYPES = Object.keys(OUTGOING);
@@ -297,6 +313,16 @@ export function receiveFromNative(raw) {
     const msg = parseIncoming(raw);
     if (!msg) return false;
     if (msg.type === 'back' && listeners.size === 0) return false;
+    if (msg.type === 'safeArea') {
+        // Native betik CSS değişkenlerini zaten yazar; doğrudan çağrıda da uygula ve ölçüleri tazele.
+        applySafeArea(msg);
+        try {
+            if (typeof window !== 'undefined') window.dispatchEvent(new Event('resize'));
+        } catch {
+            // olay üretilemedi
+        }
+        return true;
+    }
     dispatch(msg);
     return true;
 }

@@ -15,5 +15,9 @@ export default defineConfig({
         include: ['src/**/*.test.{js,jsx}'],
         setupFiles: ['./src/test/setup.js'],
         css: false,
+        // Paylaşılan/yüklü makinede (paralel ajanlar, CI) jsdom+WebGL sahte testleri 5 sn'yi aşabiliyor;
+        // ölçülen en kötü durumda duvar saati 30 kat şişti. Takılan test yine de 60 sn'de kırmızı olur.
+        testTimeout: 60000,
+        hookTimeout: 60000,
     },
 });

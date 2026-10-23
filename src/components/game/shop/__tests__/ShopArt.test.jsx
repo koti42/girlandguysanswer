@@ -3,7 +3,7 @@ import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ShopArt from '../ShopArt';
-import { FRAMES, MINIS, TITLES, getDesign } from '../../../../game/shop';
+import { FRAMES, KESIF, MINIS, TITLES, getDesign } from '../../../../game/shop';
 
 /*
  * F.2 çizici: id önekleme, url(#) yeniden yazma, iki örneğin çakışmaması,
@@ -125,5 +125,75 @@ describe('ShopArt', () => {
         expect(getDesign('ticket:message')).not.toBeNull();
         const { container } = render(<ShopArt itemKey="ticket:message" />);
         expect(container.querySelector('svg')).not.toBeNull();
+    });
+});
+
+describe('ShopArt — Keşif Koleksiyonu şablonları ve yeni dalga tasarımları', () => {
+    const wave = [
+        ...FRAMES.filter((f) => ['frame:neon-meridyen', 'frame:veri-cipi', 'frame:portal-halkasi', 'frame:gece-pazari', 'frame:diyar-isigi'].includes(f.id)),
+        ...MINIS.filter((m) => ['mini:minik-cip', 'mini:kurye-robotu', 'mini:suzulen-tahta', 'mini:neon-kedi', 'mini:portal-minik', 'mini:holo-balina'].includes(m.id)),
+        ...KESIF,
+    ];
+
+    it('40 çizilebilir tasarım (5 çerçeve + 6 mini + 29 Keşif) çizilir; tehlikeli öznitelik/etiket yok', () => {
+        expect(wave).toHaveLength(40);
+        for (const d of wave) {
+            const { container, unmount } = render(<ShopArt itemKey={d.id} label={d.name} />);
+            const svg = container.querySelector('svg');
+            expect(svg, d.id).not.toBeNull();
+            expect(svg.getAttribute('viewBox')).toBe(d.art.viewBox);
+            expect(svg.querySelector('script, image, filter, foreignObject, use, style, text')).toBeNull();
+            for (const el of svg.querySelectorAll('*')) {
+                for (const a of el.getAttributeNames()) {
+                    expect(/^on/i.test(a), `${d.id}: ${a}`).toBe(false);
+                    expect(a === 'href' || a === 'xlink:href', `${d.id}: ${a}`).toBe(false);
+                }
+            }
+            expect(svg.querySelectorAll('*').length).toBeGreaterThan(8);
+            unmount();
+        }
+    });
+
+    it('Keşif önizlemesi: animasyon sınıfları yalnız epic/legendary; animate=false hepsini kapatır; ids her örnekte öneklenir', () => {
+        for (const d of KESIF) {
+            const { container, unmount } = render(
+                <>
+                    <ShopArt itemKey={d.id} />
+                    <ShopArt itemKey={d.id} animate={false} />
+                </>
+            );
+            const [live, still] = container.querySelectorAll('svg');
+            const animated = live.querySelectorAll('.shop-anim').length;
+            if (d.rarity === 'epic' || d.rarity === 'legendary') expect(animated, d.id).toBeGreaterThan(0);
+            else expect(animated, d.id).toBe(0);
+            expect(still.classList.contains('shop-art-static')).toBe(true);
+            // iki örneğin gradyan kimlikleri çakışmaz
+            const a = [...live.querySelectorAll('[id]')].map((e) => e.id);
+            const b = [...still.querySelectorAll('[id]')].map((e) => e.id);
+            expect(a.length).toBe(d.art.defs.length);
+            expect(a.some((id) => b.includes(id))).toBe(false);
+            // her url(#) başvurusu o örneğin kendi gradyanına gider
+            for (const el of live.querySelectorAll('[fill^="url("], [stroke^="url("]')) {
+                for (const v of [el.getAttribute('fill'), el.getAttribute('stroke')].filter((x) => x && x.startsWith('url('))) {
+                    expect(a).toContain(v.slice(5, -1));
+                }
+            }
+            unmount();
+        }
+    });
+
+    it('Portal tabancası önizlemesi iki portalı da gösterir: ilkinde düz, ikincisinde kesikli iç halka', () => {
+        const d = getDesign('portal:neon-sokak');
+        const { container } = render(<ShopArt itemKey={d.id} />);
+        const ellipses = [...container.querySelectorAll('ellipse')];
+        // iki portal: kalın konturlu (stroke gradyan) iki oval
+        expect(ellipses.filter((e) => /^url\(/.test(e.getAttribute('stroke') || '')).length).toBe(2);
+        // kesikli halka: yuvarlak uçlu kısa çizgilerden oluşan beyaz yol
+        expect([...container.querySelectorAll('path')].some((p) => p.getAttribute('stroke') === '#FFFFFF' && (p.getAttribute('d').match(/M/g) || []).length >= 10)).toBe(true);
+    });
+
+    it('bilinmeyen Keşif anahtarı hiçbir şey çizmez (çökme yok)', () => {
+        const { container } = render(<ShopArt itemKey="portal:yok-boyle-bir-sey" />);
+        expect(container.querySelector('svg')).toBeNull();
     });
 });

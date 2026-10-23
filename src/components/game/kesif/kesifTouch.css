@@ -1,0 +1,217 @@
+/* KEŞİF arayüz: dokunmatik kontroller (joystick, düğme yayı, üst çubuk). (giriş: kesif.css) */
+
+/* ------------------------------------------------------------------ */
+/* Dokunmatik kontroller                                               */
+/* ------------------------------------------------------------------ */
+.kx-touch {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --kx-cs: 1;
+  --kx-btn-op: 0.78;
+}
+.kx-joy {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.kx-joy-ghost {
+  position: absolute;
+  left: calc(var(--kx-safe-l) + 62px);
+  bottom: calc(var(--kx-safe-b) + 128px);
+  width: 92px;
+  height: 92px;
+  margin: 0 0 -46px -46px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06), transparent 70%);
+  transition: opacity 160ms ease;
+}
+.kx-joy[data-left='1'] .kx-joy-ghost {
+  left: auto;
+  right: calc(var(--kx-safe-r) + 62px);
+  margin: 0 -46px -46px 0;
+}
+.kx-joy[data-active='1'] .kx-joy-ghost {
+  opacity: 0;
+}
+.kx-joy-base,
+.kx-joy-knob {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  opacity: 0;
+  will-change: transform;
+  transition: opacity 120ms ease;
+}
+.kx-joy[data-active='1'] .kx-joy-base,
+.kx-joy[data-active='1'] .kx-joy-knob {
+  opacity: 1;
+}
+.kx-joy-base {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.13));
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.25);
+}
+.kx-joy-base::after {
+  content: '';
+  position: absolute;
+  inset: -17%;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.16);
+}
+.kx-joy-knob {
+  background: radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.78), rgba(220, 228, 245, 0.45) 62%, rgba(180, 190, 215, 0.35));
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.kx-joy[data-sprint='1'] .kx-joy-base {
+  border-color: var(--kx-accent);
+  box-shadow: 0 0 22px rgba(226, 185, 76, 0.45), inset 0 0 18px rgba(226, 185, 76, 0.2);
+}
+.kx-joy[data-sprint='1'] .kx-joy-base::after {
+  border-color: rgba(226, 185, 76, 0.55);
+}
+.kx-joy-sprint {
+  position: absolute;
+  left: 50%;
+  top: -26px;
+  transform: translateX(-50%);
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgba(8, 10, 18, 0.7);
+  color: var(--kx-accent-hi);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.kx-joy[data-sprint='1'] .kx-joy-sprint {
+  opacity: 1;
+}
+.kx-topbar {
+  position: absolute;
+  top: var(--kx-safe-t);
+  right: var(--kx-safe-r);
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+.kx-touch[data-portrait='1'] .kx-topbar {
+  flex-direction: column;
+}
+.kx-topbtn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--kx-glass);
+  border: 1px solid var(--kx-line-strong);
+  color: #fff;
+  font-size: 20px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+  transition: transform 90ms ease, background-color 120ms ease;
+}
+/* qa_gpu: 320 px genişlikte 7 düğmelik üst çubuk soldan taşıyordu (7×44 + 6×6 > 310): dar ekranda 40 px + 4 px boşluk */
+@media (max-width: 349px) {
+  .kx-topbar {
+    gap: 4px;
+  }
+  .kx-topbtn {
+    width: 40px;
+    height: 40px;
+  }
+}
+.kx-topbtn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.16);
+}
+.kx-topbtn[aria-pressed='true'] {
+  border-color: var(--kx-accent);
+  color: var(--kx-accent-hi);
+}
+.kx-arc {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.kx-tbtn {
+  /* görsel boyut ölçeğe göre küçülse de 44 px altına inmez (alçak yatay ekranda 0.78 ölçek 34 px düğme veriyordu) */
+  --s: max(44px, calc(var(--bs) * var(--kx-cs, 1) * 1px));
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  right: calc(var(--kx-ax) - var(--bx) * var(--kx-cs, 1) * 1px - var(--s) / 2);
+  bottom: calc(var(--kx-ay) + var(--by) * var(--kx-cs, 1) * 1px - var(--s) / 2);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: calc(var(--s) * 0.44);
+  background: radial-gradient(circle at 35% 26%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.06) 62%), rgba(14, 18, 30, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: var(--kx-btn-op);
+  pointer-events: auto;
+  touch-action: none;
+  transition: transform 80ms ease, opacity 120ms ease, background-color 120ms ease;
+}
+.kx-touch[data-left='1'] .kx-tbtn {
+  right: auto;
+  left: calc(var(--kx-ax) - var(--bx) * var(--kx-cs, 1) * 1px - var(--s) / 2);
+}
+.kx-tbtn::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+}
+.kx-tbtn[data-icon='break'] {
+  border-color: rgba(226, 185, 76, 0.85);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 16px rgba(226, 185, 76, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.kx-tbtn[data-down='1'] {
+  opacity: 1;
+  transform: scale(0.9);
+  background: radial-gradient(circle at 35% 26%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.14) 62%), rgba(40, 46, 66, 0.7);
+}
+.kx-tbtn[data-lock='1'] {
+  opacity: 1;
+  border-color: var(--kx-accent);
+  color: var(--kx-accent-hi);
+}
+.kx-tbtn svg {
+  pointer-events: none;
+}
+.kx-tbtn-cd {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(rgba(8, 10, 18, 0.74) calc(var(--cd) * 360deg), transparent 0);
+  pointer-events: none;
+}
+.kx-tbtn-charges {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--kx-blue);
+  color: #06223a;
+  font: 800 11px/18px system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+

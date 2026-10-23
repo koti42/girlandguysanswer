@@ -3,7 +3,18 @@
  * yerel durum güncellemeleri. Saf fonksiyonlar (test edilebilir).
  */
 
-import { COSMETIC_SLOTS, SHOP_CATEGORIES, getDesign, normalizeCosmetics } from '../../../game/shop';
+import {
+    COSMETIC_SLOTS,
+    KESIF_BADGES,
+    KESIF_KIND_INFO,
+    KESIF_SLOTS,
+    RARITY,
+    SHOP_CATEGORIES,
+    getDesign,
+    kesifSlotOfKey,
+    normalizeCosmetics,
+    normalizeKesifLoadout,
+} from '../../../game/shop';
 import { shopError } from './shopError';
 
 export { shopError };
@@ -20,6 +31,9 @@ export const TX_LABELS = {
     refund: 'İade',
     backfill: 'Geçmiş koşu jetonları',
     ticket_use: 'Mesaj Bileti kullanımı',
+    kesif_reward: 'Keşif ödülü',
+    kesif_slots: 'Keşif harita hakkı',
+    profile_theme: 'Profil teması',
 };
 
 export const txLabel = (type) => TX_LABELS[type] || 'Cüzdan hareketi';
@@ -39,7 +53,11 @@ export function lockText(unlock) {
 
 export function lockHint(unlock) {
     if (unlock?.type === 'level') return `Oyun seviyen ${toInt(unlock.level, 1)} olunca açılır.`;
-    if (unlock?.type === 'badge') return 'İlgili rozeti kazanınca açılır.';
+    if (unlock?.type === 'badge') {
+        // Keşif rozetlerinin adı koddan bilinir; bilinmeyen rozet genel metne düşer.
+        const name = Object.prototype.hasOwnProperty.call(KESIF_BADGES, unlock.badge) ? KESIF_BADGES[unlock.badge] : null;
+        return name ? `“${name}” rozetini kazanınca açılır.` : 'İlgili rozeti kazanınca açılır.';
+    }
     return 'Şu an açılamaz.';
 }
 
@@ -49,11 +67,14 @@ export function lockHint(unlock) {
  * @param equipped  { frame, mini_avatar, title }
  * @param balance   cüzdan bakiyesi
  * @param now       ms (test için)
+ * @param kesifLoadout  { portal, alet, asa, jet, arac, gecis } (Keşif öğeleri için kuşanma durumu)
  */
-export function itemState(item, equipped = {}, balance = 0, now = Date.now()) {
+export function itemState(item, equipped = {}, balance = 0, now = Date.now(), kesifLoadout = null) {
     const category = item?.category;
     const consumable = category === 'consumable';
-    const cosmetic = COSMETIC_SLOTS.includes(category);
+    const kesif = category === 'kesif';
+    const kind = kesif ? kesifSlotOfKey(item?.key) : null;
+    const cosmetic = COSMETIC_SLOTS.includes(category) || kesif;
     const quantity = Math.max(0, toInt(item?.quantity));
     // Sunucu `unlocked`ı "şu an kullanılabilir" anlamında verir: jetonlu öğede yalnızca
     // sahipken true. Kilit yalnızca seviye/rozet öğelerinde anlamlıdır; jetonlu öğe
@@ -62,7 +83,10 @@ export function itemState(item, equipped = {}, balance = 0, now = Date.now()) {
     const gated = unlockType === 'level' || unlockType === 'badge';
     // Seviyesi/rozeti tutan öğe satın alınmadan giyilebilir: sahip gibi davranılır.
     const owned = consumable ? quantity > 0 : !!item?.owned || (gated && item?.unlocked === true);
-    const isEquipped = cosmetic && owned && equipped?.[category] === item?.key;
+    const isEquipped = !!(
+        owned &&
+        (kesif ? kind && kesifLoadout?.[kind] === item?.key : cosmetic && equipped?.[category] === item?.key)
+    );
     const locked = !owned && gated;
     const until = item?.available_until ? Date.parse(item.available_until) : NaN;
     const expired = Number.isFinite(until) && until <= now;
@@ -75,6 +99,8 @@ export function itemState(item, equipped = {}, balance = 0, now = Date.now()) {
         category,
         consumable,
         cosmetic,
+        kesif,
+        kind,
         owned,
         quantity,
         equipped: isEquipped,
@@ -128,6 +154,9 @@ export function normalizeShop(data) {
                 items: Array.isArray(c.items) ? c.items.filter((i) => i && typeof i.key === 'string') : [],
             })),
         equipped: normalizeCosmetics(data?.equipped),
+        // Keşif yükü özeldir; sunucu (yeni) bu alanı dönmezse boş kalır, sayfa ayrıca sorar.
+        kesifLoadout: normalizeKesifLoadout(data?.kesif_loadout ?? data?.kesif?.loadout),
+        kesifKnown: data?.kesif_loadout != null || data?.kesif?.loadout != null,
         tickets: Math.max(0, toInt(data?.tickets)),
         player: { level: Math.max(1, toInt(data?.player?.level, 1)) },
     };
@@ -170,6 +199,52 @@ export function shortLeft(ms) {
     if (m >= 1440) return `${Math.floor(m / 1440)} gün`;
     if (m >= 60) return `${Math.floor(m / 60)} sa`;
     return `${Math.max(1, m)} dk`;
+}
+
+/**
+ * Misafir kataloğunda Keşif dalgasının gösterilip gösterilmeyeceği (VITE_SHOP_KESIF_GUEST=1).
+ * Misafir sunucuya sormaz, dalga bayrağını bilemez: bayrak açılıp web yayınlandıktan sonra derleme anında açılır.
+ */
+export function guestKesifEnabled(env) {
+    return !!env && env.VITE_SHOP_KESIF_GUEST === '1';
+}
+
+/* ------------------------------------------------------------ Keşif sekmesi: tür çipleri ve sıralama */
+
+/** Tür çipleri: Tümü + altı yuva (anahtar önekine göre yerel süzgeç; sunucu öğe şekli değişmez). */
+export const KESIF_CHIPS = [
+    { key: 'all', label: 'Tümü' },
+    ...KESIF_SLOTS.map((k) => ({ key: k, label: KESIF_KIND_INFO[k]?.label || k })),
+];
+
+export function filterByKesifKind(items, kind) {
+    const list = Array.isArray(items) ? items : [];
+    if (!kind || kind === 'all') return list;
+    return list.filter((i) => kesifSlotOfKey(i?.key) === kind);
+}
+
+/** Sıralama seçenekleri: sunucu sırası (önerilen), fiyat artan, nadirlik (en nadir önce). */
+export const SORTS = [
+    { key: 'recommended', label: 'Önerilen' },
+    { key: 'price', label: 'Fiyat (artan)' },
+    { key: 'rarity', label: 'Nadirlik (en nadir önce)' },
+];
+
+const rarityOrder = (r) => (RARITY[r] ? RARITY[r].order : -1);
+
+/**
+ * Kararlı sıralama (yeni dizi döner; girdi değişmez). Fiyatı olmayanlar (rozet/seviye
+ * kilidi, misafir) fiyat sıralamasında sona gider; eşitlikte sunucu sırası korunur.
+ */
+export function sortItems(items, mode) {
+    const list = (Array.isArray(items) ? items : []).map((item, index) => ({ item, index }));
+    if (mode === 'price') {
+        const p = (i) => (i?.price == null ? Number.POSITIVE_INFINITY : toInt(i.price));
+        list.sort((a, b) => p(a.item) - p(b.item) || a.index - b.index);
+    } else if (mode === 'rarity') {
+        list.sort((a, b) => rarityOrder(b.item?.rarity) - rarityOrder(a.item?.rarity) || a.index - b.index);
+    }
+    return list.map((x) => x.item);
 }
 
 /*

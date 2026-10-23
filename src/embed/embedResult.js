@@ -45,3 +45,27 @@ export function summarizeTowerResult(r) {
         level_up: Boolean(r.level_up),
     };
 }
+
+/**
+ * Keşif özeti -> native `result` (köprü şeması: düz değerler). Sunucuda skor yoktur (ödüller
+ * `claim` ile ayrı gider); bu yalnızca native'in lobiyi tazelemesi ve kısa bildirim içindir.
+ * score = çözülen bulmaca x100 + ulaşılan bölge x250 + yenilen boss x500 (+ dünya fethi 2000).
+ */
+export function summarizeKesifResult(r) {
+    const s = r && typeof r === 'object' ? r : {};
+    const n = (v) => (typeof v === 'number' && Number.isFinite(v) ? clampInt(v, 0, 1_000_000_000, 0) : 0);
+    const puzzles = n(s.puzzles);
+    const zone = n(s.zone);
+    const bosses = n(s.bosses);
+    const victory = s.victory === true;
+    return {
+        game: 'kesif',
+        mode: ['macera', 'insa', 'harita'].includes(s.mode) ? s.mode : null,
+        score: puzzles * 100 + zone * 250 + bosses * 500 + (victory ? 2000 : 0),
+        zone,
+        puzzles,
+        bosses,
+        victory,
+        playSeconds: intOrNull(s.playSeconds),
+    };
+}

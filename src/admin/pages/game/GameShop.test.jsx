@@ -56,6 +56,20 @@ describe('GameShop', () => {
         expect(api.shopItems).toHaveBeenCalledWith({ search: '', category: '', rarity: '', active: '', page: 1 });
     });
 
+    it('Keşif dalgası kapalıysa ürün satırında "Dalga kapalı" uyarısı; açıkken yok; Keşif önizlemesi çizilir', async () => {
+        const closed = { key: 'portal:neon-sokak', category: 'kesif', name: 'Neon Sokak', price: 1600, rarity: 'rare', unlock: { type: 'price', jeton: 1600 }, is_active: true, is_featured: true, sort_order: 0, sold_count: 0, wave: 'kesif1', wave_open: false };
+        const open = { ...closed, key: 'arac:limonata', name: 'Limonata Kiti', rarity: 'common', price: 800, wave_open: true };
+        api.shopItems.mockImplementation(() => ok({ items: [closed, open, neon], pagination: { current_page: 1, last_page: 1, per_page: 20, total: 3 } }));
+        mount();
+        await screen.findAllByTestId('table-row');
+        const c = rowOf('Neon Sokak');
+        expect(within(c).getByText('Dalga kapalı')).toBeInTheDocument();
+        expect(within(c).getByText('Keşif Koleksiyonu')).toBeInTheDocument();
+        expect(within(c).getByRole('img', { name: 'Önizleme: Neon Sokak' })).toBeInTheDocument();
+        expect(within(rowOf('Limonata Kiti')).queryByText('Dalga kapalı')).toBeNull();
+        expect(within(rowOf('Neon Gece')).queryByText('Dalga kapalı')).toBeNull();
+    });
+
     it('filtre değişince ilk sayfadan yeniden sorgular', async () => {
         mount();
         await screen.findAllByTestId('table-row');

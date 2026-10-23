@@ -1,0 +1,163 @@
+/* KEŞİF arayüz: duyarlı düzen (sol elli, dikey, alçak ekran) ve hareket azaltma. (giriş: kesif.css) */
+
+/* ------------------------------------------------------------------ */
+/* Duyarlı ayarlar                                                     */
+/* ------------------------------------------------------------------ */
+/* Sol elli dokunmatik: üst blok sağa, üst çubuk sola geçer (yetenek yayı sol altta olduğu için). */
+.kx-root[data-touch='1'][data-left='1'] .kx-tl {
+  left: auto;
+  right: var(--kx-safe-r);
+  flex-direction: row-reverse;
+}
+.kx-root[data-touch='1'][data-left='1'] .kx-tl-col {
+  align-items: flex-end;
+}
+.kx-root[data-touch='1'][data-left='1'] .kx-toasts {
+  left: auto;
+  right: var(--kx-safe-r);
+}
+.kx-touch[data-left='1'] .kx-topbar {
+  right: auto;
+  left: var(--kx-safe-l);
+}
+.kx-root[data-touch='1'][data-left='1'] .kx-fps-touch {
+  right: auto;
+  left: calc(var(--kx-safe-l) + 306px);
+}
+
+/* Boss savaşında görev izleyici gizlenir (dar ekranda boss barıyla çakışmasın). */
+.kx-root[data-boss='1'][data-touch='1'] .kx-quest {
+  display: none;
+}
+@media (max-width: 900px) {
+  .kx-root[data-boss='1'] .kx-quest {
+    display: none;
+  }
+}
+@media (orientation: portrait) {
+  .kx-fps-touch {
+    right: calc(var(--kx-safe-r) + 56px);
+    top: calc(var(--kx-safe-t) + 196px);
+  }
+  .kx-root[data-touch='1'] .kx-tl {
+    max-width: calc(100% - 68px - var(--kx-safe-l) - var(--kx-safe-r));
+  }
+  .kx-root[data-touch='1'] .kx-tc {
+    top: calc(var(--kx-safe-t) + 116px);
+    width: calc(100% - 128px);
+  }
+}
+@media (max-height: 420px) and (orientation: landscape) {
+  .kx-card {
+    padding: 14px 16px;
+  }
+  .kx-stack {
+    margin-top: 12px;
+    gap: 7px;
+  }
+  .kx-btn {
+    min-height: 44px;
+  }
+  .kx-dead-ico {
+    display: none;
+  }
+  /* Zafer ekranı alçak yatay ekranda (844×390 telefon) sığmıyordu: "Keşfetmeye devam et" düğmesi görünümün altında kalıyordu.
+     Taç gizlenir, başlık/istatistikler sıkılaşır, düğmeler kartın altında yapışık durur. */
+  .kx-victory .kx-crown {
+    display: none;
+  }
+  .kx-victory .kx-h-win {
+    margin-top: 0;
+    font-size: 1.45rem;
+  }
+  .kx-victory .kx-sub {
+    margin-top: 4px;
+    font-size: 0.92em;
+    line-height: 1.3;
+  }
+  .kx-victory .kx-stats {
+    margin-top: 8px;
+    gap: 6px;
+    grid-template-columns: repeat(auto-fit, minmax(5.4rem, 1fr));
+  }
+  .kx-victory .kx-stat {
+    padding: 5px 4px;
+  }
+  .kx-victory .kx-stat-val {
+    font-size: 1.1em;
+  }
+  .kx-victory .kx-stack {
+    position: sticky;
+    bottom: 0;
+    margin-top: 8px;
+    padding-top: 6px;
+    background: linear-gradient(180deg, transparent, rgba(12, 15, 26, 0.96) 35%);
+  }
+  .kx-chip-coords {
+    display: none;
+  }
+  .kx-scroll {
+    max-height: calc(100vh - var(--kx-safe-t) - var(--kx-safe-b) - 112px);
+  }
+  .kx-done {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .kx-vrow {
+    max-width: 56%;
+  }
+  .kx-toasts {
+    max-width: 62vw;
+    bottom: calc(var(--kx-safe-b) + 128px);
+  }
+  .kx-seg-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Hareket azaltma                                                     */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .kx-vignette[data-low='1'],
+  .kx-vrow[data-low='1'] .kx-heart .kx-ico-fg,
+  .kx-held,
+  .kx-hint,
+  .kx-toast,
+  .kx-banner,
+  .kx-card,
+  .kx-overlay-dead,
+  .kx-overlay-victory,
+  .kx-rays,
+  .kx-crown,
+  .kx-h-win,
+  .kx-stat {
+    animation: none !important;
+  }
+  .kx-vignette[data-low='1'] {
+    opacity: 0.8;
+  }
+  /* Hasar bildirimi kalır ama kısa, yumuşak bir solma olarak (hareketsiz). */
+  .kx-vignette-hit {
+    animation: kx-hit-soft 700ms ease-out both !important;
+  }
+  .kx-btn-guard[data-ready='0']::after {
+    animation: none !important;
+    width: 60%;
+  }
+  .kx-boss-fill,
+  .kx-boss-lag,
+  .kx-slot,
+  .kx-tbtn,
+  .kx-topbtn,
+  .kx-switch-knob,
+  .kx-quest-chev,
+  .kx-cross-prog {
+    transition: none !important;
+  }
+  .kx-h-win {
+    background-position: 50% 50%;
+  }
+}
+

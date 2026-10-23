@@ -1,0 +1,431 @@
+/*
+ * KEŞİF — Neon Meridyen kilit / çözme / asansör panelleri (locks_hack). Sınıf önekleri: .klk-* (ortak, kod/kart/asansör), .klh-* (mini oyunlar).
+ * PanelShell (.kp-*) içinde çizilir; renk jetonları .kp-overlay'den gelir. Hedefler >= 44 px; hareket azaltma: [data-reduced="1"] ve @media ile animasyon yok.
+ */
+.klk {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  outline: none;
+  color: var(--kp-text, #eef1ff);
+}
+.klk:focus,
+.klk:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.klk-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.klk-box .kp-title {
+  letter-spacing: 0.02em;
+}
+.klk-btn {
+  min-height: 48px;
+  min-width: 44px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--kp-line, rgba(150, 165, 240, 0.24));
+  background: var(--kp-panel, #1b2146);
+  color: var(--kp-text, #eef1ff);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.klk-btn:hover:not(:disabled) {
+  background: var(--kp-panel2, #232a58);
+}
+.klk-btn:focus-visible,
+.klk-key:focus-visible,
+.klk-stop:focus-visible,
+.klh-rune:focus-visible,
+.klh-face:focus-visible {
+  outline: 3px solid #38e8ff;
+  outline-offset: 2px;
+}
+.klk-btn:disabled,
+.klk-key:disabled,
+.klk-stop:disabled,
+.klh-rune:disabled,
+.klh-face:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.klk-go {
+  background: linear-gradient(180deg, #1fb5cf, #0f7f95);
+  border-color: #38e8ff;
+  color: #04121c;
+}
+.klk-go:hover:not(:disabled) {
+  background: linear-gradient(180deg, #38d0e8, #1595ac);
+}
+.klk-wide {
+  width: 100%;
+}
+/* Telefon yatay (844×390): "Doğrula" kaydırmadan erişilsin (qa_p2) — panel gövdesi kayarken altta yapışık */
+.klk-wide.klk-go[data-testid="dice-submit"] {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  box-shadow: 0 -10px 14px 2px rgba(12, 14, 34, 0.92);
+}
+.klk-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.klk-dim {
+  color: var(--kp-dim, #aeb8de);
+  font-size: 0.85em;
+}
+.klk-hint,
+.klk-msg,
+.klk-need {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--kp-dim, #aeb8de);
+}
+.klk-msg {
+  color: var(--kp-text, #eef1ff);
+}
+.klk-ok {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #52e08a;
+  background: rgba(82, 224, 138, 0.12);
+  color: #b9ffd4;
+  font-weight: 700;
+}
+
+/* ---------------- kod kilidi ---------------- */
+.klk-slots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.klk-slot {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 64px;
+  border-radius: 12px;
+  border: 2px solid rgba(56, 232, 255, 0.45);
+  background: #070b1c;
+  font-size: 30px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #8be9ff;
+  text-shadow: 0 0 10px rgba(56, 232, 255, 0.6);
+}
+.klk-slot[data-filled="0"] {
+  color: #4b5a86;
+  text-shadow: none;
+}
+.klk-fb {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: #ffd98a;
+}
+.klk-fb-sep {
+  margin: 0 8px;
+}
+.klk-keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.klk-key {
+  min-height: 56px;
+  border-radius: 14px;
+  border: 1px solid rgba(56, 232, 255, 0.4);
+  background: linear-gradient(180deg, #1b2450, #121a3d);
+  color: #e9fbff;
+  font: inherit;
+  font-size: 24px;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.klk-key:hover:not(:disabled) {
+  background: linear-gradient(180deg, #24316a, #18214d);
+}
+
+/* ---------------- kart okuyucu ---------------- */
+.klk-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.klk-cardrow {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--kp-line, rgba(150, 165, 240, 0.24));
+  background: #101532;
+}
+.klk-cardrow[data-has="0"] {
+  opacity: 0.6;
+}
+.klk-cardchip {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 28px;
+  border-radius: 6px;
+  color: #0a0f1e;
+  font-weight: 900;
+}
+.klk-cardstate {
+  font-weight: 800;
+}
+
+/* ---------------- asansör ---------------- */
+.klk-stops {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.klk-stop {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(56, 232, 255, 0.35);
+  background: linear-gradient(180deg, #1b2450, #121a3d);
+  color: var(--kp-text, #eef1ff);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.klk-stop[data-here="1"] {
+  border-color: #52e08a;
+}
+.klk-stop[data-target="1"] {
+  border-color: #ffc24d;
+}
+.klk-stop-no {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #38e8ff;
+  color: #04121c;
+  font-weight: 900;
+}
+.klk-stop-tag {
+  font-size: 12px;
+  color: var(--kp-dim, #aeb8de);
+}
+
+/* ---------------- soğuma ---------------- */
+.klk-cool-bar {
+  height: 10px;
+  border-radius: 6px;
+  background: #0b1030;
+  overflow: hidden;
+  border: 1px solid rgba(255, 133, 133, 0.5);
+}
+.klk-cool-bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ff8585, #ffb36b);
+  transition: width 0.25s linear;
+}
+.klk[data-reduced="1"] .klk-cool-bar > span {
+  transition: none;
+}
+.klk-cool-txt {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #ffb3b3;
+}
+
+/* ---------------- mini oyunlar ---------------- */
+.klh-how {
+  margin: 0 0 8px;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+.klh-status {
+  margin: 0;
+  font-size: 14px;
+  color: var(--kp-dim, #aeb8de);
+  text-align: center;
+}
+.klh-runes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.klh-rune {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 88px;
+  border-radius: 16px;
+  border: 3px solid var(--c);
+  background: #0a0f26;
+  color: var(--c);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.klh-rune[data-lit="1"] {
+  background: var(--c);
+  color: #070b1c;
+  box-shadow: 0 0 22px var(--c);
+}
+.klh-rune[data-last="bad"] {
+  outline: 3px dashed #ff8585;
+}
+.klh-key {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.8;
+}
+.klh-lever-list,
+.klh-clues {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.klh-lever {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 2px solid var(--c);
+  background: #0b1030;
+}
+.klh-lever[data-ok="1"] {
+  background: rgba(82, 224, 138, 0.1);
+}
+.klh-lever-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c);
+  font-weight: 800;
+}
+.klh-lever-pos {
+  grid-column: 1;
+  font-size: 13.5px;
+}
+.klh-pull {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 84px;
+}
+.klh-link {
+  grid-column: 1 / span 2;
+  color: var(--kp-dim, #aeb8de);
+}
+.klh-dice-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.klh-die {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+.klh-step {
+  min-width: 56px;
+  min-height: 44px;
+  padding: 4px 10px;
+}
+.klh-face {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  border: 3px solid #ffc24d;
+  background: #fff7e0;
+  color: #1a1530;
+  font: inherit;
+  font-size: 34px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.klh-die-no {
+  font-size: 12px;
+  color: var(--kp-dim, #aeb8de);
+}
+.klh-clue {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--kp-line, rgba(150, 165, 240, 0.24));
+  background: #0b1030;
+  font-size: 14.5px;
+}
+.klh-clue[data-ok="1"] {
+  border-color: #52e08a;
+}
+.klh-clue[data-ok="0"] {
+  border-color: #ff8585;
+}
+.klh-clue-mark {
+  font-weight: 900;
+}
+
+@media (max-width: 520px) {
+  .klk-slot {
+    width: 46px;
+    height: 56px;
+    font-size: 26px;
+  }
+  .klh-runes {
+    gap: 8px;
+  }
+  .klh-rune {
+    min-height: 80px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .klk-cool-bar > span {
+    transition: none;
+  }
+}

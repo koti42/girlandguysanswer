@@ -6,6 +6,7 @@ import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput/index.jsx';
 import ConfirmationModal from './ConfirmationModal';
 import { messagesAPI } from '../services/api';
+import { newClientMessageId, classifySendError, sendWithRetry } from '../utils/messageSend';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToUserChannel } from '../services/pusherClient';
 import { isSystemAccount } from '../utils/systemAccount';
@@ -487,14 +488,166 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         }
     };
 
-    const handleSendMessage = async ({ content, file, type, is_ephemeral, ephemeral_max_views }) => {
-        if (!conversation) return;
+    // Gönderim tekrar-güvenlidir: her mesajın kimliği (client_temp_id) bir kez üretilir ve
+    // yeniden denemelerde AYNEN kullanılır; sunucu aynı kimliği aynı mesaja eşler (çift kayıt yok).
+    const pendingSendsRef = useRef(new Map());
+    const firstSendGateRef = useRef(null);
 
-        const replyToId = replyingTo?.id;
+    const setBubbleFailed = (clientTempId, failed, errorText = null) => {
+        setMessages(prev => prev.map(m =>
+            (m.id === clientTempId || m.client_temp_id === clientTempId)
+                ? { ...m, send_failed: failed, send_error: failed ? errorText : null, is_temp: true }
+                : m
+        ));
+    };
+
+    const removeBubble = (clientTempId) => {
+        setMessages(prev => prev.filter(m => m.id !== clientTempId && m.client_temp_id !== clientTempId));
+    };
+
+    const failSend = (payload, info) => {
+        if (info.keepBubble) {
+            // Sunucuya ulaşılamadı / geçici hata: balon "gönderilemedi — tekrar dene" olarak kalır.
+            setBubbleFailed(payload.clientTempId, true, info.message);
+        } else {
+            // Net ret (kural, doğrulama): balon kaldırılır, tekrar denemenin anlamı yok.
+            removeBubble(payload.clientTempId);
+            pendingSendsRef.current.delete(payload.clientTempId);
+        }
+        notificationToast.error(info.message);
+        if (info.status === 403 && payload.otherUsername) {
+            // Mesaj kapalı / yalnız takipçiler: bilet seçeneği var mı sor
+            setTicketProbeFor(payload.otherUsername);
+            refreshTicket();
+        }
+    };
+
+    // POST başarılı olduktan sonra yalnızca ekran güncellenir. Burada oluşan hiçbir hata
+    // "mesaj gönderilemedi" diye raporlanmaz (mesaj zaten sunucuda kayıtlı).
+    const applySendSuccess = (payload, newMessage, body) => {
+        const conversationData = body?.data?.conversation
+            || (newMessage?.conversation_id
+                ? { id: newMessage.conversation_id, other_user: payload.otherUser }
+                : null);
+
+        setMessages(prev => upsertMessage(prev, {
+            ...newMessage,
+            client_temp_id: payload.clientTempId,
+        }, payload.clientTempId));
+
+        if (onNewMessage) {
+            try {
+                onNewMessage(newMessage, conversationData);
+            } catch (uiError) {
+                console.error('onNewMessage hatası (mesaj gönderildi):', uiError);
+            }
+        }
+
+        // Kullanıcı gönderim sürerken sohbetten çıkmış olabilir (conversationRef null): yalnızca
+        // hâlâ AYNI sohbet açıksa kimliği ata.
+        const current = conversationRef.current;
+        if (current && !current.id && conversationData?.id && current.other_user?.id === payload.receiverId) {
+            conversationRef.current = { ...current, id: conversationData.id };
+        }
+
+        setTimeout(() => scrollToBottom(true), 100);
+    };
+
+    const executeSend = async (payload) => {
+        if (payload.inFlight) return;
+        payload.inFlight = true;
+
+        const { clientTempId, content, file, type, is_ephemeral, ephemeral_max_views, replyToId, receiverId } = payload;
+        const isGifOrSticker = type === 'gif' || type === 'sticker';
+
+        // Yeni sohbette (henüz id yok) art arda gönderimler sırayla gider: aksi halde iki istek aynı anda
+        // sohbeti oluşturmaya çalışır. (Sunucu da unique + upsert ile korunur.)
+        let releaseGate = null;
+        if (!conversationRef.current?.id) {
+            const previous = firstSendGateRef.current;
+            const mine = new Promise((resolve) => { releaseGate = resolve; });
+            firstSendGateRef.current = mine;
+            if (previous) await previous.catch(() => {});
+        }
+
+        let response;
+        try {
+            response = await sendWithRetry(() => {
+                if (type === 'text' || isGifOrSticker) {
+                    return messagesAPI.sendMessage({
+                        receiver_id: receiverId,
+                        content,
+                        type,
+                        reply_to_message_id: replyToId,
+                        client_temp_id: clientTempId,
+                    });
+                }
+                const formData = new FormData();
+                formData.append('receiver_id', receiverId);
+                formData.append('type', type);
+                formData.append('file', file);
+                formData.append('client_temp_id', clientTempId);
+                if (content) formData.append('content', content);
+                if (replyToId) formData.append('reply_to_message_id', replyToId);
+                if (is_ephemeral) formData.append('is_ephemeral', '1');
+                if (ephemeral_max_views) formData.append('ephemeral_max_views', ephemeral_max_views);
+                return messagesAPI.sendFile(formData);
+            });
+        } catch (error) {
+            console.error('Error sending message:', error);
+            failSend(payload, classifySendError(error));
+            return;
+        } finally {
+            payload.inFlight = false;
+            if (releaseGate) releaseGate();
+        }
+
+        const body = response?.data;
+        if (body?.success === false) {
+            removeBubble(clientTempId);
+            pendingSendsRef.current.delete(clientTempId);
+            notificationToast.error(body?.message || 'Mesaj gönderilemedi.');
+            return;
+        }
+
+        const newMessage = body?.data?.message;
+        if (!newMessage?.id) {
+            // 2xx ama mesaj yok (ör. aradaki bir güvenlik duvarının HTML sayfası): onaylanmadı.
+            // Aynı kimlikle yeniden denemek güvenlidir.
+            console.error('Mesaj yanıtı beklenmedik biçimde:', body);
+            failSend(payload, {
+                kind: 'unexpected',
+                status: null,
+                message: 'Sunucudan beklenmeyen bir yanıt geldi. "Tekrar dene"ye dokun; mesaj iki kez gitmez.',
+                keepBubble: true,
+            });
+            return;
+        }
+
+        pendingSendsRef.current.delete(clientTempId);
+        try {
+            applySendSuccess(payload, newMessage, body);
+        } catch (uiError) {
+            console.error('Mesaj gönderildi ancak ekran güncellenemedi:', uiError);
+        }
+    };
+
+    // Yeniden deneme her render'daki güncel executeSend'i (güncel onNewMessage vb.) kullansın.
+    const executeSendRef = useRef(executeSend);
+    executeSendRef.current = executeSend;
+
+    const handleSendMessage = async ({ content, file, type, is_ephemeral, ephemeral_max_views }) => {
+        // Gönderim sürerken sohbetten çıkılırsa conversationRef null olur: başta bir kez yakala.
+        const conv = conversationRef.current || conversation;
+        if (!conv?.other_user?.id) return;
+
+        // Gönderim sırasında geçici (temp-…) bir mesaja yanıt, sunucuda var olmayan bir kimliktir.
+        const rawReplyId = replyingTo?.id;
+        const replyToId = rawReplyId && !String(rawReplyId).startsWith('temp-') ? rawReplyId : undefined;
         setReplyingTo(null);
 
         const isGifOrSticker = type === 'gif' || type === 'sticker';
-        const clientTempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const clientTempId = newClientMessageId();
         const tempMessage = {
             id: clientTempId,
             client_temp_id: clientTempId,
@@ -512,87 +665,36 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
         setMessages(prev => [...prev, tempMessage]);
         setTimeout(() => scrollToBottom(true), 50);
 
-        try {
-            let response;
-
-            if (type === 'text') {
-                response = await messagesAPI.sendMessage({
-                    receiver_id: conversationRef.current.other_user.id,
-                    content,
-                    type: 'text',
-                    reply_to_message_id: replyToId,
-                    client_temp_id: clientTempId,
-                });
-            } else if (isGifOrSticker) {
-                response = await messagesAPI.sendMessage({
-                    receiver_id: conversationRef.current.other_user.id,
-                    content,
-                    type,
-                    reply_to_message_id: replyToId,
-                    client_temp_id: clientTempId,
-                });
-            } else {
-                const formData = new FormData();
-                formData.append('receiver_id', conversationRef.current.other_user.id);
-                formData.append('type', type);
-                formData.append('file', file);
-                formData.append('client_temp_id', clientTempId);
-                if (content) formData.append('content', content);
-                if (replyToId) formData.append('reply_to_message_id', replyToId);
-                if (is_ephemeral) formData.append('is_ephemeral', '1');
-                if (ephemeral_max_views) formData.append('ephemeral_max_views', ephemeral_max_views);
-
-                response = await messagesAPI.sendFile(formData);
-            }
-
-            if (response.data?.success === false) {
-                setMessages(prev => prev.filter(m => m.id !== clientTempId && m.client_temp_id !== clientTempId));
-                notificationToast.error(response.data?.message || 'Mesaj gönderilemedi.');
-                return;
-            }
-
-            const newMessage = response.data.data.message;
-            const conversationData = response.data.data.conversation
-                || (newMessage?.conversation_id
-                    ? { id: newMessage.conversation_id, other_user: conversationRef.current?.other_user }
-                    : null);
-
-            setMessages(prev => upsertMessage(prev, {
-                ...newMessage,
-                client_temp_id: clientTempId,
-            }, clientTempId));
-
-            if (onNewMessage) {
-                onNewMessage(newMessage, conversationData);
-            }
-
-            if (!conversationRef.current.id && conversationData?.id) {
-                conversationRef.current = { ...conversationRef.current, id: conversationData.id };
-            }
-
-            setTimeout(() => scrollToBottom(true), 100);
-        } catch (error) {
-            console.error('Error sending message:', error);
-            const status = error.response?.status;
-            // Net client/server rejection: temp'i kaldır. Network/timeout'ta mesaj sunucuda olabilir — silme.
-            if (status && status >= 400 && status < 500) {
-                setMessages(prev => prev.filter(m => m.id !== clientTempId && m.client_temp_id !== clientTempId));
-            } else {
-                setMessages(prev => prev.map(m =>
-                    (m.id === clientTempId || m.client_temp_id === clientTempId)
-                        ? { ...m, send_failed: true, is_temp: true }
-                        : m
-                ));
-            }
-            const errorMsg = error.response?.data?.message || 'Mesaj gönderilemedi. Lütfen tekrar deneyin.';
-            notificationToast.error(errorMsg);
-            if (status === 403 && conversationRef.current?.other_user?.username) {
-                // Mesaj kapalı / yalnız takipçiler: bilet seçeneği var mı sor
-                setTicketProbeFor(conversationRef.current.other_user.username);
-                refreshTicket();
-            }
-        }
+        const payload = {
+            clientTempId,
+            content,
+            file,
+            type,
+            is_ephemeral,
+            ephemeral_max_views,
+            replyToId,
+            receiverId: conv.other_user.id,
+            otherUser: conv.other_user,
+            otherUsername: conv.other_user.username || null,
+            inFlight: false,
+        };
+        pendingSendsRef.current.set(clientTempId, payload);
+        await executeSend(payload);
     };
+
+    // "Gönderilemedi — tekrar dene": AYNI client_temp_id ile yeniden gönderir (çift mesaj olmaz).
+    const handleRetrySend = useCallback((message) => {
+        const id = message?.client_temp_id || message?.id;
+        const payload = id ? pendingSendsRef.current.get(id) : null;
+        if (!payload) {
+            setMessages(prev => prev.filter(m => m.id !== id && m.client_temp_id !== id));
+            notificationToast.error('Bu mesaj yeniden gönderilemiyor. Lütfen yeniden yaz.');
+            return;
+        }
+        if (payload.inFlight) return;
+        setBubbleFailed(id, false);
+        executeSendRef.current(payload);
+    }, []);
 
     const handleDeleteMessage = useCallback(async (msg) => {
         try {
@@ -1366,6 +1468,7 @@ const ChatWindow = ({ conversation, onBack, onNewMessage }) => {
                                             onReaction={handleReaction}
                                             isHighlighted={highlightedMessageId === message.id}
                                             onScrollToMessage={scrollToMessageId}
+                                            onRetrySend={handleRetrySend}
                                         />
                                     </div>
                                 );

@@ -134,7 +134,7 @@ function isEphemeralExpiredFromBackend(message, isMine) {
     return (Date.now() - viewedAt) >= EPHEMERAL_DURATION * 1000;
 }
 
-const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserId, viewerPrefs, onReply, onEdit, onDelete, onReaction, isHighlighted = false, onScrollToMessage }) => {
+const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserId, viewerPrefs, onReply, onEdit, onDelete, onReaction, isHighlighted = false, onScrollToMessage, onRetrySend }) => {
     const ensureHttps = (url) => {
         if (!url) return url;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -671,6 +671,22 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
                     {/* Mesaj Bileti ile gelen mesaj (F.6) */}
                     {message.via_ticket && <TicketBadge mine={isMine} />}
 
+                    {/* Gönderilemedi: aynı mesaj kimliğiyle yeniden gönder */}
+                    {isMine && message.send_failed && (
+                        <div data-send-failed="true" role="alert" className="flex flex-wrap items-center gap-2 mb-1.5 text-[11px] text-red-100">
+                            <span>Gönderilemedi</span>
+                            {onRetrySend && (
+                                <button
+                                    type="button"
+                                    onClick={() => onRetrySend(message)}
+                                    className="rounded-full bg-white/20 px-2.5 py-0.5 font-semibold text-white hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/60"
+                                >
+                                    Tekrar dene
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {/* Time + Menu */}
                     <div className="flex justify-between items-start mb-1.5 opacity-80 gap-2">
                         <div className="flex items-center gap-1">
@@ -679,7 +695,11 @@ const MessageBubble = ({ message, isMine, senderGender, senderUser, currentUserI
                             </span>
                             {isMine && !message.user_deleted_at && (
                                 <span className="text-xs">
-                                    {message.read_at ? (
+                                    {message.send_failed ? (
+                                        <span className="font-bold text-red-200" title="Gönderilemedi">!</span>
+                                    ) : message.is_temp ? (
+                                        <span data-sending="true" className="text-[10px] italic text-white/70" title="Gönderiliyor">Gönderiliyor…</span>
+                                    ) : message.read_at ? (
                                         <FaCheckDouble className="text-blue-200" title={`Okundu: ${formatMessageDateTime(message.read_at)}`} />
                                     ) : (
                                         <FaCheck className="text-white/70" title="Gönderildi" />

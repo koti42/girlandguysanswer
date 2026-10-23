@@ -181,6 +181,88 @@ export const ICONS = {
         ],
     },
 
+    /* ===== Keşif Koleksiyonu unvan ikonları ===== */
+
+    // Neon Gezgin — camgöbeği-mor pill, beyaz metin: küçük pusula
+    compass: {
+        viewBox: '0 0 24 24',
+        defs: [
+            { tag: 'linearGradient', id: 'ic-compass-g', props: { x1: 0, y1: 0, x2: 1, y2: 1 },
+              stops: [{ offset: 0, color: '#FFFFFF' }, { offset: 1, color: '#B5EEFF' }] },
+        ],
+        elements: [
+            { tag: 'circle', props: { cx: 12, cy: 12, r: 9.4, fill: 'url(#ic-compass-g)' } },
+            { tag: 'circle', props: { cx: 12, cy: 12, r: 7.3, fill: '#14306B' } },
+            { tag: 'path', props: { d: 'M12 5v1.3M19 12h-1.3M12 19v-1.3M5 12h1.3', fill: 'none', stroke: '#FFE08A', strokeWidth: 1.1, strokeLinecap: 'round' } },
+            { tag: 'path', props: { d: 'M15.9 8.1L13.1 13.1L10.9 10.9Z', fill: '#FF6B8A' } },
+            { tag: 'path', props: { d: 'M8.1 15.9L10.9 10.9L13.1 13.1Z', fill: '#FFFFFF' } },
+            { tag: 'circle', props: { cx: 12, cy: 12, r: 1, fill: '#14306B', stroke: '#FFFFFF', strokeWidth: 0.5 } },
+            { tag: 'path', props: { d: sparkle(20, 4.2, 1.9), fill: '#FFFFFF' } },
+        ],
+    },
+
+    // Portal Ustası — mavi-turuncu pill, beyaz metin: iç içe geçen iki portal ovali
+    portal: {
+        viewBox: '0 0 24 24',
+        elements: [
+            { tag: 'ellipse', props: { cx: 8.4, cy: 12, rx: 4.3, ry: 8.4, fill: '#0B1B55', stroke: '#9FD6FF', strokeWidth: 2.2 } },
+            { tag: 'ellipse', props: { cx: 15.6, cy: 12, rx: 4.3, ry: 8.4, fill: '#4A1A06', stroke: '#FFB066', strokeWidth: 2.2, opacity: 0.96 } },
+            { tag: 'ellipse', props: { cx: 15.6, cy: 12, rx: 1.7, ry: 4.6, fill: 'none', stroke: '#FFE2C2', strokeWidth: 0.9, opacity: 0.8 } },
+            { tag: 'path', props: { d: 'M6.6 6.6q.6-1.6 2-2.2', fill: 'none', stroke: '#FFFFFF', strokeWidth: 1, strokeLinecap: 'round', opacity: 0.7 } },
+            { tag: 'path', props: { d: sparkle(12, 12, 1.8), fill: '#FFFFFF' } },
+        ],
+    },
+
+    // Şehir Kuryesi — sıcak turuncu pill, koyu metin: minik koli
+    parcel: {
+        viewBox: '0 0 24 24',
+        elements: [
+            { tag: 'path', props: { d: 'M1.2 10.6h3M.8 13.6h2.6M1.6 16.4h1.8', fill: 'none', stroke: '#3A1000', strokeWidth: 1.4, strokeLinecap: 'round' } },
+            { tag: 'path', props: { d: 'M5.2 8.4l6.8-3.2 6.8 3.2v9.6l-6.8 3.2-6.8-3.2z', fill: '#7A3E12', stroke: '#3A1000', strokeWidth: 0.8, strokeLinejoin: 'round' } },
+            { tag: 'path', props: { d: 'M5.2 8.4L12 11.6l6.8-3.2L12 5.2z', fill: '#B8661F' } },
+            { tag: 'path', props: { d: 'M12 11.6v9.6', fill: 'none', stroke: '#3A1000', strokeWidth: 0.8 } },
+            { tag: 'path', props: { d: 'M9.2 6.5l6.8 3.2', fill: 'none', stroke: '#FFE8C2', strokeWidth: 1.6, strokeLinecap: 'round' } },
+            { tag: 'rect', props: { x: 14.2, y: 14, width: 3, height: 2.4, rx: 0.5, fill: '#FFF3DC' } },
+        ],
+    },
+
+    // Çip Avcısı — koyu yeşil pill, beyaz metin: devre çipi
+    chip: {
+        viewBox: '0 0 24 24',
+        elements: [
+            { tag: 'path', props: { d: 'M9.4 3.2v3M12 3.2v3M14.6 3.2v3M9.4 17.8v3M12 17.8v3M14.6 17.8v3M3.2 9.4h3M3.2 12h3M3.2 14.6h3M17.8 9.4h3M17.8 12h3M17.8 14.6h3', fill: 'none', stroke: '#FFD76A', strokeWidth: 1.2, strokeLinecap: 'round' } },
+            { tag: 'rect', props: { x: 6, y: 6, width: 12, height: 12, rx: 2.4, fill: '#0A2F2A', stroke: '#7FF0D8', strokeWidth: 1.4 } },
+            { tag: 'rect', props: { x: 9.2, y: 9.2, width: 5.6, height: 5.6, rx: 1.2, fill: '#7FF0D8' } },
+            { tag: 'circle', props: { cx: 12, cy: 12, r: 1.1, fill: '#0A2F2A' } },
+            { tag: 'circle', props: { cx: 8, cy: 8, r: 0.6, fill: '#FFFFFF', opacity: 0.8 } },
+        ],
+    },
+
+    // Usta Mimar — kum rengi pill, koyu metin: altın çatılı ev
+    architect: {
+        viewBox: '0 0 24 24',
+        elements: [
+            { tag: 'path', props: { d: 'M5.2 11.2h13.6v8.8H5.2z', fill: '#5E3F14', stroke: '#3A2606', strokeWidth: 0.7, strokeLinejoin: 'round' } },
+            { tag: 'path', props: { d: 'M2.4 12L12 3.8 21.6 12', fill: 'none', stroke: '#A8680C', strokeWidth: 2.4, strokeLinecap: 'round', strokeLinejoin: 'round' } },
+            { tag: 'rect', props: { x: 10.2, y: 13.8, width: 3.6, height: 6.2, rx: 0.8, fill: '#F3E3B8' } },
+            { tag: 'rect', props: { x: 6.6, y: 13.2, width: 2.4, height: 2.4, rx: 0.4, fill: '#F3E3B8' } },
+            { tag: 'rect', props: { x: 15, y: 13.2, width: 2.4, height: 2.4, rx: 0.4, fill: '#F3E3B8' } },
+            { tag: 'path', props: { d: 'M16.6 4.2v-2M16.6 2.4l3 .9-3 1z', fill: 'none', stroke: '#A8680C', strokeWidth: 1, strokeLinecap: 'round', strokeLinejoin: 'round' } },
+        ],
+    },
+
+    // Diyar Kâşifi — altın-mercan pill, koyu metin: parlayan pusula gülü
+    'compass-rose': {
+        viewBox: '0 0 24 24',
+        elements: [
+            { tag: 'circle', props: { cx: 12, cy: 12, r: 10.6, fill: 'none', stroke: '#FFFFFF', strokeWidth: 0.9, opacity: 0.65 } },
+            { tag: 'path', props: { d: 'M12 12L18 6M12 12l6 6M12 12l-6 6M12 12L6 6', fill: 'none', stroke: '#3B1E7A', strokeWidth: 1.6, strokeLinecap: 'round' } },
+            { tag: 'path', props: { d: 'M12 2.4l1.9 7.7 7.7 1.9-7.7 1.9L12 21.6l-1.9-7.7L2.4 12l7.7-1.9z', fill: '#3B1E7A', stroke: '#3B1E7A', strokeWidth: 0.6, strokeLinejoin: 'round' } },
+            { tag: 'path', props: { d: 'M12 2.4l1.9 7.7H10.1z', fill: '#FF5C7A' } },
+            { tag: 'circle', props: { cx: 12, cy: 12, r: 2.2, fill: '#FFE8A0', stroke: '#3B1E7A', strokeWidth: 0.9 } },
+        ],
+    },
+
     /* ===== Mağaza arayüzü ikonları (açık ve koyu zeminde okunur) ===== */
 
     // Jeton — koşu oyunundaki altın jetonla aynı palet, kabartma "?"
@@ -485,6 +567,36 @@ export const TITLES = [
         id: 'title:efsane', category: 'title', name: 'Efsane', rarity: 'legendary',
         description: 'Topluluğun en parlak isimlerine. Altından mercana akan ışık, mücevherli taç ve kayan parıltı.',
         style: { text: 'Efsane', colors: ['#FFE08A', '#E2B94C', '#F08A4B'], textColor: '#2B1600', icon: 'crown', anim: 'shimmer' },
+    },
+    {
+        id: 'title:neon-gezgin', category: 'title', name: 'Neon Gezgin', rarity: 'common',
+        description: 'Neon sokakları adım adım gezenlere. Camgöbeği-mor ışıltı, küçük pusula.',
+        style: { text: 'Neon Gezgin', colors: ['#0B6672', '#2F4FC4', '#6A35C8'], textColor: '#FFFFFF', icon: 'compass' },
+    },
+    {
+        id: 'title:portal-ustasi', category: 'title', name: 'Portal Ustası', rarity: 'epic',
+        description: 'İki portal arasında yolunu bulanlara. Mavi-turuncu geçişli rozet.',
+        style: { text: 'Portal Ustası', colors: ['#1E3FA8', '#5B3FB0', '#C2410C'], textColor: '#FFFFFF', icon: 'portal', anim: 'pulse' },
+    },
+    {
+        id: 'title:sehir-kuryesi', category: 'title', name: 'Şehir Kuryesi', rarity: 'common',
+        description: 'İlk teslimatını yapan kuryeye. Sıcak turuncu zemin, minik koli.',
+        style: { text: 'Şehir Kuryesi', colors: ['#FFB066', '#FF8A3D', '#FF6B3D'], textColor: '#3A1000', icon: 'parcel' },
+    },
+    {
+        id: 'title:cip-avcisi', category: 'title', name: 'Çip Avcısı', rarity: 'rare',
+        description: 'Altmış veri çipini toplayanlara. Koyu yeşil devre deseni.',
+        style: { text: 'Çip Avcısı', colors: ['#052E2B', '#0B4F43', '#0F6B54'], textColor: '#FFFFFF', icon: 'chip' },
+    },
+    {
+        id: 'title:usta-mimar', category: 'title', name: 'Usta Mimar', rarity: 'rare',
+        description: 'Haritası çok beğenilen inşaatçıya. Kum rengi zemin, altın kasnak.',
+        style: { text: 'Usta Mimar', colors: ['#F3E3B8', '#E6CB8A', '#D9B25C'], textColor: '#3A2606', icon: 'architect' },
+    },
+    {
+        id: 'title:diyar-kasifi', category: 'title', name: 'Diyar Kâşifi', rarity: 'legendary',
+        description: 'Keşif dünyasının efsane gezgini için. Altın-mercan, parlayan pusula.',
+        style: { text: 'Diyar Kâşifi', colors: ['#FFD36B', '#F59E5B', '#F0745B'], textColor: '#2B1000', icon: 'compass-rose', anim: 'shimmer' },
     },
 ];
 

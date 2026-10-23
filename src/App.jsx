@@ -238,6 +238,9 @@ const RunnerPlayPage = lazy(() => import('./pages/game/runner/RunnerPlayPage'));
 // Herkesler Yükseliyor (kule): lobi ve oyun misafire açık (antrenman).
 const TowerLobbyPage = lazy(() => import('./pages/game/tower/TowerLobbyPage'));
 const TowerPlayPage = lazy(() => import('./pages/game/tower/TowerPlayPage'));
+// Herkesler Keşfediyor (voxel macera + inşa): lobi ve oyun misafire açık; 3D motor oyun ekranından ayrıca yüklenir.
+const KesifLobbyPage = lazy(() => import('./pages/game/kesif/KesifLobbyPage'));
+const KesifPlayPage = lazy(() => import('./pages/game/kesif/KesifPlayPage'));
 // Karakter editörü ve mağaza: ProtectedRoute YOK - sayfalar misafire kendi
 // giriş çağrısını gösteriyor (vitrin/önizleme görülebilsin).
 const AvatarEditorPage = lazy(() => import('./pages/game/AvatarEditorPage'));
@@ -355,6 +358,8 @@ function App() {
                   <Route path="/oyun/kosu/oyna" element={<RunnerPlayPage />} />
                   <Route path="/oyun/kule" element={<TowerLobbyPage />} />
                   <Route path="/oyun/kule/oyna" element={<TowerPlayPage />} />
+                  <Route path="/oyun/kesif" element={<KesifLobbyPage />} />
+                  <Route path="/oyun/kesif/oyna" element={<KesifPlayPage />} />
                   <Route path="/oyun/karakter" element={<AvatarEditorPage />} />
                   <Route path="/oyun/magaza" element={<ShopPage />} />
                   <Route path="/500" element={<ErrorPage code={500} />} />

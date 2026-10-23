@@ -9,6 +9,12 @@ describe('actionTone', () => {
         expect(actionTone('note')).toBe('neutral');
         expect(actionTone('role_change')).toBe('info');
     });
+    it('profil teması işlemleri etiketlenir; kaldırma uyarı rengindedir', () => {
+        expect(actionLabel('game_theme_grant')).toBe('Profil teması verildi');
+        expect(actionLabel('game_theme_revoke')).toBe('Profil teması kaldırıldı');
+        expect(actionTone('game_theme_revoke')).toBe('warning');
+        expect(actionTone('game_theme_grant')).toBe('info');
+    });
     it('bilinmeyen işlem için etiket işlemin kendisi', () => {
         expect(actionLabel('yeni_islem')).toBe('yeni_islem');
     });

@@ -46,6 +46,15 @@ export const gameAdminApi = {
     wallet: (userId, params) => client.get(`/admin/game/shop/wallets/${encodeURIComponent(userId)}`, { params: clean(params) }),
     /** { amount: ±n (≠0, |n| ≤ 50.000.000), reason } — bakiye negatife düşmez; yönetici kendine de verebilir. */
     adjustWallet: (userId, body) => client.post(`/admin/game/shop/wallets/${encodeURIComponent(userId)}/adjust`, body),
+
+    /* Profil Teması (Ada Profili): /api/admin/game/themes */
+
+    /** ?user_id&page&per_page → { items: [{ user, user_id, theme, source, enabled, active, expires_at, unlimited, price_paid, purchases, granted_by }], pagination } (yalnız etkin haklar) */
+    themes: (params) => client.get('/admin/game/themes', { params: clean(params) }),
+    /** { user_id | username, days: tam sayı | null (null = süresiz), reason } */
+    grantTheme: (body) => client.post('/admin/game/themes/grant', body),
+    /** Hakkı kaldırır (kullanıcı kimliği + tema anahtarı). */
+    revokeTheme: (userId, key = 'ada') => client.delete(`/admin/game/themes/${encodeURIComponent(userId)}/${encodeURIComponent(key)}`),
 };
 
 export default gameAdminApi;

@@ -64,6 +64,16 @@ export const modApi = {
     feedback: (params) => client.get('/mod/feedback', { params: clean(params) }),
     feedbackItem: (id) => client.get(`/mod/feedback/${id}`),
     resolveFeedback: (id, body) => client.post(`/mod/feedback/${id}/resolve`, body),
+
+    /** Keşif (Herkesler Keşfediyor) kullanıcı haritaları: moderatör+admin; kaldırma yalnızca admin. */
+    kesifMaps: (params) => client.get('/mod/kesif/maps', { params: clean(params) }),
+    kesifMap: (id) => client.get(`/mod/kesif/maps/${id}`, { params: { data: 0 } }),
+    kesifReports: (id, params) => client.get(`/mod/kesif/maps/${id}/reports`, { params: clean(params) }),
+    kesifHide: (id, body) => client.post(`/mod/kesif/maps/${id}/hide`, body),
+    kesifRestore: (id, body) => client.post(`/mod/kesif/maps/${id}/restore`, body),
+    kesifRemove: (id, body) => client.post(`/mod/kesif/maps/${id}/remove`, body),
+    kesifHandleReports: (id, body) => client.post(`/mod/kesif/maps/${id}/reports/handle`, body),
+    kesifBulkHandle: (body) => client.post('/mod/kesif/maps/bulk-handle', body),
 };
 
 /* ------------------------------------------------------------------ */

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaUserSlash, FaExclamationTriangle } from 'react-icons/fa';
 import MainLayout from '../layouts/MainLayout';
@@ -21,11 +21,17 @@ import AvatarCard from '../components/game/avatar/AvatarCard';
 import ProfileAvatarFrame from '../components/Profile/ProfileAvatarFrame';
 import { normalizeCosmetics } from '../game/shop';
 import { getThemeStyles, getViewerPrefs } from '../utils/userColor';
+import IslandCta from '../components/Profile/island/IslandCta';
+import { loadIslandHero } from '../components/Profile/island/islandLoader';
+import { ISLAND_HERO_HEIGHT, shouldShowIsland } from '../components/Profile/island/islandUtils';
+
+// Ada Profili (web'e özel 3B tema): kahraman ve three.js ayrı parça, ana pakete girmez.
+const ProfileIslandHero = lazy(loadIslandHero);
 
 const ProfilePage = () => {
     const { username } = useParams();
     const navigate = useNavigate();
-    const { user: currentUser, updateUser, permissions, canModerate } = useAuth();
+    const { user: currentUser, updateUser, permissions, canModerate, isAdmin } = useAuth();
     const isOwnProfile = !username || (currentUser && currentUser.username === username);
 
     const DEFAULT_COVER = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=400&fit=crop';
@@ -448,6 +454,8 @@ const ProfilePage = () => {
 
     const gender = profileData.gender;
     const contentCreator = { gender };
+    const profileBlocked = !isOwnProfile && (profileData.isBlocked || profileData.hasBlocked);
+    const showIsland = shouldShowIsland(profileData, { blocked: profileBlocked, user: currentUser });
     const viewerPrefs = getViewerPrefs(currentUser);
     const themeStyles = getThemeStyles(contentCreator, viewerPrefs);
 
@@ -482,6 +490,14 @@ const ProfilePage = () => {
         }
     };
 
+    const profileCover = (
+        <ProfileCover
+            coverPhoto={profileData.coverPhoto}
+            onCoverUpload={isOwnProfile ? handleCoverUpload : null}
+            onCoverRemove={isOwnProfile ? handleCoverRemove : null}
+        />
+    );
+
     return (
         <>
             <SEO
@@ -511,11 +527,33 @@ const ProfilePage = () => {
                         <>
                             {/* Profile Header */}
                             <div className="rounded-2xl shadow-soft overflow-hidden border" style={{ background: themeStyles.shellBg, borderColor: `${themeStyles.accentColor}50` }}>
-                                <ProfileCover
-                                    coverPhoto={profileData.coverPhoto}
-                                    onCoverUpload={isOwnProfile ? handleCoverUpload : null}
-                                    onCoverRemove={isOwnProfile ? handleCoverRemove : null}
-                                />
+                                {showIsland ? (
+                                    <Suspense
+                                        fallback={
+                                            <div
+                                                className="bg-gradient-to-b from-sky-300 via-orange-200 to-orange-300 dark:from-sky-900 dark:via-indigo-900 dark:to-slate-900"
+                                                style={{ height: ISLAND_HERO_HEIGHT, minHeight: 360 }}
+                                                aria-hidden="true"
+                                                data-testid="island-placeholder"
+                                            />
+                                        }
+                                    >
+                                        <ProfileIslandHero
+                                            profile={profileData}
+                                            isOwnProfile={!!isOwnProfile}
+                                            questions={userQuestions}
+                                            avatar={profileData.game_avatar ?? (isOwnProfile ? currentUser?.detail?.game_avatar : null) ?? null}
+                                            tabsActions={{ onFollowToggle: handleFollowToggle, isAdmin: !!isAdmin }}
+                                            onSelectTab={setActiveTab}
+                                            fallback={profileCover}
+                                        />
+                                    </Suspense>
+                                ) : isOwnProfile && profileData.profile_theme === null ? (
+                                    <div className="relative">
+                                        {profileCover}
+                                        <IslandCta />
+                                    </div>
+                                ) : profileCover}
 
                                 <div className="p-6">
                                     <div className="flex flex-col md:flex-row gap-6">

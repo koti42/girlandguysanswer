@@ -1,0 +1,369 @@
+/*
+ * KEŞİF oyun sayfası (SPA + embed) — sahne, yükleme ekranı, durum panelleri, ipucu katmanları, pencereler.
+ * Önek: kxp-. HUD/menü stilleri (kx-*) components/game/kesif/kesif.css'te; renk jetonları oradan (--kx-*).
+ */
+.kxp-root {
+  /* konum sınıfı çağırandan gelir (varsayılan: fixed inset-0); alt katmanlar ona göre mutlak konumlanır */
+  overflow: hidden;
+  background: #070b1a;
+  color: var(--kx-text, #f4f6fb);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kxp-stage {
+  position: absolute;
+  inset: 0;
+  outline: none;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  background: radial-gradient(ellipse at 50% 30%, #1d2c52 0%, #0a1020 70%);
+}
+.kxp-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+.kxp-dialogs {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+}
+.kxp-dialogs .kx-overlay {
+  z-index: 5;
+}
+
+/* ---------------- Yükleme ekranı ---------------- */
+.kxp-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: max(16px, var(--hs-safe-top, env(safe-area-inset-top, 0px))) max(16px, var(--hs-safe-right, env(safe-area-inset-right, 0px))) max(16px, var(--hs-safe-bottom, env(safe-area-inset-bottom, 0px))) max(16px, var(--hs-safe-left, env(safe-area-inset-left, 0px)));
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(70, 120, 150, 0.35), transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(226, 185, 76, 0.16), transparent 55%),
+    linear-gradient(180deg, #0a1226 0%, #101a36 55%, #1a2440 100%);
+}
+.kxp-loading-ico {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  font-size: 30px;
+  color: var(--kx-accent, #e2b94c);
+  background: rgba(226, 185, 76, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(226, 185, 76, 0.35), 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+.kxp-loading-ico svg {
+  animation: kxp-spin 6s linear infinite;
+}
+.kxp-title {
+  margin: 0;
+  font-size: clamp(22px, 4.2vw, 34px);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+.kxp-sub {
+  margin: 0;
+  color: var(--kx-muted, rgba(226, 232, 245, 0.74));
+  font-size: 14px;
+}
+.kxp-bar {
+  position: relative;
+  width: min(360px, 78vw);
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+.kxp-bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5ad7ff, var(--kx-accent, #e2b94c));
+  transition: width 220ms ease-out;
+}
+.kxp-bar[data-indeterminate='1'] > span {
+  width: 38%;
+  animation: kxp-slide 1.3s ease-in-out infinite;
+}
+.kxp-pct {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kx-accent-hi, #f3d37b);
+}
+.kxp-tip {
+  max-width: 420px;
+  min-height: 2.8em;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(226, 232, 245, 0.88);
+}
+.kxp-tip b {
+  color: var(--kx-accent-hi, #f3d37b);
+}
+.kxp-link {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(226, 232, 245, 0.75);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.kxp-link:hover {
+  color: #fff;
+}
+
+/* ---------------- Fare yakalama: küçük, sakin tek satır (kontrol listesi Duraklat > Ayarlar > Nasıl Oynanır'da) ---------------- */
+.kxp-lock {
+  position: absolute;
+  left: 50%;
+  bottom: calc(max(8px, var(--hs-safe-bottom, env(safe-area-inset-bottom, 0px))) + 132px);
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: calc(100% - 24px);
+  padding: 6px 16px;
+  border: 1px solid var(--kx-line, rgba(255, 255, 255, 0.14));
+  border-radius: 999px;
+  background: var(--kx-glass, rgba(13, 17, 29, 0.6));
+  color: var(--kx-text, #f4f6fb);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transform: translateX(-50%);
+  animation: kxp-fade 220ms ease-out both;
+}
+.kxp-lock:hover {
+  background: var(--kx-glass-strong, rgba(10, 13, 23, 0.86));
+}
+.kxp-lock svg {
+  flex: none;
+  color: var(--kx-accent-hi, #f3d37b);
+}
+
+.kxp-orient {
+  position: absolute;
+  left: max(12px, var(--hs-safe-left, env(safe-area-inset-left, 0px)));
+  /* mini harita + bilgi çipinin altı, sağdaki düğme sütununa binmez */
+  top: calc(max(10px, var(--hs-safe-top, env(safe-area-inset-top, 0px))) + 92px);
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 84px);
+  padding: 6px 6px 6px 12px;
+  border-radius: 20px;
+  background: var(--kx-glass-strong, rgba(10, 13, 23, 0.86));
+  box-shadow: inset 0 0 0 1px var(--kx-line-strong, rgba(255, 255, 255, 0.28));
+  font-size: 13px;
+  animation: kxp-fade 260ms ease-out both;
+}
+.kxp-orient button,
+.kxp-fs {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.kxp-orient button:hover,
+.kxp-fs:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.kxp-fs {
+  position: absolute;
+  left: max(10px, var(--hs-safe-left, env(safe-area-inset-left, 0px)));
+  bottom: max(10px, var(--hs-safe-bottom, env(safe-area-inset-bottom, 0px)));
+  z-index: 25;
+  min-width: 44px;
+  background: rgba(10, 13, 23, 0.55);
+  box-shadow: inset 0 0 0 1px var(--kx-line, rgba(255, 255, 255, 0.14));
+  opacity: 0.7;
+}
+.kxp-fs:hover,
+.kxp-fs:focus-visible {
+  opacity: 1;
+}
+.kxp-fs:focus-visible,
+.kxp-orient button:focus-visible,
+.kxp-lock:focus-visible,
+.kxp-link:focus-visible {
+  outline: 3px solid var(--kx-accent, #e2b94c);
+  outline-offset: 2px;
+}
+
+/* ---------------- Pencere formları ---------------- */
+.kxp-form {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  text-align: left;
+}
+.kxp-form label,
+.kxp-label {
+  font-size: 13px;
+  font-weight: 700;
+}
+.kxp-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px var(--kx-line-strong, rgba(255, 255, 255, 0.28));
+  color: inherit;
+  font: inherit;
+  -webkit-user-select: text;
+  user-select: text;
+}
+textarea.kxp-input {
+  min-height: 74px;
+  resize: vertical;
+}
+.kxp-input[aria-invalid='true'] {
+  box-shadow: inset 0 0 0 2px var(--kx-danger, #ff6b6b);
+}
+.kxp-input:focus-visible {
+  outline: 3px solid var(--kx-accent, #e2b94c);
+  outline-offset: 1px;
+}
+.kxp-err {
+  margin: 0;
+  color: #ffb4b4;
+  font-size: 13px;
+  font-weight: 700;
+}
+.kxp-count {
+  margin: -4px 0 0;
+  text-align: right;
+  font-size: 12px;
+  color: var(--kx-muted, rgba(226, 232, 245, 0.74));
+}
+.kxp-vis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.kxp-vis button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px var(--kx-line, rgba(255, 255, 255, 0.14));
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.kxp-vis button[aria-checked='true'] {
+  background: rgba(226, 185, 76, 0.16);
+  box-shadow: inset 0 0 0 2px var(--kx-accent, #e2b94c);
+}
+.kxp-vis small {
+  font-size: 12px;
+  color: var(--kx-muted, rgba(226, 232, 245, 0.74));
+}
+.kxp-agree {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-height: 44px;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.kxp-agree input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  accent-color: var(--kx-accent, #e2b94c);
+}
+
+@keyframes kxp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes kxp-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(270%);
+  }
+}
+@keyframes kxp-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kxp-loading-ico svg,
+  .kxp-bar[data-indeterminate='1'] > span,
+  .kxp-lock,
+  .kxp-orient {
+    animation: none;
+  }
+  .kxp-bar > span {
+    transition: none;
+  }
+}
+html[data-a11y='1'] .kxp-tip,
+html[data-a11y='1'] .kxp-sub,
+.kxp-root[data-a11y='1'] .kxp-tip,
+.kxp-root[data-a11y='1'] .kxp-sub {
+  font-size: 17px;
+}
+@media (max-height: 420px) {
+  .kxp-loading {
+    gap: 8px;
+  }
+  .kxp-loading-ico {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+  .kxp-tip {
+    display: none;
+  }
+}

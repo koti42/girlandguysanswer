@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash, FaUser, FaBell, FaMagic, FaUniversalAccess, FaCheck, FaPalette } from 'react-icons/fa';
+import { FaUserSecret, FaEnvelope, FaUserFriends, FaLock, FaGlobe, FaTrash, FaUser, FaBell, FaMagic, FaUniversalAccess, FaCheck, FaPalette, FaUmbrellaBeach } from 'react-icons/fa';
 import { normalizeAvatarUrl } from '../utils/avatarUrl';
 import { InterestChips } from '../components/InterestPicker';
 import MainLayout from '../layouts/MainLayout';
@@ -10,6 +10,7 @@ import { usersAPI, categoriesAPI } from '../services/api';
 import { TopUsersWidget } from '../components/Widgets';
 import Toast from '../components/Toast';
 import ConfirmationModal from '../components/ConfirmationModal';
+import ThemeSettingsCard from '../components/Profile/island/ThemeSettingsCard';
 
 const INPUT = 'w-full h-11 px-4 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:bg-white focus:border-coral focus:outline-none focus:ring-4 focus:ring-coral/15 disabled:opacity-60 disabled:cursor-not-allowed dark:border-gray-600 dark:bg-gray-700/60 dark:text-white dark:focus:bg-gray-700';
 const BTN_PRIMARY = 'inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-coral to-brand-pink px-5 text-sm font-bold text-white shadow-[0_10px_25px_-10px_rgba(231,71,152,0.7)] transition-all hover:shadow-[0_14px_30px_-10px_rgba(231,71,152,0.8)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none';
@@ -31,6 +32,7 @@ const COLOR_PRESETS = [
 const SECTIONS = [
     { id: 'hesap', label: 'Hesap', icon: <FaUser />, tint: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-300' },
     { id: 'gorunum', label: 'Profil Renkleri', icon: <FaPalette />, tint: 'bg-pink-100 text-pink-600 dark:bg-pink-900/40 dark:text-pink-300' },
+    { id: 'profil-temasi', label: 'Profil Teması', icon: <FaUmbrellaBeach />, tint: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/40 dark:text-cyan-300' },
     { id: 'gizlilik', label: 'Gizlilik ve Takip', icon: <FaUserSecret />, tint: 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300' },
     { id: 'mesajlasma', label: 'Mesajlaşma', icon: <FaEnvelope />, tint: 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300' },
     { id: 'bildirimler', label: 'Bildirimler', icon: <FaBell />, tint: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300' },
@@ -458,6 +460,11 @@ const SettingsPage = () => {
         window.addEventListener('hashchange', onHash);
         return () => window.removeEventListener('hashchange', onHash);
     }, []);
+    // #profil-temasi bağlantısı (ör. profildeki "Ada Profili al" çağrısı) kartı açıp görünür yere getirir.
+    useEffect(() => {
+        if (loading || window.location.hash !== '#profil-temasi') return;
+        document.getElementById('profil-temasi')?.scrollIntoView?.({ block: 'start' });
+    }, [loading]);
     const [a11yMode, setA11yMode] = useState(() => isAccessibilityOn(user));
     useEffect(() => { setA11yMode(isAccessibilityOn(user)); }, [user]);
     const handleAccessibilityToggle = async (value) => {
@@ -891,6 +898,11 @@ const SettingsPage = () => {
                                         );
                                     })}
                                 </div>
+                            </SettingsCard>
+
+                            {/* ───── Profil Teması (Ada Profili) ───── */}
+                            <SettingsCard id="profil-temasi" hidden={activeSection !== 'profil-temasi'} icon={<FaUmbrellaBeach />} tint="bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-300" title="Profil Teması" subtitle="Profilini 3 boyutlu bir adaya dönüştür; yalnızca web profilinde görünür">
+                                <ThemeSettingsCard user={user} onNotify={(msg, type) => (type === 'error' ? showToast(msg, 'error') : showSuccess(msg))} />
                             </SettingsCard>
 
                             {/* ───── Gizlilik ───── */}

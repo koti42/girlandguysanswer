@@ -3,15 +3,17 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-configure({ asyncUtilTimeout: 4000 });
+configure({ asyncUtilTimeout: 15000 }); // soğuk başlangıç (dinamik içe aktarma) yük altında 4 sn’yi aşabiliyor
 
 vi.mock('../../pages/game/runner/engineLoader', () => ({ loadRunnerEngine: vi.fn(() => new Promise(() => {})) }));
 vi.mock('../../pages/game/tower/engineLoader', () => ({ loadTowerEngine: vi.fn(() => new Promise(() => {})) }));
+vi.mock('../../pages/game/kesif/engineLoader', () => ({ loadKesifEngine: vi.fn(() => new Promise(() => {})) }));
 vi.mock('../../components/game/avatar/viewerLoader', () => ({ loadAvatarViewer: vi.fn() }));
 
 import { loadAvatarViewer } from '../../components/game/avatar/viewerLoader';
 import { loadRunnerEngine } from '../../pages/game/runner/engineLoader';
 import { loadTowerEngine } from '../../pages/game/tower/engineLoader';
+import { loadKesifEngine } from '../../pages/game/kesif/engineLoader';
 import EmbedApp from '../EmbedApp';
 import EmbedErrorBoundary from '../EmbedErrorBoundary';
 import { __resetBridgeForTests, receiveFromNative } from '../bridge';
@@ -60,8 +62,8 @@ describe('EmbedApp: mod yönlendirme', () => {
     it('game=kosu koşu oyununu açar (site kabuğu yok) ve ready bildirir', async () => {
         render(<EmbedApp config={config()} game="kosu" />);
         expect(await screen.findByTestId('runner-stage')).toBeInTheDocument();
-        expect(loadRunnerEngine).toHaveBeenCalled();
-        expect(posted.filter((m) => m.type === 'ready')).toEqual([{ type: 'ready', game: 'kosu' }]);
+        await waitFor(() => expect(loadRunnerEngine).toHaveBeenCalled());
+        await waitFor(() => expect(posted.filter((m) => m.type === 'ready')).toEqual([{ type: 'ready', game: 'kosu' }]));
         expect(document.documentElement.classList.contains('hs-embed-transparent')).toBe(false);
     });
 
@@ -71,6 +73,18 @@ describe('EmbedApp: mod yönlendirme', () => {
         await waitFor(() => expect(loadTowerEngine).toHaveBeenCalled());
         expect(loadRunnerEngine).not.toHaveBeenCalled();
         expect(posted.filter((m) => m.type === 'ready')).toEqual([{ type: 'ready', game: 'kule' }]);
+        fireEvent.click(screen.getByRole('button', { name: 'Vazgeç' }));
+        expect(lastOf('exit')).toEqual({ type: 'exit' });
+        expect(await screen.findByText('Oyundan çıkıldı.')).toBeInTheDocument();
+    });
+
+    it('game=kesif keşif oyununu açar (misafir macera) ve ready bildirir; yüklenirken Vazgeç çıkar', async () => {
+        render(<EmbedApp config={config()} game="kesif" />);
+        expect(await screen.findByTestId('kesif-stage')).toBeInTheDocument();
+        await waitFor(() => expect(loadKesifEngine).toHaveBeenCalled());
+        expect(loadRunnerEngine).not.toHaveBeenCalled();
+        expect(loadTowerEngine).not.toHaveBeenCalled();
+        expect(posted.filter((m) => m.type === 'ready')).toEqual([{ type: 'ready', game: 'kesif' }]);
         fireEvent.click(screen.getByRole('button', { name: 'Vazgeç' }));
         expect(lastOf('exit')).toEqual({ type: 'exit' });
         expect(await screen.findByText('Oyundan çıkıldı.')).toBeInTheDocument();
@@ -194,6 +208,28 @@ describe('embedApi', () => {
         expect(seen[2].headers.Authorization).toBeUndefined();
         expect(setItem).not.toHaveBeenCalled();
         expect(getItem).not.toHaveBeenCalled();
+    });
+
+    it('keşif istemcisi aynı jetonlu axios örneğine bağlı: uç, jeton, taze Idempotency-Key; localStorage yazılmaz', async () => {
+        const setItem = vi.spyOn(Storage.prototype, 'setItem');
+        const api = createEmbedApi(() => '12|abc');
+        expect(api.kesif).toBeTruthy();
+        const seen = [];
+        api.http.defaults.adapter = async (cfg) => {
+            seen.push(cfg);
+            return { data: { success: true, data: { claimed: true, key: 'zone:1:boss', granted: 150 } }, status: 200, statusText: 'OK', headers: {}, config: cfg };
+        };
+        await expect(api.kesif.claim('zone:1:boss', 'ABCD1234')).resolves.toMatchObject({ claimed: true, granted: 150 });
+        await api.kesif.claim('zone:1:seal');
+        await api.kesif.map('a b');
+        expect(seen[0].url).toBe('/game/kesif/claim');
+        expect(JSON.parse(seen[0].data)).toEqual({ key: 'zone:1:boss', seed: 'ABCD1234' });
+        expect(seen[0].headers.Authorization).toBe('Bearer 12|abc');
+        expect(seen[0].headers['Idempotency-Key']).toBeTruthy();
+        expect(seen[1].headers['Idempotency-Key']).not.toBe(seen[0].headers['Idempotency-Key']);
+        expect(seen[2].url).toBe('/game/kesif/maps/a%20b');
+        expect(seen[2].method).toBe('get');
+        expect(setItem).not.toHaveBeenCalled();
     });
 
     it('403 (dondurulmuş hesap) sayfayı yönlendirmez, hata olduğu gibi döner', async () => {

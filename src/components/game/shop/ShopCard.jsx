@@ -12,9 +12,9 @@ import { itemA11ySummary, itemState, lockText, shortLeft } from './shopUtils';
  * ve ürün çekmecesini açar. Nadirlik: kenar rengi + parıltı (epik/efsanevi),
  * efsanevide kayan altın kenar. Rozetler: kuşanıldı / sende / kilit / süreli.
  */
-const ShopCard = ({ item, equipped, balance = 0, onOpen, size = 'grid', avatar, gender, now, guest = false }) => {
+const ShopCard = ({ item, equipped, balance = 0, onOpen, size = 'grid', avatar, gender, now, guest = false, kesifLoadout = null }) => {
     const [ref, inView] = useInView();
-    const state = itemState(item, equipped, balance, now);
+    const state = itemState(item, equipped, balance, now, kesifLoadout);
     const r = rarityOf(item.rarity);
     const featured = size === 'featured';
     const legendary = item.rarity === 'legendary';

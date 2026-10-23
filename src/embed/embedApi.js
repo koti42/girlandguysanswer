@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { createKesifApi } from '../services/kesifApiFactory';
 
 /*
  * Mobil gömmenin API istemcisi.
@@ -58,5 +59,7 @@ export function createEmbedApi(getToken) {
                     .then(unwrap),
             abandon: (runId) => http.post(towerPath(runId, 'abandon'), {}, cfg(10000)).then(unwrap),
         },
+        // Keşif (kesifApi.js ile aynı sözleşme: services/kesifApiFactory, bu jetonlu axios örneğine bağlı)
+        kesif: createKesifApi(http),
     };
 }

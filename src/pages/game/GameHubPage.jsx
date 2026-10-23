@@ -11,6 +11,7 @@ import Countdown from '../../components/game/Countdown';
 import LeagueBadge from '../../components/game/LeagueBadge';
 import RunnerFeatureCard from '../../components/game/runner/RunnerFeatureCard';
 import TowerFeatureCard from '../../components/game/tower/TowerFeatureCard';
+import KesifFeatureCard from '../../components/game/kesif/KesifFeatureCard';
 import ShopHubCard from '../../components/game/shop/ShopHubCard';
 import AvatarHubCard from '../../components/game/avatar/AvatarHubCard';
 import UserAvatar from '../../components/UserAvatar';
@@ -86,7 +87,7 @@ const MiniLeaderboard = ({ entries, me }) => (
 );
 
 /*
- * Öne çıkan bölüm (misafir + üye): iki 3D oyun yan yana (dar ekranda alt
+ * Öne çıkan bölüm (misafir + üye): koşu ve kule yan yana, altlarında geniş Keşif kartı (dar ekranda alt
  * alta), altında "kazan -> harca" döngüsünü gösteren Mağaza ve Karakterim.
  * Karakter: user.detail.game_avatar (yoksa cinsiyete göre varsayılan).
  */
@@ -98,6 +99,8 @@ const FeaturedGames = ({ guest = false, user = null }) => {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <RunnerFeatureCard guest={guest} avatar={avatar} gender={gender} />
                 <TowerFeatureCard guest={guest} />
+                {/* Üçüncü 3D oyun: iki sütunu kaplayan geniş manzara kartı (dar ekranda zaten tek sütun). */}
+                <KesifFeatureCard guest={guest} className="lg:col-span-2" />
             </div>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <ShopHubCard member={!guest} />

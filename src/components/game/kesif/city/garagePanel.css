@@ -1,0 +1,356 @@
+/*
+ * KEŞİF — garaj paneli stilleri (vehicle_ui). Önek .kg-*; sürüş HUD stilleri vehicleHud.css'tedir (anahtar/düğme sınıfları .kvt-switch burada da kullanılır).
+ */
+/* ------------------------------------------------------------------ */
+/* Garaj paneli                                                         */
+/* ------------------------------------------------------------------ */
+.kg-wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 194, 77, 0.14);
+  border: 1px solid rgba(255, 194, 77, 0.5);
+  color: #ffe2a8;
+  font-size: 14px;
+}
+.kg-wallet b {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+.kg-tabs {
+  margin-top: 0;
+}
+.kg-pane {
+  display: block;
+}
+.kg-empty,
+.kg-hint {
+  margin: 12px 4px;
+  color: var(--kp-dim, #a9b4d6);
+  font-size: 14px;
+}
+.kg-rental {
+  margin: 6px 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(56, 232, 255, 0.12);
+  border: 1px solid rgba(56, 232, 255, 0.4);
+  font-weight: 700;
+}
+.kg-mine {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) 1fr;
+  gap: 14px;
+  align-items: start;
+}
+.kg-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kg-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 10px;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--kp-line, rgba(255, 255, 255, 0.15));
+  border-radius: 12px;
+  cursor: pointer;
+}
+.kg-card[aria-pressed='true'] {
+  background: rgba(56, 232, 255, 0.16);
+  border-color: var(--kc-cyan, #38e8ff);
+  box-shadow: inset 3px 0 0 var(--kc-cyan, #38e8ff);
+}
+.kg-card svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+.kg-card-name {
+  flex: 1;
+  font-weight: 700;
+}
+.kg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--kc-amber, #ffc24d);
+  color: #06101c;
+}
+.kg-detail {
+  min-width: 0;
+}
+.kg-prev {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto 6px;
+  background: radial-gradient(ellipse at 50% 80%, rgba(56, 232, 255, 0.12), transparent 70%);
+  border-radius: 14px;
+}
+.kg-body {
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 0.8;
+}
+.kg-glass {
+  fill: rgba(190, 230, 255, 0.55);
+}
+.kg-tyre {
+  fill: #11151f;
+}
+.kg-rim {
+  fill: none;
+  stroke: #cfd6e6;
+  stroke-width: 2;
+}
+.kg-wheel-spor .kg-rim {
+  stroke-dasharray: 2 2;
+}
+.kg-wheel-kalin .kg-tyre {
+  stroke: #3a4260;
+  stroke-width: 3;
+}
+.kg-glow {
+  filter: blur(2px);
+  opacity: 0.8;
+}
+.kg-stats {
+  list-style: none;
+  margin: 6px 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.kg-stats li {
+  display: grid;
+  grid-template-columns: 62px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12.5px;
+}
+.kg-stat-name {
+  color: var(--kp-dim, #a9b4d6);
+}
+.kg-stat-bar {
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.kg-stat-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--kc-cyan, #38e8ff), var(--kc-pink, #ff4fd0));
+}
+.kg-stats b {
+  font-variant-numeric: tabular-nums;
+  min-width: 52px;
+  text-align: right;
+}
+.kg-actions {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+.kg-actions .kp-btn,
+.kg-shop-foot .kp-btn {
+  min-height: 44px;
+  flex: 1;
+}
+.kg-paint {
+  margin-top: 6px;
+}
+.kg-paint summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.kg-sw-group {
+  margin: 6px 0;
+}
+.kg-sw-title {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--kp-dim, #a9b4d6);
+}
+.kg-sw-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.kg-sw {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 12px;
+  background: var(--kg-c, rgba(255, 255, 255, 0.12));
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.75);
+}
+.kg-sw .kg-glyph {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 1;
+  paint-order: stroke;
+}
+.kg-sw[aria-pressed='true'] {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px var(--kc-cyan, #38e8ff);
+}
+.kg-sw-tick {
+  position: absolute;
+  right: -3px;
+  top: -3px;
+  width: 16px;
+  height: 16px;
+  padding: 1px;
+  border-radius: 50%;
+  background: #fff;
+  color: #06101c;
+}
+.kg-sw:focus-visible,
+.kg-chip:focus-visible,
+.kg-card:focus-visible {
+  outline: 3px solid var(--kc-cyan, #38e8ff);
+  outline-offset: 2px;
+}
+.kg-chip {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--kp-line, rgba(255, 255, 255, 0.2));
+  cursor: pointer;
+}
+.kg-chip[aria-pressed='true'] {
+  background: rgba(56, 232, 255, 0.24);
+  border-color: var(--kc-cyan, #38e8ff);
+}
+.kg-under .kvt-switch {
+  color: inherit;
+}
+.kg-shop {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.kg-shop-item {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--kp-line, rgba(255, 255, 255, 0.15));
+}
+.kg-shop-item[data-owned='1'] {
+  opacity: 0.7;
+}
+.kg-shop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.kg-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #ffe2a8;
+  font-weight: 800;
+  font-size: 13px;
+}
+.kg-price svg {
+  width: 14px;
+  height: 14px;
+}
+.kg-desc {
+  margin: 2px 0 4px;
+  font-size: 12.5px;
+  color: var(--kp-dim, #a9b4d6);
+}
+.kg-shop-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+.kg-shop-foot .kp-btn {
+  flex: none;
+  min-width: 112px;
+}
+.kg-lock,
+.kg-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #ffb4c2;
+}
+.kg-note {
+  color: var(--kp-dim, #a9b4d6);
+}
+@media (max-width: 640px) {
+  .kg-mine {
+    grid-template-columns: 1fr;
+  }
+  .kg-list {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .kg-card {
+    min-width: 150px;
+  }
+}
+/* yatay telefon: liste solda, ayrıntı sağda; ön izleme küçük, özellikler iki sütun */
+@media (max-height: 460px) and (min-width: 641px) {
+  .kg-mine {
+    grid-template-columns: 168px 1fr;
+    gap: 10px;
+  }
+  .kg-prev {
+    max-width: 200px;
+    margin-bottom: 2px;
+  }
+  .kg-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 16px;
+  }
+  .kg-shop {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .kg-actions {
+    margin: 4px 0;
+  }
+}

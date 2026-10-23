@@ -1,0 +1,905 @@
+/*
+ * KEŞİF — sürüş arayüzü (vehicle_ui): hız göstergesi, mini harita, radyo çipi, kiralık sayacı, dokunmatik sürüş denetimleri ve garaj paneli.
+ * Sınıf önekleri: .kv-* (HUD parçaları), .kvt-* (dokunmatik denetimler), .kg-* (garaj paneli). Renk tek başına bilgi taşımaz (şekil + metin eşlik eder).
+ * Hareket azaltma: [data-calm='1'] ve @media (prefers-reduced-motion) geçişleri kapatır. Hedefler ≥ 44 px.
+ */
+.kv-root {
+  --kv-cyan: var(--kc-cyan, #38e8ff);
+  --kv-pink: var(--kc-pink, #ff4fd0);
+  --kv-amber: var(--kc-amber, #ffc24d);
+  --kv-ink: #06101c;
+  --kv-glass: rgba(8, 14, 30, 0.72);
+  --kv-line: rgba(120, 190, 255, 0.28);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.kv-root > * {
+  pointer-events: none;
+}
+.kv-sr {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hız göstergesi                                                       */
+/* ------------------------------------------------------------------ */
+.kv-gauge-slot {
+  position: absolute;
+  right: var(--kx-safe-r, 10px);
+  bottom: calc(var(--kx-safe-b, 8px) + 6px);
+}
+.kv-gauge {
+  position: relative;
+  width: 176px;
+  height: 176px;
+  color: #fff;
+  font-family: inherit;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.5));
+  --kv-arc: var(--kv-cyan);
+}
+.kv-gauge[data-boost='1'] {
+  --kv-arc: var(--kv-pink);
+}
+.kv-gauge-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  background: radial-gradient(circle at 50% 50%, rgba(6, 12, 28, 0.82) 0 56%, rgba(6, 12, 28, 0.35) 70%, transparent 71%);
+  border-radius: 50%;
+}
+.kv-arc-track,
+.kv-arc-red,
+.kv-arc-value {
+  fill: none;
+  stroke-linecap: round;
+}
+.kv-arc-track {
+  stroke: #26365f;
+  stroke-width: 10;
+}
+.kv-arc-red {
+  stroke: #ff5577;
+  stroke-width: 10;
+  stroke-dasharray: 3 4; /* taralı: renk tek başına değil */
+  stroke-linecap: butt;
+  opacity: 0.85;
+}
+.kv-arc-value {
+  stroke: var(--kv-arc);
+  stroke-width: 10;
+  transition: stroke-dasharray 90ms linear;
+  filter: drop-shadow(0 0 5px var(--kv-arc));
+}
+.kv-gauge[data-calm='1'] .kv-arc-value {
+  transition: none;
+  filter: none;
+}
+.kv-tick {
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 2;
+}
+.kv-gauge-core {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 23%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.kv-speed {
+  font-size: 46px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+  text-shadow: 0 0 12px rgba(56, 232, 255, 0.4);
+}
+.kv-unit {
+  margin-top: 2px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: #a9bde8;
+}
+.kv-gear {
+  position: absolute;
+  left: 50%;
+  bottom: 22.5%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--kv-line);
+}
+.kv-gear small {
+  font-size: 9px;
+  color: #a9bde8;
+}
+.kv-gear b {
+  font-size: 17px;
+  min-width: 12px;
+  text-align: center;
+}
+.kv-gear[data-reverse='1'] b {
+  color: var(--kv-amber);
+}
+.kv-gear[data-reverse='1']::before {
+  content: '▼';
+  font-size: 8px;
+  color: var(--kv-amber);
+}
+.kv-nitro {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  width: 118px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: stretch;
+}
+.kv-nitro-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #cfe0ff;
+}
+.kv-nitro-label i {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+.kv-nitro[data-on='1'] .kv-nitro-label {
+  color: var(--kv-pink);
+}
+.kv-nitro-segs {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+  height: 8px;
+}
+.kv-nitro-segs u {
+  display: block;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.14);
+  text-decoration: none;
+  transform: skewX(-18deg);
+}
+.kv-nitro-segs u[data-lit='1'] {
+  background: var(--kv-cyan);
+  box-shadow: 0 0 5px rgba(56, 232, 255, 0.7);
+}
+.kv-nitro[data-on='1'] .kv-nitro-segs u[data-lit='1'] {
+  background: var(--kv-pink);
+  box-shadow: 0 0 6px rgba(255, 79, 208, 0.8);
+}
+.kv-flags {
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+.kv-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  background: rgba(255, 194, 77, 0.92);
+  color: var(--kv-ink);
+}
+.kv-flag svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.kv-flag[data-flag='slow'] {
+  background: #dfe8ff;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mini harita                                                          */
+/* ------------------------------------------------------------------ */
+.kv-map-slot {
+  position: absolute;
+  top: var(--kx-safe-t, 8px);
+  right: var(--kx-safe-r, 10px);
+}
+.kv-map {
+  display: block;
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--kv-glass);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--kv-line);
+  overflow: hidden;
+  pointer-events: auto;
+  cursor: pointer;
+}
+div.kv-map {
+  cursor: default;
+}
+.kv-map:focus-visible {
+  outline: 3px solid var(--kv-cyan);
+  outline-offset: 2px;
+}
+.kv-map-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Radyo çipi                                                           */
+/* ------------------------------------------------------------------ */
+.kv-radio-slot {
+  position: absolute;
+  left: var(--kx-safe-l, 10px);
+  bottom: calc(var(--kx-safe-b, 8px) + 74px);
+}
+.kv-radio {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 270px;
+  border-radius: 14px;
+  background: var(--kv-glass);
+  border: 1px solid var(--kv-line);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  pointer-events: auto;
+}
+.kv-radio button {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+.kv-radio-arrow {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 16px;
+  color: var(--kv-cyan);
+}
+.kv-radio-arrow:active,
+.kv-radio-main:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+.kv-radio-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 6px;
+  min-width: 0;
+  text-align: left;
+}
+.kv-radio-ico {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--kv-cyan);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.kv-radio[data-silent='1'] .kv-radio-ico {
+  stroke: #9aa7c7;
+}
+.kv-radio-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+.kv-radio-txt b {
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kv-radio-txt small {
+  font-size: 10.5px;
+  color: #a9bde8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+.kv-radio:focus-within {
+  outline: 3px solid var(--kv-cyan);
+}
+
+/* ------------------------------------------------------------------ */
+/* Kiralık sayacı, tuş ipuçları                                         */
+/* ------------------------------------------------------------------ */
+.kv-rent {
+  position: absolute;
+  right: var(--kx-safe-r, 10px);
+  top: calc(var(--kx-safe-t, 8px) + 150px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--kv-glass);
+  border: 1px solid var(--kv-line);
+  font-size: 12px;
+  color: #fff;
+}
+.kv-rent svg {
+  width: 14px;
+  height: 14px;
+  color: var(--kv-cyan);
+}
+.kv-rent b {
+  font-variant-numeric: tabular-nums;
+}
+.kv-rent[data-soon='1'] {
+  background: var(--kv-amber);
+  color: var(--kv-ink);
+  border-color: var(--kv-amber);
+  font-weight: 800;
+}
+.kv-rent[data-soon='1'] svg {
+  color: var(--kv-ink);
+}
+.kv-keys {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--kx-safe-b, 8px) + 92px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 12px;
+  max-width: min(720px, 92vw);
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: var(--kv-glass);
+  border: 1px solid var(--kv-line);
+  font-size: 12px;
+  color: #cfe0ff;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dokunmatik sürüş denetimleri                                         */
+/* ------------------------------------------------------------------ */
+.kvt {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --kvt-pad: 10px;
+}
+.kvt > * {
+  pointer-events: auto;
+}
+.kvt button,
+.kvt [role='slider'] {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.kvt-top {
+  position: absolute;
+  top: var(--kx-safe-t, 8px);
+  right: var(--kx-safe-r, 10px);
+  display: flex;
+  gap: 5px;
+  pointer-events: auto;
+}
+.kvt[data-left='1'] .kvt-top {
+  right: auto;
+  left: var(--kx-safe-l, 10px);
+  flex-direction: row-reverse;
+}
+.kvt-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0;
+  color: #fff;
+  background: var(--kv-glass, rgba(8, 14, 30, 0.72));
+  border: 1.5px solid rgba(160, 210, 255, 0.4);
+  border-radius: 50%;
+  opacity: var(--kvt-op, 0.85);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: transform 80ms ease, background-color 100ms ease;
+  cursor: pointer;
+}
+.kvt-btn svg {
+  width: 38%;
+  height: 38%;
+  flex: none;
+}
+.kvt-btn-label {
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+.kvt-small {
+  border-radius: 14px;
+}
+.kvt-small svg {
+  width: 40%;
+  height: 40%;
+}
+.kvt-btn[data-down='1'],
+.kvt-btn:active {
+  transform: scale(0.92);
+  background: rgba(56, 232, 255, 0.28);
+  border-color: var(--kv-cyan);
+}
+.kvt-btn[aria-expanded='true'] {
+  border-color: var(--kv-cyan);
+  color: var(--kv-cyan);
+}
+.kvt-btn:focus-visible,
+.kvt-pedal:focus-visible,
+.kvt-steer:focus-visible {
+  outline: 3px solid var(--kv-cyan);
+  outline-offset: 2px;
+}
+.kvt-nitro-btn {
+  border-color: rgba(255, 79, 208, 0.7);
+  color: #ffd2f3;
+}
+.kvt-nitro-btn[data-down='1'] {
+  background: rgba(255, 79, 208, 0.35);
+  border-color: var(--kv-pink);
+}
+.kvt-hand {
+  border-color: rgba(255, 194, 77, 0.7);
+  color: #ffe2a8;
+}
+.kvt-hand[data-down='1'] {
+  background: rgba(255, 194, 77, 0.3);
+  border-color: var(--kv-amber);
+}
+
+/* direksiyon */
+.kvt-steer {
+  position: absolute;
+  left: calc(var(--kx-safe-l, 10px) + var(--kvt-pad));
+  bottom: calc(var(--kx-safe-b, 8px) + var(--kvt-pad));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(8, 14, 30, 0.35), rgba(8, 14, 30, 0.1) 70%);
+  opacity: var(--kvt-op, 0.85);
+}
+.kvt[data-left='1'] .kvt-steer {
+  left: auto;
+  right: calc(var(--kx-safe-r, 10px) + var(--kvt-pad));
+}
+.kvt[data-steer='slider'] .kvt-steer {
+  border-radius: 999px;
+  background: var(--kv-glass, rgba(8, 14, 30, 0.72));
+  border: 1.5px solid rgba(160, 210, 255, 0.4);
+}
+.kvt-wheel {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  will-change: transform;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+.kvt-wheel-rim {
+  fill: rgba(8, 14, 30, 0.45);
+  stroke: #cfe0ff;
+  stroke-width: 6;
+}
+.kvt-wheel-inner {
+  fill: none;
+  stroke: rgba(160, 210, 255, 0.35);
+  stroke-width: 2;
+}
+.kvt-wheel-spoke {
+  fill: none;
+  stroke: #9fb6e6;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.kvt-wheel-hub {
+  fill: #1c2a4d;
+  stroke: var(--kv-cyan);
+  stroke-width: 3;
+}
+.kvt-wheel-mark {
+  fill: var(--kv-pink);
+  stroke: var(--kv-ink);
+  stroke-width: 1.5;
+}
+.kvt-rail {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 3px;
+  background: rgba(160, 210, 255, 0.35);
+  pointer-events: none;
+}
+.kvt-rail-mid {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  margin-left: -1.5px;
+  background: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+.kvt-thumb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: rgba(56, 232, 255, 0.22);
+  border: 2px solid var(--kv-cyan);
+  pointer-events: none;
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kvt-thumb i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--kv-pink);
+}
+.kvt-steer-cap {
+  position: absolute;
+  top: 50%;
+  margin-top: -9px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+.kvt-cap-l {
+  left: 10px;
+}
+.kvt-cap-r {
+  right: 10px;
+}
+
+/* sağ küme */
+.kvt-right {
+  position: absolute;
+  right: calc(var(--kx-safe-r, 10px) + 8px);
+  bottom: calc(var(--kx-safe-b, 8px) + var(--kvt-pad));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--kvt-gap, 8px);
+  pointer-events: none;
+}
+.kvt-right > * {
+  pointer-events: auto;
+}
+.kvt[data-left='1'] .kvt-right {
+  right: auto;
+  left: calc(var(--kx-safe-l, 10px) + 8px);
+  align-items: flex-start;
+}
+.kvt-act {
+  display: flex;
+  gap: var(--kvt-gap, 8px);
+  align-items: flex-end;
+}
+.kvt[data-left='1'] .kvt-act,
+.kvt[data-left='1'] .kvt-pedals {
+  flex-direction: row-reverse;
+}
+.kvt-pedals {
+  display: flex;
+  gap: var(--kvt-gap, 8px);
+  align-items: flex-end;
+}
+.kvt-pedal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0 8px;
+  overflow: hidden;
+  color: #fff;
+  border-radius: 18px;
+  background: rgba(8, 14, 30, 0.6);
+  border: 1.5px solid rgba(160, 210, 255, 0.45);
+  opacity: var(--kvt-op, 0.85);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+.kvt-pedal-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  transform-origin: 50% 100%;
+  transform: scaleY(0);
+  background: linear-gradient(180deg, rgba(56, 232, 255, 0.65), rgba(56, 232, 255, 0.25));
+  pointer-events: none;
+}
+.kvt-brake .kvt-pedal-fill {
+  background: linear-gradient(180deg, rgba(255, 90, 120, 0.7), rgba(255, 90, 120, 0.25));
+}
+.kvt-pedal-ribs {
+  position: absolute;
+  inset: 8px 12px 30px;
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 3px, transparent 3px 11px);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.kvt-pedal-label {
+  position: relative;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+.kvt-gas {
+  border-color: rgba(56, 232, 255, 0.7);
+}
+.kvt-brake {
+  border-color: rgba(255, 110, 135, 0.7);
+}
+
+/* ayar kutusu */
+.kvt-opts {
+  position: absolute;
+  top: calc(var(--kx-safe-t, 8px) + 56px);
+  right: var(--kx-safe-r, 10px);
+  width: min(344px, 90vw);
+  max-height: calc(100% - var(--kx-safe-t, 8px) - var(--kx-safe-b, 8px) - 70px);
+  overflow-y: auto;
+  padding: 10px 12px 12px;
+  border-radius: 16px;
+  background: rgba(8, 14, 30, 0.94);
+  border: 1px solid var(--kv-line, rgba(120, 190, 255, 0.3));
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  z-index: 5;
+}
+.kvt[data-left='1'] .kvt-opts {
+  right: auto;
+  left: var(--kx-safe-l, 10px);
+}
+.kvt-opt-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 10px;
+  padding: 3px 0;
+}
+.kvt-opt-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+.kvt-seg {
+  display: inline-flex;
+  border: 1px solid var(--kv-line, rgba(120, 190, 255, 0.3));
+  border-radius: 10px;
+  overflow: hidden;
+}
+.kvt-seg-btn,
+.kvt-switch {
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 0;
+  cursor: pointer;
+}
+.kvt-seg-btn[aria-pressed='true'] {
+  background: rgba(56, 232, 255, 0.3);
+  box-shadow: inset 0 -3px 0 var(--kv-cyan);
+}
+.kvt-switch {
+  border: 1px solid var(--kv-line, rgba(120, 190, 255, 0.3));
+  border-radius: 10px;
+  min-width: 96px;
+}
+.kvt-switch[aria-checked='true'] {
+  background: rgba(56, 232, 255, 0.3);
+}
+.kvt-switch[aria-checked='true'] span::before {
+  content: '✓ ';
+}
+.kvt-opt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.kvt-x {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 17px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--kv-line, rgba(120, 190, 255, 0.3));
+  border-radius: 12px;
+  cursor: pointer;
+}
+.kvt-opts :focus-visible {
+  outline: 3px solid var(--kv-cyan);
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dokunmatik yerleşim (HUD parçaları)                                  */
+/* ------------------------------------------------------------------ */
+.kv-root[data-touch='1'] .kv-map-slot {
+  top: calc(var(--kx-safe-t, 8px) + 52px);
+}
+.kv-root[data-touch='1'][data-left='1'] .kv-map-slot {
+  right: auto;
+  left: var(--kx-safe-l, 10px);
+}
+.kv-root[data-touch='1'] .kv-gauge-slot {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--kx-safe-b, 8px) + 2px);
+}
+.kv-root[data-touch='1'] .kv-gauge {
+  width: 132px;
+  height: 132px;
+}
+.kv-root[data-touch='1'] .kv-speed {
+  font-size: 33px;
+}
+.kv-root[data-touch='1'] .kv-unit {
+  font-size: 10px;
+}
+.kv-root[data-touch='1'] .kv-gear b {
+  font-size: 15px;
+}
+.kv-root[data-touch='1'] .kv-nitro {
+  width: 92px;
+}
+.kv-root[data-touch='1'] .kv-nitro-label {
+  font-size: 8.5px;
+}
+.kv-root[data-touch='1'] .kv-radio-slot {
+  left: var(--kx-safe-l, 10px);
+  bottom: calc(var(--kx-safe-b, 8px) + var(--kvt-steer-h, 150px) + 22px);
+}
+.kv-root[data-touch='1'][data-left='1'] .kv-radio-slot {
+  left: auto;
+  right: var(--kx-safe-r, 10px);
+}
+.kv-root[data-touch='1'] .kv-radio {
+  max-width: 236px;
+}
+.kv-radio[data-compact='1'] .kv-radio-txt b {
+  font-size: 12.5px;
+}
+.kv-root[data-touch='1'] .kv-rent {
+  top: calc(var(--kx-safe-t, 8px) + 54px + 118px);
+}
+.kv-root[data-touch='1'][data-left='1'] .kv-rent {
+  right: auto;
+  left: var(--kx-safe-l, 10px);
+}
+
+@media (orientation: portrait) {
+  .kvt-top {
+    gap: 3px;
+  }
+  .kv-root[data-touch='1'] .kv-gauge-slot {
+    left: calc(var(--kx-safe-l, 10px) + 8px);
+    transform: none;
+    bottom: calc(var(--kx-safe-b, 8px) + 170px);
+  }
+  .kv-root[data-touch='1'][data-left='1'] .kv-gauge-slot {
+    left: auto;
+    right: calc(var(--kx-safe-r, 10px) + 8px);
+  }
+  .kv-root[data-touch='1'] .kv-radio-slot {
+    left: auto;
+    right: var(--kx-safe-r, 10px);
+    top: calc(var(--kx-safe-t, 8px) + 54px + 120px);
+    bottom: auto;
+  }
+  .kv-root[data-touch='1'][data-left='1'] .kv-radio-slot {
+    right: auto;
+    left: var(--kx-safe-l, 10px);
+  }
+  .kv-root[data-touch='1'] .kv-rent {
+    top: calc(var(--kx-safe-t, 8px) + 54px + 168px);
+  }
+}
+/* qa_gpu: kısa yatay ekranda (≤ 380 px; ör. 568×320, tarayıcı çubuklu telefon) mini harita nitro/el freni sütunu ile çakışıyordu: eylem sırasının soluna alınır */
+@media (max-height: 380px) and (orientation: landscape) {
+  .kv-root[data-touch='1'] .kv-map-slot {
+    right: calc(var(--kx-safe-r, 10px) + 144px);
+  }
+  .kv-root[data-touch='1'][data-left='1'] .kv-map-slot {
+    right: auto;
+    left: calc(var(--kx-safe-l, 10px) + 144px);
+  }
+}
+@media (max-height: 420px) and (orientation: landscape) {
+  .kvt-btn-label {
+    display: none;
+  }
+}
+
+/* sürüşte yürüme arayüzünü sadeleştir */
+.kx-root[data-driving='1'] .kx-cross,
+.kx-root[data-driving='1'][data-touch='1'] .kx-bottom,
+.kx-root[data-driving='1'][data-touch='1'] .kx-tcwrap,
+.kx-root[data-driving='1'][data-touch='1'] .kx-fx-wrap,
+.kx-root[data-driving='1'][data-touch='1'] .kx-hint {
+  display: none !important;
+}
+.kx-root[data-driving='1'][data-touch='1'] .kx-tl-col {
+  max-height: 96px;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-arc-value,
+  .kvt-btn {
+    transition: none;
+  }
+}

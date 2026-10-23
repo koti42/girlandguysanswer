@@ -20,6 +20,35 @@
 # ile /embed adresinde kendiliğinden sunar. "/embed -> /embed.html 200" kuralı
 # Cloudflare Pages'ta sonsuz 308 döngüsü yaratıyordu; bilerek yok.
 
+# Eksik statik dosya = gerçek 404 (SPA fallback'inden ÖNCE gelmeli).
+# Sorun: "/*" -> index.html 200 kuralı, silinmiş/eski hash'li bir parçayı
+# (/assets/index-abc123.js; deploy sonrası eski sekme, eski WebView önbelleği)
+# 200 + text/html ile döndürür; tarayıcı bunu "module MIME type" hatası sayar ve
+# mobilde "Oyun yüklenemedi"ye kadar giden kafa karıştırıcı bir hataya dönüşür.
+# Netlify kuralları yukarıdan aşağı ilk eşleşen kazanır ve force=false iken dosya
+# VARSA kural hiç çalışmaz: var olan /assets/* dosyaları normal servis edilir,
+# yalnızca olmayanlar 404 alır. SPA yolları (/oyun/kesif, /profile/x ...), /embed,
+# /embed.html, robots/sitemap/ads bu klasörlerin dışında olduğundan etkilenmez.
+# NOT 1: Netlify'da public/_redirects (dist'e kopyalanır) netlify.toml'dan ÖNCE
+#        işlenir; oradaki "/*" fallback'i bu kuralı gölgeler. Netlify'a taşınırsan
+#        _redirects'teki "/*" satırını sil (buradaki fallback yeter).
+# NOT 2: Canlı site Cloudflare Pages'te. Pages _redirects yalnızca 301/302/303/307/
+#        308/200 destekler (404 yok) ve 404.html yoksa SPA modunda eksik her yolu
+#        index.html 200 yapar; yani bu kural orada etkisizdir. Orada eski parça
+#        hatasını istemci tarafı kurtarır (src/components/game/chunkReload.js).
+# NOT 3: "/embed -> /embed.html" kuralı EKLEME (Cloudflare'da sonsuz 308 döngüsü;
+#        bkz. public/_redirects). Barındırıcı dist/embed.html'i kendiliğinden sunar.
+# Kurallar test altında: src/test/spaFallbackRules.test.js
+[[redirects]]
+  from = "/assets/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/images/*"
+  to = "/404.html"
+  status = 404
+
 # Genel SPA fallback
 [[redirects]]
   from = "/*"

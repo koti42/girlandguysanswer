@@ -1,0 +1,392 @@
+/* KEŞİF arayüz: büyü HUD'u — mana çubuğu, büyü bekleme, durum etkileri, büyülü eşya parıltısı. (giriş: kesif.css) */
+
+/* ------------------------------------------------------------------ */
+/* Mana çubuğu                                                         */
+/* ------------------------------------------------------------------ */
+.kx-mana {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+}
+.kx-mana-track {
+  position: relative;
+  flex: 1;
+  height: 9px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(8, 12, 28, 0.78);
+  border: 1.5px solid rgba(124, 196, 255, 0.45);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.kx-mana-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #8fd9ff 0%, #3f8cff 55%, #2a5fd8 100%);
+  box-shadow: 0 0 10px rgba(80, 160, 255, 0.55);
+  transition: width 140ms ease-out;
+}
+.kx-mana-mark {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  margin-left: -1px;
+  background: rgba(255, 255, 255, 0.85);
+}
+.kx-mana-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  font: 800 12px/1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+  color: #cfe9ff;
+}
+.kx-mana-text i {
+  font-style: normal;
+  font-weight: 600;
+  opacity: 0.65;
+  margin-left: -2px;
+}
+.kx-mana-text em {
+  font-style: normal;
+  font-weight: 700;
+  color: #9fd0ff;
+  margin-left: 4px;
+}
+.kx-mana-text b {
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 107, 107, 0.2);
+  border: 1px solid rgba(255, 107, 107, 0.65);
+  color: #ffb3b3;
+  font-size: 11px;
+}
+.kx-mana-ico {
+  width: 12px;
+  height: 12px;
+  fill: #7cc4ff;
+  stroke: rgba(8, 24, 60, 0.9);
+  stroke-width: 1.4;
+}
+.kx-mana[data-short='1'] .kx-mana-track {
+  border-color: rgba(255, 120, 120, 0.85);
+}
+.kx-mana[data-short='1'] .kx-mana-fill {
+  background: linear-gradient(180deg, #8f9bff, #4a58d8);
+}
+.kx-mana[data-short='1']:not([data-calm='1']) .kx-mana-track {
+  animation: kx-mana-warn 1.2s ease-in-out infinite;
+}
+@keyframes kx-mana-warn {
+  0%, 100% { box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6); }
+  50% { box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 9px rgba(255, 107, 107, 0.7); }
+}
+
+/* ------------------------------------------------------------------ */
+/* Büyü bekleme                                                        */
+/* ------------------------------------------------------------------ */
+.kx-spell {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 11px 2px 3px;
+  border-radius: 999px;
+  background: var(--kx-glass-strong);
+  border: 1px solid color-mix(in srgb, var(--kx-spell) 55%, transparent);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  animation: kx-fade-up 200ms ease-out both;
+}
+.kx-spell-ring {
+  position: relative;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: block;
+  background:
+    conic-gradient(rgba(10, 12, 24, 0.82) var(--kx-spell-left, 0deg), color-mix(in srgb, var(--kx-spell) 85%, #fff 0%) 0deg);
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.55);
+}
+.kx-spell-core {
+  position: absolute;
+  inset: 4.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, var(--kx-spell) 55%, rgba(0, 0, 0, 0.55));
+  opacity: 0.95;
+}
+.kx-spell[data-state='ready'] {
+  border-color: var(--kx-spell);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--kx-spell) 55%, transparent), 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+.kx-spell[data-state='mana'] .kx-spell-ring,
+.kx-spell[data-state='cd'] .kx-spell-ring {
+  filter: saturate(0.55) brightness(0.8);
+}
+.kx-spell[data-state='mana'] .kx-spell-text small {
+  color: #ffb3b3;
+}
+.kx-spell-text {
+  display: grid;
+  line-height: 1.15;
+}
+.kx-spell-text b {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.kx-spell-text small {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--kx-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Durum etkileri                                                      */
+/* ------------------------------------------------------------------ */
+.kx-fx-wrap {
+  position: absolute;
+  top: calc(var(--kx-safe-t) + 124px);
+  right: var(--kx-safe-r);
+  z-index: 2;
+}
+.kx-root[data-touch='1'] .kx-fx-wrap {
+  /* dokunmatik: sağ üstte düğme sırası var; etkiler solda, görev çipinin altında yatay dizilir */
+  top: calc(var(--kx-safe-t) + 90px);
+  right: auto;
+  left: calc(var(--kx-safe-l) + 92px);
+  max-width: min(60vw, 22rem);
+}
+.kx-root[data-touch='1'] .kx-fx {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px;
+}
+.kx-root[data-touch='1'] .kx-fx-item {
+  flex-direction: row;
+  padding: 2px 8px 2px 3px;
+}
+.kx-fx {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.kx-fx-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 4px 3px 9px;
+  border-radius: 999px;
+  background: var(--kx-glass);
+  border: 1px solid color-mix(in srgb, var(--kx-fx) 45%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  flex-direction: row-reverse;
+}
+.kx-fx-ring {
+  position: relative;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: conic-gradient(var(--kx-fx) var(--kx-fx-deg, 360deg), rgba(255, 255, 255, 0.14) 0deg);
+}
+.kx-fx-ring::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: rgba(10, 13, 24, 0.92);
+}
+.kx-fx-ico {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  fill: var(--kx-fx);
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 0.8;
+}
+.kx-fx-lvl {
+  position: absolute;
+  right: -2px;
+  top: -3px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--kx-fx);
+  color: #10131f;
+  font: 900 10px/1 system-ui, sans-serif;
+}
+.kx-fx-time {
+  font: 800 12px/1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px #000;
+  min-width: 2.4em;
+  text-align: right;
+}
+.kx-fx-item[data-ending='1'] {
+  animation: kx-fx-ending 1.6s ease-in-out infinite;
+}
+@keyframes kx-fx-ending {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Büyülü eşya: mor parıltı (simge siluetine maskeli) + ad rengi        */
+/* ------------------------------------------------------------------ */
+.kx-slot-glint {
+  position: absolute;
+  width: 84%;
+  height: 84%;
+  pointer-events: none;
+  -webkit-mask: var(--kx-mask) center / contain no-repeat;
+  mask: var(--kx-mask) center / contain no-repeat;
+  background: linear-gradient(115deg, rgba(150, 90, 255, 0.28) 20%, rgba(214, 170, 255, 0.95) 46%, rgba(150, 90, 255, 0.28) 68%);
+  background-size: 260% 100%;
+  mix-blend-mode: screen;
+  animation: kx-glint 2.8s linear infinite;
+}
+@keyframes kx-glint {
+  0% { background-position: 130% 0; }
+  100% { background-position: -130% 0; }
+}
+.kx-slot[data-ench='1'] {
+  border-color: rgba(176, 118, 255, 0.7);
+  box-shadow: 0 0 9px rgba(160, 100, 255, 0.35) inset;
+}
+.kx-slot[data-ench='1'][data-selected='1'] {
+  border-color: var(--kx-accent);
+  box-shadow: 0 0 0 1px var(--kx-accent) inset, 0 0 14px rgba(180, 120, 255, 0.55);
+}
+.kx-held[data-ench='1'] {
+  color: #dcbcff;
+  text-shadow: 0 0 8px rgba(176, 118, 255, 0.7), 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-slot-glint {
+    animation: none;
+    background-position: 50% 0;
+  }
+  .kx-mana-fill {
+    transition: none;
+  }
+  .kx-mana[data-short='1'] .kx-mana-track,
+  .kx-fx-item[data-ending='1'] {
+    animation: none;
+  }
+}
+.kx-root[data-a11y='1'] .kx-slot-glint,
+.kx-root[data-a11y='1'] .kx-fx-item,
+.kx-root[data-a11y='1'] .kx-mana-track {
+  animation: none;
+}
+.kx-root[data-a11y='1'] .kx-slot-glint {
+  background-position: 50% 0;
+}
+.kx-root[data-a11y='1'] .kx-fx-item {
+  background: var(--kx-glass-strong);
+  border-width: 2px;
+}
+
+@media (max-height: 430px), (max-width: 640px) {
+  /* alçak/dar ekran: büyü göstergesi yalnız halka (ad tutma bildiriminde, ayrıntı aria-label'da) */
+  .kx-spell {
+    padding: 2px;
+  }
+  .kx-spell-text {
+    display: none;
+  }
+  .kx-fx-ring {
+    width: 26px;
+    height: 26px;
+  }
+  .kx-fx-ico {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* alçak dokunmatik ekran (≈844×390): mana satırı sıkışık; ipucu satırı biraz yukarı alınır, mana metni kısalır */
+@media (max-height: 430px) {
+  .kx-mana-text i,
+  .kx-mana-text em {
+    display: none;
+  }
+  .kx-mana-track {
+    height: 7px;
+  }
+  /* etkileşim/görev ipucu: tek satır (taşan metin … ile kısalır; tamamı görev izleyicide), nişangâhın hemen altında ve
+     başparmak yayının solunda kalır (sol elli modda yayın sağında); kalp/mana satırına ve düğmelere binmez */
+  .kx-root[data-touch='1'] .kx-mid {
+    top: calc(50% + 34px);
+    left: calc((100% - 17rem) / 2);
+    max-width: min(28rem, calc(100% - 19rem));
+  }
+  .kx-root[data-touch='1'][data-left='1'] .kx-mid {
+    left: calc((100% + 17rem) / 2);
+  }
+  .kx-root[data-touch='1'] .kx-hint {
+    padding: 4px 12px;
+    font-size: 13px;
+    max-width: 100%;
+  }
+  .kx-root[data-touch='1'] .kx-hint > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* sağdaki dokunmatik düğme yayı (kullan / koşu kilidi / etkileş) mana çubuğunu ve sayısını örtmesin:
+     çubuk, alt bloğun başparmak yayından uzak yarısında kalır (sol elli modda ayna) */
+  .kx-root[data-touch='1'] .kx-mana {
+    width: min(100%, 15.5rem);
+    align-self: flex-start;
+  }
+  .kx-root[data-touch='1'][data-left='1'] .kx-mana {
+    align-self: flex-end;
+  }
+}
+
+/* dikey dokunmatik: düğme yayı mana satırının hizasına kadar iner; çubuk yayın karşı yarısında kalır */
+@media (orientation: portrait) {
+  .kx-root[data-touch='1'] .kx-mana {
+    width: min(100%, 15.5rem);
+    align-self: flex-start;
+  }
+  .kx-root[data-touch='1'][data-left='1'] .kx-mana {
+    align-self: flex-end;
+  }
+}
+
+/* çok alçak dokunmatik ekran (≤ 380 px) + mana satırı görünüyor: ipucu satırı nişangâhın ÜSTÜNE alınır (altı mana/kalp
+   satırına dolar); :has desteği olmayan eski WebView'da temel kural kalır */
+@media (max-height: 380px) {
+  .kx-root[data-touch='1']:has(.kx-mana) .kx-mid {
+    top: calc(50% - 56px);
+    left: 50%;
+    max-width: min(15rem, calc(100% - 22rem));
+  }
+}

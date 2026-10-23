@@ -9,12 +9,14 @@
 import { FRAMES } from '../../../game/shop/designs/frames';
 import { MINIS } from '../../../game/shop/designs/minis';
 import { RARITY, TITLES } from '../../../game/shop/designs/titles';
+import { KESIF } from '../../../game/shop/designs/kesif';
 import { SLOTS, STYLES } from '../../../game/avatar/catalog';
 
 export const SHOP_CATEGORIES = [
     { key: 'frame', label: 'Profil çerçevesi' },
     { key: 'mini_avatar', label: 'Mini avatar' },
     { key: 'title', label: 'Unvan' },
+    { key: 'kesif', label: 'Keşif Koleksiyonu' },
     { key: 'avatar_part', label: 'Karakter parçası' },
     { key: 'consumable', label: 'Tüketilebilir' },
 ];
@@ -48,6 +50,7 @@ export const DESIGN_CATALOG = [
     ...FRAMES.map(fromDesign),
     ...MINIS.map(fromDesign),
     ...TITLES.map(fromDesign),
+    ...KESIF.map(fromDesign),
     ...CONSUMABLES,
     ...AVATAR_PARTS,
 ];
@@ -245,6 +248,9 @@ export const TX_TYPES = {
     admin_grant: { label: 'Yönetici verdi', tone: 'accent' },
     admin_deduct: { label: 'Yönetici kesti', tone: 'danger' },
     refund: { label: 'İade', tone: 'warning' },
+    profile_theme: { label: 'Profil teması', tone: 'info' },
+    kesif_slots: { label: 'Keşif harita yuvası', tone: 'info' },
+    kesif_reward: { label: 'Keşif ödülü', tone: 'success' },
     backfill: { label: 'Geçmiş aktarım', tone: 'neutral' },
 };
 

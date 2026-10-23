@@ -1,0 +1,15 @@
+/*
+ * KEŞİF oyun içi arayüz stilleri — giriş dosyası. Sıra önemlidir (basamaklama):
+ * jetonlar/kök → HUD → dokunmatik → menüler → duyarlı düzen + hareket azaltma → dokunmatik HUD yerleşimi (son).
+ *
+ * Koyu, buzlu cam; altın vurgu (tailwind `gold` #E2B94C ile uyumlu). Tüm sınıflar `kx-` önekli ve
+ * jetonlar `:root`ta `--kx-*` olarak yayımlanır (paneller de kullanabilir).
+ */
+@import './kesifBase.css';
+@import './kesifHud.css';
+@import './kesifMagic.css';
+@import './kesifTech.css';
+@import './kesifTouch.css';
+@import './kesifMenus.css';
+@import './kesifResponsive.css';
+@import './kesifTouchHud.css';

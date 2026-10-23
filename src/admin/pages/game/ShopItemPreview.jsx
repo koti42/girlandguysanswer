@@ -34,7 +34,7 @@ function ShopItemPreview({ itemKey, size = 40, className = '' }) {
             </span>
         );
     }
-    if (design?.category === 'mini_avatar' || design?.category === 'consumable') {
+    if (design?.category === 'mini_avatar' || design?.category === 'consumable' || design?.category === 'kesif') {
         return <span className={box} style={dims}><ShopArt itemKey={key} size={size} label={label} animate={false} /></span>;
     }
     if (design?.category === 'title' && size < 64) {

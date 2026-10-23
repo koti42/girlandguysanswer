@@ -1,0 +1,702 @@
+/*
+ * Ada Profili: kahraman sahnesi, bilgi kartları ve önizleme.
+ *
+ * Görsel dil: gün batımı gökyüzü üzerinde buzlu cam kartlar. Aydınlık/karanlık
+ * tema (`.dark`), erişilebilirlik modu (`html[data-a11y='1']`: opak zemin, kalın
+ * çerçeve, büyük yazı) ve hareket azaltma desteklenir. Hedefler en az 44px.
+ * Önek: ih-
+ */
+
+.ih,
+.ih *,
+.ih-preview,
+.ih-preview * {
+    box-sizing: border-box;
+}
+
+.ih,
+.ih-preview {
+    --ih-glass: rgba(255, 255, 255, 0.76);
+    --ih-glass-solid: rgba(255, 255, 255, 0.94);
+    --ih-border: rgba(255, 255, 255, 0.65);
+    --ih-ink: #1f2937;
+    --ih-ink-soft: #475569;
+    --ih-tint: rgba(15, 23, 42, 0.06);
+    --ih-tint-strong: rgba(15, 23, 42, 0.12);
+    --ih-line: rgba(15, 23, 42, 0.22);
+    --ih-accent: #d63a2d;
+    --ih-accent-ink: #ffffff;
+    --ih-focus: #b42318;
+    --ih-shadow: 0 18px 40px -18px rgba(15, 23, 42, 0.5);
+}
+
+.dark .ih,
+.dark .ih-preview {
+    --ih-glass: rgba(15, 23, 42, 0.68);
+    --ih-glass-solid: rgba(15, 23, 42, 0.94);
+    --ih-border: rgba(255, 255, 255, 0.14);
+    --ih-ink: #f1f5f9;
+    --ih-ink-soft: #cbd5e1;
+    --ih-tint: rgba(255, 255, 255, 0.08);
+    --ih-tint-strong: rgba(255, 255, 255, 0.16);
+    --ih-line: rgba(255, 255, 255, 0.3);
+    --ih-accent: #ff8a7a;
+    --ih-accent-ink: #1a0f0e;
+    --ih-focus: #ffb4a8;
+    --ih-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.8);
+}
+
+html[data-a11y='1'] .ih,
+html[data-a11y='1'] .ih-preview {
+    --ih-glass: #ffffff;
+    --ih-glass-solid: #ffffff;
+    --ih-border: #111111;
+    --ih-ink: #000000;
+    --ih-ink-soft: #1f2937;
+    --ih-tint: #eef2f7;
+}
+
+html[data-a11y='1'].dark .ih,
+html[data-a11y='1'].dark .ih-preview {
+    --ih-glass: #000000;
+    --ih-glass-solid: #000000;
+    --ih-border: #ffffff;
+    --ih-ink: #ffffff;
+    --ih-ink-soft: #e5e7eb;
+    --ih-tint: #1f2937;
+}
+
+/* ---- Sahne kabı ---------------------------------------------------- */
+
+.ih {
+    position: relative;
+    width: 100%;
+    min-height: 360px;
+    overflow: hidden;
+    isolation: isolate;
+    color: var(--ih-ink);
+    background: linear-gradient(180deg, #7cc4ec 0%, #ffd2a4 62%, #ffb487 100%);
+}
+
+.ih-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    min-height: 180px;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #7cc4ec 0%, #ffd2a4 62%, #ffb487 100%);
+}
+
+.ih-poster {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    transition: opacity 0.5s ease;
+}
+
+.ih-poster[data-hidden='true'] {
+    opacity: 0;
+}
+
+.ih-poster svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.ih-stage {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    cursor: grab;
+    /* Yatay sürükleme adayı döndürür; dikey kaydırma sayfayı kaydırır. */
+    touch-action: pan-y;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ih-stage:active {
+    cursor: grabbing;
+}
+
+.ih-stage:focus-visible {
+    outline: 3px solid var(--ih-focus);
+    outline-offset: -3px;
+}
+
+.ih-stage canvas {
+    display: block;
+}
+
+.ih-shimmer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.38) 50%, transparent 80%);
+    background-size: 220% 100%;
+    animation: ih-shimmer 1.6s linear infinite;
+}
+
+@keyframes ih-shimmer {
+    from {
+        background-position: 120% 0;
+    }
+    to {
+        background-position: -120% 0;
+    }
+}
+
+/* ---- Üst katman ---------------------------------------------------- */
+
+.ih-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+    pointer-events: none;
+}
+
+.ih-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.ih-pill {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--ih-border);
+    background: var(--ih-glass);
+    color: var(--ih-ink);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    backdrop-filter: blur(10px) saturate(1.25);
+    -webkit-backdrop-filter: blur(10px) saturate(1.25);
+    box-shadow: var(--ih-shadow);
+}
+
+a.ih-pill:hover {
+    background: var(--ih-glass-solid);
+}
+
+.ih-pill--badge {
+    pointer-events: none;
+    min-height: 32px;
+    padding: 0 12px;
+    color: var(--ih-accent-ink);
+    background: var(--ih-accent);
+    border-color: transparent;
+}
+
+.ih-dock {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+}
+
+/* ---- Kart ----------------------------------------------------------- */
+
+.ih-card {
+    pointer-events: auto;
+    width: 100%;
+    max-width: 380px;
+    max-height: min(46vh, 340px);
+    overflow-y: auto;
+    padding: 16px 18px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--ih-border);
+    background: var(--ih-glass);
+    color: var(--ih-ink);
+    backdrop-filter: blur(16px) saturate(1.35);
+    -webkit-backdrop-filter: blur(16px) saturate(1.35);
+    box-shadow: var(--ih-shadow);
+    animation: ih-rise 0.26s ease-out;
+    overscroll-behavior: contain;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .ih-card,
+    .ih-pill,
+    .ih-nav {
+        background: var(--ih-glass-solid);
+    }
+}
+
+@keyframes ih-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ih-card__eyebrow {
+    margin: 0 0 2px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ih-ink-soft);
+}
+
+.ih-card__title {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.ih-handle {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--ih-ink-soft);
+}
+
+.ih-bio,
+.ih-lead {
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.ih-bio {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.ih-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.ih-row .ih-lead {
+    margin: 0;
+}
+
+.ih-note {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 10px 0 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--ih-ink-soft);
+}
+
+.ih-note svg {
+    flex: none;
+    margin-top: 2px;
+}
+
+.ih-chips,
+.ih-list,
+.ih-badges,
+.ih-stats {
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ih-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ih-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--ih-tint);
+    box-shadow: inset 3px 0 0 var(--chip, transparent);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ih-chip--soft {
+    color: var(--ih-ink-soft);
+}
+
+.ih-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ih-linkrow {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: var(--ih-tint);
+    color: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+}
+
+.ih-linkrow span {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.ih-linkrow:hover {
+    background: var(--ih-tint-strong);
+}
+
+.ih-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ih-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--ih-tint);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ih-badge__img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.ih-badge--more {
+    color: var(--ih-ink-soft);
+}
+
+.ih-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.ih-stat {
+    display: flex;
+    flex-direction: column;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: var(--ih-tint);
+    color: inherit;
+    text-decoration: none;
+}
+
+a.ih-stat:hover {
+    background: var(--ih-tint-strong);
+}
+
+.ih-stat__v {
+    font-size: 22px;
+    line-height: 1.1;
+    font-weight: 800;
+}
+
+.ih-stat__l {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ih-ink-soft);
+}
+
+.ih-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.ih-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    background: transparent;
+    color: var(--ih-ink);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.12s ease, background-color 0.15s ease;
+}
+
+.ih-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.ih-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.ih-btn--primary {
+    background: var(--ih-accent);
+    color: var(--ih-accent-ink);
+}
+
+.ih-btn--ghost {
+    border-color: var(--ih-line);
+}
+
+.ih-btn--ghost:hover {
+    background: var(--ih-tint);
+}
+
+.ih-btn--quiet {
+    background: var(--ih-tint-strong);
+}
+
+/* ---- Gezinti -------------------------------------------------------- */
+
+.ih-nav {
+    pointer-events: auto;
+    align-self: flex-end;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--ih-border);
+    background: var(--ih-glass);
+    color: var(--ih-ink);
+    backdrop-filter: blur(12px) saturate(1.3);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    box-shadow: var(--ih-shadow);
+}
+
+.ih-iconbtn {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.ih-iconbtn:hover {
+    background: var(--ih-tint);
+}
+
+.ih-iconbtn--ghost {
+    font-size: 18px;
+}
+
+.ih-dots {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ih-dot {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    min-height: 44px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.ih-dot__mark {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: var(--ih-line);
+    transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+.ih-dot[data-active='true'] .ih-dot__mark {
+    width: 22px;
+    background: var(--ih-accent);
+}
+
+.ih-dot:hover .ih-dot__mark {
+    background: var(--ih-ink-soft);
+}
+
+.ih-dot[data-active='true']:hover .ih-dot__mark {
+    background: var(--ih-accent);
+}
+
+.ih-pill:focus-visible,
+.ih-btn:focus-visible,
+.ih-iconbtn:focus-visible,
+.ih-dot:focus-visible,
+.ih-linkrow:focus-visible,
+.ih-stat:focus-visible {
+    outline: 3px solid var(--ih-focus);
+    outline-offset: 2px;
+}
+
+/* ---- Önizleme ipuçları ---------------------------------------------- */
+
+.ih-hint {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    z-index: 3;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.55);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.ih-hint--center {
+    bottom: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    white-space: normal;
+    text-align: center;
+    padding: 8px 14px;
+}
+
+/* ---- Duyarlı: dar ekranda alt sayfa (bottom sheet) -------------------- */
+
+@media (min-width: 420px) {
+    .ih-dot {
+        min-width: 44px;
+    }
+}
+
+@media (max-width: 767px) {
+    .ih-overlay {
+        padding: 0;
+    }
+
+    .ih-top {
+        padding: 12px 12px 0;
+    }
+
+    .ih-dock {
+        gap: 8px;
+    }
+
+    .ih-nav {
+        order: -1;
+        align-self: stretch;
+        justify-content: space-between;
+        margin: 0 12px;
+    }
+
+    .ih-card {
+        max-width: none;
+        max-height: 44vh;
+        border-radius: 22px 22px 0 0;
+        border-bottom: 0;
+        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .ih-bio {
+        -webkit-line-clamp: 2;
+    }
+
+    /* Alt sayfa kısa: üçüncü soru gizlenir, tümü "Tümünü gör" ile açılır. */
+    .ih-list li:nth-child(n + 3) {
+        display: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .ih-overlay {
+        padding: 16px;
+    }
+
+    .ih-dock {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+    }
+}
+
+/* ---- Erişilebilirlik: büyük yazı, kalın çerçeve ----------------------- */
+
+html[data-a11y='1'] .ih-card,
+html[data-a11y='1'] .ih-nav,
+html[data-a11y='1'] .ih-pill {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-width: 3px;
+}
+
+html[data-a11y='1'] .ih-card {
+    font-size: 1.15rem;
+}
+
+html[data-a11y='1'] .ih-bio,
+html[data-a11y='1'] .ih-lead,
+html[data-a11y='1'] .ih-linkrow {
+    font-size: 1.1rem;
+}
+
+/* ---- Hareket azaltma ------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .ih *,
+    .ih-preview * {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .ih-card {
+        animation: none;
+    }
+
+    .ih-shimmer {
+        animation: none;
+        background: rgba(255, 255, 255, 0.18);
+    }
+}

@@ -5,4 +5,7 @@
 # kendiliğinden /embed adresinde sunar ve /embed.html'i /embed'e 308 ile yollar.
 # Buraya "/embed /embed.html 200" yazmak sonsuz 308 döngüsü yaratıyordu
 # (yeniden yazılan .html adresi tekrar /embed'e yönlendiriliyor). Kural YOK.
+# Eksik /assets/* dosyası burada da index.html 200 alır (Cloudflare Pages 404 durumunu
+# desteklemez); gerçek 404 için netlify.toml'a bakın. Eski parça hatasını istemci
+# kurtarır: src/components/game/chunkReload.js.
 /*    /index.html   200

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { getRequestFingerprint } from './api';
 
 /**
@@ -32,5 +32,35 @@ describe('getRequestFingerprint', () => {
     it('JSON gövde davranışı değişmedi', () => {
         const cfg = { method: 'post', url: '/messages/send', data: { receiver_id: 'u', content: 'ok', client_temp_id: 't1' } };
         expect(getRequestFingerprint(cfg)).toBe('post|/messages/send|' + JSON.stringify(cfg.data));
+    });
+});
+
+describe('messagesAPI.sendMessage idempotency', () => {
+    vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {}, removeItem: () => {} });
+
+    it('client_temp_id Idempotency-Key olarak gider; aynı metinli iki mesaj farklı anahtar alır', async () => {
+        const { default: api, messagesAPI } = await import('./api');
+        const seen = [];
+        api.defaults.adapter = async (config) => {
+            seen.push(config);
+            return { data: {}, status: 201, statusText: 'Created', headers: {}, config };
+        };
+        await messagesAPI.sendMessage({ receiver_id: 'u', content: 'aynı', type: 'text', client_temp_id: 'temp-1' });
+        await messagesAPI.sendMessage({ receiver_id: 'u', content: 'aynı', type: 'text', client_temp_id: 'temp-2' });
+        // Yeniden deneme: aynı kimlik = aynı anahtar
+        await messagesAPI.sendMessage({ receiver_id: 'u', content: 'aynı', type: 'text', client_temp_id: 'temp-1' });
+        expect(seen.map((c) => c.headers['Idempotency-Key'])).toEqual(['temp-1', 'temp-2', 'temp-1']);
+        expect(seen[0].timeout).toBeGreaterThan(0);
+    });
+
+    it('dosya mesajında FormData içindeki client_temp_id anahtar olur', async () => {
+        const { default: api, messagesAPI } = await import('./api');
+        let cfg;
+        api.defaults.adapter = async (config) => { cfg = config; return { data: {}, status: 201, statusText: 'Created', headers: {}, config }; };
+        const fd = new FormData();
+        fd.append('client_temp_id', 'temp-file-1');
+        fd.append('file', new Blob(['x']));
+        await messagesAPI.sendFile(fd);
+        expect(cfg.headers['Idempotency-Key']).toBe('temp-file-1');
     });
 });

@@ -22,6 +22,7 @@ describe('köprü: web -> native şeması', () => {
     it('bilinen tipleri ve alanlarını doğrular', () => {
         expect(validateOutgoing({ type: 'ready' })).toBe(true);
         expect(validateOutgoing({ type: 'ready', game: 'kosu' })).toBe(true);
+        expect(validateOutgoing({ type: 'ready', game: 'kesif' })).toBe(true);
         expect(validateOutgoing({ type: 'ready', game: 'golf' })).toBe(false);
         expect(validateOutgoing({ type: 'haptic', style: 'success' })).toBe(true);
         expect(validateOutgoing({ type: 'haptic', style: 'boom' })).toBe(false);
@@ -41,6 +42,7 @@ describe('köprü: web -> native şeması', () => {
     it('result: oyun ve skor zorunlu, özet alanları düz değer', () => {
         expect(validateOutgoing({ type: 'result', game: 'kosu', score: 4321, distance_m: 870, new_best: true, saved: null })).toBe(true);
         expect(validateOutgoing({ type: 'result', game: 'kosu', score: null, saved: true })).toBe(true);
+        expect(validateOutgoing({ type: 'result', game: 'kesif', score: 350, zone: 1, puzzles: 1, playSeconds: 90, mode: 'macera', victory: false })).toBe(true);
         expect(validateOutgoing({ type: 'result', game: 'avatar', score: 1 })).toBe(false);
         expect(validateOutgoing({ type: 'result', game: 'kosu', score: -1 })).toBe(false);
         expect(validateOutgoing({ type: 'result', game: 'kosu', score: 1.5 })).toBe(false);
@@ -232,6 +234,7 @@ describe('köprü: native yapılandırması', () => {
         expect(readGame('?game=kosu&v=1')).toBe('kosu');
         expect(readGame('?game=avatar')).toBe('avatar');
         expect(readGame('?game=kule')).toBe('kule');
+        expect(readGame('?game=kesif&mode=insa')).toBe('kesif');
         expect(readGame('?game=golf')).toBeNull();
         expect(readGame('')).toBeNull();
 

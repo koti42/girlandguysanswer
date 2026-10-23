@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // Keşif oyununun chunk işçisi (render/worker.js) dinamik import kullanır: ES modül biçimi şart.
+  worker: { format: 'es' },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', 'axios'],
   },

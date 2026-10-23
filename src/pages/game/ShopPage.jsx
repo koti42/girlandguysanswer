@@ -11,16 +11,21 @@ import BuyCelebration from '../../components/game/shop/BuyCelebration';
 import WalletHistory from '../../components/game/shop/WalletHistory';
 import WalletChip from '../../components/game/shop/WalletChip';
 import {
+    KESIF_CHIPS,
+    SORTS,
     buyErrorMessage,
     featuredDeadline,
+    filterByKesifKind,
     findItem,
+    guestKesifEnabled,
     itemState,
     normalizeShop,
     replaceItem,
     shopError,
+    sortItems,
     toInt,
 } from '../../components/game/shop/shopUtils';
-import { SHOP_CATEGORIES, getDesign, normalizeCosmetics, staticCatalog } from '../../game/shop';
+import { SHOP_CATEGORIES, getDesign, kesifSlotOfKey, normalizeCosmetics, normalizeKesifLoadout, staticCatalog } from '../../game/shop';
 import { shopApi } from '../../services/shopApi';
 import { formatCountdown, formatNumber, nextIstanbulMonday } from '../../components/game/gameUtils';
 import useNow from '../../components/game/useNow';
@@ -34,8 +39,14 @@ import useNow from '../../components/game/useNow';
  * günceller (tam yeniden yükleme yok), kuşanılan kozmetikler oturumdaki
  * kullanıcıya da yazılır ki profil hemen güncel görünsün.
  *
- * URL: ?kategori=frame|mini_avatar|title|avatar_part|consumable, ?urun=<key>
+ * URL: ?kategori=frame|mini_avatar|title|kesif|avatar_part|consumable, ?urun=<key>
  * (ör. sohbetteki "Mağazadan bilet al" → ?urun=ticket:message çekmeceyi açar).
+ *
+ * Keşif Koleksiyonu: sunucu dalga bayrağı (GAME_SHOP_KESIF1) kapalıyken o kategoriyi
+ * hiç döndürmez; sekme yalnız öğesi olan kategoriler için çizildiğinden kendiliğinden
+ * gizlenir. Kuşanma `PUT /game/shop/equip { kesif: { <yuva>: anahtar|null } }`; Keşif
+ * yükü özeldir (kullanıcı detayına/profile yazılmaz). Sunucu `kesif_loadout`u listeyle
+ * dönmezse bir kez GET /game/kesif/loadout ile sorulur. Tür çipleri ve sıralama yereldir.
  *
  * Yarış durumları: aynı anda tek satın alma/kuşanma (busyRef); her istek
  * taze Idempotency-Key ile gider; sunucu kozmetik çift alımı 409 ile reddeder.
@@ -53,8 +64,20 @@ const FILTERS = [
     { key: 'owned', label: 'Sahip olduklarım' },
 ];
 
+/*
+ * Misafir kataloğu sunucusuzdur; Keşif dalgasının 46 öğesi, sunucu bayrağı açılıp
+ * web yayınlandıktan sonra VITE_SHOP_KESIF_GUEST=1 ile misafire de gösterilir.
+ */
+const GUEST_KESIF = (() => {
+    try {
+        return guestKesifEnabled(import.meta.env);
+    } catch {
+        return false;
+    }
+})();
+
 const GUEST_SHOP = (() => {
-    const categories = staticCatalog();
+    const categories = staticCatalog({ wave: GUEST_KESIF });
     const all = categories.flatMap((c) => c.items);
     const featured = all.filter((i) => i.rarity === 'legendary' || i.rarity === 'epic').slice(0, 8);
     return {
@@ -62,6 +85,8 @@ const GUEST_SHOP = (() => {
         featured,
         categories,
         equipped: normalizeCosmetics(null),
+        kesifLoadout: normalizeKesifLoadout(null),
+        kesifKnown: true,
         tickets: 0,
         player: { level: 1 },
     };
@@ -189,6 +214,50 @@ const FeaturedStrip = ({ items, guest, renderCard }) => {
     );
 };
 
+/** Keşif sekmesi tür çipleri: yalnız katalogda öğesi olan türler (kısmi katalogda boş çip çizilmez). */
+const KesifChips = ({ items, value, onChange }) => {
+    const present = useMemo(() => new Set(items.map((i) => kesifSlotOfKey(i.key)).filter(Boolean)), [items]);
+    const chips = KESIF_CHIPS.filter((c) => c.key === 'all' || present.has(c.key));
+    if (chips.length <= 2) return null;
+    return (
+        <div className="shop-strip -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Keşif türü" data-testid="kesif-chips">
+            {chips.map((c) => (
+                <button
+                    key={c.key}
+                    type="button"
+                    aria-pressed={value === c.key}
+                    onClick={() => onChange(c.key)}
+                    className={`min-h-[36px] shrink-0 rounded-full px-3.5 text-xs font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-coral ${
+                        value === c.key
+                            ? 'bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white shadow'
+                            : 'bg-slate-100 text-slate-700 hover:bg-indigo-50 dark:bg-white/10 dark:text-slate-200 dark:hover:bg-white/15'
+                    }`}
+                >
+                    {c.label}
+                </button>
+            ))}
+        </div>
+    );
+};
+
+const SortSelect = ({ value, onChange }) => (
+    <label className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+        <span>Sırala</span>
+        <select
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="min-h-[36px] rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-coral dark:border-white/15 dark:bg-slate-900 dark:text-white"
+            data-testid="shop-sort"
+        >
+            {SORTS.map((s) => (
+                <option key={s.key} value={s.key}>
+                    {s.label}
+                </option>
+            ))}
+        </select>
+    </label>
+);
+
 const CategoryTabs = ({ categories, active, onChange, baseId }) => {
     const refs = useRef({});
     const onKeyDown = (e) => {
@@ -249,6 +318,8 @@ const CategoryTabs = ({ categories, active, onChange, baseId }) => {
 const Shop = ({ shop, setShop, guest, user, updateUser }) => {
     const [params, setParams] = useSearchParams();
     const [filter, setFilter] = useState('all');
+    const [kind, setKind] = useState('all');
+    const [sort, setSort] = useState('recommended');
     const [busy, setBusy] = useState(false);
     const busyRef = useRef(false);
     const [drawerError, setDrawerError] = useState(null);
@@ -272,6 +343,22 @@ const Shop = ({ shop, setShop, guest, user, updateUser }) => {
     const activeCat = categories.find((c) => c.key === active);
     const selectedKey = params.get('urun');
     const selected = selectedKey ? findItem(shop, selectedKey) : null;
+    const hasKesif = categories.some((c) => c.key === 'kesif');
+
+    // Sunucu Keşif yükünü listeyle dönmediyse bir kez sorulur (yalnız üye + Keşif kategorisi varken).
+    useEffect(() => {
+        if (guest || !hasKesif || shopRef.current.kesifKnown || typeof shopApi.kesifLoadout !== 'function') return undefined;
+        let alive = true;
+        Promise.resolve()
+            .then(() => shopApi.kesifLoadout())
+            .then(
+                (res) => alive && setShop((s) => ({ ...s, kesifLoadout: normalizeKesifLoadout(res), kesifKnown: true })),
+                () => {}
+            );
+        return () => {
+            alive = false;
+        };
+    }, [guest, hasKesif, setShop]);
 
     const setParam = useCallback(
         (patch) => {
@@ -427,6 +514,18 @@ const Shop = ({ shop, setShop, guest, user, updateUser }) => {
             setBusy(true);
             setDrawerError(null);
             try {
+                if (typeof slot === 'string' && slot.startsWith('kesif:')) {
+                    // Keşif görünümü: iç içe gövde, özel yük (profil/kullanıcı detayına yazılmaz)
+                    const slotKind = slot.slice('kesif:'.length);
+                    const res = await shopApi.equip({ kesif: { [slotKind]: key } });
+                    const raw = res?.kesif_loadout ?? res?.kesif?.loadout;
+                    const next = normalizeKesifLoadout(raw != null ? raw : { ...shopRef.current.kesifLoadout, [slotKind]: key });
+                    setShop((s) => ({ ...s, kesifLoadout: next, kesifKnown: true }));
+                    const kname = key ? getDesign(key)?.name : null;
+                    setAnnounce(key ? `${kname || 'Öğe'} kuşanıldı.` : 'Çıkarıldı.');
+                    setCelebrate(null);
+                    return;
+                }
                 const res = await shopApi.equip({ [slot]: key });
                 const equipped = normalizeCosmetics(res?.equipped ?? { ...shop.equipped, [slot]: key });
                 setShop((s) => ({ ...s, equipped }));
@@ -459,14 +558,16 @@ const Shop = ({ shop, setShop, guest, user, updateUser }) => {
             gender={gender}
             now={now}
             guest={guest}
+            kesifLoadout={shop.kesifLoadout}
         />
     );
 
     const visible = useMemo(() => {
-        const items = activeCat?.items || [];
-        if (filter !== 'owned') return items;
-        return items.filter((i) => itemState(i, shop.equipped, shop.wallet.balance).owned);
-    }, [activeCat, filter, shop.equipped, shop.wallet.balance]);
+        let items = activeCat?.items || [];
+        if (filter === 'owned') items = items.filter((i) => itemState(i, shop.equipped, shop.wallet.balance).owned);
+        if (active === 'kesif') items = filterByKesifKind(items, kind);
+        return sortItems(items, sort);
+    }, [activeCat, active, filter, kind, sort, shop.equipped, shop.wallet.balance]);
 
     return (
         <>
@@ -504,11 +605,25 @@ const Shop = ({ shop, setShop, guest, user, updateUser }) => {
                         </div>
                     )}
 
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        {active === 'kesif' ? <KesifChips items={activeCat?.items || []} value={kind} onChange={setKind} /> : <span />}
+                        <SortSelect value={sort} onChange={setSort} />
+                    </div>
+
                     {visible.length === 0 ? (
                         <div className="game-card rounded-3xl p-6 text-center">
                             <LuPackageOpen className="mx-auto mb-2 text-3xl text-indigo-400" aria-hidden="true" />
-                            <p className="font-semibold">Bu kategoride henüz senin bir şeyin yok.</p>
-                            <button type="button" onClick={() => setFilter('all')} className="mt-2 min-h-[44px] text-sm font-bold text-coral underline">
+                            <p className="font-semibold">
+                                {filter === 'owned' ? 'Bu kategoride henüz senin bir şeyin yok.' : 'Bu türde şu an ürün yok.'}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setFilter('all');
+                                    setKind('all');
+                                }}
+                                className="mt-2 min-h-[44px] text-sm font-bold text-coral underline"
+                            >
                                 Tümünü göster
                             </button>
                         </div>
@@ -537,6 +652,7 @@ const Shop = ({ shop, setShop, guest, user, updateUser }) => {
                 gender={gender}
                 guest={guest}
                 busy={busy}
+                kesifLoadout={shop.kesifLoadout}
                 error={typeof drawerError === 'string' ? drawerError : drawerError?.message ?? null}
                 errorReason={typeof drawerError === 'string' ? null : drawerError?.reason ?? null}
                 onBuy={handleBuy}
@@ -547,6 +663,7 @@ const Shop = ({ shop, setShop, guest, user, updateUser }) => {
                 open={!!celebrate}
                 item={celebrate}
                 equipped={shop.equipped}
+                kesifLoadout={shop.kesifLoadout}
                 user={previewUser}
                 avatar={avatar}
                 gender={gender}

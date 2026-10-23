@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { featuredDeadline, findItem, itemState, normalizeShop, replaceItem, shortLeft } from '../shopUtils';
+import {
+    KESIF_CHIPS, SORTS, featuredDeadline, filterByKesifKind, findItem, guestKesifEnabled, itemState, lockHint, lockText, normalizeShop, replaceItem, shortLeft, sortItems, txLabel,
+} from '../shopUtils';
 import { ticketReasonText, normalizeTicketCheck } from '../ticketUtils';
 
 const NOW = Date.parse('2026-10-03T12:00:00Z');
@@ -117,5 +119,101 @@ describe('ticketUtils sohbet yolu', () => {
         const err = { response: { status: 403, data: { message: 'Kapalı', data: { reason: 'blocked' } } } };
         expect(a.shopError(err, 'x')).toEqual({ status: 403, reason: 'blocked', message: 'Kapalı' });
         expect(a.shopError(new Error('ağ'), 'x').message).toMatch(/Sunucuya ulaşılamadı/);
+    });
+});
+
+describe('Keşif Koleksiyonu — itemState, kilit metinleri, sıralama', () => {
+    const kbase = { key: 'portal:neon-sokak', category: 'kesif', price: 1600, rarity: 'rare', unlock: { type: 'price', jeton: 1600 }, owned: false, unlocked: false, quantity: 0, is_active: true, available_until: null };
+
+    it('kuşanma durumu Keşif yükünden gelir; kategori eşitliğine bakılmaz', () => {
+        const owned = { ...kbase, owned: true };
+        expect(itemState(owned, {}, 0, NOW, { portal: 'portal:neon-sokak' })).toMatchObject({ kesif: true, kind: 'portal', owned: true, equipped: true, purchasable: false });
+        expect(itemState(owned, {}, 0, NOW, { portal: 'portal:altin-kapi' }).equipped).toBe(false);
+        expect(itemState(owned, {}, 0, NOW, null).equipped).toBe(false);
+        // kesif yükü olmadan (eski çağrı biçimi) çökmez
+        expect(itemState(owned, { frame: 'portal:neon-sokak' }, 0, NOW).equipped).toBe(false);
+        // sahip olunmayan öğe kuşanılmış sayılmaz (bayat yük)
+        expect(itemState(kbase, {}, 9999, NOW, { portal: 'portal:neon-sokak' })).toMatchObject({ owned: false, equipped: false, purchasable: true });
+    });
+
+    it('yeni çerçeve/mini/unvan öğeleri eski yuva kurallarıyla kuşanılır', () => {
+        const f = { ...base, key: 'frame:neon-meridyen', owned: true };
+        expect(itemState(f, { frame: 'frame:neon-meridyen' }, 0, NOW)).toMatchObject({ equipped: true, kesif: false, kind: null });
+    });
+
+    it('seviye/rozet kilidi: koşul sağlanınca sahip gibi kuşanılabilir, sağlanmayınca kilitli', () => {
+        const lvl = { ...kbase, key: 'alet:neon-serit', price: null, unlock: { type: 'level', level: 8 } };
+        expect(itemState({ ...lvl, unlocked: false }, {}, 9999, NOW)).toMatchObject({ locked: true, owned: false, purchasable: false });
+        expect(itemState({ ...lvl, unlocked: true }, {}, 0, NOW, { alet: 'alet:neon-serit' })).toMatchObject({ locked: false, owned: true, equipped: true, purchasable: false });
+        const badge = { ...base, key: 'title:cip-avcisi', category: 'title', price: null, unlock: { type: 'badge', badge: 'kesif_neon_cip_60' } };
+        expect(itemState({ ...badge, unlocked: false }, {}, 9999, NOW)).toMatchObject({ locked: true, purchasable: false });
+        expect(itemState({ ...badge, unlocked: true }, { title: 'title:cip-avcisi' }, 0, NOW)).toMatchObject({ owned: true, equipped: true });
+    });
+
+    it('kilit metinleri: seviye, rozet adı (bilinen/bilinmeyen)', () => {
+        expect(lockText({ type: 'level', level: 8 })).toBe('Seviye 8');
+        expect(lockText({ type: 'badge', badge: 'kesif_neon_cip_60' })).toBe('Rozetle açılır');
+        expect(lockHint({ type: 'level', level: 12 })).toContain('12');
+        expect(lockHint({ type: 'badge', badge: 'kesif_neon_cip_60' })).toBe('“Çip Koleksiyoncusu” rozetini kazanınca açılır.');
+        expect(lockHint({ type: 'badge', badge: 'runner_5k' })).toBe('İlgili rozeti kazanınca açılır.');
+        expect(lockHint({ type: 'badge', badge: 'constructor' })).toBe('İlgili rozeti kazanınca açılır.');
+        expect(lockHint({ type: 'badge' })).toBe('İlgili rozeti kazanınca açılır.');
+    });
+
+    it('misafir Keşif vitrini yalnız VITE_SHOP_KESIF_GUEST=1 ile açılır (varsayılan kapalı)', () => {
+        expect(guestKesifEnabled(undefined)).toBe(false);
+        expect(guestKesifEnabled({})).toBe(false);
+        expect(guestKesifEnabled({ VITE_SHOP_KESIF_GUEST: '' })).toBe(false);
+        expect(guestKesifEnabled({ VITE_SHOP_KESIF_GUEST: 'true' })).toBe(false);
+        expect(guestKesifEnabled({ VITE_SHOP_KESIF_GUEST: '1' })).toBe(true);
+    });
+
+    it('cüzdan işlem etiketleri: Keşif ödülü, harita hakkı, profil teması', () => {
+        expect(txLabel('kesif_reward')).toBe('Keşif ödülü');
+        expect(txLabel('kesif_slots')).toBe('Keşif harita hakkı');
+        expect(txLabel('profile_theme')).toBe('Profil teması');
+        expect(txLabel('bilinmeyen')).toBe('Cüzdan hareketi');
+    });
+
+    it('tür çipleri: Tümü + altı yuva; filterByKesifKind yerel ve girdiyi değiştirmez', () => {
+        expect(KESIF_CHIPS.map((c) => c.key)).toEqual(['all', 'portal', 'alet', 'asa', 'jet', 'arac', 'gecis']);
+        expect(KESIF_CHIPS.map((c) => c.label)).toEqual(['Tümü', 'Portal', 'Alet', 'Asa', 'Jetpack', 'Araç', 'Geçiş']);
+        const items = [{ key: 'portal:a-b' }, { key: 'arac:limonata' }, { key: 'portal:neon-sokak' }, { key: 'bozuk' }];
+        expect(filterByKesifKind(items, 'portal').map((i) => i.key)).toEqual(['portal:a-b', 'portal:neon-sokak']);
+        expect(filterByKesifKind(items, 'all')).toBe(items);
+        expect(filterByKesifKind(items, undefined)).toBe(items);
+        expect(filterByKesifKind(items, 'jet')).toEqual([]);
+        expect(filterByKesifKind(null, 'jet')).toEqual([]);
+    });
+
+    it('sıralama: önerilen sunucu sırası; fiyat artan (fiyatsız sonda); nadirlik en nadir önce; kararlı, girdi değişmez', () => {
+        expect(SORTS.map((s) => s.key)).toEqual(['recommended', 'price', 'rarity']);
+        const items = [
+            { key: 'a', price: 900, rarity: 'rare' },
+            { key: 'b', price: null, rarity: 'epic' },
+            { key: 'c', price: 300, rarity: 'common' },
+            { key: 'd', price: 900, rarity: 'legendary' },
+            { key: 'e', price: 5000, rarity: 'rare' },
+        ];
+        const copy = JSON.stringify(items);
+        expect(sortItems(items, 'recommended').map((i) => i.key)).toEqual(['a', 'b', 'c', 'd', 'e']);
+        expect(sortItems(items, 'bilinmeyen').map((i) => i.key)).toEqual(['a', 'b', 'c', 'd', 'e']);
+        expect(sortItems(items, 'price').map((i) => i.key)).toEqual(['c', 'a', 'd', 'e', 'b']);
+        expect(sortItems(items, 'rarity').map((i) => i.key)).toEqual(['d', 'b', 'a', 'e', 'c']);
+        expect(JSON.stringify(items)).toBe(copy);
+        expect(sortItems(undefined, 'price')).toEqual([]);
+    });
+
+    it('normalizeShop: Keşif yükü yoksa boş ve bilinmiyor; varsa süzülür; kozmetik `equipped` Keşif içermez', () => {
+        const none = normalizeShop({ wallet: {}, categories: [] });
+        expect(none.kesifLoadout).toEqual({ portal: null, alet: null, asa: null, jet: null, arac: null, gecis: null });
+        expect(none.kesifKnown).toBe(false);
+        const some = normalizeShop({ categories: [], equipped: { frame: null, kesif: { portal: 'portal:neon-sokak' } }, kesif_loadout: { portal: 'portal:neon-sokak', alet: 'x:y' } });
+        expect(some.kesifKnown).toBe(true);
+        expect(some.kesifLoadout.portal).toBe('portal:neon-sokak');
+        expect(some.kesifLoadout.alet).toBeNull();
+        expect(Object.keys(some.equipped)).toEqual(['frame', 'mini_avatar', 'title']);
+        const nested = normalizeShop({ categories: [], kesif: { loadout: { arac: 'arac:limonata' } } });
+        expect(nested.kesifLoadout.arac).toBe('arac:limonata');
     });
 });

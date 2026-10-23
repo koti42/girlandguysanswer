@@ -36,7 +36,11 @@ const GameProfilePage = () => {
 
     const isMe = me?.username && me.username === username;
     const p = data?.player;
-    const earned = (data?.badges || []).filter((b) => b.earned_at).length;
+    // Keşif rozetleri (sunucu `group: 'kesif'` verir; eski sunucuda alan yok → hepsi tek listede kalır)
+    const mainBadges = (data?.badges || []).filter((b) => b?.group !== 'kesif');
+    const kesifBadges = (data?.badges || []).filter((b) => b?.group === 'kesif');
+    const earned = mainBadges.filter((b) => b.earned_at).length;
+    const kesifEarned = kesifBadges.filter((b) => b.earned_at).length;
     // Mağaza kozmetikleri (çerçeve / mini avatar / unvan); kendi profilinde sunucu alanı yoksa oturumdaki
     const cosmetics = normalizeCosmetics(data?.cosmetics ?? (isMe ? me?.detail?.game_cosmetics : null));
     const hasCosmetics = !!(cosmetics.frame || cosmetics.mini_avatar || cosmetics.title);
@@ -105,10 +109,19 @@ const GameProfilePage = () => {
 
                     <section className="mt-6 game-card rounded-3xl p-4 sm:p-5">
                         <h2 className="mb-3 font-extrabold">
-                            Rozetler <span className="text-sm font-semibold text-slate-500">({earned}/{data.badges?.length ?? 0})</span>
+                            Rozetler <span className="text-sm font-semibold text-slate-500">({earned}/{mainBadges.length})</span>
                         </h2>
-                        <BadgeGrid badges={data.badges} />
+                        <BadgeGrid badges={mainBadges} />
                     </section>
+
+                    {kesifBadges.length > 0 && (
+                        <section className="mt-6 game-card rounded-3xl p-4 sm:p-5" aria-labelledby="game-profile-kesif-badges" data-testid="game-profile-kesif-badges">
+                            <h2 id="game-profile-kesif-badges" className="mb-3 font-extrabold">
+                                Keşif Rozetleri <span className="text-sm font-semibold text-slate-500">({kesifEarned}/{kesifBadges.length})</span>
+                            </h2>
+                            <BadgeGrid badges={kesifBadges} />
+                        </section>
+                    )}
 
                     <section className="mt-6">
                         <h2 className="mb-3 font-extrabold">Son oyunlar</h2>

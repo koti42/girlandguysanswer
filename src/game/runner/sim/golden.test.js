@@ -12,7 +12,8 @@ import { buildGolden, canonicalPatterns, GOLDEN_PATH, patternsHash, serializeGol
  * testleri o zaman yeni dosyayla ve yeni patterns.json ile koşar).
  */
 
-const text = readFileSync(GOLDEN_PATH, 'utf8');
+// Windows'ta git autocrlf dosyayı CRLF yazar; içerik aynıysa satır sonu farkı sayılmaz.
+const text = readFileSync(GOLDEN_PATH, 'utf8').split('\r\n').join('\n');
 const golden = JSON.parse(text);
 
 describe('golden.json', () => {

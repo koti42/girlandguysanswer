@@ -1,0 +1,54 @@
+/*
+ * KEŞİF — Neon Meridyen şehir haritası eklentileri (photo_map): .kcm-*. Temel yerleşim panels.css (.kp-map-*); hedefler ≥ 44 px, renk + şekil + metin.
+ */
+.kcm .kp-map-tools { align-items: center; }
+.kcm .kp-canvas-wrap { height: clamp(240px, 60dvh, 620px); }
+.kcm-status {
+  margin-left: auto;
+  padding: 0 8px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--kp-accent);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.kcm-card { align-items: flex-start; }
+.kcm-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 8px; width: 100%; margin-top: 4px; }
+.kcm-actions .kp-btn { margin-left: 0; min-height: 44px; }
+.kcm-travel { display: grid; gap: 2px; }
+.kcm-go { min-height: 44px; }
+.kcm-why { max-width: 260px; color: var(--kp-dim); font-size: 12.5px; }
+.kcm-route { width: 100%; color: var(--kp-accent2); font-weight: 700; }
+.kcm-fog {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: #0b0f20;
+  border: 1.5px dashed #8f9bc2;
+  border-radius: 4px;
+}
+.kcm-h { margin: 10px 0 6px; font-size: 14px; color: var(--kp-accent); }
+.kcm-node {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  padding: 8px 10px;
+  background: var(--kp-panel);
+  border: 1px solid var(--kp-line);
+  border-radius: 12px;
+}
+.kcm-node[data-ok='1'] { border-color: var(--kp-good); }
+.kcm-node-name { font-weight: 800; }
+@media (max-width: 560px) {
+  .kcm-why { max-width: 100%; }
+  .kcm-status { margin-left: 0; width: 100%; }
+}
+/* telefon yatay (alçak ekran): harita tuvali ekranı doldurur; ipucu/alt başlık gizlenir (alt başlıktaki bilgi Liste sekmesinde) */
+@media (max-height: 460px) {
+  .kcm .kp-canvas-wrap { height: max(140px, calc(100dvh - 176px)); }
+  .kcm .kp-sub, .kcm .kp-hint { display: none; }
+  .kcm .kp-map-tools { gap: 4px; }
+}

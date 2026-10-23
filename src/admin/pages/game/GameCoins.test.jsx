@@ -5,7 +5,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { ToastProvider } from '../../../panel/hooks/useToast';
 
-const api = vi.hoisted(() => ({ shopSummary: vi.fn(), searchWallets: vi.fn(), wallet: vi.fn(), adjustWallet: vi.fn() }));
+const api = vi.hoisted(() => ({ shopSummary: vi.fn(), searchWallets: vi.fn(), wallet: vi.fn(), adjustWallet: vi.fn(), themes: vi.fn(), grantTheme: vi.fn(), revokeTheme: vi.fn() }));
 vi.mock('../../gameAdminApi', () => ({ gameAdminApi: api, default: api }));
 
 import GameCoins from './GameCoins';
@@ -37,6 +37,7 @@ describe('GameCoins', () => {
         api.shopSummary.mockImplementation(() => ok(summary));
         api.searchWallets.mockImplementation(() => ok([{ user: ayse, wallet: { balance: 300, earned_total: 900, spent_total: 600 } }]));
         api.wallet.mockImplementation(() => ok(walletBody()));
+        api.themes.mockImplementation(() => ok({ items: [] }));
     });
 
     it('özet kartlarını, en çok satanları ve Mesaj Bileti kaydını gösterir', async () => {
@@ -148,5 +149,142 @@ describe('GameCoins', () => {
         expect(screen.getByText('Tekrar dene')).toBeInTheDocument();
         expect(screen.getByText('Bir kullanıcı seçin.')).toBeInTheDocument();
         expect(api.wallet).not.toHaveBeenCalled();
+    });
+});
+describe('GameCoins › Profil teması', () => {
+    const entitlement = (over = {}) => ({
+        user: ayse, user_id: 'u9', theme: 'ada', source: 'admin', enabled: true, active: true,
+        expires_at: null, unlimited: true, price_paid: 0, purchases: 0, ...over,
+    });
+    const openUser = async () => {
+        mount('/cpl-manage/game/coins?user=u9');
+        return within(await screen.findByTestId('wallet-card')).getByTestId('theme-admin');
+    };
+
+    beforeEach(() => {
+        Object.values(api).forEach((f) => f.mockReset());
+        api.shopSummary.mockImplementation(() => ok(summary));
+        api.wallet.mockImplementation(() => ok(walletBody()));
+        api.themes.mockImplementation(() => ok({ items: [], pagination: { current_page: 1, last_page: 1, total: 0 } }));
+    });
+
+    it('seçili kullanıcı için hakları kullanıcı kimliğiyle sorgular; hak yoksa "Hakkı yok" ve kaldır düğmesi çıkmaz', async () => {
+        const panel = await openUser();
+        await waitFor(() => expect(api.themes).toHaveBeenCalledWith({ user_id: 'u9', per_page: 50 }));
+        expect(await within(panel).findByText('Hakkı yok')).toBeInTheDocument();
+        expect(within(panel).queryByRole('button', { name: 'Temayı kaldır' })).toBeNull();
+    });
+
+    it('başka kullanıcıya ait satırı (süzgeç yok sayılsa bile) bu kullanıcının hakkı sanmaz', async () => {
+        api.themes.mockImplementation(() => ok({ items: [entitlement({ user_id: 'u1', user: { id: 'u1', username: 'baska' } })] }));
+        const panel = await openUser();
+        expect(await within(panel).findByText('Hakkı yok')).toBeInTheDocument();
+    });
+
+    it('mevcut hak: durum, kaynak, bitiş ve harcanan gösterilir', async () => {
+        api.themes.mockImplementation(() => ok({ items: [entitlement({ source: 'purchase', unlimited: false, expires_at: '2026-11-01T12:00:00Z', price_paid: 2000000, purchases: 2 })] }));
+        const panel = await openUser();
+        const details = await within(panel).findByTestId('theme-admin-details');
+        expect(within(panel).getByTestId('theme-admin-status')).toHaveTextContent(/Aktif · kalan \d+ gün|Süresi doldu/);
+        expect(details).toHaveTextContent('Satın alma');
+        expect(details).toHaveTextContent('2.000.000 jeton · 2 alım');
+        expect(details).toHaveTextContent('Açık');
+    });
+
+    it('süresiz yönetici hakkı etiketi', async () => {
+        api.themes.mockImplementation(() => ok({ items: [entitlement()] }));
+        const panel = await openUser();
+        expect(await within(panel).findByText('Süresiz (yönetici)')).toBeInTheDocument();
+        expect(within(panel).getByTestId('theme-admin-details')).toHaveTextContent('Süresiz');
+    });
+
+    it('gün ver: gerekçe zorunlu; onay penceresi kullanıcıyı ve süreyi yazar; onayla POST atar ve liste tazelenir', async () => {
+        api.grantTheme.mockImplementation(() => ok({ theme: entitlement({ unlimited: false, expires_at: '2026-11-01T00:00:00Z' }) }, 'Tema verildi.'));
+        const panel = await openUser();
+        const form = within(panel).getByTestId('theme-grant-form');
+        await waitFor(() => expect(api.themes).toHaveBeenCalledTimes(1));
+
+        fireEvent.click(within(form).getByRole('button', { name: 'Temayı ver' }));
+        expect(within(form).getByText('Gerekçe zorunlu.')).toBeInTheDocument();
+        expect(screen.queryByRole('dialog')).toBeNull();
+
+        fireEvent.change(within(form).getByLabelText('Gün'), { target: { value: '0' } });
+        fireEvent.change(within(form).getByLabelText('Tema gerekçesi'), { target: { value: 'Yarışma ödülü' } });
+        fireEvent.click(within(form).getByRole('button', { name: 'Temayı ver' }));
+        expect(within(form).getByText('1 ile 365 arasında tam sayı girin.')).toBeInTheDocument();
+
+        fireEvent.change(within(form).getByLabelText('Gün'), { target: { value: '30' } });
+        fireEvent.click(within(form).getByRole('button', { name: 'Temayı ver' }));
+        const dialog = await screen.findByRole('dialog');
+        expect(dialog).toHaveTextContent('@ayse kullanıcısına Ada Profili 30 gün verilecek.');
+        expect(dialog).toHaveTextContent('Yarışma ödülü');
+        expect(api.grantTheme).not.toHaveBeenCalled();
+
+        fireEvent.click(within(dialog).getByTestId('confirm-button'));
+        await waitFor(() => expect(api.grantTheme).toHaveBeenCalledWith({ user_id: 'u9', days: 30, reason: 'Yarışma ödülü' }));
+        expect(await screen.findByText('Tema verildi.')).toBeInTheDocument();
+        await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+        expect(api.themes).toHaveBeenCalledTimes(2);
+        expect(within(form).getByLabelText('Tema gerekçesi')).toHaveValue('');
+    });
+
+    it('süresiz ver: days null gider, gün alanı kalkar', async () => {
+        api.grantTheme.mockImplementation(() => ok({}, 'Verildi.'));
+        const panel = await openUser();
+        const form = within(panel).getByTestId('theme-grant-form');
+        fireEvent.click(within(form).getByRole('radio', { name: 'Süresiz ver' }));
+        expect(within(form).queryByLabelText('Gün')).toBeNull();
+        fireEvent.change(within(form).getByLabelText('Tema gerekçesi'), { target: { value: 'Ekip üyesi' } });
+        fireEvent.click(within(form).getByRole('button', { name: 'Temayı ver' }));
+        const dialog = await screen.findByRole('dialog');
+        expect(dialog).toHaveTextContent('Ada Profili süresiz verilecek.');
+        fireEvent.click(within(dialog).getByTestId('confirm-button'));
+        await waitFor(() => expect(api.grantTheme).toHaveBeenCalledWith({ user_id: 'u9', days: null, reason: 'Ekip üyesi' }));
+    });
+
+    it('kaldır: onay penceresi sonrası DELETE atar', async () => {
+        api.themes.mockImplementation(() => ok({ items: [entitlement()] }));
+        api.revokeTheme.mockImplementation(() => ok({}, 'Tema kaldırıldı.'));
+        const panel = await openUser();
+        fireEvent.click(await within(panel).findByRole('button', { name: 'Temayı kaldır' }));
+        const dialog = await screen.findByRole('dialog');
+        expect(dialog).toHaveTextContent('@ayse kullanıcısının Ada Profili hakkı kaldırılacak');
+        expect(api.revokeTheme).not.toHaveBeenCalled();
+        fireEvent.click(within(dialog).getByTestId('confirm-button'));
+        await waitFor(() => expect(api.revokeTheme).toHaveBeenCalledWith('u9'));
+        expect(await screen.findByText('Tema kaldırıldı.')).toBeInTheDocument();
+        await waitFor(() => expect(api.themes).toHaveBeenCalledTimes(2));
+    });
+
+    it('vazgeçilirse hiçbir istek atılmaz', async () => {
+        api.themes.mockImplementation(() => ok({ items: [entitlement()] }));
+        const panel = await openUser();
+        fireEvent.click(await within(panel).findByRole('button', { name: 'Temayı kaldır' }));
+        const dialog = await screen.findByRole('dialog');
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Vazgeç' }));
+        await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+        expect(api.revokeTheme).not.toHaveBeenCalled();
+        expect(api.grantTheme).not.toHaveBeenCalled();
+    });
+
+    it('sunucu hatası: bildirim çıkar, alan hatası gösterilir, form korunur', async () => {
+        api.grantTheme.mockImplementation(() => fail(422, 'Doğrulama hatası', { errors: { reason: ['Gerekçe çok kısa.'] } }));
+        const panel = await openUser();
+        const form = within(panel).getByTestId('theme-grant-form');
+        fireEvent.change(within(form).getByLabelText('Tema gerekçesi'), { target: { value: 'x' } });
+        fireEvent.click(within(form).getByRole('button', { name: 'Temayı ver' }));
+        fireEvent.click(within(await screen.findByRole('dialog')).getByTestId('confirm-button'));
+        expect(await screen.findByText('Doğrulama hatası Gerekçe çok kısa.')).toBeInTheDocument();
+        expect(within(form).getAllByText('Gerekçe çok kısa.').length).toBeGreaterThan(0);
+        await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+        expect(within(form).getByLabelText('Tema gerekçesi')).toHaveValue('x');
+    });
+
+    it('hak listesi alınamazsa tekrar dene çıkar; jeton formu yine çalışır durumda kalır', async () => {
+        api.themes.mockImplementation(() => fail(500, 'Liste alınamadı'));
+        const panel = await openUser();
+        expect(await within(panel).findByText('Liste alınamadı')).toBeInTheDocument();
+        expect(within(panel).getByText('Tekrar dene')).toBeInTheDocument();
+        expect(screen.getByTestId('wallet-adjust')).toBeInTheDocument();
     });
 });

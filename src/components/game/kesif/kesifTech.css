@@ -1,0 +1,195 @@
+/* KEŞİF arayüz: teknoloji HUD'u — şarj/yakıt/kalkan/portal göstergeleri, enerji ağı çipi, tarayıcı okları. (giriş: kesif.css) */
+
+/* ------------------------------------------------------------------ */
+/* Çubuktaki cihaz göstergeleri (alt blok)                             */
+/* ------------------------------------------------------------------ */
+.kx-tech {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+  width: 100%;
+  pointer-events: none;
+}
+.kx-tech-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 999px;
+  background: rgba(8, 12, 24, 0.7);
+  border: 1.5px solid rgba(124, 196, 255, 0.4);
+  font: 800 11.5px/1 system-ui, sans-serif;
+  color: #dcecff;
+  text-shadow: 0 1px 2px #000;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+.kx-tech-pill[data-kind='jetpack'] { border-color: rgba(255, 179, 71, 0.55); }
+.kx-tech-pill[data-kind='shield'] { border-color: rgba(122, 216, 255, 0.6); }
+.kx-tech-ico { display: inline-flex; font-size: 13px; }
+.kx-tech-ico svg { width: 13px; height: 13px; }
+.kx-tech-pill[data-kind='jetpack'] .kx-tech-ico { color: #ffb347; }
+.kx-tech-pill[data-kind='shield'] .kx-tech-ico { color: #7ad8ff; }
+.kx-tech-pill[data-kind='charge'] .kx-tech-ico { color: #7affea; }
+.kx-tech-label { max-width: 8.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0.02em; }
+.kx-tech-track {
+  position: relative;
+  width: 64px;
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.kx-tech-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #9fe8ff, #3f9cff);
+  transition: width 120ms ease-out;
+}
+.kx-tech-pill[data-kind='jetpack'] .kx-tech-fill { background: linear-gradient(180deg, #ffd27a, #ff8a2a); }
+.kx-tech-pill[data-kind='shield'] .kx-tech-fill { background: linear-gradient(180deg, #b6f0ff, #3aa8ff); }
+.kx-tech-pill[data-kind='charge'] .kx-tech-fill { background: linear-gradient(180deg, #9affef, #1fc4a8); }
+.kx-tech-pill[data-level='low'] .kx-tech-fill { background: linear-gradient(180deg, #ffe08a, #e8a21c); }
+.kx-tech-pill[data-level='crit'] { border-color: rgba(255, 120, 120, 0.85); }
+.kx-tech-pill[data-level='crit'] .kx-tech-fill { background: linear-gradient(180deg, #ff9a9a, #e04848); }
+.kx-tech-val { font-variant-numeric: tabular-nums; min-width: 2.2em; text-align: right; }
+.kx-tech-val small { font-weight: 600; opacity: 0.75; font-size: 10.5px; }
+.kx-tech-extra { font-weight: 700; opacity: 0.8; font-size: 10.5px; }
+.kx-tech-warn {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 107, 107, 0.2);
+  border: 1px solid rgba(255, 107, 107, 0.65);
+  color: #ffb3b3;
+  font-size: 10.5px;
+}
+.kx-tech-pill[data-thrust='1'][data-calm='0'] .kx-tech-fill { animation: kx-tech-burn 0.5s ease-in-out infinite alternate; }
+@keyframes kx-tech-burn { from { filter: brightness(1); } to { filter: brightness(1.35); } }
+
+/* portal göstergesi: mavi = düz halka, turuncu = çizgili halka (renk körlüğü) */
+.kx-pdots { display: inline-flex; gap: 5px; }
+.kx-pdot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--kx-pdot, #3a9bff);
+  opacity: 0.5;
+}
+.kx-pdot i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--kx-pdot, #3a9bff); opacity: 0; }
+.kx-pdot-mavi { --kx-pdot: #3a9bff; border-style: solid; }
+.kx-pdot-turuncu { --kx-pdot: #ff9a2e; border-style: dashed; }
+.kx-pdot.is-open { opacity: 1; box-shadow: 0 0 8px var(--kx-pdot); }
+.kx-pdot.is-open i { opacity: 1; }
+
+/* ------------------------------------------------------------------ */
+/* Enerji ağı çipi (üst sol, konum çipinin altı)                       */
+/* ------------------------------------------------------------------ */
+.kx-energy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin: 0;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  background: var(--kx-glass);
+  border: 1.5px solid rgba(90, 215, 255, 0.5);
+  font: 800 12px/1.1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: #d4f3ff;
+  text-shadow: 0 1px 2px #000;
+}
+.kx-energy svg { width: 13px; height: 13px; color: #5ad7ff; }
+.kx-energy i { font-style: normal; font-weight: 700; opacity: 0.85; }
+.kx-energy[data-level='short'] { border-color: rgba(255, 179, 71, 0.8); }
+.kx-energy[data-level='short'] svg { color: #ffb347; }
+.kx-energy[data-level='dead'] { border-color: rgba(255, 120, 120, 0.75); }
+.kx-energy[data-level='dead'] svg { color: #ff8585; }
+
+/* ------------------------------------------------------------------ */
+/* Tarayıcı okları (üst orta)                                          */
+/* ------------------------------------------------------------------ */
+.kx-radar {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-width: 11rem;
+  pointer-events: none;
+}
+.kx-radar-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--kx-glass);
+  border: 1px solid rgba(90, 215, 255, 0.45);
+  font: 800 11.5px/1.2 system-ui, sans-serif;
+  color: #cfeeff;
+  text-shadow: 0 1px 2px #000;
+}
+.kx-radar-head svg { width: 13px; height: 13px; color: #5ad7ff; }
+.kx-radar-head i { font-style: normal; opacity: 0.75; font-variant-numeric: tabular-nums; }
+.kx-radar[data-empty='1'] .kx-radar-head { border-color: rgba(255, 120, 120, 0.8); color: #ffb3b3; }
+.kx-radar-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.kx-ping {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 11rem;
+  max-width: 15rem;
+  padding: 2px 9px 2px 6px;
+  border-radius: 9px;
+  background: rgba(8, 12, 24, 0.72);
+  border-left: 3px solid var(--kx-ping, #fff);
+  font: 700 12px/1.15 system-ui, sans-serif;
+  color: #f1f6ff;
+  text-shadow: 0 1px 2px #000;
+}
+.kx-ping[data-hostile='1'] { border-left-style: dashed; }
+.kx-ping-arrow { display: inline-flex; width: 16px; height: 16px; color: var(--kx-ping, #fff); transition: transform 90ms linear; }
+.kx-ping-arrow svg { width: 100%; height: 100%; }
+.kx-ping-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kx-ping b { font-variant-numeric: tabular-nums; }
+.kx-ping small { opacity: 0.8; width: 1em; text-align: center; }
+.kx-radar[data-calm='1'] .kx-ping-arrow { transition: none; }
+
+.kx-root[data-touch='1'] .kx-tech-track { width: 48px; }
+.kx-root[data-touch='1'] .kx-tech-label { max-width: 5.5rem; }
+@media (max-height: 420px) and (orientation: landscape) {
+  .kx-tech { gap: 3px 4px; }
+  .kx-tech-pill { min-height: 20px; padding: 1px 7px 1px 5px; font-size: 10.5px; }
+  .kx-radar-list { grid-template-columns: repeat(2, minmax(0, auto)); }
+  .kx-ping { min-width: 8.5rem; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kx-tech-fill, .kx-ping-arrow { transition: none; }
+  .kx-tech-pill[data-thrust='1'] .kx-tech-fill { animation: none; }
+}
+.kx-root[data-a11y='1'] .kx-tech-pill { font-size: 13px; }
+.kx-root[data-a11y='1'] .kx-ping { font-size: 13px; }
+
+/* eşya çubuğunda şarj çubuğu (jetpack yakıtı, alet/zırh/tarayıcı/portal tabancası şarjı) */
+.kx-slot-chg {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 3px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+.kx-slot-chg[data-has-dur='1'] { bottom: 7px; }
+.kx-slot-chg span { display: block; height: 100%; background: linear-gradient(90deg, #3f9cff, #7affea); }
+.kx-slot-chg[data-low='1'] span { background: #ff7a7a; }

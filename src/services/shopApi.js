@@ -35,8 +35,13 @@ export const shopApi = {
     get: () => api.get('/game/shop', { timeout: 15000 }).then(unwrap),
     /** `{ wallet, item, tickets }` */
     buy: (item) => api.post('/game/shop/buy', { item }, cfg(15000)).then(unwrap),
-    /** `{ equipped }` — gövde yalnız değişen yuvaları taşır (key ya da null). */
+    /**
+     * `{ equipped, kesif_loadout? }` — gövde yalnız değişen yuvaları taşır (key ya da null).
+     * Keşif görünümleri iç içe gider: `{ kesif: { portal: 'portal:neon-sokak' } }` (null = varsayılana dön).
+     */
     equip: (slots) => api.put('/game/shop/equip', slots, cfg(15000)).then(unwrap),
+    /** `{ loadout: { portal, alet, asa, jet, arac, gecis } }` — Keşif oyun görünümlerim (yalnız kendi verim). */
+    kesifLoadout: () => api.get('/game/kesif/loadout', { timeout: 8000 }).then(unwrap),
     /** `{ transactions, pagination }` */
     transactions: (page = 1) =>
         api.get('/game/wallet/transactions', { params: { page }, timeout: 15000 }).then(unwrap),

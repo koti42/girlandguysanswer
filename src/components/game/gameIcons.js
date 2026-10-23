@@ -16,6 +16,7 @@ import {
     LuActivity, LuCoins, LuGauge, LuInfinity, LuMagnet, LuMilestone, LuPersonStanding, LuRoute,
     LuShieldCheck, LuWind,
     LuCloud, LuLayers, LuSplit, LuShoppingBag, LuTicket,
+    LuCompass,
 } from 'react-icons/lu';
 
 const ICONS = {
@@ -45,6 +46,9 @@ const ICONS = {
     split: LuSplit, layers: LuLayers, cloud: LuCloud, tower: LuBuilding2,
     // Mağaza
     'shopping-bag': LuShoppingBag, shop: LuShoppingBag, ticket: LuTicket,
+    // Keşif rozetleri (kesif_ilk_adim: compass; diğerleri yukarıda: globe, mountain, leaf, flame, rocket, gem,
+    // footprints, medal, crown, bike, trophy, cpu, sparkles, star, building, heart, map)
+    compass: LuCompass,
 };
 
 /*

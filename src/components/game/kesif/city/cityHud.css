@@ -1,0 +1,367 @@
+/*
+ * KEŞİF — Neon Meridyen arayüzü (cityhud): bölge/saat/hava çipi, ışık ipucu, boyut kipi çipi, yükleme paneli, boyut düğmesi.
+ * Sınıf önekleri: .kx-c* (HUD çipleri), .kcl-* (yükleme paneli). Jetonlar kesifBase.css'te; neon vurgu burada.
+ * Dokunmatik yerleşim kuralları kesifTouchHud.css'in sütun genişliğine (152 px) uyar; çipler .kx-chip'i yeniden kullanır, bu yüzden oradaki
+ * sıkışık-yatay kuralları (koordinat gizli, tek satır) otomatik geçerlidir. Hareket azaltma: animasyon yok (aşağıdaki @media + [data-reduced]).
+ */
+:root {
+  --kc-cyan: #38e8ff;
+  --kc-pink: #ff4fd0;
+  --kc-amber: #ffc24d;
+  --kc-ink: #06101c;
+}
+
+/* ------------------------------------------------------------------ */
+/* Bölge çipi: ad + hava simgesi, saat, (masaüstü) koordinat            */
+/* ------------------------------------------------------------------ */
+.kx-cchip {
+  border-color: rgba(56, 232, 255, 0.34);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28), 0 0 14px rgba(56, 232, 255, 0.12);
+}
+.kx-cchip .kx-chip-zone svg {
+  color: var(--kc-cyan);
+}
+.kx-cwx {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 6px;
+  color: #8fd8ff;
+  flex: none;
+}
+.kx-cwx svg {
+  color: inherit;
+  width: 1.1em;
+  height: 1.1em;
+}
+.kx-cwx[data-wx='fırtına'] {
+  color: var(--kc-amber);
+}
+/* dokunmatik: dar sütunda (152 px) uzun bölge adı iki satıra kırılır (… ile kesilmez); çip en çok bir satır büyür */
+.kx-root[data-touch='1'] .kx-cchip .kx-chip-zone {
+  align-items: flex-start;
+}
+.kx-root[data-touch='1'] .kx-cchip .kx-chip-zone > span:not(.kx-cwx) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+  line-height: 1.2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.kx-root[data-touch='1'] .kx-cchip .kx-chip-zone svg {
+  margin-top: 2px;
+}
+.kx-cclock {
+  gap: 5px;
+}
+.kx-cclock-t {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--kx-text);
+}
+.kx-cclock-p {
+  text-transform: capitalize;
+}
+
+/* ------------------------------------------------------------------ */
+/* Işık ipucu: şekil + metin + uzaklık (renk körlüğü: şekil ve metin ayırt eder) */
+/* ------------------------------------------------------------------ */
+.kx-clight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-color: rgba(255, 79, 208, 0.5);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28), 0 0 16px rgba(255, 79, 208, 0.2);
+}
+.kx-clight-shape {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: var(--kc-pink);
+  stroke: var(--kc-ink);
+  stroke-width: 1.2;
+  paint-order: stroke;
+  filter: drop-shadow(0 0 4px rgba(255, 79, 208, 0.7));
+}
+.kx-clight-txt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 0.92em;
+}
+.kx-clight-d {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.86em;
+  color: var(--kx-muted);
+}
+.kx-clight[data-near='1'] {
+  border-color: var(--kc-cyan);
+}
+.kx-clight[data-near='1'] .kx-clight-shape {
+  fill: var(--kc-cyan);
+  filter: drop-shadow(0 0 4px rgba(56, 232, 255, 0.8));
+}
+
+/* ------------------------------------------------------------------ */
+/* Boyut kipi çipi (masaüstü anahtar ipucu)                             */
+/* ------------------------------------------------------------------ */
+.kx-cmode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 24px;
+  padding: 2px 5px 2px 9px;
+  border-radius: 999px;
+  background: var(--kx-glass);
+  border: 1px solid var(--kx-line);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  pointer-events: none;
+}
+.kx-cmode > svg {
+  flex: none;
+  color: var(--kx-muted);
+}
+.kx-cmode[data-mode='boyut'] {
+  border-color: var(--kc-pink);
+  box-shadow: 0 0 12px rgba(255, 79, 208, 0.28);
+}
+.kx-cmode[data-mode='boyut'] > svg {
+  color: var(--kc-pink);
+}
+.kx-cmode-name {
+  white-space: nowrap;
+}
+.kx-cmode-hint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--kx-muted);
+}
+.kx-cmode .kx-kbd {
+  flex: none;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+.kx-root[data-a11y='1'] .kx-cmode {
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dokunmatik boyut kipi düğmesi (Portal Tabancası düğmesinin yanı)       */
+/* ------------------------------------------------------------------ */
+.kx-tbtn[data-icon='dimension'] {
+  border-color: rgba(255, 79, 208, 0.55);
+}
+.kx-tbtn[data-icon='dimension'][data-lock='1'] {
+  border-color: var(--kc-pink);
+  color: #ffd0f1;
+  background: radial-gradient(circle at 35% 26%, rgba(255, 79, 208, 0.5), rgba(255, 79, 208, 0.12) 62%), rgba(14, 18, 30, 0.6);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 16px rgba(255, 79, 208, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ------------------------------------------------------------------ */
+/* Yükleme paneli (LoadingOverlay)                                      */
+/* ------------------------------------------------------------------ */
+.kcl-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: max(14px, var(--kx-safe-t)) max(14px, var(--kx-safe-r)) max(14px, var(--kx-safe-b)) max(14px, var(--kx-safe-l));
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(56, 232, 255, 0.16), transparent 62%),
+    radial-gradient(ellipse at 50% 100%, rgba(255, 79, 208, 0.16), transparent 58%),
+    rgba(5, 8, 20, 0.84);
+  color: var(--kx-text, #f4f6fb);
+  pointer-events: none;
+  animation: kcl-in 260ms ease-out both;
+}
+.kcl-card {
+  width: min(100%, 27rem);
+  max-height: 100%;
+  box-sizing: border-box;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 18px 20px 16px;
+  text-align: center;
+  border-radius: 20px;
+  background: rgba(10, 14, 28, 0.78);
+  border: 1px solid rgba(56, 232, 255, 0.4);
+  box-shadow: 0 0 28px rgba(56, 232, 255, 0.16), 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+.kcl-ico {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  font-size: 30px;
+  color: var(--kc-cyan);
+  filter: drop-shadow(0 0 8px rgba(56, 232, 255, 0.7));
+  animation: kcl-spin 2.4s linear infinite;
+}
+.kcl-title {
+  margin: 0;
+  font-size: 1.15em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.kcl-sub {
+  margin: 0;
+  font-size: 0.92em;
+  color: var(--kx-muted, rgba(226, 232, 245, 0.74));
+}
+.kcl-bar {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+.kcl-bar > span {
+  display: block;
+  height: 100%;
+  width: var(--kcl-p, 0%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--kc-cyan), var(--kc-pink));
+  transition: width 220ms ease-out;
+}
+.kcl-bar[data-indeterminate='1'] > span {
+  width: 38%;
+  animation: kcl-slide 1.5s ease-in-out infinite;
+}
+.kcl-pct {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 0.95em;
+  color: var(--kc-cyan);
+}
+.kcl-tip {
+  margin: 4px 0 0;
+  max-width: 24rem;
+  font-size: 0.9em;
+  line-height: 1.5;
+  color: var(--kx-text, #f4f6fb);
+}
+.kcl-tip b {
+  color: var(--kc-amber);
+}
+.kcl-scrim[data-a11y='1'] .kcl-card {
+  background: rgb(6, 8, 14);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+.kcl-scrim[data-a11y='1'] {
+  font-size: 1.12em;
+}
+/* alçak yatay ekran: kart sıkışık (başlık + çubuk yan yana değil, ama ikon gizli) */
+@media (orientation: landscape) and (max-height: 460px) {
+  .kcl-card {
+    gap: 6px;
+    padding: 10px 16px 10px;
+  }
+  .kcl-ico {
+    display: none;
+  }
+  .kcl-tip {
+    margin-top: 2px;
+  }
+}
+
+@keyframes kcl-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes kcl-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes kcl-slide {
+  0% { margin-left: -38%; }
+  100% { margin-left: 100%; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Duraklat > Nasıl Oynanır > Neon Meridyen sayfası                       */
+/* ------------------------------------------------------------------ */
+/* Nasıl Oynanır sekme çubuğu: üç seçenek (Klavye ve fare / Dokunmatik / Neon Meridyen) tek sırada; dar ekranda sığmazsa kendi içinde kırılır */
+.kx-ht-bar .kx-seg-row[data-cols='3'] {
+  grid-template-columns: repeat(3, 1fr);
+}
+.kx-ht-bar .kx-seg-row[data-cols='3'] .kx-seg-btn {
+  min-height: 44px;
+  padding: 2px 6px;
+  line-height: 1.15;
+}
+@media (max-height: 420px) and (orientation: landscape) {
+  .kx-ht .kx-ht-bar:has(.kx-seg-row[data-cols='3']) {
+    grid-template-columns: 2.4fr 1fr 1fr;
+  }
+  .kx-ht .kx-ht-bar:has(> .kx-seg:only-child) {
+    grid-template-columns: 1fr;
+  }
+}
+.kx-ht-steps {
+  margin: 0;
+  padding: 0 0 0 1.4em;
+  list-style: decimal;
+  display: grid;
+  gap: 6px;
+  font-size: 0.94em;
+  line-height: 1.45;
+}
+.kx-ht-steps b {
+  color: var(--kc-cyan);
+}
+.kx-ht-city-lead {
+  margin: 0 0 4px;
+  font-size: 0.94em;
+  line-height: 1.5;
+  color: var(--kx-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Hareket azaltma / erişilebilirlik: animasyon ve geçiş yok             */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .kcl-scrim,
+  .kcl-ico,
+  .kcl-bar > span,
+  .kcl-bar[data-indeterminate='1'] > span {
+    animation: none;
+    transition: none;
+  }
+  .kcl-bar[data-indeterminate='1'] > span {
+    width: 100%;
+    opacity: 0.6;
+  }
+}
+.kcl-scrim[data-reduced='1'],
+.kcl-scrim[data-reduced='1'] .kcl-ico,
+.kcl-scrim[data-reduced='1'] .kcl-bar > span {
+  animation: none;
+  transition: none;
+}
+.kcl-scrim[data-reduced='1'] .kcl-bar[data-indeterminate='1'] > span {
+  width: 100%;
+  opacity: 0.6;
+}

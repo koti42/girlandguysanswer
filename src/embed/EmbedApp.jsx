@@ -11,6 +11,7 @@ import { createEmbedApi } from './embedApi';
 const EmbedRunner = lazy(() => import('./EmbedRunner'));
 const EmbedAvatar = lazy(() => import('./EmbedAvatar'));
 const EmbedTower = lazy(() => import('./EmbedTower'));
+const EmbedKesif = lazy(() => import('./EmbedKesif'));
 
 // Parça inerken: koşu/kule koyu zemin + dönen halka; karakter önizlemesi şeffaf kalır.
 const Loading = ({ transparent }) =>
@@ -51,7 +52,7 @@ const UnknownGame = () => {
  * Gömülü oyun kökü (embed.html). Site kabuğu yok: AuthContext, Router,
  * başlık/altbilgi, reklam, yaş/cinsiyet kapıları, mesaj kutusu yüklenmez.
  * Kimlik ve tercihler native'in enjekte ettiği __HS_NATIVE__'den (yalnızca
- * bellekte), oyun ?game= parametresinden: kosu | kule | avatar.
+ * bellekte), oyun ?game= parametresinden: kosu | kule | kesif | avatar.
  *
  * Testler config / game / api'yi doğrudan verebilir.
  */
@@ -81,6 +82,7 @@ const EmbedApp = ({ config: configProp, game: gameProp, api: apiProp }) => {
     if (game === 'kosu') content = <EmbedRunner config={config} api={api} haptic={haptic} />;
     else if (game === 'avatar') content = <EmbedAvatar config={config} />;
     else if (game === 'kule') content = <EmbedTower config={config} api={api} haptic={haptic} />;
+    else if (game === 'kesif') content = <EmbedKesif config={config} api={api} haptic={haptic} />;
     else content = <UnknownGame />;
 
     return (

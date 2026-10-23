@@ -66,3 +66,19 @@ describe('gameApi karakter / mağaza yönlendirmeleri', () => {
         api.post.mock.calls.forEach((c) => expect(c[2].headers['Idempotency-Key']).toBeTruthy());
     });
 });
+
+describe('gameApi Keşif görünümleri', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it('kuşanma gövdesi iç içe `kesif` taşır (Idempotency-Key ile); yük ayrı uçtan okunur', async () => {
+        await gameApi.equipCosmetics({ kesif: { portal: 'portal:neon-sokak' } });
+        await gameApi.equipCosmetics({ kesif: { arac: null } });
+        await gameApi.getKesifLoadout();
+        expect(api.put.mock.calls.map((c) => [c[0], c[1]])).toEqual([
+            ['/game/shop/equip', { kesif: { portal: 'portal:neon-sokak' } }],
+            ['/game/shop/equip', { kesif: { arac: null } }],
+        ]);
+        api.put.mock.calls.forEach((c) => expect(c[2].headers['Idempotency-Key']).toBeTruthy());
+        expect(api.get.mock.calls.map((c) => c[0])).toEqual(['/game/kesif/loadout']);
+    });
+});

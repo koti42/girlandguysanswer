@@ -1,0 +1,252 @@
+/*
+ * Herkesler Keşfediyor - lobi ve hub kartı stilleri.
+ * Önek: kesif-. Genel zemin/kart sınıfları game.css'ten (game-card, game-press...).
+ * Hareketler prefers-reduced-motion'da kapanır.
+ */
+
+/* ---------------- Kahraman görseli (SVG) ---------------- */
+.kesif-art {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+/* Sahne yüksekliğe göre ölçeklenir, sağa/alta yaslanır; dar kartta soldan kırpılır. */
+.kesif-art svg {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 960 / 260;
+  display: block;
+}
+/* Metnin altında kalan sol kenar soluklaşır; okunabilirlik. */
+.kesif-art-fade {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 28%, #000 72%);
+  mask-image: linear-gradient(90deg, transparent 0%, transparent 28%, #000 72%);
+}
+@media (max-width: 639px) {
+  /* Dar ekranda metin sahnenin üstüne biner: sahne alt yarıya yaslanır (ada, güneş, kaşif görünür), solu sönük. */
+  .kesif-art svg {
+    height: 54%;
+  }
+  .kesif-art-compact svg {
+    height: 42%;
+  }
+  .kesif-art-fade {
+    opacity: 0.9;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+  }
+}
+.kesif-cloud {
+  animation: kesif-drift 70s linear infinite alternate;
+}
+.kesif-cloud-b {
+  animation-duration: 95s;
+}
+.kesif-cloud-c {
+  animation-duration: 55s;
+  animation-direction: alternate-reverse;
+}
+@keyframes kesif-drift {
+  from { transform-box: fill-box; translate: -26px 0; }
+  to { transform-box: fill-box; translate: 40px 0; }
+}
+.kesif-crystal,
+.kesif-crystal-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.kesif-crystal {
+  animation: kesif-float 5s ease-in-out infinite;
+}
+.kesif-crystal-glow {
+  animation: kesif-pulse 3.2s ease-in-out infinite;
+}
+@keyframes kesif-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -4px; }
+}
+@keyframes kesif-pulse {
+  0%, 100% { opacity: 0.55; scale: 0.92; }
+  50% { opacity: 1; scale: 1.08; }
+}
+
+/* ---------------- Mod karoları ---------------- */
+.kesif-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 132px;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  padding: 1rem;
+  text-align: left;
+  color: #fff;
+  box-shadow: 0 14px 34px -16px rgba(8, 12, 40, 0.7);
+  outline-offset: 3px;
+}
+.kesif-tile:focus-visible {
+  outline: 2px solid #ff6b6b;
+}
+.kesif-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 45%),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 16px);
+}
+.kesif-tile > * {
+  position: relative;
+  z-index: 1;
+}
+.kesif-tile[aria-pressed='true'],
+.kesif-tile[data-active='true'] {
+  box-shadow: 0 0 0 3px #ffd34d, 0 14px 34px -16px rgba(8, 12, 40, 0.7);
+}
+.kesif-tile-macera { background: linear-gradient(150deg, #0f766e 0%, #155e75 55%, #1e3a8a 100%); }
+.kesif-tile-devam { background: linear-gradient(150deg, #334155 0%, #1e293b 60%, #312e81 100%); }
+.kesif-tile-insa { background: linear-gradient(150deg, #b45309 0%, #92400e 55%, #7c2d12 100%); }
+.kesif-tile-topluluk { background: linear-gradient(150deg, #6d28d9 0%, #5b21b6 55%, #3730a3 100%); }
+.kesif-tile-harita { background: linear-gradient(150deg, #be185d 0%, #9d174d 55%, #581c87 100%); }
+.kesif-tile-hak { background: linear-gradient(150deg, #a16207 0%, #854d0e 55%, #78350f 100%); }
+
+/* ---------------- Harita kapağı (kapak yoksa voxel yedek) ---------------- */
+.kesif-cover {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--kc-sky, #1e293b);
+}
+.kesif-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  image-rendering: pixelated;
+}
+.kesif-cover-art {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(0deg, var(--kc-ground) 0 22%, transparent 22%),
+    linear-gradient(0deg, var(--kc-hill) 0 44%, transparent 44%),
+    var(--kc-sky);
+  -webkit-mask-image: none;
+}
+.kesif-cover-art::before {
+  content: '';
+  position: absolute;
+  left: 18%;
+  top: 22%;
+  width: 14%;
+  aspect-ratio: 1;
+  background: var(--kc-spark);
+  box-shadow: 0 0 22px 4px var(--kc-spark);
+  opacity: 0.9;
+}
+.kesif-cover-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 12px);
+}
+
+/* ---------------- Hak sayacı ---------------- */
+.kesif-meter {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 3px;
+}
+.kesif-meter > span {
+  height: 12px;
+  background: rgba(100, 116, 139, 0.28);
+}
+.kesif-meter > span[data-on='true'] {
+  background: linear-gradient(180deg, #ffd34d, #f59e0b);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* ---------------- Satın alma kutlaması ---------------- */
+.kesif-burst {
+  position: relative;
+  display: flex;
+  height: 12rem;
+  align-items: center;
+  justify-content: center;
+}
+.kesif-burst-cubes {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.kesif-cube {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #ffe58a 0 50%, #f5b52c 50% 100%);
+  box-shadow: inset -5px -5px 0 rgba(120, 53, 15, 0.35), 0 8px 18px -6px rgba(245, 158, 11, 0.7);
+  animation: kesif-cube-pop 520ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+.kesif-cube:nth-child(even) {
+  margin-bottom: 14px;
+}
+@keyframes kesif-cube-pop {
+  0% { opacity: 0; transform: translateY(26px) scale(0.4) rotate(-12deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+.kesif-confetti {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+}
+.kesif-confetti > span {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: var(--c);
+  opacity: 0;
+  animation: kesif-confetti 1100ms ease-out forwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes kesif-confetti {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+  100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); }
+}
+
+/* ---------------- Yükleniyor iskeleti ---------------- */
+.kesif-skeleton {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.16), rgba(148, 163, 184, 0.3), rgba(148, 163, 184, 0.16));
+  background-size: 200% 100%;
+  animation: kesif-shimmer 1.4s linear infinite;
+}
+@keyframes kesif-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kesif-cloud,
+  .kesif-crystal,
+  .kesif-crystal-glow,
+  .kesif-cube,
+  .kesif-skeleton {
+    animation: none !important;
+  }
+  .kesif-cube {
+    opacity: 1;
+  }
+  .kesif-confetti {
+    display: none;
+  }
+}

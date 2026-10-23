@@ -1,0 +1,283 @@
+/*
+ * KEŞİF — Envanter/Üret çalışma alanı: sekme şeridi, sıradaki adım kartı, istasyon göstergeleri, eksik satırı, tost.
+ * panels.css değişkenlerini (.kp-overlay) kullanır; ayrı dosya, çakışmayı azaltmak için.
+ */
+.kp-work {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(8, 11, 30, 0.7);
+  border: 1px solid var(--kp-line);
+  flex: none;
+}
+.kp-work-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--kp-dim);
+  font: inherit;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.kp-work-tab:hover { color: var(--kp-text); background: rgba(255, 255, 255, 0.06); }
+.kp-work-tab.is-on {
+  color: #15130a;
+  background: linear-gradient(180deg, #ffd978, #f2b83a);
+  border-color: #ffe29a;
+  box-shadow: 0 2px 10px rgba(242, 184, 58, 0.35);
+}
+.kp-work-key {
+  padding: 0 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.18);
+  font: 700 11px/18px ui-monospace, Menlo, Consolas, monospace;
+  color: inherit;
+}
+.kp-work-tab.is-on .kp-work-key { border-color: rgba(0, 0, 0, 0.35); background: rgba(0, 0, 0, 0.1); }
+.kp-work-tab .kp-tab-count { margin-left: 0; }
+@media (hover: none) { .kp-work-key { display: none; } }
+
+/* ---------- sıradaki adım ---------- */
+.kp-guide {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(100deg, rgba(255, 207, 90, 0.16), rgba(255, 207, 90, 0.05));
+  border: 1px solid rgba(255, 207, 90, 0.55);
+}
+.kp-guide-icon { flex: none; font-size: 22px; line-height: 1; }
+.kp-guide-body { flex: 1; min-width: 0; }
+.kp-guide-title { margin: 0; font-size: 11px; font-weight: 800; letter-spacing: 0.9px; text-transform: uppercase; color: var(--kp-accent); }
+.kp-guide-text { margin: 2px 0 0; font-weight: 700; color: var(--kp-text); }
+.kp-guide .kp-btn { flex: none; }
+
+/* ---------- istasyon göstergeleri (tıklayınca o istasyonun tarifleri süzülür) ---------- */
+.kp-station { padding: 0; cursor: pointer; }
+.kp-station-btn { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; min-height: 28px; border-radius: 999px; cursor: pointer; }
+.kp-station-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.kp-station.is-filter { border-color: var(--kp-accent); background: rgba(255, 207, 90, 0.16); color: var(--kp-accent); }
+.kp-station-help { margin: 4px 2px 0; font-size: 12px; color: var(--kp-dim); }
+
+/* ---------- tarif satırı ---------- */
+.kp-recipe-row:not(.is-craftable) .kp-recipe-out .kp-icon { filter: grayscale(0.55) brightness(0.8); }
+.kp-recipe-row:not(.is-craftable) .kp-recipe-name { color: var(--kp-dim); }
+.kp-recipe-row.is-pinned { border-color: rgba(255, 207, 90, 0.55); }
+.kp-pin-mark { margin-left: 4px; color: var(--kp-accent); }
+.kp-missing { display: block; font-size: 12px; font-weight: 600; color: #ffb3a8; line-height: 1.25; }
+.kp-recipe-out.is-pop { animation: kp-item-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes kp-item-pop { 0% { transform: scale(1); } 35% { transform: scale(1.28); } 100% { transform: scale(1); } }
+
+/* ---------- ayrıntı ---------- */
+.kp-pin-btn { margin-top: 8px; width: 100%; }
+.kp-station-hint { margin: 2px 0 8px; font-size: 12.5px; color: var(--kp-dim); }
+
+/* ---------- üretim tostu ---------- */
+.kp-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  translate: -50% 0;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 10px;
+  border-radius: 999px;
+  background: rgba(24, 92, 58, 0.96);
+  border: 1px solid var(--kp-good);
+  color: #eafff2;
+  font-weight: 800;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: kp-toast-in 0.28s cubic-bezier(0.2, 1.2, 0.4, 1);
+}
+.kp-toast.is-bad { background: rgba(110, 36, 36, 0.96); border-color: var(--kp-bad); color: #ffecec; }
+.kp-toast .kp-icon { width: 28px; height: 28px; }
+@keyframes kp-toast-in { from { opacity: 0; translate: -50% 12px; } to { opacity: 1; translate: -50% 0; } }
+
+/* ---------- kısa görünüm (telefon yatay ≈ 360–520 px yükseklik): üst denetimler sıkışır, liste görünür kalır ---------- */
+@media (max-height: 520px) {
+  .kp-sub { display: none; }
+  .kp-head { padding: 4px 8px 4px 14px; }
+  .kp-title { font-size: 17px; }
+  .kp-work-tab { min-height: 44px; padding: 4px 12px; font-size: 14px; }
+  .kp-body { padding: 6px 10px 10px; }
+  .kp-craft-top { gap: 5px; }
+  .kp-guide { padding: 5px 10px; gap: 8px; border-radius: 10px; }
+  .kp-guide-icon { display: none; }
+  .kp-guide-title { display: inline; margin-right: 6px; font-size: 10px; }
+  .kp-guide-text { display: inline; font-size: 13px; margin: 0; }
+  .kp-guide .kp-btn { min-height: 36px; padding: 4px 10px; }
+  .kp-station { flex: none; font-size: 11.5px; }
+  .kp-station-btn { padding: 2px 8px; min-height: 26px; position: relative; }
+  /* dokunmatik: görsel boyut sıkışık kalır, vuruş alanı ≥ 42 px (QA5) */
+  .kp-station-btn::after { content: ''; position: absolute; inset: -8px -2px; }
+  .kp-search-row .kp-search, .kp-search-row .kp-chip { min-height: 40px; }
+  .kp-tabs { margin: 0 0 4px; padding-bottom: 2px; }
+  .kp-tab { min-height: 38px; padding: 2px 12px; }
+  .kp-recipe-row { padding: 4px; }
+  .kp-toast { bottom: 8px; }
+}
+
+@media (max-width: 760px) {
+  .kp-work-tab { padding: 6px 12px; }
+  .kp-head { gap: 8px; }
+  .kp-head-text { flex: 1 1 0; }
+  .kp-work { padding: 3px; }
+}
+.kp-calm .kp-recipe-out.is-pop, .kp-calm .kp-toast { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .kp-recipe-out.is-pop, .kp-toast, .kp-work-tab { animation: none; transition: none; }
+}
+
+/* =====================================================================================================
+ * SABİT YERLEŞİM — bir tarifin satırı kendi kendine yer değiştirmez.
+ *  - kutu sabit yükseklikte; üst denetimler sabit, yalnız tarif listesi kendi içinde kayar (kaydırma konumu yenilemede korunur)
+ *  - satır yüksekliği sabit (eksik satırı her zaman yer tutar), istasyon/sabit şeridi/sekme sayaçları sabit genişlik/yükseklik
+ *  - rehber altbilgide, ısı göstergesi ayrıntıda, tost örtüde: hiçbiri listeyi aşağı itmez
+ *  - ayrıntıda Üret düğmeleri alt çubukta sabit (üstteki içerik uzayıp kısalsa da düğmeler yerinde)
+ * ================================================================================================== */
+.kp-craft { --kp-row-h: 100px; }
+.kp-a11y .kp-craft, .kp-craft.kp-a11y { --kp-row-h: 124px; }
+.kp-box.kp-craft { height: min(100%, 760px); }
+.kp-craft .kp-body { display: flex; flex-direction: column; overflow: hidden; }
+.kp-craft .kp-craft-top { flex: none; }
+.kp-craft .kp-craft-layout { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; margin-top: 2px; }
+.kp-craft .kp-craft-listwrap {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #3a4380 transparent;
+  padding: 2px 2px 8px 0;
+}
+
+/* istasyonlar + sabit şeridi tek satır (sabit yükseklik) */
+.kp-chiprow { display: flex; align-items: center; gap: 8px; height: 44px; }
+.kp-craft .kp-stations { flex: 0 1 auto; flex-wrap: nowrap; overflow-x: auto; max-width: 64%; scrollbar-width: none; }
+.kp-craft .kp-station { flex: none; white-space: nowrap; }
+.kp-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.kp-pinstrip {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  border: 1px dashed var(--kp-line);
+  border-radius: 12px;
+}
+.kp-pinstrip-star { flex: none; color: var(--kp-accent); font-size: 15px; }
+.kp-pinstrip-empty { flex: none; font-size: 12px; color: var(--kp-dim); white-space: nowrap; }
+.kp-pinchip {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--kp-line);
+  background: var(--kp-slot-bg);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.kp-pinchip .kp-icon { width: 30px; height: 30px; filter: grayscale(0.55) brightness(0.8); }
+.kp-pinchip.is-craftable { border-color: rgba(82, 224, 138, 0.6); }
+.kp-pinchip.is-craftable .kp-icon { filter: none; }
+.kp-pinchip.is-sel { border-color: var(--kp-accent2); box-shadow: 0 0 0 2px rgba(90, 215, 255, 0.45); }
+
+/* sekme sayaçları: rozet sekmenin köşesine ASILI (yer kaplamaz): sayı belirip kaybolunca ya da 1→12 olunca sekmeler yana kaymaz */
+.kp-craft .kp-tab { position: relative; padding: 6px 22px 6px 14px; }
+.kp-craft .kp-tab-count { position: absolute; top: 4px; right: 4px; margin: 0; min-width: 18px; padding: 0 4px; font-size: 10px; line-height: 16px; font-variant-numeric: tabular-nums; }
+.kp-tab-count.is-empty { display: none; }
+
+/* tarif satırı: sabit yükseklik; ad tek satır, malzemeler en çok iki satır, eksik satırı hep yer tutar */
+.kp-craft .kp-recipes { grid-auto-rows: var(--kp-row-h); }
+.kp-craft .kp-recipe-row { height: var(--kp-row-h); overflow: hidden; }
+.kp-craft .kp-recipe { min-height: 0; height: 100%; }
+.kp-craft .kp-recipe-body { align-content: center; }
+.kp-craft .kp-recipe-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kp-craft .kp-ings { max-height: 48px; overflow: hidden; gap: 3px; }
+.kp-craft .kp-ing { font-size: 11px; }
+.kp-craft .kp-ing .kp-icon { width: 20px; height: 20px; }
+.kp-craft .kp-ing-n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kp-craft .kp-missing { height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kp-craft .kp-missing[aria-hidden='true'] { visibility: hidden; }
+/* istasyon süzgeci açıkken (ve istasyon yakındayken) kart başına yinelenen istasyon rozeti yer kaplamaz: ad okunur kalır; metin ekran okuyucuya açık */
+.kp-craft .kp-recipes[data-station-filter] .kp-badge.is-ok { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ayrıntı: kaydırılan içerik + sabit alt çubuk (Üret düğmeleri hep aynı yerde) */
+.kp-craft .kp-detail { position: static; display: flex; flex-direction: column; min-height: 0; max-height: none; padding: 0; overflow: hidden; }
+.kp-craft .kp-detail-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 12px 12px 6px; scrollbar-width: thin; scrollbar-gutter: stable; }
+.kp-craft .kp-craft-actions { flex: none; position: static; margin: 0; padding: 8px 12px 12px; border-top: 1px solid var(--kp-line); background: var(--kp-panel); grid-template-columns: 1fr 1fr 1.6fr; }
+.kp-craft .kp-craft-actions .kp-btn { white-space: nowrap; padding: 8px 4px; min-height: 46px; }
+.kp-craft .kp-detail > .kp-empty { margin: 14px 12px; }
+.kp-craft .kp-heat { margin-top: 10px; }
+.kp-craft .kp-pin-btn { margin-top: 10px; }
+
+/* sıradaki adım: altbilgide sabit yükseklikli tek şerit */
+.kp-craft .kp-foot { padding: 6px 12px; }
+.kp-guide-slot { height: 54px; display: flex; align-items: center; }
+.kp-guide-slot .kp-guide { width: 100%; height: 100%; padding: 4px 10px; gap: 8px; overflow: hidden; }
+.kp-guide-slot .kp-guide-icon { display: none; }
+.kp-guide-slot .kp-guide-body { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; line-height: 1.3; }
+.kp-guide-slot .kp-guide-title { display: inline; margin: 0 6px 0 0; font-size: 10px; }
+.kp-guide-slot .kp-guide-text { display: inline; margin: 0; font-size: 13px; }
+.kp-guide-slot .kp-btn { min-height: 36px; padding: 4px 12px; white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .kp-craft .kp-craft-layout { grid-template-columns: minmax(0, 1fr); }
+  .kp-craft .kp-detail { position: absolute; top: auto; left: 8px; right: 8px; bottom: 8px; height: min(72%, 360px); display: none; }
+  .kp-craft .kp-detail.is-open { display: flex; }
+}
+/* KISA GÖRÜNÜM (telefon yatay): arama+sekmeler solda, sabit şeridi + ayrıntı sağda; istasyon çipleri yalnız süzgeç açıkken (kaldırmak için) */
+@media (max-height: 520px) {
+  .kp-craft { --kp-row-h: 80px; }
+  .kp-craft .kp-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 300px); grid-template-rows: auto auto minmax(0, 1fr); gap: 4px 10px; padding: 6px 10px 8px; }
+  .kp-craft .kp-craft-top, .kp-craft .kp-craft-layout { display: contents; }
+  .kp-craft .kp-search-row { grid-column: 1; grid-row: 1; }
+  .kp-craft .kp-tabs { grid-column: 1; grid-row: 2; margin: 0; padding-bottom: 0; }
+  .kp-craft .kp-craft-listwrap { grid-column: 1; grid-row: 3; }
+  .kp-craft .kp-chiprow { grid-column: 2; grid-row: 1; height: 40px; }
+  .kp-craft .kp-detail { grid-column: 2; grid-row: 2 / span 2; }
+  .kp-craft .kp-stations { max-width: none; }
+  .kp-craft .kp-station:not(.is-filter) { display: none; }
+  .kp-craft .kp-stations:not(:has(.is-filter)) { display: none; }
+  .kp-pinstrip { height: 40px; }
+  .kp-pinchip { width: 34px; height: 34px; }
+  .kp-craft .kp-ings { flex-wrap: nowrap; max-height: 24px; }
+  .kp-craft .kp-craft-actions { padding: 6px 10px 8px; }
+  .kp-craft .kp-craft-actions .kp-btn { min-height: 44px; }
+  .kp-craft .kp-detail-scroll { padding: 8px 10px 4px; }
+  .kp-craft .kp-foot { padding: 4px 10px; }
+  .kp-guide-slot { height: 42px; }
+  .kp-guide-slot .kp-guide-text { font-size: 12px; }
+}
+/* kısa + dar (≈667×375 yatay): tek sütun, ayrıntı çekmece; sabit şeridi/istasyonlar yalnız süzgeç açıksa görünür */
+@media (max-height: 520px) and (max-width: 760px) {
+  .kp-craft .kp-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto minmax(0, 1fr); }
+  .kp-craft .kp-chiprow { grid-column: 1; grid-row: 1; }
+  .kp-craft .kp-search-row { grid-row: 2; }
+  .kp-craft .kp-tabs { grid-row: 3; }
+  .kp-craft .kp-craft-listwrap { grid-row: 4; }
+  .kp-craft .kp-chiprow:not(:has(.is-filter)) { display: none; }
+  .kp-craft .kp-detail { grid-column: 1; grid-row: 4; }
+}

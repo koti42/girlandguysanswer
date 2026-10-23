@@ -10,7 +10,8 @@ import { buildGolden, GOLDEN_PATH, serializeGolden } from '../../../../scripts/t
  * (backend kopyası da yazılır, PHP testleri yeni dosyayla koşar).
  */
 
-const text = readFileSync(GOLDEN_PATH, 'utf8');
+// Windows'ta git autocrlf dosyayı CRLF yazar; içerik aynıysa satır sonu farkı sayılmaz.
+const text = readFileSync(GOLDEN_PATH, 'utf8').split('\r\n').join('\n');
 const golden = JSON.parse(text);
 
 describe('tower golden.json', () => {

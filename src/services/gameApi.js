@@ -120,6 +120,7 @@ export const gameApi = {
     getShop: (...a) => shopApi.get(...a),
     buyShopItem: (...a) => shopApi.buy(...a),
     equipCosmetics: (...a) => shopApi.equip(...a),
+    getKesifLoadout: (...a) => shopApi.kesifLoadout(...a),
     getWalletTransactions: (...a) => shopApi.transactions(...a),
     checkMessageTicket: (...a) => shopApi.checkMessageTicket(...a),
     sendTicketMessage: (...a) => shopApi.sendTicketMessage(...a),

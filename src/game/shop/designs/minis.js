@@ -924,4 +924,305 @@ export const MINIS = [
             ],
         },
     },
+
+    /* 19 ─ Minik Çip (common) — Keşif Koleksiyonu ──────────────── */
+    {
+        id: 'mini:minik-cip',
+        category: 'mini_avatar',
+        name: 'Minik Çip',
+        rarity: 'common',
+        description: 'Gülümseyen küçük bir veri çipi; bacakları devre yolu.',
+        art: {
+            viewBox: '0 0 64 64',
+            defs: [
+                lin('mc-board', [stop(0, '#5BE0C6'), stop(0.55, '#26B39D'), stop(1, '#14766F')], 0, 0, 1, 1),
+                lin('mc-die', [stop(0, '#34416E'), stop(1, '#161E3C')]),
+                lin('mc-pin', [stop(0, '#FFE58A'), stop(1, '#E3A52B')], 0, 0, 1, 0),
+                lin('mc-pin-v', [stop(0, '#FFE58A'), stop(1, '#E3A52B')], 0, 0, 0, 1),
+            ],
+            elements: [
+                shadow(15, 61),
+                // devre yolu bacaklar
+                el('path', { d: 'M24 49 L24 55 L19 55 L19 59 M40 49 L40 55 L45 55 L45 59', fill: 'none', stroke: OL, strokeWidth: 4.2, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+                el('path', { d: 'M24 49 L24 55 L19 55 L19 59 M40 49 L40 55 L45 55 L45 59', fill: 'none', stroke: '#7FF0D8', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+                el('circle', { cx: 19, cy: 59.4, r: 2.3, fill: 'url(#mc-pin)', stroke: OL, strokeWidth: SW_D }),
+                el('circle', { cx: 45, cy: 59.4, r: 2.3, fill: 'url(#mc-pin)', stroke: OL, strokeWidth: SW_D }),
+                // yan pimler
+                el('rect', { x: 11, y: 18, width: 5, height: 5, rx: 1.2, fill: 'url(#mc-pin)', stroke: OL, strokeWidth: 1.2 }),
+                el('rect', { x: 11, y: 28, width: 5, height: 5, rx: 1.2, fill: 'url(#mc-pin)', stroke: OL, strokeWidth: 1.2 }),
+                el('rect', { x: 11, y: 38, width: 5, height: 5, rx: 1.2, fill: 'url(#mc-pin)', stroke: OL, strokeWidth: 1.2 }),
+                el('rect', { x: 48, y: 18, width: 5, height: 5, rx: 1.2, fill: 'url(#mc-pin)', stroke: OL, strokeWidth: 1.2 }),
+                el('rect', { x: 48, y: 28, width: 5, height: 5, rx: 1.2, fill: 'url(#mc-pin)', stroke: OL, strokeWidth: 1.2 }),
+                el('rect', { x: 48, y: 38, width: 5, height: 5, rx: 1.2, fill: 'url(#mc-pin)', stroke: OL, strokeWidth: 1.2 }),
+                el('rect', { x: 20, y: 6, width: 5, height: 5, rx: 1.2, fill: 'url(#mc-pin-v)', stroke: OL, strokeWidth: 1.2 }),
+                el('rect', { x: 29.5, y: 6, width: 5, height: 5, rx: 1.2, fill: 'url(#mc-pin-v)', stroke: OL, strokeWidth: 1.2 }),
+                el('rect', { x: 39, y: 6, width: 5, height: 5, rx: 1.2, fill: 'url(#mc-pin-v)', stroke: OL, strokeWidth: 1.2 }),
+                // kart gövdesi
+                el('rect', { x: 14, y: 9, width: 36, height: 41, rx: 8, fill: 'url(#mc-board)', stroke: OL, strokeWidth: SW }),
+                // devre izleri
+                el('path', { d: 'M18 16 L23 16 L23 20 M46 16 L41 16 L41 20 M18 44 L24 44 M46 44 L40 44', fill: 'none', stroke: '#C2FFF2', strokeWidth: 1.1, strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.7 }),
+                el('circle', { cx: 18, cy: 16, r: 1.2, fill: '#C2FFF2', opacity: 0.8 }),
+                el('circle', { cx: 46, cy: 16, r: 1.2, fill: '#C2FFF2', opacity: 0.8 }),
+                // çip çekirdeği
+                el('rect', { x: 20, y: 17, width: 24, height: 25, rx: 5.4, fill: 'url(#mc-die)', stroke: OL, strokeWidth: SW_D }),
+                el('rect', { x: 22, y: 19, width: 12, height: 2.2, rx: 1.1, fill: '#FFFFFF', opacity: 0.22 }),
+                el('path', { d: 'M24.6 29.6 Q27.2 26 29.8 29.6 M34.2 29.6 Q36.8 26 39.4 29.6', fill: 'none', stroke: '#62F4F0', strokeWidth: 2.4, strokeLinecap: 'round' }),
+                el('path', { d: 'M28.6 34.4 Q32 38 35.4 34.4', fill: 'none', stroke: '#62F4F0', strokeWidth: 2, strokeLinecap: 'round' }),
+                blush(23.6, 34.8, '#FF7E9C', 2.2, 1.4),
+                blush(40.4, 34.8, '#FF7E9C', 2.2, 1.4),
+                el('ellipse', { cx: 21.4, cy: 13.4, rx: 4.8, ry: 1.8, fill: '#FFFFFF', opacity: 0.4, transform: 'rotate(-12 21.4 13.4)' }),
+            ],
+        },
+    },
+
+    /* 20 ─ Kurye Robotu (common) — Keşif Koleksiyonu ───────────── */
+    {
+        id: 'mini:kurye-robotu',
+        category: 'mini_avatar',
+        name: 'Kurye Robotu',
+        rarity: 'common',
+        description: 'Sırtında minik koli taşıyan, hiç yorulmayan teslimat robotu.',
+        art: {
+            viewBox: '0 0 64 64',
+            defs: [
+                lin('kr-metal', [stop(0, '#F3F6FC'), stop(1, '#AEBBD3')]),
+                lin('kr-screen', [stop(0, '#2B3A66'), stop(1, '#141C38')]),
+                lin('kr-cap', [stop(0, '#FFA45A'), stop(1, '#EA5F2A')]),
+                lin('kr-box', [stop(0, '#E8B777'), stop(1, '#B9803F')], 0, 0, 1, 1),
+                rad('kr-wheel', [stop(0, '#5B6486'), stop(1, '#262C48')], 0.4, 0.35, 0.7),
+            ],
+            elements: [
+                shadow(18, 61),
+                // sırttaki koli
+                el('g', { transform: 'rotate(9 46 22)' }, [
+                    el('rect', { x: 36, y: 8, width: 24, height: 22, rx: 3, fill: 'url(#kr-box)', stroke: OL, strokeWidth: SW }),
+                    el('rect', { x: 45, y: 8, width: 6, height: 22, fill: '#F6DDB0', stroke: OL, strokeWidth: 1 }),
+                    el('rect', { x: 39, y: 15, width: 4.4, height: 5.4, rx: 1, fill: '#FFFFFF', opacity: 0.9 }),
+                    el('path', { d: 'M40 17.4 L42.4 17.4 M40 19 L42.4 19', fill: 'none', stroke: '#B9803F', strokeWidth: 0.7, strokeLinecap: 'round' }),
+                ]),
+                // koli askısı
+                el('path', { d: 'M40 34 C37 28 34 27 31 28', fill: 'none', stroke: OL, strokeWidth: 3.6, strokeLinecap: 'round' }),
+                el('path', { d: 'M40 34 C37 28 34 27 31 28', fill: 'none', stroke: '#FF7A45', strokeWidth: 1.6, strokeLinecap: 'round' }),
+                // tekerlek gövde
+                el('rect', { x: 18, y: 41, width: 28, height: 11, rx: 5, fill: '#8F9DB9', stroke: OL, strokeWidth: SW_D }),
+                el('circle', { cx: 24, cy: 54, r: 5.4, fill: 'url(#kr-wheel)', stroke: OL, strokeWidth: SW_D }),
+                el('circle', { cx: 24, cy: 54, r: 2, fill: '#C7D0E6' }),
+                el('circle', { cx: 40, cy: 54, r: 5.4, fill: 'url(#kr-wheel)', stroke: OL, strokeWidth: SW_D }),
+                el('circle', { cx: 40, cy: 54, r: 2, fill: '#C7D0E6' }),
+                // kafa
+                el('rect', { x: 11, y: 17, width: 42, height: 31, rx: 10, fill: 'url(#kr-metal)', stroke: OL, strokeWidth: SW }),
+                el('rect', { x: 15.5, y: 22.5, width: 33, height: 20, rx: 6.5, fill: 'url(#kr-screen)', stroke: OL, strokeWidth: SW_D }),
+                el('path', { d: 'M20.4 33 Q24.2 27.6 28 33 M36 33 Q39.8 27.6 43.6 33', fill: 'none', stroke: '#62F4F0', strokeWidth: 2.6, strokeLinecap: 'round' }),
+                el('path', { d: 'M28.4 37 Q32 39.8 35.6 37', fill: 'none', stroke: '#62F4F0', strokeWidth: 1.8, strokeLinecap: 'round' }),
+                el('circle', { cx: 19.8, cy: 37.6, r: 1.5, fill: '#FF6B6B', opacity: 0.75 }),
+                el('circle', { cx: 44.2, cy: 37.6, r: 1.5, fill: '#FF6B6B', opacity: 0.75 }),
+                el('rect', { x: 5.4, y: 28, width: 6.4, height: 12, rx: 2.4, fill: '#8F9DB9', stroke: OL, strokeWidth: SW_D }),
+                // kurye şapkası
+                el('path', { d: 'M13 21 C13 10 22 6 32 6 C42 6 51 10 51 21 Z', fill: 'url(#kr-cap)', stroke: OL, strokeWidth: SW, strokeLinejoin: 'round' }),
+                el('path', { d: 'M9.6 21.6 C20 18.6 44 18.6 54.4 21.6 C54.4 24.4 50 25 32 25 C14 25 9.6 24.4 9.6 21.6 Z', fill: '#C8481C', stroke: OL, strokeWidth: SW_D, strokeLinejoin: 'round' }),
+                el('circle', { cx: 32, cy: 13.6, r: 3.6, fill: '#FFF2DA', stroke: OL, strokeWidth: 1.2 }),
+                el('path', { d: 'M30.2 13.6 L33.8 13.6 M32 11.8 L32 15.4', fill: 'none', stroke: '#EA5F2A', strokeWidth: 1.2, strokeLinecap: 'round' }),
+                el('ellipse', { cx: 21, cy: 11.6, rx: 4.2, ry: 1.7, fill: '#FFFFFF', opacity: 0.4, transform: 'rotate(-26 21 11.6)' }),
+            ],
+        },
+    },
+
+    /* 21 ─ Süzülen Tahta (rare) — Keşif Koleksiyonu ────────────── */
+    {
+        id: 'mini:suzulen-tahta',
+        category: 'mini_avatar',
+        name: 'Süzülen Tahta',
+        rarity: 'rare',
+        description: 'Yerden bir karış yukarıda süzülen neon hover tahta.',
+        art: {
+            viewBox: '0 0 64 64',
+            defs: [
+                rad('st-halo', [stop(0, '#62F4F0', 0.5), stop(1, '#62F4F0', 0)], 0.5, 0.5, 0.5),
+                rad('st-under', [stop(0, '#7DF4FF', 0.9), stop(0.55, '#3B9BFF', 0.35), stop(1, '#3B9BFF', 0)], 0.5, 0.5, 0.5),
+                lin('st-deck', [stop(0, '#3A4A86'), stop(0.5, '#222C5C'), stop(1, '#131A3C')], 0, 0, 0, 1),
+                lin('st-side', [stop(0, '#1B2350'), stop(1, '#0C1128')]),
+                lin('st-neon', [stop(0, '#FF6FD0'), stop(0.5, '#B27CFF'), stop(1, '#62F4F0')], 0, 0, 1, 0),
+            ],
+            elements: [
+                el('ellipse', { cx: 32, cy: 33, rx: 30, ry: 22, fill: 'url(#st-halo)' }),
+                el('ellipse', { cx: 32, cy: 58.4, rx: 15, ry: 2.4, fill: OL, opacity: 0.2 }),
+                el('ellipse', { cx: 32, cy: 52, rx: 21, ry: 6.4, fill: 'url(#st-under)' }),
+                // gövde yan yüzü
+                el('path', { d: 'M5.6 36.4 C5.6 42.6 14 46.6 32 46.6 C50 46.6 58.4 42.6 58.4 36.4 L58.4 32.4 L5.6 32.4 Z', fill: 'url(#st-side)', stroke: OL, strokeWidth: SW, strokeLinejoin: 'round' }),
+                // üst yüz
+                el('path', { d: 'M4.6 32.4 C4.6 25.6 14 21.6 32 21.6 C50 21.6 59.4 25.6 59.4 32.4 C59.4 39.2 50 43.2 32 43.2 C14 43.2 4.6 39.2 4.6 32.4 Z', fill: 'url(#st-deck)', stroke: OL, strokeWidth: SW }),
+                // neon kenar çizgisi
+                el('path', { d: 'M8.4 32.4 C8.4 27.6 17 24.6 32 24.6 C47 24.6 55.6 27.6 55.6 32.4 C55.6 37.2 47 40.2 32 40.2 C17 40.2 8.4 37.2 8.4 32.4 Z', fill: 'none', stroke: 'url(#st-neon)', strokeWidth: 1.7 }),
+                // yıldız çıkartması
+                el('path', { d: 'M32 27.4 L33.6 31 L37.4 31.4 L34.6 34 L35.4 37.8 L32 35.9 L28.6 37.8 L29.4 34 L26.6 31.4 L30.4 31 Z', fill: '#FFE45E', stroke: OL, strokeWidth: 1, strokeLinejoin: 'round' }),
+                el('ellipse', { cx: 18, cy: 27.4, rx: 7, ry: 1.7, fill: '#FFFFFF', opacity: 0.2, transform: 'rotate(-10 18 27.4)' }),
+                // itici ışıkları
+                el('ellipse', { cx: 16, cy: 45.4, rx: 3.6, ry: 1.4, fill: '#B8FBFF' }),
+                el('ellipse', { cx: 48, cy: 45.4, rx: 3.6, ry: 1.4, fill: '#B8FBFF' }),
+                // rüzgâr çizgileri ve parıltılar
+                el('path', { d: 'M3 18 L12 18 M7 22.6 L14 22.6 M52 16 L61 16', fill: 'none', stroke: '#B9E8FF', strokeWidth: 1.3, strokeLinecap: 'round', opacity: 0.6 }),
+                spark(50, 11, 3.2, '#FFFFFF', 0.95),
+                spark(12, 9, 2.2, '#9FF7FF', 0.9),
+            ],
+        },
+    },
+
+    /* 22 ─ Neon Kedi (rare) — Keşif Koleksiyonu ────────────────── */
+    {
+        id: 'mini:neon-kedi',
+        category: 'mini_avatar',
+        name: 'Neon Kedi',
+        rarity: 'rare',
+        description: 'Tabelalardan ışık toplayan, kuyruğu neon tüp olan kedi.',
+        art: {
+            viewBox: '0 0 64 64',
+            defs: [
+                rad('nk-glow', [stop(0, '#FF4FB4', 0.4), stop(1, '#FF4FB4', 0)], 0.5, 0.5, 0.5),
+                rad('nk-fur', [stop(0, '#6A5BC2'), stop(0.6, '#3E3394'), stop(1, '#241C5E')], 0.4, 0.28, 0.85),
+                rad('nk-iris', [stop(0, '#B8FFF6'), stop(1, '#19C9C0')], 0.5, 0.55, 0.6),
+            ],
+            elements: [
+                el('ellipse', { cx: 34, cy: 34, rx: 30, ry: 28, fill: 'url(#nk-glow)' }),
+                shadow(16, 61),
+                // neon kuyruk (dış parıltı, orta, çekirdek)
+                el('path', { d: 'M44 54 C54 57 60 50 56 43.5 C54 40 50 40.6 51.4 43.6 C52.2 45.4 54.4 45 55 43.6', fill: 'none', stroke: '#FF2E97', strokeWidth: 7, strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.22 }),
+                el('path', { d: 'M44 54 C54 57 60 50 56 43.5 C54 40 50 40.6 51.4 43.6 C52.2 45.4 54.4 45 55 43.6', fill: 'none', stroke: '#FF4FB4', strokeWidth: 3.8, strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.6 }),
+                el('path', { d: 'M44 54 C54 57 60 50 56 43.5 C54 40 50 40.6 51.4 43.6 C52.2 45.4 54.4 45 55 43.6', fill: 'none', stroke: '#FFE0F1', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+                // gövde
+                el('path', { d: 'M32 30 C42 30 47 40 46 49 C45.5 55 40 58.6 32 58.6 C24 58.6 18.5 55 18 49 C17 40 22 30 32 30 Z', fill: 'url(#nk-fur)', stroke: OL, strokeWidth: SW }),
+                el('ellipse', { cx: 32, cy: 50, rx: 7, ry: 6.4, fill: '#8F83E0', opacity: 0.55 }),
+                el('path', { d: 'M23.6 57.6 Q23.6 59.8 26.6 59.8 Q29.4 59.8 29.4 57.6 M34.6 57.6 Q34.6 59.8 37.4 59.8 Q40.4 59.8 40.4 57.6', fill: '#6A5BC2', stroke: OL, strokeWidth: SW_D, strokeLinejoin: 'round' }),
+                // kulaklar
+                el('path', { d: 'M15 24 L13 7 L27 15 Z', fill: 'url(#nk-fur)', stroke: OL, strokeWidth: SW, strokeLinejoin: 'round' }),
+                el('path', { d: 'M17.4 20.4 L16.4 11.4 L23.4 15.4 Z', fill: '#FF4FB4' }),
+                el('path', { d: 'M49 24 L51 7 L37 15 Z', fill: 'url(#nk-fur)', stroke: OL, strokeWidth: SW, strokeLinejoin: 'round' }),
+                el('path', { d: 'M46.6 20.4 L47.6 11.4 L40.6 15.4 Z', fill: '#FF4FB4' }),
+                // kafa
+                el('ellipse', { cx: 32, cy: 29, rx: 19, ry: 15.6, fill: 'url(#nk-fur)', stroke: OL, strokeWidth: SW }),
+                el('ellipse', { cx: 22, cy: 21.6, rx: 5.4, ry: 2.2, fill: '#FFFFFF', opacity: 0.22, transform: 'rotate(-24 22 21.6)' }),
+                // neon yanak çizgileri (bıyık)
+                el('path', { d: 'M9.6 29 L16.6 30.2 M10.4 34 L16.8 32.6 M54.4 29 L47.4 30.2 M53.6 34 L47.2 32.6', fill: 'none', stroke: '#62F4F0', strokeWidth: 1.2, strokeLinecap: 'round', opacity: 0.9 }),
+                // gözler
+                el('ellipse', { cx: 24.4, cy: 28, rx: 4.2, ry: 5, fill: OL }),
+                el('ellipse', { cx: 39.6, cy: 28, rx: 4.2, ry: 5, fill: OL }),
+                el('ellipse', { cx: 24.4, cy: 29, rx: 3, ry: 3.6, fill: 'url(#nk-iris)' }),
+                el('ellipse', { cx: 39.6, cy: 29, rx: 3, ry: 3.6, fill: 'url(#nk-iris)' }),
+                el('ellipse', { cx: 24.4, cy: 29.2, rx: 1.1, ry: 2.5, fill: OL }),
+                el('ellipse', { cx: 39.6, cy: 29.2, rx: 1.1, ry: 2.5, fill: OL }),
+                el('circle', { cx: 25.8, cy: 26.4, r: 1.5, fill: '#FFFFFF' }),
+                el('circle', { cx: 41, cy: 26.4, r: 1.5, fill: '#FFFFFF' }),
+                el('path', { d: 'M30 33.4 L34 33.4 L32 35.6 Z', fill: '#FF6FA8', stroke: OL, strokeWidth: 1, strokeLinejoin: 'round' }),
+                el('path', { d: 'M32 35.6 Q30.6 38 28.2 37 M32 35.6 Q33.4 38 35.8 37', fill: 'none', stroke: OL, strokeWidth: 1.3, strokeLinecap: 'round' }),
+                blush(19.4, 34.4, '#FF7AC8', 3, 1.8),
+                blush(44.6, 34.4, '#FF7AC8', 3, 1.8),
+                el('g', {}, [spark(8, 14, 3, '#FFFFFF', 0.95), spark(58, 18, 2.2, '#9FF7FF', 0.95)]),
+            ],
+        },
+    },
+
+    /* 23 ─ Portal Minik (epic) — Keşif Koleksiyonu ─────────────── */
+    {
+        id: 'mini:portal-minik',
+        category: 'mini_avatar',
+        name: 'Portal Minik',
+        rarity: 'epic',
+        description: 'Portaldan başını uzatan meraklı küçük yaratık.',
+        art: {
+            viewBox: '0 0 64 64',
+            defs: [
+                rad('pm-glow', [stop(0, '#3AA0FF', 0.5), stop(0.65, '#3AA0FF', 0.15), stop(1, '#3AA0FF', 0)], 0.5, 0.5, 0.5),
+                rad('pm-void', [stop(0, '#0A1030'), stop(0.7, '#17255E'), stop(1, '#2B5BD0')], 0.5, 0.5, 0.5),
+                lin('pm-rim', [stop(0, '#9FD6FF'), stop(0.5, '#3AA0FF'), stop(1, '#1E5FD6')], 0, 0, 0, 1),
+                rad('pm-body', [stop(0, '#C7B8FF'), stop(0.6, '#8F78F0'), stop(1, '#5A44C2')], 0.4, 0.3, 0.8),
+                rad('pm-eye', [stop(0, '#FFFFFF'), stop(1, '#E8EEFF')], 0.5, 0.5, 0.6),
+            ],
+            elements: [
+                el('g', {}, [el('ellipse', { cx: 32, cy: 42, rx: 30, ry: 20, fill: 'url(#pm-glow)' })], 'pulse'),
+                // portal ovali (arka)
+                el('ellipse', { cx: 32, cy: 46, rx: 24, ry: 10.6, fill: 'url(#pm-void)', stroke: OL, strokeWidth: SW }),
+                el('ellipse', { cx: 32, cy: 46, rx: 19, ry: 7.4, fill: 'none', stroke: '#6FB8FF', strokeWidth: 1.1, opacity: 0.6 }),
+                // yaratık
+                el('path', { d: 'M23 48 C21 38 24 28 32 28 C40 28 43 38 41 48 Z', fill: 'url(#pm-body)', stroke: OL, strokeWidth: SW, strokeLinejoin: 'round' }),
+                el('path', { d: 'M24 11 C22 6 18 5 15 7 C18 8 19 11 20 14 Z', fill: '#8F78F0', stroke: OL, strokeWidth: SW_D, strokeLinejoin: 'round' }),
+                el('path', { d: 'M40 11 C42 6 46 5 49 7 C46 8 45 11 44 14 Z', fill: '#8F78F0', stroke: OL, strokeWidth: SW_D, strokeLinejoin: 'round' }),
+                el('circle', { cx: 32, cy: 24, r: 14, fill: 'url(#pm-body)', stroke: OL, strokeWidth: SW }),
+                el('ellipse', { cx: 26, cy: 15.6, rx: 5, ry: 2.2, fill: '#FFFFFF', opacity: 0.45, transform: 'rotate(-26 26 15.6)' }),
+                // meraklı bakış (yukarı-yana)
+                el('circle', { cx: 26, cy: 24, r: 4.6, fill: 'url(#pm-eye)', stroke: OL, strokeWidth: SW_D }),
+                el('circle', { cx: 38, cy: 24, r: 4.6, fill: 'url(#pm-eye)', stroke: OL, strokeWidth: SW_D }),
+                el('circle', { cx: 27.4, cy: 23, r: 2.4, fill: OL }),
+                el('circle', { cx: 39.4, cy: 23, r: 2.4, fill: OL }),
+                el('circle', { cx: 28.2, cy: 22, r: 0.9, fill: '#FFFFFF' }),
+                el('circle', { cx: 40.2, cy: 22, r: 0.9, fill: '#FFFFFF' }),
+                el('ellipse', { cx: 32, cy: 31, rx: 2.2, ry: 1.7, fill: OL }),
+                blush(21, 29.4, '#FF8FB4', 2.8, 1.7),
+                blush(43, 29.4, '#FF8FB4', 2.8, 1.7),
+                // portal ön kenarı (alt yarı) — yaratığın bedenini örter
+                el('path', { d: 'M8 46 C8 56 18 60 32 60 C46 60 56 56 56 46 C56 51 46 54.8 32 54.8 C18 54.8 8 51 8 46 Z', fill: 'url(#pm-rim)', stroke: OL, strokeWidth: SW, strokeLinejoin: 'round' }),
+                // portal kenarını tutan eller
+                el('ellipse', { cx: 19.4, cy: 49.6, rx: 3.8, ry: 3, fill: '#A892FF', stroke: OL, strokeWidth: SW_D }),
+                el('ellipse', { cx: 44.6, cy: 49.6, rx: 3.8, ry: 3, fill: '#A892FF', stroke: OL, strokeWidth: SW_D }),
+                el('g', {}, [
+                    spark(55, 24, 3.4, '#BFE4FF'),
+                    spark(8, 30, 2.4, '#FFFFFF'),
+                    spark(50, 8, 2, '#9FD6FF'),
+                ], 'shimmer'),
+            ],
+        },
+    },
+
+    /* 24 ─ Holo Balina (legendary) — Keşif Koleksiyonu ─────────── */
+    {
+        id: 'mini:holo-balina',
+        category: 'mini_avatar',
+        name: 'Holo Balina',
+        rarity: 'legendary',
+        description: 'Gökdelenlerin arasında süzülen, ışıktan yapılmış dev ama sevimli balina.',
+        art: {
+            viewBox: '0 0 64 64',
+            defs: [
+                rad('hb-aura', [stop(0, '#9FF7FF', 0.55), stop(0.55, '#B27CFF', 0.22), stop(1, '#FF8AD8', 0)], 0.5, 0.5, 0.5),
+                lin('hb-body', [stop(0, '#8CF8FF'), stop(0.45, '#8FA8FF'), stop(1, '#E58BFF')], 0, 0, 1, 1),
+                lin('hb-belly', [stop(0, '#E6FEFF'), stop(1, '#C9D4FF')]),
+                lin('hb-fluke', [stop(0, '#7FF0FF'), stop(1, '#C07DFF')], 0, 0, 1, 1),
+                rad('hb-eye', [stop(0, '#FFFFFF'), stop(1, '#D6E4FF')], 0.5, 0.5, 0.6),
+            ],
+            elements: [
+                el('g', {}, [el('circle', { cx: 32, cy: 33, r: 31, fill: 'url(#hb-aura)' })], 'pulse'),
+                // gökdelen silüetleri (uzak)
+                el('path', { d: 'M3 63 L3 52 L8 52 L8 46 L13 46 L13 63 Z M51 63 L51 49 L56 49 L56 43 L61 43 L61 63 Z', fill: '#2A3A86', opacity: 0.55 }),
+                el('g', {}, [
+                    // fıskiye parıltıları
+                    el('path', { d: 'M40 15 C40 10 38 7 36 4 M40 15 C42 10 45 8 48 6', fill: 'none', stroke: '#CFFBFF', strokeWidth: 1.4, strokeLinecap: 'round', opacity: 0.85 }),
+                    el('circle', { cx: 36, cy: 3.6, r: 1.4, fill: '#FFFFFF' }),
+                    el('circle', { cx: 48.4, cy: 5.8, r: 1.2, fill: '#FFFFFF' }),
+                    // kuyruk
+                    el('path', { d: 'M17 38 C12 36 9 31 8.6 26 C8 22 7 18 5.4 14 C9.6 14.6 12.6 16.6 14.4 20 C15.6 16 18.6 13 22 11.4 C22 16.4 21.4 21.4 22.4 26 Z', fill: 'url(#hb-fluke)', stroke: OL, strokeWidth: SW, strokeLinejoin: 'round' }),
+                    // gövde
+                    el('path', { d: 'M58 38 C58 25 48 16 34 16.4 C23 16.8 14.6 24 13.4 34.6 C12.8 39.6 14.6 44.4 19.6 47.4 C26 51.4 38 52.4 47.2 48.4 C54.4 45.4 58 42 58 38 Z', fill: 'url(#hb-body)', stroke: OL, strokeWidth: SW, strokeLinejoin: 'round' }),
+                    // karın
+                    el('path', { d: 'M56.4 39.4 C53 45.4 44 49.6 34 49.8 C27 49.8 21 48 18 45.4 C24 47 32 46.4 40 43 C47 40 52 38 56.4 39.4 Z', fill: 'url(#hb-belly)', opacity: 0.92 }),
+                    el('path', { d: 'M24 46 L31 40.6 M30 47.6 L37 42.4 M36 48.2 L43 43.4 M42 47.6 L48.6 43.4', fill: 'none', stroke: '#8FA8FF', strokeWidth: 0.9, strokeLinecap: 'round', opacity: 0.55 }),
+                    // hologram tarama çizgileri
+                    el('path', { d: 'M22 26 L50 24.6 M17.6 31.4 L56 30 M15.6 36.4 L25 36', fill: 'none', stroke: '#FFFFFF', strokeWidth: 0.9, strokeLinecap: 'round', opacity: 0.35 }),
+                    el('ellipse', { cx: 31, cy: 21.4, rx: 9, ry: 2.4, fill: '#FFFFFF', opacity: 0.5, transform: 'rotate(-6 31 21.4)' }),
+                    // yüzgeç
+                    el('path', { d: 'M33 43 C30 49 24 52 19 52.4 C22 49 24.4 46 25.6 42.4 Z', fill: 'url(#hb-fluke)', stroke: OL, strokeWidth: SW_D, strokeLinejoin: 'round' }),
+                    // göz ve yüz
+                    el('circle', { cx: 46, cy: 33, r: 4.6, fill: 'url(#hb-eye)', stroke: OL, strokeWidth: SW_D }),
+                    el('circle', { cx: 46.8, cy: 33.4, r: 2.6, fill: OL }),
+                    el('circle', { cx: 47.8, cy: 32.2, r: 1, fill: '#FFFFFF' }),
+                    el('circle', { cx: 45.4, cy: 34.6, r: 0.5, fill: '#FFFFFF', opacity: 0.85 }),
+                    el('path', { d: 'M52.6 41.4 Q49 43.8 45.6 42', fill: 'none', stroke: OL, strokeWidth: 1.5, strokeLinecap: 'round' }),
+                    blush(41.2, 38.8, '#FF7AC8', 2.6, 1.6),
+                ], 'float'),
+                el('g', {}, [
+                    spark(10, 8, 3.4, '#FFFFFF'),
+                    spark(58, 28, 2.6, '#FFE9A8'),
+                    spark(6, 46, 2.2, '#9FF7FF'),
+                    spark(30, 6, 2, '#FFFFFF'),
+                ], 'twinkle'),
+            ],
+        },
+    },
 ];

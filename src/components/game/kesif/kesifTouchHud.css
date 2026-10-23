@@ -1,0 +1,551 @@
+/* KEŞİF arayüz: dokunmatik HUD yerleşimi (telefon yatay/dikey, tablet). (giriş: kesif.css; SON yüklenir) */
+
+/*
+ * Bölgeler (dokunmatik):
+ *   YATAY   sol: joystick (ghost 92 px, kenardan 62 px)   sağ: başparmak yayı (kenardan ≈ 250 px)   orta: bant
+ *           üst: [sol öbek 260 px][orta öbek: parkur/boss/tarayıcı/duyurular][üst çubuk 294 px]   alt-orta: ölçerler, can/açlık, eşya çubuğu (bant içinde)
+ *   DİKEY   üst: üst çubuk (yatay sıra)  →  tek sütun akışı: sol öbek, orta öbek, ipucu, duyurular
+ *           alt: can/açlık + eşya çubuğu tam genişlik; ölçerler (araç/mana/elde) sol sütunda, joystick ghost'un üstünde (yayın solunda)
+ * Hiçbir parça başka bir parçanın bölgesine girmez: yerleşim ölçülür (_kesifHarness/touchui-* senaryoları, kesifTouchHud.test.js sözleşmesi).
+ */
+.kx-root[data-touch='1'] {
+  --kx-slot: 44px;
+  --kx-top-w: 302px; /* üst çubuk: 6 × 44 + 5 × 6 + pay */
+  --kx-tl-w: 248px; /* sol öbek: mini harita 76 + 8 + sütun 152 + pay */
+  --kx-joy-r: 124px; /* joystick ghost'un sağ kenarı (kenardan) */
+  --kx-arc-l: 256px; /* düğme yayının sol kenarı (kenardan) */
+}
+.kx-root[data-touch='1'][data-a11y='1'] {
+  --kx-slot: 52px;
+}
+/* masaüstü / genel: sarmalayıcılar yerleşime karışmaz */
+.kx-top,
+.kx-tcwrap,
+.kx-gauges {
+  display: contents;
+}
+
+/* ------------------------------------------------------------------ */
+/* Eşya çubuğu: 44 px yuva; sığmazsa yatay şerit (seçili yuvayı izler)  */
+/* ------------------------------------------------------------------ */
+.kx-hotbar {
+  width: max-content;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.kx-hotbar[data-scroll='1'] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 8px;
+  scrollbar-width: none;
+}
+.kx-hotbar[data-scroll='1']::-webkit-scrollbar {
+  display: none;
+}
+.kx-hotbar[data-scroll='1'][data-fade='l'] {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 26px);
+  mask-image: linear-gradient(90deg, transparent 0, #000 26px);
+}
+.kx-hotbar[data-scroll='1'][data-fade='r'] {
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent 100%);
+}
+.kx-hotbar[data-scroll='1'][data-fade='lr'] {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+}
+.kx-hotbar .kx-slot:focus-visible {
+  outline-offset: -3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* YATAY (dokunmatik)                                                  */
+/* ------------------------------------------------------------------ */
+@media (orientation: landscape) {
+  /* alt-orta bant: joystick ile düğme yayı arasında */
+  .kx-root[data-touch='1'] .kx-bottom {
+    left: calc(var(--kx-safe-l) + var(--kx-joy-r));
+    right: calc(var(--kx-safe-r) + var(--kx-arc-l));
+    width: auto;
+    max-width: 30rem; /* geniş bantta (tablet) ölçerler yayın altına uzanmasın; bant içinde ortalı */
+    margin-inline: auto;
+    transform: none;
+  }
+  .kx-root[data-touch='1'][data-left='1'] .kx-bottom {
+    left: calc(var(--kx-safe-l) + var(--kx-arc-l));
+    right: calc(var(--kx-safe-r) + var(--kx-joy-r));
+  }
+  .kx-root[data-touch='1'] .kx-vitals {
+    --kx-ico: 13px;
+  }
+  .kx-root[data-touch='1'] .kx-vrow {
+    max-width: 50%;
+  }
+  .kx-root[data-touch='1'] .kx-hint {
+    border-radius: 18px;
+    padding: 5px 12px;
+  }
+
+  /* üst: sol öbek sabit genişlikte → orta öbek ona göre konumlanır */
+  .kx-root[data-touch='1'] .kx-tl {
+    max-width: none;
+  }
+  .kx-root[data-touch='1'] .kx-tl-col {
+    width: 152px;
+    flex: none;
+  }
+  .kx-root[data-touch='1'] .kx-tcwrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--kx-safe-t) + 52px);
+    left: calc(var(--kx-safe-l) + var(--kx-tl-w));
+    right: calc(var(--kx-safe-r) + var(--kx-arc-l) - 30px);
+    pointer-events: none;
+  }
+  .kx-root[data-touch='1'][data-left='1'] .kx-tcwrap {
+    left: calc(var(--kx-safe-l) + var(--kx-arc-l) - 30px);
+    right: calc(var(--kx-safe-r) + var(--kx-tl-w));
+  }
+  .kx-root[data-touch='1'] .kx-tc {
+    position: static;
+    transform: none;
+    top: auto;
+    left: auto;
+    width: 100%;
+    min-width: 0;
+  }
+}
+/* geniş yatay (≥ 780): orta öbek üst çubukla aynı sırada, ikisinin arasında */
+@media (orientation: landscape) and (min-width: 780px) {
+  .kx-root[data-touch='1'] .kx-tcwrap {
+    top: var(--kx-safe-t);
+    right: calc(var(--kx-safe-r) + var(--kx-top-w));
+  }
+  .kx-root[data-touch='1'][data-left='1'] .kx-tcwrap {
+    left: calc(var(--kx-safe-l) + var(--kx-top-w));
+    right: calc(var(--kx-safe-r) + var(--kx-tl-w));
+  }
+}
+/* dar yatay (≤ 640): orta öbek varken bilgi sütunu (çip, görev…) gizlenir; yalnız mini harita kalır */
+@media (orientation: landscape) and (max-width: 640px) {
+  .kx-root[data-touch='1'] .kx-tcwrap {
+    left: calc(var(--kx-safe-l) + 96px);
+  }
+  .kx-root[data-touch='1'][data-left='1'] .kx-tcwrap {
+    right: calc(var(--kx-safe-r) + 96px);
+  }
+  .kx-root[data-touch='1'] .kx-top:has(.kx-tc > *, .kx-toasts) .kx-tl-col {
+    display: none;
+  }
+}
+/* yatay: durum etkileri kompakt (halka 22 px, seviye rozeti kalkar) → üç etki tek-iki satır */
+@media (orientation: landscape) {
+  .kx-root[data-touch='1'] .kx-tl-col .kx-fx-ring {
+    width: 22px;
+    height: 22px;
+  }
+  .kx-root[data-touch='1'] .kx-tl-col .kx-fx-ring::before {
+    inset: 2px;
+  }
+  .kx-root[data-touch='1'] .kx-tl-col .kx-fx-ico {
+    width: 13px;
+    height: 13px;
+  }
+  .kx-root[data-touch='1'] .kx-tl-col .kx-fx-item {
+    gap: 4px;
+    padding: 1px 6px 1px 2px;
+  }
+  .kx-root[data-touch='1'] .kx-tl-col .kx-fx-time {
+    font-size: 11px;
+    min-width: 2.2em;
+  }
+}
+/* dokunmatik: enerji çipi ölçerlerle birlikte (alt-orta bant / dikeyde sol sütun); sol öbek kısa kalır */
+.kx-root[data-touch='1'] .kx-gauges .kx-energy {
+  align-self: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (orientation: portrait) {
+  .kx-root[data-touch='1'] .kx-gauges .kx-energy {
+    align-self: flex-start;
+    font-size: 11px;
+    padding: 2px 8px 2px 6px;
+  }
+  .kx-root[data-touch='1'] .kx-gauges .kx-energy i {
+    display: none;
+  }
+}
+/* alçak yatay: durum etkisi süresi (ekran okuyucuya zaten etikette) kalkar → etkiler tek satır; erişilebilirlik modunda yazı kalır */
+@media (orientation: landscape) and (max-height: 420px) {
+  .kx-root[data-touch='1']:not([data-a11y='1']) .kx-tl-col .kx-fx-time {
+    display: none;
+  }
+  .kx-root[data-touch='1']:not([data-a11y='1']) .kx-tl-col .kx-fx-item {
+    padding: 2px;
+  }
+}
+
+/* alçak yatay ve küçük dikey: bilgi çipi iki satır (bölge; biyom · saat), hava/koordinat gizli, derinlik yalnız tehlikeli bantta */
+@media (orientation: landscape) and (max-height: 420px), (orientation: portrait) and (max-height: 700px) {
+  .kx-root[data-touch='1'] .kx-chip-sub > .kx-chip-time + .kx-chip-time,
+  .kx-root[data-touch='1'] .kx-chip-coords {
+    display: none;
+  }
+  .kx-root[data-touch='1'] .kx-chip-depth:not([data-band='ham']):not([data-band='dip']) {
+    display: none;
+  }
+  /* büyük sistem yazısında bile her satır tek satır (taşan metin … ile kesilir; çip uzayıp joystick/can satırına binmez) */
+  .kx-root[data-touch='1'] .kx-chip-sub {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  .kx-root[data-touch='1'] .kx-chip-sub > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kx-root[data-touch='1'] .kx-chip-depth {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+@media (orientation: landscape) and (max-height: 420px) {
+  .kx-root[data-touch='1'] .kx-tech-label,
+  .kx-root[data-touch='1'] .kx-tech-extra {
+    display: none;
+  }
+  .kx-root[data-touch='1'] .kx-tech-track {
+    width: 40px;
+  }
+}
+/* joystick ghost kısa yatay ekranda biraz alçalır: sol öbek ile çakışmaz */
+@media (orientation: landscape) and (max-height: 460px) {
+  .kx-joy-ghost {
+    bottom: calc(var(--kx-safe-b) + 100px);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* DİKEY (dokunmatik)                                                  */
+/* ------------------------------------------------------------------ */
+@media (orientation: portrait) {
+  .kx-touch[data-portrait='1'] .kx-topbar {
+    flex-direction: row;
+  }
+  .kx-root[data-touch='1'] .kx-top {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--kx-safe-t) + 52px);
+    left: var(--kx-safe-l);
+    right: var(--kx-safe-r);
+    pointer-events: none;
+  }
+  .kx-root[data-touch='1'] .kx-tl {
+    position: static;
+    max-width: 100%;
+    width: 100%;
+  }
+  .kx-root[data-touch='1'][data-left='1'] .kx-tl {
+    flex-direction: row-reverse;
+  }
+  .kx-root[data-touch='1'] .kx-tl-col {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .kx-root[data-touch='1'] .kx-tcwrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+  .kx-root[data-touch='1'] .kx-tc {
+    position: static;
+    transform: none;
+    top: auto;
+    left: auto;
+    width: min(100%, 24rem);
+    min-width: 0;
+  }
+  /* alt: can/açlık + eşya çubuğu tam genişlik; ölçerler sol sütunda joystick ghost'un üstünde */
+  .kx-root[data-touch='1'] .kx-bottom {
+    left: var(--kx-safe-l);
+    right: var(--kx-safe-r);
+    width: auto;
+    transform: none;
+  }
+  .kx-root[data-touch='1'] .kx-gauges {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 78px + max(44px, min(65px, 14.4vw)));
+    width: calc(100% * 0.41);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    pointer-events: none;
+  }
+  .kx-root[data-touch='1'][data-left='1'] .kx-gauges {
+    left: auto;
+    right: 0;
+    align-items: flex-end;
+  }
+  .kx-root[data-touch='1'] .kx-gauges .kx-tech {
+    justify-content: flex-start;
+  }
+  .kx-root[data-touch='1'] .kx-gauges .kx-tech-label,
+  .kx-root[data-touch='1'] .kx-gauges .kx-tech-extra {
+    display: none;
+  }
+  .kx-root[data-touch='1'] .kx-gauges .kx-tech-track {
+    width: 36px;
+  }
+  .kx-root[data-touch='1'] .kx-gauges .kx-mana {
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    padding: 0;
+  }
+  .kx-root[data-touch='1'] .kx-gauges .kx-mana-track {
+    flex: 1 1 40px;
+    min-width: 40px;
+  }
+  .kx-root[data-touch='1'] .kx-gauges .kx-held {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* dokunmatik: etkileşim ipucu ölçerlerin en üstünde, akışta (alt-orta bant / dikeyde sol sütun) */
+.kx-root[data-touch='1'] .kx-mid {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.kx-root[data-touch='1'] .kx-gauges .kx-hint {
+  max-width: 100%;
+  font-size: 0.92em;
+  line-height: 1.25;
+  border-radius: 14px;
+  padding: 5px 10px;
+  text-align: left;
+}
+
+/* ------------------------------------------------------------------ */
+/* Üst-orta öbekteki duyuru yığını ve "telefonunu çevir" ipucu          */
+/* ------------------------------------------------------------------ */
+.kx-root[data-touch='1'] .kx-toasts {
+  position: static;
+  width: 100%;
+  max-width: min(100%, 22rem);
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+}
+.kx-root[data-touch='1'] .kx-toast {
+  pointer-events: auto;
+  padding: 5px 10px 5px 6px;
+  gap: 8px;
+  border-radius: 12px;
+  animation-name: kx-toast-top;
+  animation-duration: 3.8s;
+}
+.kx-root[data-touch='1'] .kx-toast[data-quiet='1'] {
+  animation-duration: 1.8s;
+}
+.kx-root[data-touch='1'][data-a11y='1'] .kx-toast {
+  animation-duration: 8s;
+}
+.kx-root[data-touch='1'] .kx-toast-ico {
+  width: 26px;
+  height: 26px;
+  font-size: 15px;
+  border-radius: 8px;
+}
+.kx-root[data-touch='1'] .kx-toast-txt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+}
+.kx-root[data-touch='1'] .kx-toast-txt strong {
+  font-size: 0.9em;
+  line-height: 1.2;
+}
+.kx-root[data-touch='1'] .kx-toast-txt span {
+  font-size: 0.8em;
+  max-width: 100%;
+  white-space: nowrap;
+}
+@keyframes kx-toast-top {
+  0% { opacity: 0; transform: translateY(-8px); }
+  8% { opacity: 1; transform: translateY(0); }
+  88% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-4px); }
+}
+.kx-tc .kxp-orient {
+  position: static;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  pointer-events: auto;
+  z-index: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sol öbekte durum etkileri; orta öbek içeriği dar kutuya sığar        */
+/* ------------------------------------------------------------------ */
+.kx-root[data-touch='1'] .kx-tl-col .kx-fx-wrap {
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
+  max-width: 100%;
+  z-index: auto;
+}
+.kx-root[data-touch='1'] .kx-tl-col .kx-fx {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 4px;
+}
+.kx-root[data-touch='1'] .kx-tl-col .kx-fx-item {
+  flex-direction: row;
+  padding: 2px 8px 2px 3px;
+}
+.kx-root[data-touch='1'] .kx-tl-col .kx-fx-ring {
+  width: 26px;
+  height: 26px;
+}
+.kx-root[data-touch='1'] .kx-tc > * {
+  max-width: 100%;
+  min-width: 0;
+}
+.kx-root[data-touch='1'] .kx-boss-top {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+.kx-root[data-touch='1'] .kx-boss-name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kx-root[data-touch='1'] .kx-parkour {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 10px;
+  border-radius: 14px;
+}
+.kx-root[data-touch='1'] .kx-radar {
+  min-width: 0;
+}
+.kx-root[data-touch='1'] .kx-ping {
+  min-width: 0;
+}
+
+/* dikey: joystick ghost can/açlık satırının üstünde (yay anchor'ıyla aynı yükseklik) */
+@media (orientation: portrait) {
+  .kx-joy-ghost {
+    bottom: calc(var(--kx-safe-b) + 150px);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Kısa ekranlarda duyuru ve ipucu tasarrufu (yer yok → yalnız en yeni) */
+/* ------------------------------------------------------------------ */
+@media (orientation: landscape) and (max-height: 420px) {
+  .kx-root[data-touch='1'] .kx-toasts .kx-toast:not(:last-child) {
+    display: none;
+  }
+}
+@media (orientation: portrait) {
+  /* üst öbek, düğme yayının en üst düğmesinin üstünde biter (taşan duyuru kırpılır, yayın üstüne binmez) */
+  .kx-root[data-touch='1'] .kx-top {
+    max-height: calc(100% - var(--kx-safe-t) - 60px - var(--kx-safe-b) - 150px - max(150px, min(222px, 49.5vw)) - 8px);
+    overflow: hidden;
+  }
+  .kx-tcwrap:has(.kx-toast) .kxp-orient {
+    display: none;
+  }
+}
+@media (orientation: portrait) and (max-height: 700px) {
+  .kx-root[data-touch='1'] .kx-toasts .kx-toast:not(:last-child) {
+    display: none;
+  }
+}
+@media (orientation: portrait) and (max-height: 640px) {
+  .kx-tc .kxp-orient {
+    display: none;
+  }
+}
+
+/* çok kısa ekran (yatay ≤ 340, dikey ≤ 640): duyuru görünürken etkileşim ipucu beklemeye alınır (ikisi sığmaz); duyuru kalkınca ipucu geri gelir */
+@media (orientation: landscape) and (max-height: 340px), (orientation: portrait) and (max-height: 640px) {
+  .kx-layer:has(.kx-tcwrap .kx-toast) .kx-gauges .kx-mid {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Menü dokunma hedefleri (Duraklat / Ayarlar / Nasıl Oynanır) ≥ 44 px   */
+/* ------------------------------------------------------------------ */
+@media (pointer: coarse), (max-width: 760px) {
+  .kx-seg-btn,
+  .kx-overlay .kx-ht-bar .kx-seg-btn {
+    min-height: 44px;
+  }
+  .kx-slider input[type='range'] {
+    height: 44px;
+  }
+  .kx-switch {
+    min-height: 48px;
+  }
+}
+
+/* Büyük sistem yazısı (%200): ayar satırları dar kartı taşırmaz (ızgara izleri daralır, metin sarılır) */
+.kx-set-sec {
+  grid-template-columns: minmax(0, 1fr);
+}
+.kx-switch-label,
+.kx-slider-label,
+.kx-seg-label,
+.kx-switch-hint {
+  overflow-wrap: anywhere;
+}
+.kx-switch-state {
+  min-width: 0;
+  flex: none;
+}
+
+/* Nasıl Oynanır araç çubuğu alçak yatayda: izler daralabilir (büyük sistem yazısında düğme kartın dışına taşmaz) */
+@media (max-height: 420px) and (orientation: landscape) {
+  .kx-overlay .kx-ht-bar {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .kx-overlay .kx-ht-bar .kx-seg-btn {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.1;
+  }
+}

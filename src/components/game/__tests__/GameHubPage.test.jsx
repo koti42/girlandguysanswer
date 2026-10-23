@@ -73,6 +73,11 @@ describe('GameHubPage', () => {
         const tower = screen.getByRole('link', { name: /Herkesler Yükseliyor/ });
         expect(tower).toHaveAttribute('href', '/oyun/kule');
         expect(within(tower).getByText('Antrenmana başla')).toBeInTheDocument();
+        // Üçüncü 3D oyun (Keşif): misafire de açık, iki sütunu kaplayan geniş kart.
+        const kesif = screen.getByRole('link', { name: /Herkesler Keşfediyor/ });
+        expect(kesif).toHaveAttribute('href', '/oyun/kesif');
+        expect(kesif).toHaveClass('lg:col-span-2');
+        expect(within(kesif).getByText('Keşfetmeye başla')).toBeInTheDocument();
 
         // Mağaza (sabit vitrin ürünü) ve Karakterim kartları misafire de görünür.
         const shop = screen.getByRole('link', { name: /^Mağaza:/ });

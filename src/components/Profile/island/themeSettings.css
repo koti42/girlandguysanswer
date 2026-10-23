@@ -1,0 +1,96 @@
+/*
+ * Profil Teması (Ada Profili) ayar kartı + satın alma penceresi.
+ * Önek: theme-. Genel zemin sınıfları (game-card, game-press...) game.css'ten.
+ * Hareket: prefers-reduced-motion ve <html data-a11y="1"> altında kapalı.
+ */
+
+.theme-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+@keyframes theme-art-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+.theme-art-float { animation: theme-art-float 5s ease-in-out infinite; }
+
+/* Kutlama: ışın halesi + konfeti (saf CSS). */
+@keyframes theme-rays-spin { to { transform: rotate(360deg); } }
+.theme-rays {
+  background: repeating-conic-gradient(from 0deg, rgba(255, 211, 77, 0.35) 0 8deg, transparent 8deg 22deg);
+  -webkit-mask-image: radial-gradient(circle, #000 25%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 25%, transparent 70%);
+  animation: theme-rays-spin 24s linear infinite;
+}
+
+@keyframes theme-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.theme-pop { animation: theme-pop 520ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+
+@keyframes theme-confetti-fall {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  100% { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: 0; }
+}
+.theme-confetti { position: absolute; left: 50%; top: 38%; pointer-events: none; }
+.theme-confetti > span {
+  position: absolute;
+  display: block;
+  border-radius: 2px;
+  background: var(--c);
+  animation: theme-confetti-fall 1400ms ease-out var(--d) both;
+}
+
+/* Durum rozeti */
+.theme-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.theme-badge[data-tone='success'] { background: #d1fae5; color: #065f46; }
+.theme-badge[data-tone='warning'] { background: #fef3c7; color: #92400e; }
+.theme-badge[data-tone='neutral'] { background: #f3f4f6; color: #374151; }
+.dark .theme-badge[data-tone='success'] { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+.dark .theme-badge[data-tone='warning'] { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+.dark .theme-badge[data-tone='neutral'] { background: rgba(255, 255, 255, 0.1); color: #d1d5db; }
+
+/* Önizleme alanı: canlı sahne ya da statik yedek aynı kutuda durur. */
+.theme-preview-box {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  aspect-ratio: 16 / 9;
+  max-height: 320px;
+  background: linear-gradient(180deg, #ffb07a, #bfe3f0);
+}
+
+.theme-btn-primary:focus-visible,
+.theme-btn-ghost:focus-visible,
+.theme-switch:focus-visible {
+  outline: 3px solid #f0568a;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-art-float,
+  .theme-rays,
+  .theme-pop,
+  .theme-confetti > span { animation: none !important; }
+  .theme-confetti { display: none; }
+}
+
+html[data-a11y='1'] .theme-art-float,
+html[data-a11y='1'] .theme-rays,
+html[data-a11y='1'] .theme-pop,
+html[data-a11y='1'] .theme-confetti > span { animation: none !important; }
+html[data-a11y='1'] .theme-confetti { display: none; }
+html[data-a11y='1'] .theme-badge { font-size: 0.875rem; }

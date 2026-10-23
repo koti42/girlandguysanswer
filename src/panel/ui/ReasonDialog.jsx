@@ -7,7 +7,7 @@ import { DURATION_PRESETS, REASON_PRESETS } from '../lib/moderation';
  * Sebep + (isteğe bağlı) süre isteyen moderasyon diyaloğu. Gizleme, ban,
  * dondurma, kaldırma hep bunu kullanır; sebep zorunlu, ön ayarlar hızlı.
  */
-export default function ReasonDialog({ open, onClose, onSubmit, title, submitLabel = 'Uygula', withDuration = false, danger = false, loading = false, presets = REASON_PRESETS, description, maxMinutes = null }) {
+export default function ReasonDialog({ open, onClose, onSubmit, title, submitLabel = 'Uygula', withDuration = false, danger = false, loading = false, presets = REASON_PRESETS, description, maxMinutes = null, placeholder = 'Kullanıcıya iletilecek açıklama', maxLength = 500 }) {
     const [reason, setReason] = useState('');
     const [minutes, setMinutes] = useState(null);
 
@@ -50,12 +50,12 @@ export default function ReasonDialog({ open, onClose, onSubmit, title, submitLab
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         rows={3}
-                        maxLength={500}
-                        placeholder="Kullanıcıya iletilecek açıklama"
+                        maxLength={maxLength}
+                        placeholder={placeholder}
                         className="mt-1.5 w-full rounded-lg p-inset border border-[var(--p-border)] px-3 py-2 text-sm text-[var(--p-text)] p-ring resize-none"
                         data-testid="reason-input"
                     />
-                    <span className="text-[11px] p-muted">{reason.length}/500</span>
+                    <span className="text-[11px] p-muted">{reason.length}/{maxLength}</span>
                 </label>
                 {withDuration && (
                     <div>

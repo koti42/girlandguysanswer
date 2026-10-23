@@ -1,0 +1,153 @@
+/*
+ * KEŞİF envanter sınıfı paneller — DOKUNMATİK / DAR EKRAN düzeni (telefon dikey 320–430, yatay 568–932, tablet).
+ * panels.css / panelsCraft.css / panelsMagic.css'ten SONRA yüklenir (PanelShell); seçiciler `.kp-overlay` ile bir kademe güçlendirilmiştir.
+ *
+ * İlkeler:
+ *  - yuva ≥ 44 px (erişilebilirlik modunda 52 px); ızgara sütun sayısını `auto-fill` seçer → ekran/güvenli alan/boşluk ne olursa olsun
+ *    yatay taşma OLMAZ (320 px'te 6, 360'ta 7, 390'da 8, 430+ 9 sütun); 9'dan fazla sütun açılmaz (max-width).
+ *  - yer sabittir: hiçbir şey kendiliğinden yer değiştirmez (yalnız ekran/yön değişince sütun sayısı değişir).
+ *  - yuvalar dikey kaydırmaya izin verir (touch-action: pan-y); sürükleme ~180 ms basılı tutunca başlar (hazır yuva büyür).
+ *  - başlık: Envanter/Üret sekmeleri varken (dar ekran) başlık metni yalnız ekran okuyucuya kalır → kırpılma yok.
+ *  - telefon yatay (kısa): yuva ızgarası solda, karakter+zırh+eşya bilgisi sağda (kaydırma azalır).
+ */
+
+/* ---------- dokunmatik ya da dar: 44 px yuva, otomatik sütun ---------- */
+@media (pointer: coarse), (max-width: 760px) {
+  .kp-overlay { --kp-slot: 44px; --kp-gap: 4px; }
+  .kp-overlay .kp-chest,
+  .kp-overlay .kp-hotstrip { --kp-slot: 44px; }
+  .kp-overlay.kp-a11y,
+  .kp-overlay.kp-a11y .kp-chest,
+  .kp-overlay.kp-a11y .kp-hotstrip { --kp-slot: 52px; }
+
+  .kp-overlay .kp-grid,
+  .kp-overlay.kp-a11y .kp-grid {
+    grid-template-columns: repeat(auto-fill, minmax(var(--kp-slot), 1fr));
+    max-width: calc(9 * var(--kp-slot) + 8 * var(--kp-gap));
+    overflow: visible;
+  }
+  .kp-overlay .kp-grid > .kp-slot {
+    width: 100%;
+    height: auto;
+    min-width: var(--kp-slot);
+    min-height: var(--kp-slot);
+    aspect-ratio: 1 / 1;
+  }
+  /* kaydırma yuvalardan da yapılır (ızgara panelin çoğunu kaplar); sürükleme 180 ms basılı tutunca başlar (panelHooks.useSlotDrag) */
+  .kp-overlay .kp-slot,
+  .kp-overlay .kp-block { touch-action: pan-y; }
+  .kp-overlay .kp-slot[data-armed],
+  .kp-overlay .kp-block[data-armed] { scale: 1.08; border-color: var(--kp-accent); box-shadow: 0 0 0 3px rgba(255, 207, 90, 0.55); }
+  .kp-overlay .kp-grid.kp-grid-armor,
+  .kp-overlay.kp-a11y .kp-grid.kp-grid-armor { grid-template-columns: var(--kp-slot); max-width: none; }
+  .kp-overlay .kp-grid-armor > .kp-slot { width: var(--kp-slot); height: var(--kp-slot); }
+
+  /* 44 px dokunma hedefi: düğme, çip, sekme, arama */
+  .kp-overlay .kp-btn,
+  .kp-overlay .kp-chip,
+  .kp-overlay .kp-tab,
+  .kp-overlay .kp-search,
+  .kp-overlay .kp-row-head .kp-btn,
+  .kp-overlay .kp-search-row .kp-search,
+  .kp-overlay .kp-search-row .kp-chip,
+  .kp-overlay .kp-craft .kp-tab { min-height: 44px; }
+  .kp-overlay .kp-station-btn { min-height: 44px; }
+  .kp-overlay .kp-craft .kp-chiprow { height: 48px; }
+  /* büyük sistem yazısında (%200) arama + süzgeç çipleri tek satıra sığmaz → sarılır, arama kutusu ezilmez */
+  .kp-overlay .kp-search-row { flex-wrap: wrap; }
+  .kp-overlay .kp-search-row .kp-search { flex: 1 1 140px; min-width: 120px; }
+  .kp-overlay .kp-search-row .kp-chip { flex: 1 1 auto; white-space: normal; line-height: 1.15; text-align: center; padding-block: 4px; }
+  .kp-overlay .kp-head { flex-wrap: wrap; row-gap: 4px; }
+  .kp-overlay .kp-head-text { flex: 1 1 8rem; }
+  .kp-overlay .kp-work { flex: 0 1 auto; min-width: 0; }
+  .kp-overlay .kp-work-tab { flex: 1 1 auto; justify-content: center; min-width: 0; }
+  .kp-overlay .kp-pinstrip { height: 48px; }
+  .kp-overlay .kp-pinchip { width: 44px; height: 44px; }
+  .kp-overlay .ke-slot { min-height: var(--kp-slot); }
+  .kp-overlay .kp-craft .kp-craft-actions .kp-btn { min-height: 46px; }
+  .kp-overlay .kp-guide-slot .kp-btn { min-height: 44px; }
+  /* eşya bilgi kartı dar sütunda (büyük sistem yazısı dahil) taşmaz: satırlar sarılır */
+  .kp-overlay .kp-info,
+  .kp-overlay .kp-info * { overflow-wrap: anywhere; }
+  .kp-overlay .kp-info-lines > div { flex-wrap: wrap; }
+}
+@media (pointer: coarse) and (min-width: 700px) and (min-height: 700px) {
+  .kp-overlay { --kp-slot: 52px; }
+  .kp-overlay .kp-chest,
+  .kp-overlay .kp-hotstrip { --kp-slot: 52px; }
+}
+
+/* ---------- kısa (telefon yatay): gövde dolgusu 6/10/10 px; büyü masası eylem çubuğu buna uyar ---------- */
+@media (max-height: 520px) {
+  .kp-overlay .ke-actions { margin: 2px -10px -10px; padding: 8px 10px 10px; bottom: -10px; }
+}
+
+/* ---------- tek sütun düzenlerde izler daralabilir (uzun bilgi metni / büyük sistem yazısı kartı taşırmasın) ---------- */
+@media (max-width: 760px) {
+  .kp-overlay .kp-inv-layout,
+  .kp-overlay .kp-chest-layout,
+  .kp-overlay .kp-craft-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- dar (telefon dikey) ---------- */
+@media (max-width: 480px) {
+  .kp-overlay .kp-body { padding: 8px 8px 12px; }
+  .kp-overlay .kp-head { padding: 6px 6px 6px 12px; gap: 6px; }
+  .kp-overlay .kp-work-tab { padding: 6px 10px; gap: 6px; font-size: 14px; }
+  /* sekmeler varken başlık metni yalnız ekran okuyucuya (başlık yarışması: "Env…" kırpılması) */
+  .kp-overlay .kp-head:has(.kp-work) .kp-head-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .kp-overlay .kp-head:has(.kp-work) .kp-work { margin-right: auto; }
+  /* üretim üst denetimleri: tek sütun, taşma yok */
+  .kp-overlay .kp-craft-top { grid-template-columns: minmax(0, 1fr); }
+  .kp-overlay .kp-craft .kp-stations { max-width: 62%; }
+  /* arama + iki süzgeç çipi: arama kendi satırında, çipler altta eşit paylaşır (320 px'te arama kutusu 35 px'e düşmesin) */
+  .kp-overlay .kp-search-row { flex-wrap: wrap; }
+  .kp-overlay .kp-search-row .kp-search { flex: 1 1 100%; }
+  .kp-overlay .kp-search-row .kp-chip { flex: 1 1 0; min-width: 0; padding: 6px 8px; }
+  /* büyü masası: yapışkan eylem çubuğu gövde dolgusuyla (8/12 px) hizalanır → yatay taşma yok */
+  .kp-overlay .ke-actions { margin: 2px -8px -12px; padding: 8px 8px 12px; bottom: -12px; }
+  .kp-overlay .kp-inv-char { padding: 8px; gap: 8px; }
+  .kp-overlay .kp-bust-wrap { width: 56px; height: 56px; }
+  .kp-overlay .kp-grid.kp-grid-armor,
+  .kp-overlay.kp-a11y .kp-grid.kp-grid-armor { grid-template-columns: repeat(4, var(--kp-slot)); }
+  .kp-overlay .kp-actions { gap: 6px; margin: 10px 0 6px; }
+  .kp-overlay .kp-actions-title { flex: 1 0 100%; }
+}
+
+/* küçük telefon dikey (≤ 700 px yükseklik): istasyon/sabit tarif şeridi yalnız süzgeç ya da sabit tarif varken görünür (liste 1 yerine 2+ tarif gösterir) */
+@media (max-width: 480px) and (max-height: 700px) {
+  .kp-overlay .kp-craft .kp-chiprow:not(:has(.is-filter)):not(:has(.kp-pinchip)) { display: none; }
+}
+
+/* ---------- kısa yatay (telefon): ızgara solda, karakter + zırh + bilgi sağda ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  .kp-overlay .kp-inv-layout {
+    grid-template-columns: minmax(0, 1fr) clamp(172px, 34%, 240px);
+    grid-template-areas: 'main char' 'main side';
+    gap: 8px 12px;
+    align-items: start;
+  }
+  .kp-overlay .kp-inv-main { grid-area: main; }
+  .kp-overlay .kp-inv-char { grid-area: char; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; padding: 8px; }
+  .kp-overlay .kp-inv-side { grid-area: side; }
+  .kp-overlay .kp-bust-wrap { width: 56px; height: 56px; }
+  .kp-overlay .kp-armor-col { flex-direction: row; }
+  .kp-overlay .kp-armor-labels { display: none; }
+  .kp-overlay .kp-grid.kp-grid-armor,
+  .kp-overlay.kp-a11y .kp-grid.kp-grid-armor { grid-template-columns: repeat(2, var(--kp-slot)); }
+  .kp-overlay .kp-defense { flex: 1 0 100%; text-align: center; }
+  .kp-overlay .kp-keys { display: none; }
+  .kp-overlay .kp-chest-layout { grid-template-columns: minmax(0, 1fr) clamp(160px, 30%, 220px); gap: 8px 12px; }
+}
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 760px) {
+  .kp-overlay .kp-chest-layout { grid-template-columns: minmax(0, 1fr); }
+  .kp-overlay .kp-inv-layout { grid-template-columns: minmax(0, 1fr) 172px; }
+}
