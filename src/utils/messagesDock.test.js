@@ -8,6 +8,11 @@ describe('isDockHiddenPath', () => {
         }
     });
 
+    it('tam ekran oyun sahnelerinde dock gizlenir, lobilerde görünür', () => {
+        for (const p of ['/oyun/protocol-zero/oyna', '/oyun/kule/oyna', '/oyun/kesif/oyna/']) expect(isDockHiddenPath(p)).toBe(true);
+        for (const p of ['/oyun/protocol-zero', '/oyun/kule', '/oyun/oynayan']) expect(isDockHiddenPath(p)).toBe(false);
+    });
+
     it('diğer sayfalarda dock görünür', () => {
         for (const p of ['/', '/questions', '/profile/ayse', '/oyun/magaza', '/models', '/moderation-rules', '/cpl-manager', '']) {
             expect(isDockHiddenPath(p)).toBe(false);

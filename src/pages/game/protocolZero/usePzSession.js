@@ -1,16 +1,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { breachResolve, buyTech, chooseDilemma, createSim, purge, snapshot, summary, tick, toggleIsolate, upgradeFirewall } from '../../../game/protocolZero/sim';
+import {
+    breachResolve,
+    buyTech,
+    chooseDilemma,
+    createSim,
+    packetArrive,
+    popBubble,
+    purge,
+    snapshot,
+    summary,
+    tick,
+    toggleIsolate,
+    upgradeFirewall,
+} from '../../../game/protocolZero/sim';
 import { computeScore } from '../../../game/protocolZero/score';
 import { SoundEngine } from '../../../game/protocolZero/sound';
 import { loadMuted, saveMuted } from '../../../components/game/protocolZero/pzUtils';
 
 /*
  * Oyun oturumu: simülasyon döngüsü (rAF, gerçek dt × hız), HUD deposu (useSyncExternalStore; sayfa
- * state'ine yazmadan ~10 Hz), ses motoru, küre köprüsü ve oyuncu aksiyonları.
+ * state'ine yazmadan ~10 Hz), ses motoru, harita köprüsü ve oyuncu aksiyonları.
  *
- * Duraklama kaynakları: hız 0, brifing, menü, savunma ağacı, mini oyun, bekleyen ikilem, oyun bitti.
- * Olaylar (sim.tick): dilemma → ses; breach → alarm + kamerayı düğüme çevir; breachLost/captured → ses;
- * victory/defeat → sonuç (summary + skor + gerçek süre).
+ * Duraklama kaynakları: hız 0, brifing, menü, savunma ağacı, dünya durumu, mini oyun, bekleyen ikilem, oyun bitti.
+ * Olaylar (sim.tick): dilemma → ses; breach → alarm + haritayı düğüme çevir; bubble → ses; alert günlük →
+ * haber bandı kızıl + bülten sesi; victory/defeat → sonuç (summary + skor + gerçek süre).
  */
 
 function createStore(initial) {
@@ -31,33 +44,39 @@ function createStore(initial) {
 
 const MAX_STEP = 0.25;
 const PUSH_MS = 100;
+const ALERT_MS = 4000;
 
 export default function usePzSession({ entry, reducedMotion = false }) {
-    // Sim ve ses motoru bileşen ömrü boyunca tek örnek (useState başlatıcısı: render'da ref yazmadan).
-    const [sim] = useState(() => createSim(entry.difficulty, { seed: entry.seed }));
+    // Sim, ses motoru ve başlangıç tarihi bileşen ömrü boyunca tek örnek (useState başlatıcısı).
+    const [sim] = useState(() => createSim(entry.difficulty, { seed: entry.seed, archetype: entry.archetype }));
     const [sound] = useState(() => new SoundEngine({ muted: loadMuted() }));
+    const [startDate] = useState(() => new Date());
     const store = useMemo(() => createStore(snapshot(sim)), [sim]);
     const snap = useSyncExternalStore(store.subscribe, store.get, store.get);
 
     const [speed, setSpeedState] = useState(1);
-    const [ui, setUi] = useState({ started: false, menu: false, tech: false, breachGame: false });
+    const [ui, setUi] = useState({ started: false, menu: false, tech: false, world: false, breachGame: false });
     const [selectedId, setSelectedId] = useState(null);
+    const [countryName, setCountryName] = useState('');
     const [lastError, setLastError] = useState('');
     const [result, setResult] = useState(null);
     const [muted, setMuted] = useState(loadMuted);
     const [breachSeed, setBreachSeed] = useState(0);
+    const [alert, setAlert] = useState(false);
 
-    const globeRef = useRef(null);
+    const mapRef = useRef(null);
+    const worldRef = useRef(null);
     const startedAtRef = useRef(null);
     const pausedAccumRef = useRef(0);
     const pauseStartRef = useRef(null);
     const lastSpeedRef = useRef(1);
     const errTimer = useRef(0);
+    const alertTimer = useRef(0);
+    const lastLogRef = useRef(0);
 
     const finished = snap.status !== 'running';
-    const paused = !ui.started || ui.menu || ui.tech || ui.breachGame || Boolean(snap.dilemma) || finished || speed === 0;
+    const paused = !ui.started || ui.menu || ui.tech || ui.world || ui.breachGame || Boolean(snap.dilemma) || finished || speed === 0;
 
-    // Döngü (rAF) güncel hız/duraklamayı ref'ten okur; atama commit sonrası effect'te.
     const ctl = useRef({ speed, paused });
     useEffect(() => {
         ctl.current = { speed, paused };
@@ -66,7 +85,7 @@ export default function usePzSession({ entry, reducedMotion = false }) {
     const push = useCallback(() => {
         const s = snapshot(sim);
         store.set(s);
-        globeRef.current?.update(s);
+        mapRef.current?.update(s);
     }, [store, sim]);
 
     const sfx = useCallback((name) => sound.play(name), [sound]);
@@ -77,13 +96,19 @@ export default function usePzSession({ entry, reducedMotion = false }) {
         if (msg) errTimer.current = setTimeout(() => setLastError(''), 2500);
     }, []);
 
-    /* ----------------------------- ses / küre ----------------------------- */
+    const flashAlert = useCallback(() => {
+        setAlert(true);
+        clearTimeout(alertTimer.current);
+        alertTimer.current = setTimeout(() => setAlert(false), ALERT_MS);
+    }, []);
+
+    /* ----------------------------- ses / harita ----------------------------- */
     const toggleMute = useCallback(() => {
         setMuted((m) => {
             const next = !m;
             saveMuted(next);
             sound.setMuted(next);
-            if (!next && ctl.current && sim?.status === 'running') {
+            if (!next && sim.status === 'running') {
                 sound.unlock();
                 sound.startAmbient();
                 if (sim.breach) sound.startAlarm();
@@ -92,30 +117,31 @@ export default function usePzSession({ entry, reducedMotion = false }) {
         });
     }, [sim, sound]);
 
-    const onGlobeReady = useCallback(
-        (globe) => {
-            globeRef.current = globe;
-            if (globe) {
-                globe.update(store.get());
-                globe.setSelected(selectedId);
+    const onMapReady = useCallback(
+        (map, world) => {
+            mapRef.current = map;
+            if (world) worldRef.current = world;
+            if (map) {
+                map.update(store.get());
+                map.setSelected(selectedId);
             }
         },
         [store, selectedId]
     );
 
     useEffect(() => {
-        globeRef.current?.setSelected(selectedId);
+        mapRef.current?.setSelected(selectedId);
     }, [selectedId]);
 
     useEffect(() => {
-        globeRef.current?.setPaused(paused);
+        mapRef.current?.setPaused(paused);
     }, [paused]);
 
     useEffect(() => {
-        const timer = errTimer;
+        const timers = [errTimer, alertTimer];
         return () => {
             sound.dispose();
-            clearTimeout(timer.current);
+            for (const t of timers) clearTimeout(t.current);
         };
     }, [sound]);
 
@@ -126,20 +152,31 @@ export default function usePzSession({ entry, reducedMotion = false }) {
                 switch (e.type) {
                     case 'dilemma':
                         sfx('dilemma');
+                        flashAlert();
                         break;
                     case 'breach':
                         sound.startAlarm();
-                        globeRef.current?.focusNode(e.nodeId);
+                        mapRef.current?.focusNode(e.nodeId);
+                        flashAlert();
                         break;
                     case 'breachLost':
                         sound.stopAlarm();
                         sfx('fail');
+                        flashAlert();
                         break;
                     case 'captured':
                         sfx('reseed');
+                        flashAlert();
                         break;
                     case 'reseed':
-                        sfx('data');
+                        flashAlert();
+                        break;
+                    case 'story':
+                        if (e.kind === 'alert') flashAlert();
+                        break;
+                    case 'bubble':
+                        sfx(e.bubble.kind === 'breach' ? 'popBad' : 'data');
+                        if (e.bubble.kind === 'breach') flashAlert();
                         break;
                     case 'autoPatch':
                         sfx('data');
@@ -160,7 +197,7 @@ export default function usePzSession({ entry, reducedMotion = false }) {
                 }
             }
         },
-        [sfx, sim, sound]
+        [sfx, sim, sound, flashAlert]
     );
 
     /* -------------------------------- döngü -------------------------------- */
@@ -183,6 +220,11 @@ export default function usePzSession({ entry, reducedMotion = false }) {
                 if (sim.status !== 'running' || sim.dilemma) break;
             }
             if (events.length) handleEvents(events);
+            if (sim.logSeq !== lastLogRef.current) {
+                lastLogRef.current = sim.logSeq;
+                const latest = sim.log[sim.log.length - 1];
+                if (latest?.kind === 'alert') sfx('news');
+            }
             if (now - lastPush > PUSH_MS || events.length) {
                 lastPush = now;
                 push();
@@ -190,9 +232,9 @@ export default function usePzSession({ entry, reducedMotion = false }) {
         };
         raf = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(raf);
-    }, [handleEvents, push, sim]);
+    }, [handleEvents, push, sim, sfx]);
 
-    // Duraklatılan gerçek süre skora girmesin (elapsed_seconds gün sayısıyla karşılaştırılır; fazla olması sorun değil, ama dürüst ölçelim).
+    // Duraklatılan gerçek süre skora girmesin.
     useEffect(() => {
         if (!ui.started) return;
         if (paused) {
@@ -227,22 +269,21 @@ export default function usePzSession({ entry, reducedMotion = false }) {
     }, []);
 
     const select = useCallback(
-        (id) => {
-            if (id) {
-                sfx('ping');
-                globeRef.current?.focusNode(id);
-            }
+        (id, countryId) => {
+            if (id) sfx('ping');
             setSelectedId(id || null);
+            const world = worldRef.current;
+            setCountryName(id && countryId && world ? world.byId[countryId]?.name || '' : '');
             showError('');
         },
         [sfx, showError]
     );
 
     const act = useCallback(
-        (fn, sound) => (...args) => {
+        (fn, soundName) => (...args) => {
             const r = fn(sim, ...args);
             if (r.ok) {
-                sfx(sound);
+                sfx(soundName);
                 showError('');
             } else {
                 sfx('miss');
@@ -264,6 +305,18 @@ export default function usePzSession({ entry, reducedMotion = false }) {
         [act]
     );
 
+    const pop = useCallback(
+        (id) => {
+            const r = popBubble(sim, id);
+            if (r.ok) sfx(r.kind === 'data' ? 'pop' : 'success');
+            push();
+            return r;
+        },
+        [sim, sfx, push]
+    );
+
+    const onPacketArrive = useCallback((from, to) => packetArrive(sim, from, to), [sim]);
+
     const choose = useCallback(
         (index) => {
             const r = chooseDilemma(sim, index);
@@ -279,6 +332,11 @@ export default function usePzSession({ entry, reducedMotion = false }) {
         setUi((u) => ({ ...u, tech: true }));
     }, [sfx]);
     const closeTech = useCallback(() => setUi((u) => ({ ...u, tech: false })), []);
+    const openWorld = useCallback(() => {
+        sfx('click');
+        setUi((u) => ({ ...u, world: true }));
+    }, [sfx]);
+    const closeWorld = useCallback(() => setUi((u) => ({ ...u, world: false })), []);
     const openMenu = useCallback(() => {
         sfx('click');
         setUi((u) => ({ ...u, menu: true }));
@@ -308,6 +366,7 @@ export default function usePzSession({ entry, reducedMotion = false }) {
     return {
         snap,
         sim,
+        startDate,
         speed,
         setSpeed,
         togglePause,
@@ -315,15 +374,21 @@ export default function usePzSession({ entry, reducedMotion = false }) {
         finished,
         result,
         ui,
+        alert,
         muted,
         toggleMute,
         selectedId,
         selectedNode,
+        countryName,
         select,
         actions,
+        pop,
+        onPacketArrive,
         choose,
         openTech,
         closeTech,
+        openWorld,
+        closeWorld,
         openMenu,
         closeMenu,
         startBreachGame,
@@ -331,7 +396,7 @@ export default function usePzSession({ entry, reducedMotion = false }) {
         breachSeed,
         start,
         lastError,
-        onGlobeReady,
+        onMapReady,
         sfx,
         reducedMotion,
     };

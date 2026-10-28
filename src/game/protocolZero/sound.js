@@ -4,7 +4,7 @@
  *   const sfx = new SoundEngine({ muted });
  *   sfx.unlock();                 // ilk kullanıcı jestinde (kendisi de pointerdown/keydown dinler)
  *   sfx.play('click' | 'ping' | 'upgrade' | 'purge' | 'isolate' | 'data' | 'tick' | 'hit' | 'miss' |
- *            'dilemma' | 'success' | 'fail' | 'victory' | 'defeat' | 'reseed' | 'tech' | 'coin');
+ *            'dilemma' | 'success' | 'fail' | 'victory' | 'defeat' | 'reseed' | 'tech' | 'coin' | 'pop' | 'popBad' | 'news');
  *   sfx.startAlarm() / sfx.stopAlarm();      // kırmızı alarm sireni (döngü)
  *   sfx.startAmbient() / sfx.stopAmbient();  // komuta merkezi uğultusu
  *   sfx.setMuted(bool); sfx.dispose();
@@ -326,6 +326,20 @@ const RECIPES = {
         s._tone({ type: 'square', freq: 110, freqTo: 80, dur: 0.25, gain: 0.08, at: 0.05 });
     },
     tick: (s) => s._tone({ type: 'triangle', freq: 1000, dur: 0.045, gain: 0.07 }),
+    // Baloncuk patlatma: kısa, tok, yukarı kayan "pop".
+    pop: (s) => {
+        s._tone({ type: 'sine', freq: 520, freqTo: 1240, dur: 0.09, gain: 0.16, attack: 0.002 });
+        s._burst({ dur: 0.06, gain: 0.08, filter: { type: 'bandpass', freq: 2400 } });
+    },
+    popBad: (s) => {
+        s._tone({ type: 'square', freq: 300, freqTo: 90, dur: 0.16, gain: 0.12 });
+        s._burst({ dur: 0.12, gain: 0.1, filter: { type: 'lowpass', freq: 1800, freqTo: 300 } });
+    },
+    // Son dakika haber bülteni jingle'ı.
+    news: (s) => {
+        [880, 1175, 880].forEach((f, i) => s._tone({ type: 'square', freq: f, dur: 0.08, gain: 0.06, at: i * 0.1 }));
+        s._tone({ type: 'sine', freq: 1760, dur: 0.3, gain: 0.04, at: 0.3 });
+    },
     hit: (s) => s._tone({ type: 'square', freq: 660, freqTo: 990, dur: 0.07, gain: 0.08 }),
     miss: (s) => s._tone({ type: 'sawtooth', freq: 220, freqTo: 140, dur: 0.18, gain: 0.1, filter: { type: 'lowpass', freq: 900 } }),
     dilemma: (s) => {

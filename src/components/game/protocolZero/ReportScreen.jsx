@@ -5,6 +5,7 @@ import { FaWhatsapp, FaXTwitter } from 'react-icons/fa6';
 import { gameErrorMessage } from '../../../services/gameErrors';
 import protocolZeroApiDefault from '../../../services/protocolZeroApi';
 import { CLIENT_VERSION } from '../../../game/protocolZero/constants';
+import { archetypeOf } from '../../../game/protocolZero/archetypes';
 import { buildShareText, buildShareUrl, copyText, shareResult, whatsappLink, xLink } from '../../../game/protocolZero/share';
 import { CANONICAL_ORIGIN } from '../../../config/site';
 import PzLeaderboard from './PzLeaderboard';
@@ -49,7 +50,7 @@ const ReportScreen = ({ result, user, api = protocolZeroApiDefault, onReplay, on
     }, [api, summary.difficulty]);
 
     const shareText = useMemo(
-        () => buildShareText({ outcome: summary.outcome, days: summary.days, score, difficulty: summary.difficulty }, buildShareUrl(CANONICAL_ORIGIN)),
+        () => buildShareText({ outcome: summary.outcome, days: summary.days, score, difficulty: summary.difficulty, archetype: summary.archetype }, buildShareUrl(CANONICAL_ORIGIN)),
         [summary, score]
     );
 
@@ -75,6 +76,8 @@ const ReportScreen = ({ result, user, api = protocolZeroApiDefault, onReplay, on
                     elapsed_seconds: Math.max(1, Math.round(elapsedSeconds)),
                     client_version: CLIENT_VERSION,
                     meta: {
+                        archetype: summary.archetype,
+                        bubbles: summary.bubbles,
                         techs: summary.techs,
                         breaches_won: summary.breachesWon,
                         breaches_lost: summary.breachesLost,
@@ -109,10 +112,10 @@ const ReportScreen = ({ result, user, api = protocolZeroApiDefault, onReplay, on
     const rank = state.data?.rank;
 
     return (
-        <div className="pz-modal-backdrop !items-start overflow-y-auto">
-            <div className="pz-modal pz-glass pz-scan my-auto max-w-2xl p-5 sm:p-7" role="dialog" aria-modal="true" aria-labelledby="pz-report-title">
+        <div className="pz-modal-backdrop pz-scrollable">
+            <div className="pz-modal pz-glass pz-scan max-w-2xl p-5 sm:p-7" role="dialog" aria-modal="true" aria-labelledby="pz-report-title">
                 <p className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] ring-1 ${victory ? 'bg-emerald-400/15 text-emerald-200 ring-emerald-300/40' : 'bg-rose-500/15 text-rose-200 ring-rose-300/40'}`}>
-                    Görev raporu · {difficultyName(summary.difficulty)}
+                    Görev raporu · {difficultyName(summary.difficulty)} · {archetypeOf(summary.archetype).icon} {archetypeOf(summary.archetype).name}
                 </p>
                 <h2 id="pz-report-title" className="mt-2 text-3xl font-black leading-none text-white sm:text-4xl">
                     {victory ? '🏆 DÜNYA KURTARILDI' : '💀 GÖREV BAŞARISIZ'}

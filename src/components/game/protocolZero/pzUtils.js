@@ -3,6 +3,7 @@
  * etiketler ve biçimlendirme. Oyun kuralları src/game/protocolZero/*.
  */
 import { DIFFICULTIES, DIFFICULTY_KEYS, LOBBY_PATH, PLAY_PATH } from '../../../game/protocolZero/constants';
+import { ARCHETYPE_KEYS, DEFAULT_ARCHETYPE } from '../../../game/protocolZero/archetypes';
 
 export { LOBBY_PATH, PLAY_PATH };
 
@@ -21,6 +22,7 @@ export const STORAGE_KEYS = Object.freeze({
     name: 'hs_pz_name',
     best: 'hs_pz_best',
     difficulty: 'hs_pz_difficulty',
+    archetype: 'hs_pz_archetype',
     briefed: 'hs_pz_briefed',
 });
 
@@ -53,6 +55,12 @@ export function loadDifficulty() {
 }
 export const saveDifficulty = (d) => storageSet(STORAGE_KEYS.difficulty, d);
 
+export function loadArchetype() {
+    const a = storageGet(STORAGE_KEYS.archetype);
+    return ARCHETYPE_KEYS.includes(a) ? a : DEFAULT_ARCHETYPE;
+}
+export const saveArchetype = (a) => storageSet(STORAGE_KEYS.archetype, a);
+
 /** Bu cihazdaki en iyi sonuç (misafir ya da üye fark etmez; yalnızca gösterim). */
 export function loadBest() {
     try {
@@ -75,8 +83,13 @@ export function saveBestIfBetter(result) {
 }
 
 /** Lobi → oyun geçiş durumu. */
-export function buildEntry({ difficulty = 'normal', seed = Date.now() } = {}) {
-    return { v: 1, difficulty: DIFFICULTY_KEYS.includes(difficulty) ? difficulty : 'normal', seed: Number(seed) >>> 0 || 1 };
+export function buildEntry({ difficulty = 'normal', seed = Date.now(), archetype = DEFAULT_ARCHETYPE } = {}) {
+    return {
+        v: 1,
+        difficulty: DIFFICULTY_KEYS.includes(difficulty) ? difficulty : 'normal',
+        archetype: ARCHETYPE_KEYS.includes(archetype) ? archetype : DEFAULT_ARCHETYPE,
+        seed: Number(seed) >>> 0 || 1,
+    };
 }
 
 export function readEntry(state) {
@@ -97,6 +110,17 @@ export const STATUS_LABEL = Object.freeze({
 export const fmtNum = (n) => Number(n || 0).toLocaleString('tr-TR');
 
 export const fmtPct = (n) => `%${Math.round(Number(n) || 0)}`;
+
+/** Oyun takvimi: başlangıç tarihi + (gün − 1). "28 Eki 2026" biçiminde. */
+export function formatGameDate(startDate, day) {
+    const d = new Date(startDate instanceof Date ? startDate.getTime() : Number(startDate) || Date.now());
+    d.setDate(d.getDate() + Math.max(0, (Number(day) || 1) - 1));
+    try {
+        return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+        return d.toDateString();
+    }
+}
 
 export function fmtSeconds(s) {
     const v = Math.max(0, Math.ceil(Number(s) || 0));

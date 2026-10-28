@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LuLogIn, LuMessageCircleQuestion, LuMonitorX, LuPlay, LuShieldAlert, LuTrophy } from 'react-icons/lu';
+import { LuLogIn, LuMessageCircleQuestion, LuPlay, LuShieldAlert, LuTrophy } from 'react-icons/lu';
 import { useAuth } from '../../../context/AuthContext';
 import GameLayout from '../../../components/game/GameLayout';
 import { GameLoading } from '../../../components/game/GameStates';
@@ -9,9 +9,11 @@ import SEO from '../../../components/SEO';
 import PzHeroArt from '../../../components/game/protocolZero/PzHeroArt';
 import PzLeaderboard from '../../../components/game/protocolZero/PzLeaderboard';
 import PzHowTo from '../../../components/game/protocolZero/PzHowTo';
+import ArchetypePicker from '../../../components/game/protocolZero/ArchetypePicker';
+import { ARCHETYPES } from '../../../game/protocolZero/archetypes';
 import { DIFFICULTIES, DIFFICULTY_KEYS, TECH_TREE } from '../../../game/protocolZero/constants';
 import protocolZeroApiDefault from '../../../services/protocolZeroApi';
-import { PLAY_PATH, buildEntry, detectWebGL, difficultyName, fmtNum, loadBest, loadDifficulty, saveDifficulty } from '../../../components/game/protocolZero/pzUtils';
+import { PLAY_PATH, buildEntry, difficultyName, fmtNum, loadArchetype, loadBest, loadDifficulty, saveArchetype, saveDifficulty } from '../../../components/game/protocolZero/pzUtils';
 import '../../../components/game/protocolZero/protocolZero.css';
 
 const StatTile = ({ label, value, sub }) => (
@@ -48,8 +50,8 @@ const DifficultyPicker = ({ value, onChange }) => (
 
 const Lobby = ({ member, api }) => {
     const navigate = useNavigate();
-    const [webgl] = useState(detectWebGL);
     const [difficulty, setDifficulty] = useState(loadDifficulty);
+    const [archetype, setArchetype] = useState(loadArchetype);
     const [best] = useState(loadBest);
     const fetcher = useCallback(() => api.overview(), [api]);
     const { data, error, reload } = useAsync(fetcher, member ? 'm' : 'g');
@@ -57,38 +59,31 @@ const Lobby = ({ member, api }) => {
     const discussion = data?.discussion || null;
 
     const start = () => {
-        if (!webgl) return;
         saveDifficulty(difficulty);
-        navigate(PLAY_PATH, { state: { entry: buildEntry({ difficulty, seed: Date.now() }) } });
+        saveArchetype(archetype);
+        navigate(PLAY_PATH, { state: { entry: buildEntry({ difficulty, archetype, seed: Date.now() }) } });
     };
 
     return (
         <>
             <SEO
                 title="PROTOCOL: ZERO - Yapay Zeka Saldırısını Durdurabilir Misin? | Herkesler Soruyor"
-                description="3D dünya küresinde 14 veri merkezini kontrolden çıkan yapay zekâya karşı savun. Üyeliksiz oynanan canlı strateji simülasyonu: güvenlik duvarları, karantina, kuantum şifre çözümü. Skorunu paylaş, arkadaşlarına meydan oku."
+                description="Gerçek ülke sınırlı taktik dünya haritasında 14 veri merkezini kontrolden çıkan yapay zekâya karşı savun. Plague Inc. tarzı, üyeliksiz canlı strateji simülasyonu: güvenlik duvarları, karantina, kuantum şifre çözümü, kriz kararları. Skorunu paylaş, arkadaşlarına meydan oku."
             />
             <section className="game-hero game-hero-pz relative min-h-[340px] overflow-hidden rounded-3xl p-5 shadow-2xl game-pop-in sm:p-8" aria-labelledby="pz-hero-title">
                 <PzHeroArt />
                 <div className="relative z-10 flex max-w-2xl flex-col">
                     <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-400 to-cyan-300 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-950">
-                        <LuShieldAlert aria-hidden="true" /> Canlı simülasyon · Üyeliksiz · 3D
+                        <LuShieldAlert aria-hidden="true" /> Canlı simülasyon · Üyeliksiz · Taktik dünya haritası
                     </span>
                     <h1 id="pz-hero-title" className="pz-title mt-2 text-3xl leading-tight sm:text-5xl">
                         PROTOCOL: ZERO
                     </h1>
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200">Küresel Yapay Zekâ Karantinası</p>
                     <p className="mt-3 text-white/85">
-                        Bir araştırma yapay zekâsı kontrolden çıktı ve dünyadaki 14 veri merkezine sızıyor. Küreyi döndür, güvenlik duvarlarını güçlendir,
-                        denizaltı kablolarını kes, paniği yönet ve çekirdek şifresini çöz. Yapay zeka saldırısını durdurabilir misin?
+                        Bir araştırma yapay zekâsı kontrolden çıktı ve dünyadaki 14 veri merkezine sızıyor. Ülkeler kızıla dönmeden haritada müdahale et:
+                        güvenlik duvarlarını güçlendir, denizaltı kablolarını kes, baloncukları patlat, paniği yönet ve çekirdek şifresini çöz. Yapay zeka saldırısını durdurabilir misin?
                     </p>
-
-                    {!webgl && (
-                        <p role="alert" className="mt-4 flex items-start gap-2 rounded-2xl bg-rose-500/25 px-3 py-2 text-sm text-rose-50 ring-1 ring-rose-300/30">
-                            <LuMonitorX className="mt-0.5 shrink-0" aria-hidden="true" />
-                            Bu tarayıcıda 3D grafik (WebGL) kullanılamıyor. Donanım hızlandırmayı açıp ya da güncel bir tarayıcıyla tekrar dene.
-                        </p>
-                    )}
 
                     <div className="mt-5">
                         <p className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/70">Zorluk seç</p>
@@ -99,11 +94,10 @@ const Lobby = ({ member, api }) => {
                         <button
                             type="button"
                             onClick={start}
-                            disabled={!webgl}
                             data-testid="pz-start"
                             className="inline-flex min-h-[56px] basis-full items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-400 px-7 text-lg font-black text-slate-950 shadow-lg game-press disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:basis-auto"
                         >
-                            <LuPlay className="shrink-0" aria-hidden="true" /> Görevi başlat · {difficultyName(difficulty)}
+                            <LuPlay className="shrink-0" aria-hidden="true" /> Görevi başlat · {ARCHETYPES[archetype]?.name} · {difficultyName(difficulty)}
                         </button>
                         {!member && (
                             <p className="rounded-2xl bg-white/10 px-3 py-2 text-sm text-white/90 ring-1 ring-white/15">
@@ -116,6 +110,26 @@ const Lobby = ({ member, api }) => {
                         )}
                     </div>
                 </div>
+            </section>
+
+            {/* Plague Inc. "tür seç" ekranı: YZ tehdit türü */}
+            <section className="pz-arch-section mt-5 rounded-3xl p-4 sm:p-6" aria-labelledby="pz-arch-title">
+                <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-rose-300">Senaryo</p>
+                        <h2 id="pz-arch-title" className="text-2xl font-black text-white sm:text-3xl">Tehdit Türünü Seç</h2>
+                    </div>
+                    <p className="text-xs text-white/60">Her tür farklı yayılır, farklı korkutur ve kendi hikâyesini anlatır.</p>
+                </div>
+                <ArchetypePicker value={archetype} onChange={setArchetype} />
+                <button
+                    type="button"
+                    onClick={start}
+                    data-testid="pz-start-arch"
+                    className="mt-4 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-400 px-6 text-base font-black text-white shadow-lg game-press focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto"
+                >
+                    <LuPlay aria-hidden="true" /> {ARCHETYPES[archetype]?.icon} {ARCHETYPES[archetype]?.name} senaryosunu başlat
+                </button>
             </section>
 
             <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -210,7 +224,7 @@ const Lobby = ({ member, api }) => {
             </div>
 
             <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-                Simülasyon tamamen cihazında çalışır; sunucuya yalnızca oyun sonu skor özeti gider. Ses efektleri gerçek zamanlı sentezlenir, hiçbir dosya indirilmez.
+                Simülasyon tamamen cihazında çalışır; sunucuya yalnızca oyun sonu skor özeti gider. Ülke sınırları Natural Earth (world-atlas) verisinden, ses efektleri gerçek zamanlı sentezlenir.
             </p>
         </>
     );

@@ -15,10 +15,14 @@
  *  - Panik: baskı = Σ(izole 0.30 | ele geçirilmiş 0.35 | enf ≥ 60 → 0.12) × panicRate (sıkıyönetimde ×0.5); toparlanma 0.45 (+0.6 deepfake).
  *  - Deşifre: decryptBase × (1 + hızlandırıcılar) × temiz işlem gücü payı.
  *  - YZ her reseedEvery sn'de yeni bir arka kapı açar (deşifre %100 değilse). Sıfırıncı gün saldırısı (breach) ayrı zamanlayıcıda.
+ *  - Baloncuklar (BUBBLES): mavi veri baloncuğu temiz bir düğümde belirir, patlatılırsa +₵ ve +deşifre; bir düğüm ilk
+ *    kez enfekte olunca kızıl sızma baloncuğu çıkar, süresi içinde patlatılırsa ilk dalga bastırılır (düğüm %0).
+ *  - Veri paketleri (harita trafiği) enfekte kaynaktan hedefe varınca küçük bir sızma ekler (packetArrive).
  *  - Zafer: deşifre %100 ya da (tüm düğümler %0 ve gün ≥ 30). Yenilgi: hakimiyet ≥ %99 ya da panik ≥ %100.
  */
-import { COSTS, DAY_SECONDS, DIFFICULTIES, DILEMMAS, NEIGHBORS, NODES, NODE_BY_ID, TECH_BY_ID } from './constants';
+import { BUBBLES, COSTS, DAY_SECONDS, DIFFICULTIES, DILEMMAS, NEIGHBORS, NODES, NODE_BY_ID, SERVERS_PER_TFLOPS, TECH_BY_ID } from './constants';
 import { between, createRng, pick } from './rng';
+import { CONDITIONAL_STORY, GENERIC_NEWS, GLOBAL_STORY, applyArchetype, archetypeOf } from './archetypes';
 
 export const PURGE_VICTORY_DAY = 30;
 export const MAX_LOG = 40;
@@ -31,13 +35,16 @@ function log(state, text, kind = 'info') {
     if (state.log.length > MAX_LOG) state.log.splice(0, state.log.length - MAX_LOG);
 }
 
-export function createSim(difficulty = 'normal', { seed = Date.now(), rng } = {}) {
-    const cfg = DIFFICULTIES[difficulty] || DIFFICULTIES.normal;
+export function createSim(difficulty = 'normal', { seed = Date.now(), rng, archetype } = {}) {
+    const base = DIFFICULTIES[difficulty] || DIFFICULTIES.normal;
+    const arch = archetypeOf(archetype);
+    const cfg = applyArchetype(base, arch.key);
     const random = rng || createRng(seed);
     const state = {
-        version: 1,
+        version: 2,
         seed,
-        difficulty: cfg.key,
+        difficulty: base.key,
+        archetype: arch.key,
         cfg,
         rng: random,
         time: 0,
@@ -54,18 +61,22 @@ export function createSim(difficulty = 'normal', { seed = Date.now(), rng } = {}
         techs: {},
         breach: null,
         dilemma: null,
+        bubbles: [],
+        bubbleSeq: 0,
         recentDilemmas: [],
         incomeMods: [],
+        story: { fired: {}, flags: {}, nextNews: between(random, 10, 18) },
         timers: {
             nextDilemma: between(random, cfg.dilemmaEvery[0], cfg.dilemmaEvery[1]),
             nextBreach: between(random, cfg.breachEvery[0], cfg.breachEvery[1]),
             nextReseed: between(random, cfg.reseedEvery[0], cfg.reseedEvery[1]),
             nextAutoPatch: 20,
+            nextDataBubble: between(random, BUBBLES.dataEvery[0], BUBBLES.dataEvery[1]) * cfg.dataBubbleEvery,
             hunterSwitch: 0,
             hunterTarget: null,
         },
         rates: { income: 0, decrypt: 0, panic: 0 },
-        stats: { purges: 0, firewalls: 0, isolations: 0, breachesWon: 0, breachesLost: 0, dilemmas: 0, techs: 0, reseeds: 0, captured: 0, earned: 0 },
+        stats: { purges: 0, firewalls: 0, isolations: 0, breachesWon: 0, breachesLost: 0, dilemmas: 0, techs: 0, reseeds: 0, captured: 0, earned: 0, bubbles: 0, breachBubbles: 0, packets: 0 },
         log: [],
         logSeq: 0,
     };
@@ -90,8 +101,44 @@ export function createSim(difficulty = 'normal', { seed = Date.now(), rng } = {}
     for (const id of seeds) {
         state.nodes[id].infection = 28 + Math.round(random() * 14);
     }
-    log(state, `Kontrolden çıkan YZ ${seeds.map((id) => NODE_BY_ID[id].name).join(', ')} düğümünde tespit edildi.`, 'alert');
+    log(state, `${arch.name} türü YZ ${seeds.map((id) => NODE_BY_ID[id].name).join(', ')} düğümünde tespit edildi.`, 'alert');
     return state;
+}
+
+/* ----------------------------- senaryo / haber ----------------------------- */
+
+function fillNews(state, template) {
+    const rng = state.rng;
+    const n = pick(rng, NODES);
+    return template.replace(/\{node\}/g, n.name).replace(/\{country\}/g, n.countryName || n.country);
+}
+
+/** Güne/duruma bağlı senaryo vuruşları ve dolgu haberleri; her vuruş bir kez. */
+function storyTick(state, dt, events) {
+    const arch = archetypeOf(state.archetype);
+    const beats = [...GLOBAL_STORY, ...(arch.story || [])];
+    for (let i = 0; i < beats.length; i++) {
+        const b = beats[i];
+        const key = `${b.day}:${i}`;
+        if (state.day >= b.day && !state.story.fired[key]) {
+            state.story.fired[key] = true;
+            log(state, b.text, b.kind || 'story');
+            events.push({ type: 'story', kind: b.kind || 'story', text: b.text });
+        }
+    }
+    for (const c of CONDITIONAL_STORY) {
+        if (!state.story.flags[c.flag] && c.when(state)) {
+            state.story.flags[c.flag] = true;
+            log(state, c.text, c.kind || 'story');
+            events.push({ type: 'story', kind: c.kind || 'story', text: c.text });
+        }
+    }
+    state.story.nextNews -= dt;
+    if (state.story.nextNews <= 0) {
+        state.story.nextNews = between(state.rng, 10, 18);
+        const pool = state.rng() < 0.45 && arch.news?.length ? arch.news : GENERIC_NEWS;
+        log(state, fillNews(state, pick(state.rng, pool)), 'news');
+    }
 }
 
 /* ----------------------------- yardımcılar ----------------------------- */
@@ -99,6 +146,9 @@ export function createSim(difficulty = 'normal', { seed = Date.now(), rng } = {}
 export const nodeStatus = (n) => (n.isolated ? 'isolated' : n.infection >= 100 ? 'lost' : n.infection > 20 ? 'warn' : 'safe');
 
 export const firewallCost = (node) => COSTS.firewallBase * node.firewall;
+
+/** Firewall etkinliği: tür çarpanı (botnet: üs 0,85 → duvarlar daha az etkili). */
+const fwEff = (state, n) => Math.pow(n.firewall, state.cfg.firewallEff ?? 1);
 
 function spreadMultiplier(state) {
     const adapt = 1 + state.cfg.aiAdapt * (state.day / 100);
@@ -136,7 +186,7 @@ export function panicRatePerSecond(state) {
     for (const id in state.nodes) {
         const n = state.nodes[id];
         if (n.isolated) pressure += 0.3;
-        else if (n.infection >= 100) pressure += 0.35;
+        else if (n.infection >= 100) pressure += 0.35 * (state.cfg.capturedPanic ?? 1);
         else if (n.infection >= 60) pressure += 0.12;
     }
     pressure *= state.cfg.panicRate * (state.techs.martial ? 0.5 : 1);
@@ -157,6 +207,13 @@ function nonIsolated(state, filter = () => true) {
         if (!n.isolated && filter(n)) out.push(n);
     }
     return out;
+}
+
+function spawnBubble(state, kind, nodeId, ttl) {
+    const rng = state.rng;
+    const bubble = { id: ++state.bubbleSeq, kind, nodeId, ttl, age: 0, offset: [(rng() - 0.5) * 2, (rng() - 0.5) * 2] };
+    state.bubbles.push(bubble);
+    return bubble;
 }
 
 function finish(state, status, extra, events) {
@@ -192,6 +249,10 @@ export function tick(state, dt) {
     // Geçici gelir cezaları
     if (state.incomeMods.length) state.incomeMods = state.incomeMods.filter((m) => m.until > state.time);
 
+    // Bu tick'te ilk kez enfekte olan düğümler (kızıl sızma baloncuğu için)
+    const cleanBefore = {};
+    for (const id in nodes) cleanBefore[id] = nodes[id].infection <= 0;
+
     // --- YZ yayılımı ---
     const spread = spreadMultiplier(state);
     const delta = {};
@@ -199,19 +260,19 @@ export function tick(state, dt) {
     for (const id in nodes) {
         const n = nodes[id];
         if (n.isolated || n.infection <= 0) continue;
-        if (n.infection < 100) delta[id] += (spread * 1.1) / n.firewall * (n.isolated ? 0.5 : 1);
+        if (n.infection < 100) delta[id] += (spread * 1.1) / fwEff(state, n);
         if (n.infection > 20) {
             for (const nb of NEIGHBORS[id]) {
                 const m = nodes[nb];
                 if (m.isolated || m.infection >= 100) continue;
-                delta[nb] += (spread * (n.infection / 100) * 2.2) / m.firewall;
+                delta[nb] += (spread * (n.infection / 100) * 2.2) / fwEff(state, m);
             }
         }
     }
     for (const id in nodes) {
         const n = nodes[id];
         // izole düğüm kendi içinde yarı hızda büyür (yukarıdaki döngü izoleyi atladı)
-        if (n.isolated && n.infection > 0 && n.infection < 100) delta[id] += (spread * 0.55) / n.firewall;
+        if (n.isolated && n.infection > 0 && n.infection < 100) delta[id] += (spread * 0.55) / fwEff(state, n);
         if (delta[id]) n.infection = clamp(n.infection + delta[id] * dt, 0, 100);
     }
 
@@ -314,6 +375,31 @@ export function tick(state, dt) {
         }
     }
 
+    // --- Baloncuklar ---
+    for (const b of state.bubbles) b.age += dt;
+    const expired = state.bubbles.filter((b) => b.age >= b.ttl);
+    if (expired.length) {
+        state.bubbles = state.bubbles.filter((b) => b.age < b.ttl);
+        for (const b of expired) events.push({ type: 'bubbleExpired', id: b.id, kind: b.kind, nodeId: b.nodeId });
+    }
+    for (const id in nodes) {
+        const n = nodes[id];
+        if (cleanBefore[id] && n.infection > 0 && n.infection < 100 && !state.bubbles.some((b) => b.kind === 'breach' && b.nodeId === id)) {
+            const bubble = spawnBubble(state, 'breach', id, BUBBLES.breachTtl);
+            events.push({ type: 'bubble', bubble });
+            log(state, `${NODE_BY_ID[id].name} bölgesinde YZ sızması başladı! Baloncuğu patlat, ilk dalgayı bastır.`, 'alert');
+        }
+    }
+    state.timers.nextDataBubble -= dt;
+    if (state.timers.nextDataBubble <= 0) {
+        state.timers.nextDataBubble = between(rng, BUBBLES.dataEvery[0], BUBBLES.dataEvery[1]) * (cfg.dataBubbleEvery ?? 1);
+        const target = pick(rng, nonIsolated(state, (n) => n.infection < 50 && !state.bubbles.some((b) => b.nodeId === n.id)));
+        if (target) {
+            const bubble = spawnBubble(state, 'data', target.id, BUBBLES.dataTtl);
+            events.push({ type: 'bubble', bubble });
+        }
+    }
+
     // --- İkilem ---
     state.timers.nextDilemma -= dt;
     if (state.timers.nextDilemma <= 0 && !state.breach) {
@@ -327,8 +413,12 @@ export function tick(state, dt) {
         }
     }
 
-    // --- Kazanma / kaybetme ---
     state.dominance = dominanceOf(state);
+
+    // --- Senaryo ve haberler ---
+    storyTick(state, dt, events);
+
+    // --- Kazanma / kaybetme ---
     if (state.decrypt >= 100) {
         finish(state, 'victory', { victoryType: 'decrypt' }, events);
         log(state, 'Çekirdek şifresi çözüldü: YZ kaynak kodu imha edildi.', 'good');
@@ -369,7 +459,7 @@ export function purge(state, id) {
     if (n.infection <= 0) return fail('Düğüm zaten temiz.');
     if (state.budget < COSTS.purge) return fail('Yetersiz bütçe.');
     state.budget -= COSTS.purge;
-    n.infection = clamp(n.infection - COSTS.purgeAmount, 0, 100);
+    n.infection = clamp(n.infection - (state.cfg.purgeAmount ?? COSTS.purgeAmount), 0, 100);
     state.stats.purges += 1;
     log(state, `${NODE_BY_ID[id].name} düğümünde anti-YZ temizliği: %${Math.round(n.infection)} kaldı.`, 'good');
     return { ok: true, cost: COSTS.purge };
@@ -460,6 +550,43 @@ export function breachResolve(state, success) {
     return { ok: true, success };
 }
 
+/**
+ * Baloncuk patlatma. data: +₵ ve +deşifre. breach: düğüm %0 (ilk sızma dalgası bastırıldı).
+ * @returns {{ok:boolean, kind?:string, nodeId?:string, reason?:string}}
+ */
+export function popBubble(state, id) {
+    if (state.status !== 'running') return fail('Oyun aktif değil.');
+    const i = state.bubbles.findIndex((b) => b.id === id);
+    if (i < 0) return fail('Baloncuk yok.');
+    const b = state.bubbles[i];
+    state.bubbles.splice(i, 1);
+    if (b.kind === 'data') {
+        state.budget += BUBBLES.dataBudget;
+        state.decrypt = clamp(state.decrypt + BUBBLES.dataDecrypt, 0, 100);
+        state.stats.bubbles += 1;
+        return { ok: true, kind: 'data', nodeId: b.nodeId, budget: BUBBLES.dataBudget, decrypt: BUBBLES.dataDecrypt };
+    }
+    const n = state.nodes[b.nodeId];
+    if (n && n.infection < 100) n.infection = 0;
+    state.stats.breachBubbles += 1;
+    log(state, `${NODE_BY_ID[b.nodeId].name}: ilk sızma dalgası bastırıldı.`, 'good');
+    return { ok: true, kind: 'breach', nodeId: b.nodeId };
+}
+
+/**
+ * Harita trafiği: enfekte kaynaktan çıkan kızıl paket hedefe varınca küçük bir sızma ekler.
+ * @returns {boolean} sızma oldu mu
+ */
+export function packetArrive(state, fromId, toId) {
+    if (state.status !== 'running') return false;
+    const src = state.nodes[fromId];
+    const tgt = state.nodes[toId];
+    if (!src || !tgt || src.isolated || tgt.isolated || src.infection <= 20 || tgt.infection >= 100) return false;
+    tgt.infection = clamp(tgt.infection + 1.2 * spreadMultiplier(state), 0, 100);
+    state.stats.packets += 1;
+    return true;
+}
+
 /* ------------------------------- görünüm ------------------------------- */
 
 /** HUD ve küre için düz anlık görüntü (her tick yeni nesne; store kimliği değişir). */
@@ -477,6 +604,9 @@ export function snapshot(state) {
             computePower: def.computePower,
             status: nodeStatus(n),
             firewallCost: n.firewall >= COSTS.maxFirewall ? null : firewallCost(n),
+            flag: def.flag,
+            servers: def.computePower * SERVERS_PER_TFLOPS,
+            infectedServers: Math.round(def.computePower * SERVERS_PER_TFLOPS * (n.infection / 100)),
         };
     });
     return {
@@ -490,13 +620,16 @@ export function snapshot(state) {
         decryptRate: Math.round(state.rates.decrypt * 1000) / 1000,
         panicRate: Math.round(state.rates.panic * 100) / 100,
         status: state.status,
+        archetype: state.archetype,
+        purgeAmount: state.cfg.purgeAmount ?? COSTS.purgeAmount,
         victoryType: state.victoryType,
         defeatReason: state.defeatReason,
         nodes,
         techs: { ...state.techs },
         breach: state.breach ? { ...state.breach, remaining: Math.max(0, state.breach.remaining) } : null,
+        bubbles: state.bubbles.map((b) => ({ ...b, remaining: Math.max(0, b.ttl - b.age) })),
         dilemma: state.dilemma ? { id: state.dilemma.id, title: state.dilemma.title, body: state.dilemma.body, options: state.dilemma.options.map((o) => ({ label: o.label, hint: o.hint })) } : null,
-        log: state.log.slice(-6).reverse(),
+        log: state.log.slice(-10).reverse(),
         stats: { ...state.stats },
     };
 }
@@ -506,6 +639,7 @@ export function summary(state) {
     const nodesSaved = Object.values(state.nodes).filter((n) => n.infection < 100).length;
     return {
         difficulty: state.difficulty,
+        archetype: state.archetype,
         outcome: state.status === 'victory' ? 'victory' : 'defeat',
         victoryType: state.victoryType,
         defeatReason: state.defeatReason,
@@ -519,5 +653,7 @@ export function summary(state) {
         isolations: state.stats.isolations,
         dilemmas: state.stats.dilemmas,
         captured: state.stats.captured,
+        bubbles: state.stats.bubbles,
+        breachBubbles: state.stats.breachBubbles,
     };
 }

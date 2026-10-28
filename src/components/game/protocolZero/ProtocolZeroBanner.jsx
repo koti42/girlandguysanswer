@@ -39,7 +39,7 @@ const ProtocolZeroBanner = ({ compact = false, className = '' }) => {
                         Yapay Zeka Saldırısını Durdurabilir Misin?
                     </span>
                     <span className="mt-1 block text-sm text-white/80">
-                        PROTOCOL: ZERO — 3D dünya küresinde 14 veri merkezini kontrolden çıkan yapay zekâya karşı savun. Skorunu paylaş, arkadaşlarına meydan oku.
+                        PROTOCOL: ZERO — Plague Inc. tarzı taktik dünya haritasında 14 veri merkezini kontrolden çıkan yapay zekâya karşı savun. Skorunu paylaş, arkadaşlarına meydan oku.
                     </span>
                 </span>
                 <span className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full bg-white px-5 py-3 text-sm font-extrabold text-slate-900 shadow-lg">

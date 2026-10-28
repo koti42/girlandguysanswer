@@ -50,9 +50,6 @@ describe('ProtocolZeroLobbyPage', () => {
             leaderboard: vi.fn().mockResolvedValue({ entries: ENTRIES, period: 'all', difficulty: null }),
             submitScore: vi.fn(),
         };
-        // jsdom'da WebGL yok; lobi uyarı gösterir. Testte var sayalım.
-        HTMLCanvasElement.prototype.getContext = vi.fn(() => ({}));
-        window.WebGLRenderingContext = function WebGLRenderingContext() {};
     });
 
     it('misafire kahraman, zorluk seçimi, liderlik ve tartışma çağrısını gösterir', async () => {
@@ -79,9 +76,22 @@ describe('ProtocolZeroLobbyPage', () => {
         await waitFor(() => expect(screen.getByTestId('play-state')).toBeInTheDocument());
         const state = JSON.parse(screen.getByTestId('play-state').textContent);
         expect(state.entry.difficulty).toBe('nightmare');
+        expect(state.entry.archetype).toBe('worm');
         expect(state.entry.v).toBe(1);
         expect(typeof state.entry.seed).toBe('number');
         expect(window.localStorage.getItem('hs_pz_difficulty')).toBe('nightmare');
+    });
+
+    it('tehdit türü seçilir, kaydedilir ve oyuna taşınır', async () => {
+        renderLobby(api);
+        expect(screen.getByRole('heading', { name: 'Tehdit Türünü Seç' })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('radio', { name: /Deepfake Ağı/ }));
+        expect(screen.getByText(/Her dilde kusursuz konuşan/)).toBeInTheDocument();
+        fireEvent.click(screen.getByTestId('pz-start-arch'));
+        await waitFor(() => expect(screen.getByTestId('play-state')).toBeInTheDocument());
+        const state = JSON.parse(screen.getByTestId('play-state').textContent);
+        expect(state.entry.archetype).toBe('deepfake');
+        expect(window.localStorage.getItem('hs_pz_archetype')).toBe('deepfake');
     });
 
     it('zorluk filtresi liderliği yeniden çeker', async () => {

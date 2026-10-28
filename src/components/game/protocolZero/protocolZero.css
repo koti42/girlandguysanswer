@@ -384,3 +384,148 @@
     animation: none !important;
   }
 }
+
+/* ---------------- Plague Inc. düzeni: haber bandı, alt gösterge paneli ---------------- */
+
+.pz-ticker {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 25;
+  display: flex;
+  align-items: stretch;
+  height: 30px;
+  background: rgba(2, 10, 28, 0.88);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.pz-ticker-alert {
+  background: rgba(96, 6, 26, 0.92);
+  border-bottom-color: rgba(255, 0, 60, 0.7);
+  box-shadow: 0 0 24px rgba(255, 0, 60, 0.45);
+}
+.pz-ticker-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: #fff;
+  background: linear-gradient(90deg, #ff003c, #ff3b63);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  padding-right: 16px;
+}
+.pz-ticker-viewport {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+}
+.pz-ticker-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+  animation: pz-ticker-scroll linear infinite;
+}
+.pz-ticker-text {
+  padding-right: 80px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #e6f7ff;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+}
+@keyframes pz-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.pz-ticker:hover .pz-ticker-track { animation-play-state: paused; }
+
+.pz-bottom-center { animation: pz-sheet-in 0.2s ease both; }
+
+/* Rapor ekranı: tüm arka plan kaydırılır (iç kutuya yükseklik sınırı yok) */
+.pz-modal-backdrop.pz-scrollable {
+  align-items: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+.pz-modal-backdrop.pz-scrollable .pz-modal {
+  max-height: none;
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pz-ticker-track { animation: none; }
+}
+
+/* ---------------- Tehdit türü seçimi (Plague Inc. "tür seç" ekranı) ---------------- */
+.pz-arch-section {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(700px 260px at 50% -10%, rgba(255, 0, 60, 0.35), transparent 70%),
+    radial-gradient(500px 240px at 100% 100%, rgba(0, 240, 255, 0.12), transparent 70%),
+    linear-gradient(180deg, #1a0510 0%, #0a0a1f 60%, #06061a 100%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.pz-arch-card {
+  --arch: #22d3ee;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 150px;
+  padding: 10px 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  color: #fff;
+  text-align: center;
+  transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.pz-arch-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--arch) 60%, transparent); }
+.pz-arch-card:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.pz-arch-card[data-active='1'] {
+  border-color: var(--arch);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--arch) 22%, transparent), rgba(255, 255, 255, 0.03));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--arch) 40%, transparent), 0 10px 30px color-mix(in srgb, var(--arch) 25%, transparent);
+}
+.pz-arch-threat {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #ff5f7a;
+}
+.pz-arch-icon {
+  font-size: 34px;
+  line-height: 1;
+  margin-top: 10px;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--arch) 70%, transparent));
+}
+.pz-arch-name { font-size: 13px; font-weight: 900; letter-spacing: 0.02em; }
+.pz-arch-desc { font-size: 10px; line-height: 1.25; color: rgba(255, 255, 255, 0.7); }
+.pz-arch-detail {
+  --arch: #22d3ee;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--arch) 40%, transparent);
+  background: rgba(2, 10, 28, 0.55);
+  animation: pz-fade-up 0.25s ease both;
+}

@@ -33,20 +33,20 @@ export const COLORS = Object.freeze({
  * Komşular LINKS'ten türetilir (bkz. NEIGHBORS).
  */
 export const NODES = Object.freeze([
-    { id: 'ist', name: 'İstanbul', country: 'TR', lat: 41.01, lng: 28.98, computePower: 110, firewall: 2 },
-    { id: 'fra', name: 'Frankfurt', country: 'EU', lat: 50.11, lng: 8.68, computePower: 160, firewall: 3 },
-    { id: 'vir', name: 'Virginia', country: 'US-E', lat: 38.9, lng: -77.04, computePower: 190, firewall: 3 },
-    { id: 'svl', name: 'Silikon Vadisi', country: 'US-W', lat: 37.39, lng: -122.08, computePower: 200, firewall: 3 },
-    { id: 'lon', name: 'Londra', country: 'UK', lat: 51.51, lng: -0.13, computePower: 150, firewall: 3 },
-    { id: 'mos', name: 'Moskova', country: 'RU', lat: 55.76, lng: 37.62, computePower: 120, firewall: 2 },
-    { id: 'tyo', name: 'Tokyo', country: 'JP', lat: 35.68, lng: 139.69, computePower: 170, firewall: 3 },
-    { id: 'sgp', name: 'Singapur', country: 'SG', lat: 1.35, lng: 103.82, computePower: 140, firewall: 2 },
-    { id: 'syd', name: 'Sidney', country: 'AU', lat: -33.87, lng: 151.21, computePower: 90, firewall: 2 },
-    { id: 'sao', name: 'São Paulo', country: 'BR', lat: -23.55, lng: -46.63, computePower: 100, firewall: 1 },
-    { id: 'cai', name: 'Kahire', country: 'EG', lat: 30.04, lng: 31.24, computePower: 70, firewall: 1 },
-    { id: 'mum', name: 'Mumbai', country: 'IN', lat: 19.08, lng: 72.88, computePower: 130, firewall: 2 },
-    { id: 'seo', name: 'Seul', country: 'KR', lat: 37.57, lng: 126.98, computePower: 150, firewall: 3 },
-    { id: 'rek', name: 'Reykjavík', country: 'IS', lat: 64.15, lng: -21.94, computePower: 60, firewall: 2 },
+    { id: 'ist', countryName: 'Türkiye', flag: '🇹🇷', name: 'İstanbul', country: 'TR', lat: 41.01, lng: 28.98, computePower: 110, firewall: 2 },
+    { id: 'fra', countryName: 'Almanya', flag: '🇩🇪', name: 'Frankfurt', country: 'EU', lat: 50.11, lng: 8.68, computePower: 160, firewall: 3 },
+    { id: 'vir', countryName: 'ABD', flag: '🇺🇸', name: 'Virginia', country: 'US-E', lat: 38.9, lng: -77.04, computePower: 190, firewall: 3 },
+    { id: 'svl', countryName: 'ABD', flag: '🇺🇸', name: 'Silikon Vadisi', country: 'US-W', lat: 37.39, lng: -122.08, computePower: 200, firewall: 3 },
+    { id: 'lon', countryName: 'Birleşik Krallık', flag: '🇬🇧', name: 'Londra', country: 'UK', lat: 51.51, lng: -0.13, computePower: 150, firewall: 3 },
+    { id: 'mos', countryName: 'Rusya', flag: '🇷🇺', name: 'Moskova', country: 'RU', lat: 55.76, lng: 37.62, computePower: 120, firewall: 2 },
+    { id: 'tyo', countryName: 'Japonya', flag: '🇯🇵', name: 'Tokyo', country: 'JP', lat: 35.68, lng: 139.69, computePower: 170, firewall: 3 },
+    { id: 'sgp', countryName: 'Singapur', flag: '🇸🇬', name: 'Singapur', country: 'SG', lat: 1.35, lng: 103.82, computePower: 140, firewall: 2 },
+    { id: 'syd', countryName: 'Avustralya', flag: '🇦🇺', name: 'Sidney', country: 'AU', lat: -33.87, lng: 151.21, computePower: 90, firewall: 2 },
+    { id: 'sao', countryName: 'Brezilya', flag: '🇧🇷', name: 'São Paulo', country: 'BR', lat: -23.55, lng: -46.63, computePower: 100, firewall: 1 },
+    { id: 'cai', countryName: 'Mısır', flag: '🇪🇬', name: 'Kahire', country: 'EG', lat: 30.04, lng: 31.24, computePower: 70, firewall: 1 },
+    { id: 'mum', countryName: 'Hindistan', flag: '🇮🇳', name: 'Mumbai', country: 'IN', lat: 19.08, lng: 72.88, computePower: 130, firewall: 2 },
+    { id: 'seo', countryName: 'Güney Kore', flag: '🇰🇷', name: 'Seul', country: 'KR', lat: 37.57, lng: 126.98, computePower: 150, firewall: 3 },
+    { id: 'rek', countryName: 'İzlanda', flag: '🇮🇸', name: 'Reykjavík', country: 'IS', lat: 64.15, lng: -21.94, computePower: 60, firewall: 2 },
 ]);
 
 /** Kıtalar arası fiber hatlar (çift yönlü). */
@@ -108,6 +108,22 @@ export const DIFFICULTIES = Object.freeze({
 });
 
 export const DIFFICULTY_KEYS = Object.freeze(Object.keys(DIFFICULTIES));
+
+/** Bir düğümdeki sunucu sayısı = computePower × SERVERS_PER_TFLOPS (bilgi barındaki canlı sayaçlar). */
+export const SERVERS_PER_TFLOPS = 7400;
+
+/**
+ * Harita baloncukları (Plague Inc. DNA/ilaç baloncukları gibi):
+ *  data   mavi "Veri/Kuantum": +25 ₵, +2 deşifre; dataEvery sn'de bir temiz düğümde belirir, dataTtl sn yaşar
+ *  breach kızıl "YZ sızma": bir düğüm ilk kez enfekte olunca; breachTtl sn içinde patlatılırsa ilk dalga bastırılır
+ */
+export const BUBBLES = Object.freeze({
+    dataEvery: [8, 14],
+    dataTtl: 9,
+    dataBudget: 25,
+    dataDecrypt: 2,
+    breachTtl: 5,
+});
 
 /** Düğüm aksiyon maliyetleri. */
 export const COSTS = Object.freeze({

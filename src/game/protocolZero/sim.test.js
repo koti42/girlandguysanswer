@@ -6,6 +6,8 @@ import {
     createSim,
     firewallCost,
     incomePerSecond,
+    packetArrive,
+    popBubble,
     purge,
     PURGE_VICTORY_DAY,
     snapshot,
@@ -14,7 +16,7 @@ import {
     toggleIsolate,
     upgradeFirewall,
 } from './sim';
-import { COSTS, DAY_SECONDS, DIFFICULTIES, DILEMMAS, NEIGHBORS, NODES, TECH_TREE } from './constants';
+import { BUBBLES, COSTS, DAY_SECONDS, DIFFICULTIES, DILEMMAS, NEIGHBORS, NODES, TECH_TREE } from './constants';
 
 const run = (s, seconds, step = 0.25) => {
     const events = [];
@@ -298,6 +300,78 @@ describe('sıfırıncı gün saldırısı', () => {
         s.timers.nextReseed = 1e9;
         run(s, 0.5);
         expect(s.breach.total).toBe(DIFFICULTIES.normal.breachSeconds + 4);
+    });
+});
+
+describe('baloncuklar ve veri paketleri', () => {
+    const quiet = (s) => {
+        s.timers.nextBreach = 1e9;
+        s.timers.nextDilemma = 1e9;
+        s.timers.nextReseed = 1e9;
+        return s;
+    };
+
+    it('mavi veri baloncuğu temiz bir düğümde belirir, patlatılınca ₵ ve deşifre verir, süresi dolunca kaybolur', () => {
+        const s = quiet(createSim('normal', { seed: 4 }));
+        s.timers.nextDataBubble = 0.1;
+        const ev = run(s, 0.5);
+        const spawn = ev.find((e) => e.type === 'bubble' && e.bubble.kind === 'data');
+        expect(spawn).toBeDefined();
+        expect(s.nodes[spawn.bubble.nodeId].infection).toBeLessThan(50);
+        const b0 = s.budget;
+        const d0 = s.decrypt;
+        expect(popBubble(s, spawn.bubble.id)).toMatchObject({ ok: true, kind: 'data', budget: BUBBLES.dataBudget });
+        expect(s.budget).toBe(b0 + BUBBLES.dataBudget);
+        expect(s.decrypt).toBeCloseTo(d0 + BUBBLES.dataDecrypt);
+        expect(popBubble(s, spawn.bubble.id).ok).toBe(false);
+
+        s.timers.nextDataBubble = 0.1;
+        const ev2 = run(s, 0.5);
+        const b = ev2.find((e) => e.type === 'bubble').bubble;
+        s.timers.nextDataBubble = 1e9;
+        const ev3 = run(s, BUBBLES.dataTtl + 1);
+        expect(ev3.some((e) => e.type === 'bubbleExpired' && e.id === b.id)).toBe(true);
+        expect(s.bubbles.find((x) => x.id === b.id)).toBeUndefined();
+    });
+
+    it('bir düğüm ilk kez enfekte olunca kızıl sızma baloncuğu çıkar; patlatılırsa düğüm temizlenir', () => {
+        const s = quiet(createSim('normal', { seed: 4 }));
+        s.timers.nextDataBubble = 1e9;
+        for (const n of Object.values(s.nodes)) n.infection = 0;
+        s.nodes.fra.infection = 70;
+        s.nodes.fra.firewall = 1;
+        const ev = run(s, 2);
+        const spawn = ev.find((e) => e.type === 'bubble' && e.bubble.kind === 'breach');
+        expect(spawn).toBeDefined();
+        expect(NEIGHBORS.fra).toContain(spawn.bubble.nodeId);
+        expect(spawn.bubble.ttl).toBe(BUBBLES.breachTtl);
+        expect(s.nodes[spawn.bubble.nodeId].infection).toBeGreaterThan(0);
+        expect(popBubble(s, spawn.bubble.id)).toMatchObject({ ok: true, kind: 'breach' });
+        expect(s.nodes[spawn.bubble.nodeId].infection).toBe(0);
+        expect(s.stats.breachBubbles).toBe(1);
+        expect(s.bubbles.filter((b) => b.kind === 'breach').length).toBeLessThanOrEqual(NEIGHBORS.fra.length);
+    });
+
+    it('kızıl paket enfekte kaynaktan hedefe varınca küçük sızma ekler; temiz/izole kaynakta eklemez', () => {
+        const s = quiet(createSim('normal', { seed: 1 }));
+        for (const n of Object.values(s.nodes)) n.infection = 0;
+        s.nodes.fra.infection = 60;
+        expect(packetArrive(s, 'fra', 'lon')).toBe(true);
+        expect(s.nodes.lon.infection).toBeGreaterThan(0);
+        expect(s.nodes.lon.infection).toBeLessThan(5);
+        expect(packetArrive(s, 'lon', 'rek')).toBe(false);
+        s.nodes.fra.isolated = true;
+        expect(packetArrive(s, 'fra', 'ist')).toBe(false);
+        expect(s.stats.packets).toBe(1);
+    });
+
+    it('snapshot sunucu sayaçlarını ve bayrağı taşır', () => {
+        const s = createSim('normal', { seed: 1 });
+        s.nodes.svl.infection = 50;
+        const svl = snapshot(s).nodes.find((n) => n.id === 'svl');
+        expect(svl.flag).toBe('🇺🇸');
+        expect(svl.servers).toBe(200 * 7400);
+        expect(svl.infectedServers).toBe(200 * 7400 * 0.5);
     });
 });
 

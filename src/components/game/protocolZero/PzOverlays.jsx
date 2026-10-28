@@ -1,25 +1,34 @@
 import React from 'react';
 import { LuHouse, LuPlay, LuVolume2, LuVolumeX } from 'react-icons/lu';
 import { DIFFICULTIES } from '../../../game/protocolZero/constants';
+import { archetypeOf } from '../../../game/protocolZero/archetypes';
 
 /** Görev brifingi: oyun başlamadan önce (ses kilidi de burada açılır). */
-export const BriefingOverlay = ({ difficulty, onStart, muted, onToggleMute }) => {
+export const BriefingOverlay = ({ difficulty, archetype, onStart, muted, onToggleMute }) => {
     const d = DIFFICULTIES[difficulty] || DIFFICULTIES.normal;
+    const a = archetypeOf(archetype);
     return (
         <div className="pz-modal-backdrop">
             <div className="pz-modal pz-glass pz-scan max-w-lg p-5 sm:p-7" role="dialog" aria-modal="true" aria-labelledby="pz-brief-title">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-300 pz-blink">⬤ Acil durum brifingi · Gizli</p>
                 <h1 id="pz-brief-title" className="pz-title mt-2 text-3xl sm:text-4xl">PROTOCOL: ZERO</h1>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200">Küresel YZ Karantinası · {d.name} ({d.tag})</p>
-                <div className="mt-4 space-y-2 text-sm text-white/85">
-                    <p>
-                        Komutan, bir araştırma yapay zekâsı kontrolden çıktı ve dünyadaki veri merkezlerine sızıyor. Küresel ağın savunması sana emanet.
-                    </p>
+                <div className="mt-3 flex items-start gap-3 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
+                    <span className="text-3xl leading-none" aria-hidden="true">{a.icon}</span>
+                    <div>
+                        <p className="text-sm font-black" style={{ color: a.color }}>
+                            Tehdit: {a.name} <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">· {a.tag}</span>
+                        </p>
+                        <p className="mt-1 text-xs text-white/75">{a.lore}</p>
+                    </div>
+                </div>
+                <div className="mt-3 space-y-2 text-sm text-white/85">
+                    <p>Komutan, taktik harita senin: ülkeler kızıla döndükçe zaman daralır. Haber bandını izle; senaryo gün gün gelişecek.</p>
                     <ul className="list-disc space-y-1 pl-5 text-white/75">
-                        <li>Düğümlere dokun: <strong className="text-cyan-200">firewall</strong> güçlendir, <strong className="text-cyan-200">temizlik</strong> yap, gerekirse <strong className="text-amber-200">kabloyu kes</strong>.</li>
-                        <li>Bütçe (₵) temiz düğümlerden akar; <strong className="text-violet-200">Savunma Ağacı</strong>ndan geliştirme al.</li>
-                        <li>Zafer: <strong className="text-violet-200">çekirdek deşifre %100</strong> ya da 30. günden sonra <strong className="text-emerald-200">tam temizlik</strong>.</li>
-                        <li>Yenilgi: YZ hakimiyeti ya da <strong className="text-amber-200">küresel panik %100</strong>.</li>
+                        <li>Ülkelere ve veri merkezlerine dokun: <strong className="text-cyan-200">firewall</strong> kur, <strong className="text-cyan-200">temizle</strong>, gerekirse <strong className="text-amber-200">kabloyu kes</strong>.</li>
+                        <li><strong className="text-sky-200">Mavi baloncukları</strong> patlat: +₵ ve deşifre. <strong className="text-rose-200">Kızıl baloncuğu</strong> 5 sn içinde patlatırsan ilk sızma dalgası bastırılır.</li>
+                        <li>Bütçe (₵) temiz bölgelerden akar; <strong className="text-violet-200">Savunma Ağacı</strong>ndan geliştirme al.</li>
+                        <li>Zafer: <strong className="text-violet-200">çekirdek deşifre %100</strong> ya da 30. günden sonra <strong className="text-emerald-200">tam temizlik</strong>. Yenilgi: YZ hakimiyeti ya da panik %100.</li>
                     </ul>
                 </div>
                 <div className="mt-5 flex items-center gap-2">
@@ -58,25 +67,3 @@ export const PauseMenu = ({ open, onResume, onExit, muted, onToggleMute, day }) 
         </div>
     );
 };
-
-/** Sol altta son olaylar. */
-export const EventLog = ({ items }) => (
-    <aside className="pointer-events-none absolute bottom-2 left-2 z-10 hidden max-w-xs sm:block md:bottom-4 md:left-4" aria-live="polite" aria-label="Olay günlüğü">
-        <ul className="pz-log space-y-1 text-[11px] font-semibold">
-            {items.map((l) => (
-                <li key={l.id} className={`pz-glass rounded-xl px-2.5 py-1.5 pz-log-${l.kind}`}>
-                    <span className="pz-mono mr-1 text-white/40">G{l.day}</span>
-                    {l.text}
-                </li>
-            ))}
-        </ul>
-    </aside>
-);
-
-/** Dar ekranda en son olay tek satır. */
-export const EventTicker = ({ item }) =>
-    item ? (
-        <p className={`pointer-events-none absolute bottom-2 left-2 right-2 z-10 truncate rounded-xl px-2.5 py-1.5 text-[11px] font-semibold pz-glass sm:hidden pz-log-${item.kind}`} aria-live="polite">
-            {item.text}
-        </p>
-    ) : null;

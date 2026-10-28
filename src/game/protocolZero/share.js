@@ -3,6 +3,7 @@
  * Bağlantı her zaman sitenin lobi adresidir (organik trafik döngüsü).
  */
 import { DIFFICULTIES, LOBBY_PATH } from './constants';
+import { ARCHETYPES } from './archetypes';
 
 const fmt = (n) => Number(n || 0).toLocaleString('tr-TR');
 
@@ -15,10 +16,12 @@ export function buildShareUrl(origin = 'https://herkeslersoruyor.com.tr') {
  */
 export function buildShareText(r, url = buildShareUrl()) {
     const diff = DIFFICULTIES[r.difficulty]?.name || 'Normal';
+    const arch = ARCHETYPES[r.archetype]?.name;
+    const what = arch ? `"${arch}" türü yapay zekâyı` : 'kontrolden çıkan yapay zekâyı';
     if (r.outcome === 'victory') {
-        return `🔥 PROTOCOL: ZERO'da kontrolden çıkan yapay zekâyı ${fmt(r.days)} günde durdurdum! Skor: ${fmt(r.score)} (${diff}). Sen dünyayı kurtarabilir misin? ${url}`;
+        return `🔥 PROTOCOL: ZERO'da ${what} ${fmt(r.days)} günde durdurdum! Skor: ${fmt(r.score)} (${diff}). Sen dünyayı kurtarabilir misin? ${url}`;
     }
-    return `🚨 PROTOCOL: ZERO'da yapay zekâ ${fmt(r.days)}. günde dünyayı ele geçirdi… Skor: ${fmt(r.score)} (${diff}). Sen daha uzun dayanabilir misin? ${url}`;
+    return `🚨 PROTOCOL: ZERO'da ${arch ? `"${arch}" türü ` : ''}yapay zekâ ${fmt(r.days)}. günde dünyayı ele geçirdi… Skor: ${fmt(r.score)} (${diff}). Sen daha uzun dayanabilir misin? ${url}`;
 }
 
 export const whatsappLink = (text) => `https://wa.me/?text=${encodeURIComponent(text)}`;

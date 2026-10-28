@@ -28,11 +28,11 @@ const Play = ({ initialEntry }) => {
     }, [location.pathname, location.state, navigate]);
 
     const exitToLobby = useCallback(() => navigate(LOBBY_PATH, { replace: true }), [navigate]);
-    const replay = useCallback(() => setEntry((e) => buildEntry({ difficulty: e.difficulty, seed: Date.now() })), []);
+    const replay = useCallback(() => setEntry((e) => buildEntry({ difficulty: e.difficulty, archetype: e.archetype, seed: Date.now() })), []);
 
     return (
         <ProtocolZeroGameScreen
-            key={`${entry.difficulty}:${entry.seed}`}
+            key={`${entry.difficulty}:${entry.archetype}:${entry.seed}`}
             entry={entry}
             user={isAuthenticated ? user : null}
             onExit={exitToLobby}
