@@ -11,8 +11,8 @@ export const CLIENT_VERSION = '1.0.0';
 export const LOBBY_PATH = '/oyun/protocol-zero';
 export const PLAY_PATH = '/oyun/protocol-zero/oyna';
 
-/** Bir oyun günü kaç simülasyon saniyesi (1x hızda gerçek saniye). */
-export const DAY_SECONDS = 3;
+/** Bir oyun günü kaç simülasyon saniyesi (1x hızda gerçek saniye). 6 sn: 30 gün ≈ 3 dk, 100 gün ≈ 10 dk. */
+export const DAY_SECONDS = 6;
 
 /** Düğüm sayısı (backend `node_count` ile aynı). */
 export const NODE_COUNT = 14;
@@ -62,6 +62,22 @@ export const LINKS = Object.freeze([
     ['sao', 'cai'],
     ['cai', 'mum'],
 ]);
+
+/** Hat türleri (bölge panelindeki "bağlantı yolları"): fiber (kara), submarine (denizaltı), satellite (uydu). */
+export const LINK_TYPES = Object.freeze({
+    'ist-fra': 'fiber', 'ist-cai': 'submarine', 'ist-mos': 'fiber',
+    'fra-lon': 'submarine', 'fra-mos': 'fiber', 'fra-cai': 'submarine', 'fra-vir': 'submarine',
+    'vir-lon': 'submarine', 'vir-svl': 'fiber', 'vir-sao': 'submarine', 'vir-rek': 'submarine',
+    'svl-tyo': 'submarine', 'svl-syd': 'submarine',
+    'lon-rek': 'submarine',
+    'mos-mum': 'fiber', 'mos-seo': 'satellite',
+    'tyo-seo': 'submarine', 'tyo-sgp': 'submarine',
+    'sgp-mum': 'submarine', 'sgp-syd': 'submarine',
+    'sao-cai': 'satellite',
+    'cai-mum': 'submarine',
+});
+export const LINK_TYPE_LABEL = Object.freeze({ fiber: 'Kara fiberi', submarine: 'Denizaltı kablosu', satellite: 'Uydu bağlantısı' });
+export const linkType = (a, b) => LINK_TYPES[`${a}-${b}`] || LINK_TYPES[`${b}-${a}`] || 'fiber';
 
 export const NEIGHBORS = (() => {
     const map = {};

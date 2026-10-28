@@ -48,14 +48,15 @@ const ALERT_MS = 4000;
 
 export default function usePzSession({ entry, reducedMotion = false }) {
     // Sim, ses motoru ve başlangıç tarihi bileşen ömrü boyunca tek örnek (useState başlatıcısı).
-    const [sim] = useState(() => createSim(entry.difficulty, { seed: entry.seed, archetype: entry.archetype }));
+    const [sim] = useState(() => createSim(entry.difficulty, { seed: entry.seed, archetype: entry.archetype, genes: entry.genes }));
     const [sound] = useState(() => new SoundEngine({ muted: loadMuted() }));
     const [startDate] = useState(() => new Date());
     const store = useMemo(() => createStore(snapshot(sim)), [sim]);
     const snap = useSyncExternalStore(store.subscribe, store.get, store.get);
 
     const [speed, setSpeedState] = useState(1);
-    const [ui, setUi] = useState({ started: false, menu: false, tech: false, world: false, breachGame: false });
+    // panel: null | 'threat' | 'research' | 'stats' | 'settings'  (menu = duraklatma penceresi)
+    const [ui, setUi] = useState({ started: false, menu: false, panel: null, breachGame: false });
     const [selectedId, setSelectedId] = useState(null);
     const [countryName, setCountryName] = useState('');
     const [lastError, setLastError] = useState('');
@@ -75,7 +76,7 @@ export default function usePzSession({ entry, reducedMotion = false }) {
     const lastLogRef = useRef(0);
 
     const finished = snap.status !== 'running';
-    const paused = !ui.started || ui.menu || ui.tech || ui.world || ui.breachGame || Boolean(snap.dilemma) || finished || speed === 0;
+    const paused = !ui.started || ui.menu || Boolean(ui.panel) || ui.breachGame || Boolean(snap.dilemma) || finished || speed === 0;
 
     const ctl = useRef({ speed, paused });
     useEffect(() => {
@@ -327,16 +328,15 @@ export default function usePzSession({ entry, reducedMotion = false }) {
         [sfx, push, sim]
     );
 
-    const openTech = useCallback(() => {
-        sfx('click');
-        setUi((u) => ({ ...u, tech: true }));
-    }, [sfx]);
-    const closeTech = useCallback(() => setUi((u) => ({ ...u, tech: false })), []);
-    const openWorld = useCallback(() => {
-        sfx('click');
-        setUi((u) => ({ ...u, world: true }));
-    }, [sfx]);
-    const closeWorld = useCallback(() => setUi((u) => ({ ...u, world: false })), []);
+    const openPanel = useCallback(
+        (name) => {
+            sfx('click');
+            setUi((u) => ({ ...u, panel: u.panel === name ? null : name }));
+        },
+        [sfx]
+    );
+    const closePanel = useCallback(() => setUi((u) => ({ ...u, panel: null })), []);
+    const resetView = useCallback(() => mapRef.current?.resetView(), []);
     const openMenu = useCallback(() => {
         sfx('click');
         setUi((u) => ({ ...u, menu: true }));
@@ -385,10 +385,9 @@ export default function usePzSession({ entry, reducedMotion = false }) {
         pop,
         onPacketArrive,
         choose,
-        openTech,
-        closeTech,
-        openWorld,
-        closeWorld,
+        openPanel,
+        closePanel,
+        resetView,
         openMenu,
         closeMenu,
         startBreachGame,

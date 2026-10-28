@@ -9,8 +9,8 @@
  *
  * Kurallar (saniye başına, dt ile ölçeklenir):
  *  - Yayılım: enfeksiyonu %20'yi aşan ve izole olmayan düğüm, izole olmayan komşularına
- *    spread × (kaynak/100) × 2.2 / hedef.firewall hızında sızar. Her enfekte düğüm kendi içinde
- *    spread × 1.1 / firewall büyür (izoleyse yarısı). spread = zorluk × (1 + aiAdapt × gün/100) × (kalkan ? 0.65 : 1).
+ *    spread × (kaynak/100) × 1.7 / hedef.firewall^eff hızında sızar. Her enfekte düğüm kendi içinde
+ *    spread × 0.85 / firewall^eff büyür (izoleyse ~yarısı). spread = zorluk × (1 + aiAdapt × gün/100) × (kalkan ? 0.65 : 1).
  *  - Ekonomi: izole olmayan her düğüm (computePower/120) × 0.9 × (1 − enf/100) ₵/sn kazandırır (çarpanlar: zorluk, fon, sıkıyönetim, kriz cezası).
  *  - Panik: baskı = Σ(izole 0.30 | ele geçirilmiş 0.35 | enf ≥ 60 → 0.12) × panicRate (sıkıyönetimde ×0.5); toparlanma 0.45 (+0.6 deepfake).
  *  - Deşifre: decryptBase × (1 + hızlandırıcılar) × temiz işlem gücü payı.
@@ -23,6 +23,10 @@
 import { BUBBLES, COSTS, DAY_SECONDS, DIFFICULTIES, DILEMMAS, NEIGHBORS, NODES, NODE_BY_ID, SERVERS_PER_TFLOPS, TECH_BY_ID } from './constants';
 import { between, createRng, pick } from './rng';
 import { CONDITIONAL_STORY, GENERIC_NEWS, GLOBAL_STORY, applyArchetype, archetypeOf } from './archetypes';
+import { geneMods, sanitizeGenes } from './progression';
+
+export const HISTORY_LEN = 48;
+export const HISTORY_EVERY = 2; // sim sn
 
 export const PURGE_VICTORY_DAY = 30;
 export const MAX_LOG = 40;
@@ -35,23 +39,47 @@ function log(state, text, kind = 'info') {
     if (state.log.length > MAX_LOG) state.log.splice(0, state.log.length - MAX_LOG);
 }
 
-export function createSim(difficulty = 'normal', { seed = Date.now(), rng, archetype } = {}) {
+export function createSim(difficulty = 'normal', { seed = Date.now(), rng, archetype, genes } = {}) {
     const base = DIFFICULTIES[difficulty] || DIFFICULTIES.normal;
     const arch = archetypeOf(archetype);
-    const cfg = applyArchetype(base, arch.key);
+    const equipped = sanitizeGenes(genes);
+    const gm = geneMods(equipped);
+    const cfg0 = applyArchetype(base, arch.key);
+    // Gen etkileri yapılandırmaya işlenir (tek doğruluk kaynağı cfg kalır).
+    const cfg = {
+        ...cfg0,
+        startBudget: cfg0.startBudget + gm.startBudget,
+        income: cfg0.income * gm.income,
+        decryptBase: cfg0.decryptBase * gm.decryptBase,
+        panicRate: cfg0.panicRate * gm.panicRate,
+        reseedEvery: [cfg0.reseedEvery[0] * gm.reseedEvery, cfg0.reseedEvery[1] * gm.reseedEvery],
+        breachSeconds: cfg0.breachSeconds + gm.breachSeconds,
+        purgeAmount: cfg0.purgeAmount + gm.purgeAmount,
+        firewallCost: gm.firewallCost,
+        techCost: gm.techCost,
+        isolatePanicSpike: gm.isolatePanicSpike,
+        isolatePressure: gm.isolatePressure,
+        panicRecovery: gm.panicRecovery,
+        dilemmaPanic: gm.dilemmaPanic,
+        bubbleTtl: gm.bubbleTtl,
+        dataBudget: gm.dataBudget,
+        startFirewall: gm.startFirewall,
+        startDecrypt: gm.startDecrypt,
+    };
     const random = rng || createRng(seed);
     const state = {
         version: 2,
         seed,
         difficulty: base.key,
         archetype: arch.key,
+        genes: equipped,
         cfg,
         rng: random,
         time: 0,
         day: 1,
         budget: cfg.startBudget,
         panic: 0,
-        decrypt: 0,
+        decrypt: clamp(cfg.startDecrypt, 0, 100),
         dominance: 0,
         status: 'running', // running | victory | defeat
         outcome: null,
@@ -75,7 +103,9 @@ export function createSim(difficulty = 'normal', { seed = Date.now(), rng, arche
             hunterSwitch: 0,
             hunterTarget: null,
         },
-        rates: { income: 0, decrypt: 0, panic: 0 },
+        rates: { income: 0, decrypt: 0, panic: 0, infected: 0 },
+        history: { dominance: [], panic: [], decrypt: [], nextSample: 0 },
+        prevInfectedServers: 0,
         stats: { purges: 0, firewalls: 0, isolations: 0, breachesWon: 0, breachesLost: 0, dilemmas: 0, techs: 0, reseeds: 0, captured: 0, earned: 0, bubbles: 0, breachBubbles: 0, packets: 0 },
         log: [],
         logSeq: 0,
@@ -84,11 +114,12 @@ export function createSim(difficulty = 'normal', { seed = Date.now(), rng, arche
         state.nodes[n.id] = {
             id: n.id,
             infection: 0,
-            firewall: n.firewall,
+            firewall: clamp(n.firewall + cfg.startFirewall, 1, COSTS.maxFirewall),
             isolated: false,
             panic: 0,
             computePower: n.computePower,
             captured: false,
+            history: [],
         };
     }
     // Başlangıç sızması: düşük firewall'lu düğümler daha olası.
@@ -129,8 +160,23 @@ function storyTick(state, dt, events) {
     for (const c of CONDITIONAL_STORY) {
         if (!state.story.flags[c.flag] && c.when(state)) {
             state.story.flags[c.flag] = true;
+            if (typeof c.effect === 'function') c.effect(state, helpers(state));
             log(state, c.text, c.kind || 'story');
             events.push({ type: 'story', kind: c.kind || 'story', text: c.text });
+        }
+    }
+    // Hükümet tepkisi (Plague: sınır kapatma / sıkıyönetim): ağır enfekte, izole olmayan bölge kendi
+    // başına sınırlarını kapatır — bir kez: firewall +1 (ücretsiz) ama panik +4.
+    for (const id in state.nodes) {
+        const n = state.nodes[id];
+        const flag = `gov:${id}`;
+        if (!state.story.flags[flag] && n.infection >= 80 && !n.isolated && n.firewall < COSTS.maxFirewall) {
+            state.story.flags[flag] = true;
+            n.firewall += 1;
+            state.panic = clamp(state.panic + 4, 0, 100);
+            const text = `${NODE_BY_ID[id].countryName || NODE_BY_ID[id].name} hükümeti acil önlem aldı: ${NODE_BY_ID[id].name} sınırları kapatıldı (firewall +1), halk tedirgin.`;
+            log(state, text, 'warn');
+            events.push({ type: 'story', kind: 'warn', text });
         }
     }
     state.story.nextNews -= dt;
@@ -145,7 +191,7 @@ function storyTick(state, dt, events) {
 
 export const nodeStatus = (n) => (n.isolated ? 'isolated' : n.infection >= 100 ? 'lost' : n.infection > 20 ? 'warn' : 'safe');
 
-export const firewallCost = (node) => COSTS.firewallBase * node.firewall;
+export const firewallCost = (node, state) => Math.round(COSTS.firewallBase * node.firewall * (state?.cfg?.firewallCost ?? 1));
 
 /** Firewall etkinliği: tür çarpanı (botnet: üs 0,85 → duvarlar daha az etkili). */
 const fwEff = (state, n) => Math.pow(n.firewall, state.cfg.firewallEff ?? 1);
@@ -185,12 +231,12 @@ export function panicRatePerSecond(state) {
     let pressure = 0;
     for (const id in state.nodes) {
         const n = state.nodes[id];
-        if (n.isolated) pressure += 0.3;
+        if (n.isolated) pressure += 0.3 * (state.cfg.isolatePressure ?? 1);
         else if (n.infection >= 100) pressure += 0.35 * (state.cfg.capturedPanic ?? 1);
         else if (n.infection >= 60) pressure += 0.12;
     }
     pressure *= state.cfg.panicRate * (state.techs.martial ? 0.5 : 1);
-    const recovery = 0.45 + (state.techs.deepfake ? 0.6 : 0);
+    const recovery = 0.45 + (state.techs.deepfake ? 0.6 : 0) + (state.cfg.panicRecovery ?? 0);
     return pressure - recovery;
 }
 
@@ -260,19 +306,19 @@ export function tick(state, dt) {
     for (const id in nodes) {
         const n = nodes[id];
         if (n.isolated || n.infection <= 0) continue;
-        if (n.infection < 100) delta[id] += (spread * 1.1) / fwEff(state, n);
+        if (n.infection < 100) delta[id] += (spread * 0.85) / fwEff(state, n);
         if (n.infection > 20) {
             for (const nb of NEIGHBORS[id]) {
                 const m = nodes[nb];
                 if (m.isolated || m.infection >= 100) continue;
-                delta[nb] += (spread * (n.infection / 100) * 2.2) / fwEff(state, m);
+                delta[nb] += (spread * (n.infection / 100) * 1.7) / fwEff(state, m);
             }
         }
     }
     for (const id in nodes) {
         const n = nodes[id];
         // izole düğüm kendi içinde yarı hızda büyür (yukarıdaki döngü izoleyi atladı)
-        if (n.isolated && n.infection > 0 && n.infection < 100) delta[id] += (spread * 0.55) / fwEff(state, n);
+        if (n.isolated && n.infection > 0 && n.infection < 100) delta[id] += (spread * 0.45) / fwEff(state, n);
         if (delta[id]) n.infection = clamp(n.infection + delta[id] * dt, 0, 100);
     }
 
@@ -385,7 +431,7 @@ export function tick(state, dt) {
     for (const id in nodes) {
         const n = nodes[id];
         if (cleanBefore[id] && n.infection > 0 && n.infection < 100 && !state.bubbles.some((b) => b.kind === 'breach' && b.nodeId === id)) {
-            const bubble = spawnBubble(state, 'breach', id, BUBBLES.breachTtl);
+            const bubble = spawnBubble(state, 'breach', id, BUBBLES.breachTtl + (cfg.bubbleTtl ?? 0));
             events.push({ type: 'bubble', bubble });
             log(state, `${NODE_BY_ID[id].name} bölgesinde YZ sızması başladı! Baloncuğu patlat, ilk dalgayı bastır.`, 'alert');
         }
@@ -395,7 +441,7 @@ export function tick(state, dt) {
         state.timers.nextDataBubble = between(rng, BUBBLES.dataEvery[0], BUBBLES.dataEvery[1]) * (cfg.dataBubbleEvery ?? 1);
         const target = pick(rng, nonIsolated(state, (n) => n.infection < 50 && !state.bubbles.some((b) => b.nodeId === n.id)));
         if (target) {
-            const bubble = spawnBubble(state, 'data', target.id, BUBBLES.dataTtl);
+            const bubble = spawnBubble(state, 'data', target.id, BUBBLES.dataTtl + (cfg.bubbleTtl ?? 0));
             events.push({ type: 'bubble', bubble });
         }
     }
@@ -414,6 +460,24 @@ export function tick(state, dt) {
     }
 
     state.dominance = dominanceOf(state);
+
+    // --- Enfekte sunucu hızı ve geçmiş örnekleri (grafikler) ---
+    let infectedServers = 0;
+    for (const id in nodes) infectedServers += NODE_BY_ID[id].computePower * SERVERS_PER_TFLOPS * (nodes[id].infection / 100);
+    state.rates.infected = state.rates.infected * 0.9 + ((infectedServers - state.prevInfectedServers) / dt) * 0.1;
+    state.prevInfectedServers = infectedServers;
+    state.history.nextSample -= dt;
+    if (state.history.nextSample <= 0) {
+        state.history.nextSample = HISTORY_EVERY;
+        const pushH = (arr, v) => {
+            arr.push(Math.round(v * 10) / 10);
+            if (arr.length > HISTORY_LEN) arr.splice(0, arr.length - HISTORY_LEN);
+        };
+        pushH(state.history.dominance, state.dominance);
+        pushH(state.history.panic, state.panic);
+        pushH(state.history.decrypt, state.decrypt);
+        for (const id in nodes) pushH(nodes[id].history, nodes[id].infection);
+    }
 
     // --- Senaryo ve haberler ---
     storyTick(state, dt, events);
@@ -444,7 +508,7 @@ export function upgradeFirewall(state, id) {
     const n = state.nodes[id];
     if (!n || state.status !== 'running') return fail('Oyun aktif değil.');
     if (n.firewall >= COSTS.maxFirewall) return fail('Güvenlik duvarı zaten en üst seviyede.');
-    const cost = firewallCost(n);
+    const cost = firewallCost(n, state);
     if (state.budget < cost) return fail('Yetersiz bütçe.');
     state.budget -= cost;
     n.firewall += 1;
@@ -471,7 +535,7 @@ export function toggleIsolate(state, id) {
     n.isolated = !n.isolated;
     if (n.isolated) {
         state.stats.isolations += 1;
-        if (!state.techs.martial) state.panic = clamp(state.panic + 6, 0, 100);
+        if (!state.techs.martial && state.cfg.isolatePanicSpike !== false) state.panic = clamp(state.panic + 6, 0, 100);
         n.panic = clamp(n.panic + 20, 0, 100);
         log(state, `${NODE_BY_ID[id].name} ağdan izole edildi (kill-switch). Panik yükseliyor.`, 'warn');
     } else {
@@ -485,8 +549,9 @@ export function canBuyTech(state, techId) {
     if (!t) return fail('Bilinmeyen geliştirme.');
     if (state.techs[techId]) return fail('Zaten alındı.');
     if (t.requires && !state.techs[t.requires]) return fail(`Önce "${TECH_BY_ID[t.requires].name}" gerekir.`);
-    if (state.budget < t.cost) return fail('Yetersiz bütçe.');
-    return { ok: true, cost: t.cost };
+    const cost = Math.round(t.cost * (state.cfg.techCost ?? 1));
+    if (state.budget < cost) return fail('Yetersiz bütçe.');
+    return { ok: true, cost };
 }
 
 export function buyTech(state, techId) {
@@ -494,17 +559,17 @@ export function buyTech(state, techId) {
     const check = canBuyTech(state, techId);
     if (!check.ok) return check;
     const t = TECH_BY_ID[techId];
-    state.budget -= t.cost;
+    state.budget -= check.cost;
     state.techs[techId] = true;
     state.stats.techs += 1;
     log(state, `Geliştirme etkin: ${t.name}.`, 'good');
-    return { ok: true, cost: t.cost };
+    return { ok: true, cost: check.cost };
 }
 
 function helpers(state) {
     const rng = state.rng;
     return {
-        addPanic: (v) => { state.panic = clamp(state.panic + v, 0, 100); },
+        addPanic: (v) => { state.panic = clamp(state.panic + (v > 0 ? v * (state.cfg.dilemmaPanic ?? 1) : v), 0, 100); },
         addBudget: (v) => { state.budget = Math.max(0, state.budget + v); },
         addDecrypt: (v) => { state.decrypt = clamp(state.decrypt + v, 0, 100); },
         addInfection: (id, v) => { const n = state.nodes[id]; if (n) n.infection = clamp(n.infection + v, 0, 100); },
@@ -561,10 +626,11 @@ export function popBubble(state, id) {
     const b = state.bubbles[i];
     state.bubbles.splice(i, 1);
     if (b.kind === 'data') {
-        state.budget += BUBBLES.dataBudget;
+        const gain = BUBBLES.dataBudget + (state.cfg.dataBudget ?? 0);
+        state.budget += gain;
         state.decrypt = clamp(state.decrypt + BUBBLES.dataDecrypt, 0, 100);
         state.stats.bubbles += 1;
-        return { ok: true, kind: 'data', nodeId: b.nodeId, budget: BUBBLES.dataBudget, decrypt: BUBBLES.dataDecrypt };
+        return { ok: true, kind: 'data', nodeId: b.nodeId, budget: gain, decrypt: BUBBLES.dataDecrypt };
     }
     const n = state.nodes[b.nodeId];
     if (n && n.infection < 100) n.infection = 0;
@@ -603,7 +669,8 @@ export function snapshot(state) {
             panic: Math.round(n.panic),
             computePower: def.computePower,
             status: nodeStatus(n),
-            firewallCost: n.firewall >= COSTS.maxFirewall ? null : firewallCost(n),
+            firewallCost: n.firewall >= COSTS.maxFirewall ? null : firewallCost(n, state),
+            history: n.history,
             flag: def.flag,
             servers: def.computePower * SERVERS_PER_TFLOPS,
             infectedServers: Math.round(def.computePower * SERVERS_PER_TFLOPS * (n.infection / 100)),
@@ -621,7 +688,14 @@ export function snapshot(state) {
         panicRate: Math.round(state.rates.panic * 100) / 100,
         status: state.status,
         archetype: state.archetype,
+        genes: state.genes,
         purgeAmount: state.cfg.purgeAmount ?? COSTS.purgeAmount,
+        techCost: state.cfg.techCost ?? 1,
+        infectedServers: Math.round(state.prevInfectedServers),
+        totalServers: NODES.reduce((s, n) => s + n.computePower * SERVERS_PER_TFLOPS, 0),
+        infectedRate: Math.round(state.rates.infected),
+        history: { dominance: state.history.dominance, panic: state.history.panic, decrypt: state.history.decrypt },
+        spreadMultiplier: Math.round(spreadMultiplier(state) * 100) / 100,
         victoryType: state.victoryType,
         defeatReason: state.defeatReason,
         nodes,
@@ -640,6 +714,7 @@ export function summary(state) {
     return {
         difficulty: state.difficulty,
         archetype: state.archetype,
+        genes: state.genes,
         outcome: state.status === 'victory' ? 'victory' : 'defeat',
         victoryType: state.victoryType,
         defeatReason: state.defeatReason,

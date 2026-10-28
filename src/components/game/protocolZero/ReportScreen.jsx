@@ -6,10 +6,12 @@ import { gameErrorMessage } from '../../../services/gameErrors';
 import protocolZeroApiDefault from '../../../services/protocolZeroApi';
 import { CLIENT_VERSION } from '../../../game/protocolZero/constants';
 import { archetypeOf } from '../../../game/protocolZero/archetypes';
+import { levelFor, newlyUnlocked, xpFor } from '../../../game/protocolZero/progression';
+import CommanderCard from './CommanderCard';
 import { buildShareText, buildShareUrl, copyText, shareResult, whatsappLink, xLink } from '../../../game/protocolZero/share';
 import { CANONICAL_ORIGIN } from '../../../config/site';
 import PzLeaderboard from './PzLeaderboard';
-import { defeatText, difficultyName, fmtNum, loadName, saveBestIfBetter, saveName, victoryText } from './pzUtils';
+import { addLocalXp, defeatText, difficultyName, fmtNum, loadLocalXp, loadName, saveBestIfBetter, saveName, syncXp, victoryText } from './pzUtils';
 
 const Stat = ({ label, value, tone = 'text-white' }) => (
     <div className="rounded-2xl bg-white/5 px-3 py-2.5">
@@ -33,6 +35,14 @@ const ReportScreen = ({ result, user, api = protocolZeroApiDefault, onReplay, on
     const [overview, setOverview] = useState(null);
     const [shareMsg, setShareMsg] = useState('');
     const [lbKey, setLbKey] = useState(0);
+
+    // Kalıcı ilerleme: bu oyunun XP'si yerel birikime bir kez eklenir (rapor ekranı açılır açılmaz).
+    const [xpState] = useState(() => {
+        const gained = xpFor({ score, days: summary.days, outcome: summary.outcome, difficulty: summary.difficulty });
+        const before = loadLocalXp();
+        const after = addLocalXp(gained);
+        return { gained, before, after, unlocked: newlyUnlocked(before, after), levelUp: levelFor(after).level > levelFor(before).level };
+    });
 
     useEffect(() => {
         saveBestIfBetter({ score, days: summary.days, difficulty: summary.difficulty, outcome: summary.outcome });
@@ -77,6 +87,7 @@ const ReportScreen = ({ result, user, api = protocolZeroApiDefault, onReplay, on
                     client_version: CLIENT_VERSION,
                     meta: {
                         archetype: summary.archetype,
+                        genes: (summary.genes || []).join(','),
                         bubbles: summary.bubbles,
                         techs: summary.techs,
                         breaches_won: summary.breachesWon,
@@ -110,6 +121,9 @@ const ReportScreen = ({ result, user, api = protocolZeroApiDefault, onReplay, on
 
     const discussion = state.data?.discussion ?? overview?.discussion ?? null;
     const rank = state.data?.rank;
+    // Üye: sunucu XP'si (skor kaydedilince güncellenir) yerelle eşitlenir.
+    const serverXp = state.data?.me?.xp ?? overview?.me?.xp;
+    const totalXp = member && serverXp != null ? syncXp(serverXp) : xpState.after;
 
     return (
         <div className="pz-modal-backdrop pz-scrollable">
@@ -130,6 +144,22 @@ const ReportScreen = ({ result, user, api = protocolZeroApiDefault, onReplay, on
                             <LuTrophy className="inline" aria-hidden="true" /> {difficultyName(summary.difficulty)} tablosunda #{rank}
                         </p>
                     )}
+                </div>
+
+                <div className="mt-3 rounded-2xl bg-white/5 p-3 ring-1 ring-cyan-300/20">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-extrabold text-white">
+                            +{fmtNum(xpState.gained)} XP kazandın{xpState.levelUp ? ' · 🎖️ Rütbe atladın!' : ''}
+                        </p>
+                        {xpState.unlocked.length > 0 && (
+                            <p className="text-[11px] font-bold text-emerald-200">
+                                Yeni gen: {xpState.unlocked.map((g) => g.name).join(', ')}
+                            </p>
+                        )}
+                    </div>
+                    <div className="mt-2">
+                        <CommanderCard xp={totalXp} name={member ? user.username : 'Komutan'} compact />
+                    </div>
                 </div>
 
                 <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">

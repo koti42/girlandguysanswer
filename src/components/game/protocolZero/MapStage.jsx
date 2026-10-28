@@ -59,11 +59,11 @@ const MapStage = ({ onReady, onSelect, onPopBubble, onPacketArrive, lowPower = f
                 </div>
             )}
             {api && (
-                <div className="absolute right-2 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1 sm:right-3" aria-label="Yakınlaştırma">
-                    <button type="button" className="pz-icon-btn !h-10 !w-10" onClick={api.zoomIn} aria-label="Yakınlaştır">
+                <div className="pz-zoom" role="group" aria-label="Yakınlaştırma">
+                    <button type="button" className="pz-icon-btn" onClick={api.zoomIn} aria-label="Yakınlaştır">
                         <LuPlus aria-hidden="true" />
                     </button>
-                    <button type="button" className="pz-icon-btn !h-10 !w-10" onClick={api.zoomOut} aria-label="Uzaklaştır">
+                    <button type="button" className="pz-icon-btn" onClick={api.zoomOut} aria-label="Uzaklaştır">
                         <LuMinus aria-hidden="true" />
                     </button>
                 </div>

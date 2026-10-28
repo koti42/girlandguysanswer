@@ -7,8 +7,11 @@ import React, { useMemo } from 'react';
 const NewsTicker = ({ items, alert = false }) => {
     const text = useMemo(() => {
         const list = (items && items.length ? items : [{ text: 'Küresel ağ izleniyor. Tüm veri merkezleri çevrim içi.', kind: 'info' }]).slice(0, 8);
-        const icon = { alert: '⚠ ', good: '✔ ', story: '📡 ', news: '📰 ', warn: '△ ' };
-        return list.map((l) => `${icon[l.kind] || '• '}${l.text}`).join('      ▪      ');
+        const icon = { alert: '⚠ ', good: '✔ ', story: '◆ ', news: '▪ ', warn: '△ ' };
+        let txt = list.map((l) => `${icon[l.kind] || '• '}${l.text}`).join('   │   ');
+        // Kısa günlükte bant boş kalmasın: metin en az ~160 karaktere tamamlanır.
+        while (txt.length < 160) txt += `   │   ${txt}`;
+        return txt;
     }, [items]);
     const seconds = Math.max(18, Math.min(70, text.length * 0.16));
 

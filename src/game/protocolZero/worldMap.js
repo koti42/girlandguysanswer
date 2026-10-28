@@ -20,14 +20,18 @@ import { CITIES } from './cities';
 import { createRng } from './rng';
 
 const STATUS_COLOR = { safe: COLORS.safe, warn: COLORS.warn, lost: COLORS.lost, isolated: COLORS.isolated };
-const LINK_SAFE = 'rgba(45, 212, 191, 0.55)';
-const LINK_HOT = 'rgba(255, 0, 60, 0.85)';
+const LINK_SAFE = 'rgba(125, 211, 252, 0.7)';
+const LINK_SAFE_GLOW = 'rgba(56, 189, 248, 0.14)';
+const LINK_HOT = '#ff2d55';
+const LINK_HOT_GLOW = 'rgba(255, 0, 60, 0.18)';
 const LINK_OFF = 'rgba(100, 116, 139, 0.25)';
-const LAND = '#0f172a';
-const LAND_SELECTED = '#13213d';
-const BORDER = '#1e293b';
-const MIN_K = 1;
+const OCEAN = '#030a18';
+const LAND = '#0b1628';
+const LAND_SELECTED = '#102040';
+const BORDER = 'rgba(56, 189, 248, 0.18)';
 const MAX_K = 7;
+/** HUD altında kalan alanlar (etiket çizilmez): üst şerit, sol menü, alt panel. */
+const HUD_INSETS = (w) => (w >= 768 ? { top: 58, left: 96, right: 12, bottom: 118 } : { top: 50, left: 0, right: 0, bottom: 215 });
 const LINK_SAMPLES = 40;
 
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
@@ -65,10 +69,37 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
     let disposed = false;
     const sporeMax = lowPower ? 18 : 36;
     const packetsPerLink = lowPower ? 1 : 2;
+    let minK = 1;
+    let keyboardEnabled = true;
+
+    // Parıltı sprite'ları (gölge bulanıklığı yerine; mobilde ucuz)
+    function glowSprite(color, size) {
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const g = c.getContext('2d');
+        const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+        grad.addColorStop(0, color);
+        grad.addColorStop(0.35, color);
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = grad;
+        g.fillRect(0, 0, size, size);
+        return c;
+    }
+    const sporeSprite = glowSprite('rgba(255, 40, 70, 0.9)', 32);
+    const packetSpriteRed = glowSprite('rgba(255, 60, 100, 0.95)', 24);
+    const packetSpriteCyan = glowSprite('rgba(103, 232, 249, 0.95)', 24);
 
     /* ------------------------------ yerleşim ------------------------------ */
     function layout() {
-        projection.fitExtent([[8, 8], [w - 8, h - 8]], { type: 'Sphere' });
+        const ins = HUD_INSETS(w);
+        if (w < 640) {
+            // Telefon: harita görünür alandan ~2,2× büyük kurulur; başlangıçta Avrupa/Orta Doğu ortalanır, uzaklaşılabilir.
+            projection.fitExtent([[0, 0], [w * 2.2, h * 2.2]], { type: 'Sphere' });
+            minK = 0.45;
+        } else {
+            projection.fitExtent([[ins.left + 8, ins.top + 8], [w - ins.right - 8, h - ins.bottom - 8]], { type: 'Sphere' });
+            minK = 1;
+        }
         pathStr = geoPath(projection);
         spherePath = new Path2D(pathStr({ type: 'Sphere' }));
         gratPath = new Path2D(pathStr(geoGraticule10()));
@@ -100,6 +131,7 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
         staticDirty = true;
     }
 
+    let firstLayout = true;
     function resize() {
         w = Math.max(1, container.clientWidth);
         h = Math.max(1, container.clientHeight);
@@ -109,13 +141,33 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
         stat.width = canvas.width;
         stat.height = canvas.height;
         layout();
+        if (firstLayout && w < 640) {
+            const p = projection([22, 34]);
+            view.k = 1;
+            view.x = w / 2 - p[0];
+            view.y = h / 2 - p[1];
+        }
+        firstLayout = false;
         clampView();
     }
 
+    // Kenarlardan %45 taşma payı: 1× yakınlıkta bile harita elle kaydırılabilir.
     function clampView() {
-        view.k = clamp(view.k, MIN_K, MAX_K);
-        view.x = clamp(view.x, w - w * view.k, 0);
-        view.y = clamp(view.y, h - h * view.k, 0);
+        view.k = clamp(view.k, minK, MAX_K);
+        const bw = (w < 640 ? w * 2.2 : w) * view.k; // taban harita genişliği (ekran px)
+        const bh = (w < 640 ? h * 2.2 : h) * view.k;
+        const mx = w * 0.45;
+        const my = h * 0.45;
+        view.x = clamp(view.x, w - bw - mx, mx);
+        view.y = clamp(view.y, h - bh - my, my);
+    }
+
+    function panBy(dx, dy) {
+        view.x += dx;
+        view.y += dy;
+        clampView();
+        staticDirty = true;
+        focusTween = null;
     }
 
     const toScreen = (p) => [p[0] * view.k + view.x, p[1] * view.k + view.y];
@@ -133,12 +185,12 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
         c.fillRect(0, 0, stat.width, stat.height);
         c.setTransform(dpr * view.k, 0, 0, dpr * view.k, dpr * view.x, dpr * view.y);
         // Okyanus (küre alanı)
-        c.fillStyle = '#071a3a';
+        c.fillStyle = OCEAN;
         c.fill(spherePath);
-        c.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+        c.strokeStyle = 'rgba(0, 240, 255, 0.22)';
         c.lineWidth = 1.5 / view.k;
         c.stroke(spherePath);
-        c.strokeStyle = 'rgba(0, 240, 255, 0.07)';
+        c.strokeStyle = 'rgba(0, 240, 255, 0.05)';
         c.lineWidth = 0.6 / view.k;
         c.stroke(gratPath);
         // Ülkeler
@@ -151,12 +203,22 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
             c.fill(p);
             const inf = snap ? countryInfection(nodes, world, country.id) : 0;
             if (inf > 0.5) {
-                c.fillStyle = `rgba(220, 38, 38, ${(0.12 + (inf / 100) * 0.66).toFixed(3)})`;
+                c.fillStyle = `rgba(140, 10, 34, ${(0.18 + (inf / 100) * 0.55).toFixed(3)})`;
                 c.fill(p);
             }
-            c.strokeStyle = inf > 30 ? 'rgba(248, 113, 113, 0.55)' : inRegion ? 'rgba(0, 240, 255, 0.35)' : BORDER;
-            c.lineWidth = (inf > 30 ? 0.9 : 0.7) / view.k;
-            c.stroke(p);
+            if (inf > 30) {
+                c.save();
+                c.shadowColor = 'rgba(255, 40, 70, 0.9)';
+                c.shadowBlur = 6;
+                c.strokeStyle = 'rgba(255, 60, 90, 0.65)';
+                c.lineWidth = 0.9 / view.k;
+                c.stroke(p);
+                c.restore();
+            } else {
+                c.strokeStyle = inRegion ? 'rgba(0, 240, 255, 0.4)' : BORDER;
+                c.lineWidth = 0.7 / view.k;
+                c.stroke(p);
+            }
         }
         c.setTransform(1, 0, 0, 1, 0, 0);
         staticDirty = false;
@@ -189,18 +251,13 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
             if (inf < 2) continue;
             const pts = sporesOf(country.id);
             const count = Math.min(pts.length, Math.ceil((pts.length * inf) / 100));
+            ctx.globalCompositeOperation = 'lighter';
             for (let i = 0; i < count; i++) {
                 const p = pts[i];
-                const r = (1.3 + ((i * 7) % 5) * 0.25 + 0.6 * pulse) / Math.sqrt(view.k);
-                ctx.beginPath();
-                ctx.arc(p[0], p[1], r * 2.2, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 60, 90, 0.16)';
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(p[0], p[1], r, 0, Math.PI * 2);
-                ctx.fillStyle = i % 3 === 0 ? '#ff6b86' : '#ff003c';
-                ctx.fill();
+                const r = (3.5 + ((i * 7) % 5) * 0.6 + 1.6 * pulse) / Math.sqrt(view.k);
+                ctx.drawImage(sporeSprite, p[0] - r, p[1] - r, r * 2, r * 2);
             }
+            ctx.globalCompositeOperation = 'source-over';
         }
 
         // Rotalar
@@ -213,16 +270,26 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
             const bHot = b.infection > 20 && !b.isolated;
             l.hot = !l.off && (aHot || bHot);
             l.hotDir = aHot && !bHot ? 1 : bHot && !aHot ? -1 : a.infection >= b.infection ? 1 : -1;
-            ctx.strokeStyle = l.off ? LINK_OFF : l.hot ? LINK_HOT : LINK_SAFE;
-            ctx.lineWidth = (l.hot ? 1.4 : 1) / view.k;
-            ctx.setLineDash([6 / view.k, 5 / view.k]);
-            ctx.lineDashOffset = reducedMotion || paused ? 0 : (-t * 14 * (l.hot ? 2 : 1)) / view.k;
-            for (const [s, e] of l.segs) {
-                ctx.beginPath();
-                ctx.moveTo(l.pts[s][0], l.pts[s][1]);
-                for (let i = s + 1; i <= e; i++) ctx.lineTo(l.pts[i][0], l.pts[i][1]);
-                ctx.stroke();
+            const strokeSegs = () => {
+                for (const [s, e] of l.segs) {
+                    ctx.beginPath();
+                    ctx.moveTo(l.pts[s][0], l.pts[s][1]);
+                    for (let i = s + 1; i <= e; i++) ctx.lineTo(l.pts[i][0], l.pts[i][1]);
+                    ctx.stroke();
+                }
+            };
+            if (!l.off) {
+                // Parıltı altlığı
+                ctx.setLineDash([]);
+                ctx.strokeStyle = l.hot ? LINK_HOT_GLOW : LINK_SAFE_GLOW;
+                ctx.lineWidth = (l.hot ? 4 : 3) / view.k;
+                strokeSegs();
             }
+            ctx.strokeStyle = l.off ? LINK_OFF : l.hot ? LINK_HOT : LINK_SAFE;
+            ctx.lineWidth = (l.hot ? 1.3 : 1) / view.k;
+            ctx.setLineDash(l.off ? [3 / view.k, 5 / view.k] : [2.5 / view.k, 4.5 / view.k]);
+            ctx.lineDashOffset = reducedMotion || paused ? 0 : (-t * 14 * (l.hot ? 2 : 1)) / view.k;
+            strokeSegs();
         }
         ctx.setLineDash([]);
 
@@ -253,6 +320,10 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
                 const from = p.dir === 1 ? l.a : l.b;
                 const red = nodes[from].infection > 20 && !nodes[from].isolated;
                 const s = 4.2 / Math.sqrt(view.k);
+                const gs = s * 4;
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.drawImage(red ? packetSpriteRed : packetSpriteCyan, x - gs / 2, y - gs / 2, gs, gs);
+                ctx.globalCompositeOperation = 'source-over';
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(ang);
@@ -262,9 +333,7 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
                 ctx.lineTo(-s * 0.4, 0);
                 ctx.lineTo(-s, -s * 0.8);
                 ctx.closePath();
-                ctx.fillStyle = red ? '#ff3b63' : '#67e8f9';
-                ctx.shadowColor = red ? 'rgba(255,0,60,0.9)' : 'rgba(0,240,255,0.8)';
-                ctx.shadowBlur = 8;
+                ctx.fillStyle = red ? '#ff3b63' : '#e0fbff';
                 ctx.fill();
                 ctx.restore();
             }
@@ -322,62 +391,105 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
             }
         }
 
-        // Ekran uzayı: düğümler, etiketler, baloncuklar
-        ctx.font = '700 11px Inter, ui-sans-serif, system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        // Ekran uzayı: düğümler (halka rozeti + iki satırlı pil etiket), baloncuklar
+        const ins = HUD_INSETS(w);
+        const placed = []; // çizilen etiket dikdörtgenleri (çakışma önleme)
+        const overlaps = (r) => placed.some((q) => r.x < q.x + q.w && r.x + r.w > q.x && r.y < q.y + q.h && r.y + r.h > q.y);
+        const nameFont = '600 12px Rajdhani, Inter, ui-sans-serif, system-ui, sans-serif';
+        const valFont = '700 11px Rajdhani, Inter, ui-sans-serif, system-ui, sans-serif';
         for (const n of snap.nodes) {
             const [x, y] = toScreen(nodePos[n.id]);
+            if (x < -40 || y < -40 || x > w + 40 || y > h + 40) continue;
             const color = STATUS_COLOR[n.status];
-            const size = 6 + n.computePower / 80 + (n.infection / 100) * 3;
+            const R = 11 + (n.computePower / 200) * 2;
             const isSel = selectedId === n.id;
             const isBreach = snap.breach?.nodeId === n.id;
             if (isBreach) {
                 const fast = 0.5 + 0.5 * Math.sin(now / 110);
                 ctx.beginPath();
-                ctx.arc(x, y, size + 8 + fast * 10, 0, Math.PI * 2);
+                ctx.arc(x, y, R + 8 + fast * 10, 0, Math.PI * 2);
                 ctx.strokeStyle = `rgba(255, 0, 60, ${0.35 + 0.5 * fast})`;
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
             if (isSel) {
                 ctx.beginPath();
-                ctx.arc(x, y, size + 6 + pulse * 2, 0, Math.PI * 2);
+                ctx.arc(x, y, R + 6 + pulse * 2, 0, Math.PI * 2);
                 ctx.strokeStyle = 'rgba(255,255,255,0.9)';
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
             // hale
+            ctx.globalCompositeOperation = 'lighter';
+            const hs = R * (3.2 + 0.6 * pulse * (n.infection / 100 + 0.3));
+            ctx.globalAlpha = n.status === 'isolated' ? 0.25 : 0.55;
+            ctx.drawImage(n.status === 'safe' || n.status === 'isolated' ? packetSpriteCyan : packetSpriteRed, x - hs / 2, y - hs / 2, hs, hs);
+            ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
+            // halka rozeti: koyu disk + sızma yayı
             ctx.beginPath();
-            ctx.arc(x, y, size * (1.5 + 0.3 * pulse), 0, Math.PI * 2);
-            ctx.fillStyle = hexA(color, n.status === 'isolated' ? 0.1 : 0.22 + 0.2 * pulse * (n.infection / 100 + 0.2));
+            ctx.arc(x, y, R, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(4, 10, 24, 0.92)';
             ctx.fill();
-            // elmas işaret
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(Math.PI / 4);
-            ctx.fillStyle = color;
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 10;
-            ctx.fillRect(-size / 2, -size / 2, size, size);
-            ctx.restore();
-            ctx.fillStyle = '#02101f';
-            ctx.beginPath();
-            ctx.arc(x, y, size * 0.22, 0, Math.PI * 2);
-            ctx.fill();
-            // etiket
-            const label = n.isolated ? `${n.name} · izole` : n.infection > 0 ? `${n.name} · %${Math.round(n.infection)}` : n.name;
-            const tw = ctx.measureText(label).width + 14;
-            const ly = y + size + 11;
-            ctx.fillStyle = 'rgba(2, 12, 30, 0.78)';
-            roundRect(ctx, x - tw / 2, ly - 8, tw, 16, 8);
-            ctx.fill();
-            ctx.strokeStyle = hexA(color, 0.5);
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = hexA(color, 0.3);
             ctx.stroke();
-            ctx.fillStyle = n.status === 'lost' ? '#ffc2cf' : n.status === 'warn' ? '#ffe0a3' : n.status === 'isolated' ? '#cbd5e1' : '#cffaff';
-            ctx.fillText(label, x, ly + 0.5);
+            if (n.isolated) ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.arc(x, y, R, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (n.isolated ? 1 : Math.max(0.03, n.infection / 100)));
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            // pil etiket (sağda; çakışırsa solda / üstte; HUD altındaysa gizle)
+            ctx.font = nameFont;
+            const nameW = ctx.measureText(n.name).width;
+            ctx.font = valFont;
+            const val = n.isolated ? 'İZOLE' : `%${Math.round(n.infection)}`;
+            const valW = ctx.measureText(val).width;
+            const pw = Math.max(nameW, valW) + 20;
+            const ph = 30;
+            const cands = [
+                { x: x + R + 4, y: y - ph / 2 },
+                { x: x - R - 4 - pw, y: y - ph / 2 },
+                { x: x - pw / 2, y: y - R - 6 - ph },
+                { x: x - pw / 2, y: y + R + 6 },
+            ];
+            let rect = null;
+            for (const c of cands) {
+                const r = { x: c.x, y: c.y, w: pw, h: ph };
+                const inHud = r.y < ins.top || r.y + r.h > h - ins.bottom || r.x < ins.left || r.x + r.w > w - ins.right;
+                if (!inHud && !overlaps(r)) {
+                    rect = r;
+                    break;
+                }
+            }
+            const hidden = !rect;
+            if (hidden) rect = { x: cands[0].x, y: cands[0].y, w: pw, h: ph };
+            placed.push(rect);
+            if (!hidden || isSel) {
+                ctx.fillStyle = 'rgba(6, 12, 28, 0.84)';
+                roundRect(ctx, rect.x, rect.y, rect.w, rect.h, 15);
+                ctx.fill();
+                ctx.strokeStyle = hexA(color, 0.45);
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.font = nameFont;
+                ctx.fillStyle = '#fff';
+                ctx.fillText(n.name, rect.x + 10, rect.y + 9.5);
+                ctx.font = valFont;
+                ctx.fillStyle = n.status === 'lost' ? '#ff6b86' : n.status === 'warn' ? '#ffd166' : n.status === 'isolated' ? '#cbd5e1' : '#67e8f9';
+                ctx.fillText(val, rect.x + 10, rect.y + 21.5);
+            }
         }
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '700 11px Inter, ui-sans-serif, system-ui, sans-serif';
 
         // Baloncuklar
         for (const b of snap.bubbles || []) {
@@ -442,7 +554,7 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
 
     function zoomAt(factor, cx, cy) {
         const k0 = view.k;
-        const k1 = clamp(k0 * factor, MIN_K, MAX_K);
+        const k1 = clamp(k0 * factor, minK, MAX_K);
         view.x = cx - ((cx - view.x) * k1) / k0;
         view.y = cy - ((cy - view.y) * k1) / k0;
         view.k = k1;
@@ -555,6 +667,24 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
     canvas.addEventListener('pointercancel', onCancel);
     canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    // Klavye: ok tuşları kaydırır, + / - yakınlaştırır (yazı alanlarında devre dışı; harf kısayolları oyun ekranında).
+    const onKey = (e) => {
+        if (!keyboardEnabled) return;
+        if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+        if (document.querySelector('.pz-modal-backdrop')) return;
+        const step = 60;
+        switch (e.key) {
+            case 'ArrowLeft': panBy(step, 0); break;
+            case 'ArrowRight': panBy(-step, 0); break;
+            case 'ArrowUp': panBy(0, step); break;
+            case 'ArrowDown': panBy(0, -step); break;
+            case '+': case '=': zoomAt(1.25, w / 2, h / 2); break;
+            case '-': case '_': zoomAt(1 / 1.25, w / 2, h / 2); break;
+            default: return;
+        }
+        e.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
 
     /* ------------------------------ dış API ------------------------------ */
     function update(s) {
@@ -613,8 +743,30 @@ export function createWorldMap(container, { world, onSelect, onPopBubble, onPack
         canvas.removeEventListener('pointerup', onUp);
         canvas.removeEventListener('pointercancel', onCancel);
         canvas.removeEventListener('wheel', onWheel);
+        window.removeEventListener('keydown', onKey);
         canvas.remove();
     }
 
-    return { update, setSelected, focusNode, setPaused, resize, dispose, zoomIn: () => zoomAt(1.4, w / 2, h / 2), zoomOut: () => zoomAt(1 / 1.4, w / 2, h / 2) };
+    function resetView() {
+        if (w < 640) {
+            const p = projection([22, 34]);
+            focusTween = { k: 1, x: w / 2 - p[0], y: h / 2 - p[1] };
+        } else focusTween = { k: 1, x: 0, y: 0 };
+    }
+
+    return {
+        update,
+        setSelected,
+        focusNode,
+        setPaused,
+        resize,
+        dispose,
+        panBy,
+        resetView,
+        setKeyboardEnabled: (v) => {
+            keyboardEnabled = Boolean(v);
+        },
+        zoomIn: () => zoomAt(1.4, w / 2, h / 2),
+        zoomOut: () => zoomAt(1 / 1.4, w / 2, h / 2),
+    };
 }

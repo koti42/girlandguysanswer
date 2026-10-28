@@ -1,10 +1,13 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import MapStage from '../../../components/game/protocolZero/MapStage';
-import NewsTicker from '../../../components/game/protocolZero/NewsTicker';
 import PzTopBar from '../../../components/game/protocolZero/PzTopBar';
 import PzBottomBar from '../../../components/game/protocolZero/PzBottomBar';
-import WorldStatusModal from '../../../components/game/protocolZero/WorldStatusModal';
-import TechTreeModal from '../../../components/game/protocolZero/TechTreeModal';
+import PzSidebar from '../../../components/game/protocolZero/PzSidebar';
+import RegionPanel from '../../../components/game/protocolZero/RegionPanel';
+import ResearchPanel from '../../../components/game/protocolZero/ResearchPanel';
+import ThreatPanel from '../../../components/game/protocolZero/ThreatPanel';
+import SettingsPanel from '../../../components/game/protocolZero/SettingsPanel';
+import StatsPanel from '../../../components/game/protocolZero/StatsPanel';
 import DilemmaModal from '../../../components/game/protocolZero/DilemmaModal';
 import BreachMiniGame from '../../../components/game/protocolZero/BreachMiniGame';
 import ReportScreen from '../../../components/game/protocolZero/ReportScreen';
@@ -15,11 +18,12 @@ import usePzSession from './usePzSession';
 import '../../../components/game/protocolZero/protocolZero.css';
 
 /*
- * Tam ekran oyun katmanı (Plague Inc. düzeni). Katmanlar (alttan üste): taktik dünya haritası (canvas) →
- * haber bandı (üst) + takvim/hız (sağ üst) + gösterge paneli (alt: bütçe/ağaç · bölge bilgisi · dünya durumu)
- * → kipler (savunma ağacı, dünya durumu, ikilem, mini oyun, menü) → brifing / rapor.
+ * Tam ekran komuta merkezi (Plague Inc. düzeni). Katmanlar (alttan üste): taktik dünya haritası (canvas) →
+ * neon çerçeve → üst şerit (haber bandı + hız) · sol menü (Dünya/Tehdit/Araştırma/İstatistikler/Ayarlar) ·
+ * alt gösterge paneli → sağ panel (bölge / araştırma / tehdit / ayarlar) → kipler (dünya durumu, ikilem,
+ * mini oyun, duraklatma) → brifing / rapor.
  *
- * Props: entry { difficulty, seed }, user (null = misafir), onExit(), onReplay(), reducedMotion.
+ * Props: entry { difficulty, archetype, genes, seed }, user (null = misafir), onExit(), onReplay(), reducedMotion.
  */
 const ProtocolZeroGameScreen = ({ entry, user, onExit, onReplay, reducedMotion = false }) => {
     const s = usePzSession({ entry, reducedMotion });
@@ -27,23 +31,26 @@ const ProtocolZeroGameScreen = ({ entry, user, onExit, onReplay, reducedMotion =
     const [mapError, setMapError] = useState(null);
     const cfg = DIFFICULTIES[entry.difficulty] || DIFFICULTIES.normal;
 
-    // Klavye: boşluk duraklat, T ağaç, W dünya durumu, Esc kapat.
+    // Klavye: boşluk duraklat, T araştırma, G dünya durumu, H tehdit, Esc kapat. Dinleyici bir kez bağlanır (ref).
+    const sRef = useRef(s);
+    useEffect(() => {
+        sRef.current = s;
+    }, [s]);
     useEffect(() => {
         const onKey = (e) => {
+            const s = sRef.current;
             if (!s.ui.started || s.finished) return;
-            if (e.target && /input|textarea/i.test(e.target.tagName)) return;
+            if (s.ui.breachGame || s.snap.dilemma) return; // mini oyun / ikilem: kısayollar kapalı
+            if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+            const k = e.key.toLowerCase();
             if (e.code === 'Space') {
                 e.preventDefault();
-                if (!s.ui.tech && !s.ui.world && !s.ui.menu && !s.ui.breachGame && !s.snap.dilemma) s.togglePause();
-            } else if (e.key === 't' || e.key === 'T') {
-                if (s.ui.tech) s.closeTech();
-                else s.openTech();
-            } else if (e.key === 'w' || e.key === 'W') {
-                if (s.ui.world) s.closeWorld();
-                else s.openWorld();
-            } else if (e.key === 'Escape') {
-                if (s.ui.tech) s.closeTech();
-                else if (s.ui.world) s.closeWorld();
+                if (!s.ui.panel && !s.ui.menu && !s.ui.breachGame && !s.snap.dilemma) s.togglePause();
+            } else if (k === 't') s.openPanel('research');
+            else if (k === 'g') s.openPanel('stats');
+            else if (k === 'h') s.openPanel('threat');
+            else if (e.key === 'Escape') {
+                if (s.ui.panel) s.closePanel();
                 else if (s.ui.menu) s.closeMenu();
                 else if (s.selectedId) s.select(null);
                 else s.openMenu();
@@ -51,11 +58,22 @@ const ProtocolZeroGameScreen = ({ entry, user, onExit, onReplay, reducedMotion =
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [s]);
+    }, []);
 
-    const onDone = useCallback((ok) => s.resolveBreach(ok), [s]);
+    const onDone = useCallback((ok) => sRef.current.resolveBreach(ok), []);
     const breachNode = s.snap.breach ? s.snap.nodes.find((n) => n.id === s.snap.breach.nodeId) : null;
     const inGame = s.ui.started && !s.finished;
+    const sideActive = s.ui.panel || 'map';
+    const onSide = (key) => {
+        if (key === 'map') {
+            s.closePanel();
+            s.select(null);
+        } else s.openPanel(key);
+    };
+    const pickOnMap = (id) => {
+        s.closePanel();
+        s.select(id, null);
+    };
 
     return (
         <div className={`pz-screen ${s.snap.breach && !s.ui.breachGame && inGame ? 'pz-screen-alarm' : ''}`}>
@@ -70,46 +88,52 @@ const ProtocolZeroGameScreen = ({ entry, user, onExit, onReplay, reducedMotion =
                     </div>
                 </div>
             ) : (
-                <MapStage
-                    onReady={s.onMapReady}
-                    onSelect={s.select}
-                    onPopBubble={s.pop}
-                    onPacketArrive={s.onPacketArrive}
-                    lowPower={lowPower}
-                    reducedMotion={reducedMotion}
-                    onError={setMapError}
-                />
+                <MapStage onReady={s.onMapReady} onSelect={s.select} onPopBubble={s.pop} onPacketArrive={s.onPacketArrive} lowPower={lowPower} reducedMotion={reducedMotion} onError={setMapError} />
             )}
+            <div className="pz-frame" aria-hidden="true" />
+            <style>{`.pz-screen{--pz-panel-w:${inGame && (s.selectedNode || (s.ui.panel && s.ui.panel !== 'stats')) ? '400px' : '0px'}}`}</style>
 
             {inGame && (
                 <>
-                    <NewsTicker items={s.snap.log} alert={s.alert || Boolean(s.snap.breach)} />
-                    <PzTopBar
+                    <PzTopBar snap={s.snap} alert={s.alert} speed={s.speed} onSpeed={s.setSpeed} onSettings={() => s.openPanel('settings')} onIntervene={s.startBreachGame} />
+                    <PzSidebar active={sideActive} onSelect={onSide} badges={{ threat: s.snap.breach ? 1 : 0 }} />
+                    <PzBottomBar
                         snap={s.snap}
                         startDate={s.startDate}
                         speed={s.speed}
                         onSpeed={s.setSpeed}
-                        muted={s.muted}
-                        onToggleMute={s.toggleMute}
-                        onMenu={s.openMenu}
+                        paused={s.speed === 0}
+                        onTogglePause={s.togglePause}
+                        onTech={() => s.openPanel('research')}
+                        onWorld={() => s.openPanel('stats')}
                         onIntervene={s.startBreachGame}
                     />
-                    <PzBottomBar
-                        snap={s.snap}
-                        selectedNode={s.selectedNode}
-                        countryName={s.countryName}
-                        onTech={s.openTech}
-                        onWorld={s.openWorld}
-                        onCloseNode={() => s.select(null)}
-                        onFirewall={() => s.actions.upgradeFirewall(s.selectedId)}
-                        onPurge={() => s.actions.purge(s.selectedId)}
-                        onIsolate={() => s.actions.toggleIsolate(s.selectedId)}
-                        onIntervene={s.startBreachGame}
-                        lastError={s.lastError}
-                    />
-                    <TechTreeModal open={s.ui.tech} techs={s.snap.techs} budget={s.snap.budget} onBuy={(id) => s.actions.buyTech(id)} onClose={s.closeTech} lastError={s.lastError} />
-                    <WorldStatusModal open={s.ui.world} snap={s.snap} onClose={s.closeWorld} onPick={(id) => s.select(id, null)} />
-                    {!s.ui.tech && !s.ui.world && !s.ui.breachGame && <DilemmaModal dilemma={s.snap.dilemma} onChoose={s.choose} />}
+
+                    {s.selectedNode && !s.ui.panel && (
+                        <RegionPanel
+                            node={s.selectedNode}
+                            nodes={s.snap.nodes}
+                            countryName={s.countryName}
+                            budget={s.snap.budget}
+                            breach={s.snap.breach}
+                            purgeAmount={s.snap.purgeAmount}
+                            onClose={() => s.select(null)}
+                            onFirewall={() => s.actions.upgradeFirewall(s.selectedId)}
+                            onPurge={() => s.actions.purge(s.selectedId)}
+                            onIsolate={() => s.actions.toggleIsolate(s.selectedId)}
+                            onIntervene={s.startBreachGame}
+                            onPick={(id) => s.select(id, null)}
+                            lastError={s.lastError}
+                        />
+                    )}
+                    {s.ui.panel === 'research' && <ResearchPanel snap={s.snap} onBuy={(id) => s.actions.buyTech(id)} onClose={s.closePanel} lastError={s.lastError} />}
+                    {s.ui.panel === 'threat' && <ThreatPanel snap={s.snap} onClose={s.closePanel} onPick={pickOnMap} />}
+                    {s.ui.panel === 'settings' && (
+                        <SettingsPanel muted={s.muted} onToggleMute={s.toggleMute} speed={s.speed} onSpeed={s.setSpeed} onResetView={s.resetView} onExit={onExit} onClose={s.closePanel} />
+                    )}
+                    <StatsPanel open={s.ui.panel === 'stats'} snap={s.snap} selectedId={s.selectedId} onPick={pickOnMap} onClose={s.closePanel} />
+
+                    {!s.ui.panel && !s.ui.breachGame && <DilemmaModal dilemma={s.snap.dilemma} onChoose={s.choose} />}
                     <BreachMiniGame
                         open={s.ui.breachGame}
                         nodeName={breachNode?.name || 'Düğüm'}

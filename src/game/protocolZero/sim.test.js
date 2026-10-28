@@ -387,6 +387,9 @@ describe('zafer / yenilgi', () => {
         const s = quiet(createSim('normal', { seed: 1 }));
         s.decrypt = 99.99;
         s.techs.quantum = true;
+        // Eşik olayları (%75 anahtar rotasyonu, %95 karşı saldırı) bu testte devre dışı.
+        s.story.flags.decrypt75 = true;
+        s.story.flags.decrypt95 = true;
         const ev = run(s, 5);
         expect(ev.some((e) => e.type === 'victory' && e.victoryType === 'decrypt')).toBe(true);
         expect(s.status).toBe('victory');

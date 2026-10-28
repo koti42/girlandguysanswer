@@ -4,6 +4,7 @@
  */
 import { DIFFICULTIES, DIFFICULTY_KEYS, LOBBY_PATH, PLAY_PATH } from '../../../game/protocolZero/constants';
 import { ARCHETYPE_KEYS, DEFAULT_ARCHETYPE } from '../../../game/protocolZero/archetypes';
+import { sanitizeGenes } from '../../../game/protocolZero/progression';
 
 export { LOBBY_PATH, PLAY_PATH };
 
@@ -23,6 +24,8 @@ export const STORAGE_KEYS = Object.freeze({
     best: 'hs_pz_best',
     difficulty: 'hs_pz_difficulty',
     archetype: 'hs_pz_archetype',
+    xp: 'hs_pz_xp',
+    genes: 'hs_pz_genes',
     briefed: 'hs_pz_briefed',
 });
 
@@ -61,6 +64,31 @@ export function loadArchetype() {
 }
 export const saveArchetype = (a) => storageSet(STORAGE_KEYS.archetype, a);
 
+/** Bu cihazda biriken XP (misafir). Üye için sunucu değeriyle en yükseği alınır. */
+export const loadLocalXp = () => Math.max(0, Math.floor(Number(storageGet(STORAGE_KEYS.xp)) || 0));
+export function addLocalXp(delta) {
+    const next = loadLocalXp() + Math.max(0, Math.floor(Number(delta) || 0));
+    storageSet(STORAGE_KEYS.xp, String(next));
+    return next;
+}
+/** Üye: sunucu XP'si yerel birikimden büyükse yerel de ona çekilir (cihaz değişince gerilemesin). */
+export function syncXp(serverXp) {
+    const local = loadLocalXp();
+    const srv = Math.max(0, Math.floor(Number(serverXp) || 0));
+    if (srv > local) storageSet(STORAGE_KEYS.xp, String(srv));
+    return Math.max(local, srv);
+}
+
+export function loadGenes() {
+    try {
+        const raw = storageGet(STORAGE_KEYS.genes);
+        return sanitizeGenes(raw ? JSON.parse(raw) : []);
+    } catch {
+        return [];
+    }
+}
+export const saveGenes = (keys) => storageSet(STORAGE_KEYS.genes, JSON.stringify(sanitizeGenes(keys)));
+
 /** Bu cihazdaki en iyi sonuç (misafir ya da üye fark etmez; yalnızca gösterim). */
 export function loadBest() {
     try {
@@ -83,11 +111,12 @@ export function saveBestIfBetter(result) {
 }
 
 /** Lobi → oyun geçiş durumu. */
-export function buildEntry({ difficulty = 'normal', seed = Date.now(), archetype = DEFAULT_ARCHETYPE } = {}) {
+export function buildEntry({ difficulty = 'normal', seed = Date.now(), archetype = DEFAULT_ARCHETYPE, genes = [] } = {}) {
     return {
         v: 1,
         difficulty: DIFFICULTY_KEYS.includes(difficulty) ? difficulty : 'normal',
         archetype: ARCHETYPE_KEYS.includes(archetype) ? archetype : DEFAULT_ARCHETYPE,
+        genes: sanitizeGenes(genes),
         seed: Number(seed) >>> 0 || 1,
     };
 }

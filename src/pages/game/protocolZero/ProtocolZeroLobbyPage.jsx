@@ -10,10 +10,26 @@ import PzHeroArt from '../../../components/game/protocolZero/PzHeroArt';
 import PzLeaderboard from '../../../components/game/protocolZero/PzLeaderboard';
 import PzHowTo from '../../../components/game/protocolZero/PzHowTo';
 import ArchetypePicker from '../../../components/game/protocolZero/ArchetypePicker';
+import GenePicker from '../../../components/game/protocolZero/GenePicker';
+import CommanderCard from '../../../components/game/protocolZero/CommanderCard';
 import { ARCHETYPES } from '../../../game/protocolZero/archetypes';
 import { DIFFICULTIES, DIFFICULTY_KEYS, TECH_TREE } from '../../../game/protocolZero/constants';
 import protocolZeroApiDefault from '../../../services/protocolZeroApi';
-import { PLAY_PATH, buildEntry, difficultyName, fmtNum, loadArchetype, loadBest, loadDifficulty, saveArchetype, saveDifficulty } from '../../../components/game/protocolZero/pzUtils';
+import {
+    PLAY_PATH,
+    buildEntry,
+    difficultyName,
+    fmtNum,
+    loadArchetype,
+    loadBest,
+    loadDifficulty,
+    loadGenes,
+    loadLocalXp,
+    saveArchetype,
+    saveDifficulty,
+    saveGenes,
+    syncXp,
+} from '../../../components/game/protocolZero/pzUtils';
 import '../../../components/game/protocolZero/protocolZero.css';
 
 const StatTile = ({ label, value, sub }) => (
@@ -52,16 +68,20 @@ const Lobby = ({ member, api }) => {
     const navigate = useNavigate();
     const [difficulty, setDifficulty] = useState(loadDifficulty);
     const [archetype, setArchetype] = useState(loadArchetype);
+    const [genes, setGenes] = useState(loadGenes);
+    const [localXp] = useState(loadLocalXp);
     const [best] = useState(loadBest);
     const fetcher = useCallback(() => api.overview(), [api]);
     const { data, error, reload } = useAsync(fetcher, member ? 'm' : 'g');
     const me = data?.me || null;
     const discussion = data?.discussion || null;
+    const xp = member && me?.xp != null ? syncXp(me.xp) : localXp;
 
     const start = () => {
         saveDifficulty(difficulty);
         saveArchetype(archetype);
-        navigate(PLAY_PATH, { state: { entry: buildEntry({ difficulty, archetype, seed: Date.now() }) } });
+        saveGenes(genes);
+        navigate(PLAY_PATH, { state: { entry: buildEntry({ difficulty, archetype, genes, seed: Date.now() }) } });
     };
 
     return (
@@ -130,6 +150,24 @@ const Lobby = ({ member, api }) => {
                 >
                     <LuPlay aria-hidden="true" /> {ARCHETYPES[archetype]?.icon} {ARCHETYPES[archetype]?.name} senaryosunu başlat
                 </button>
+            </section>
+
+            {/* Komutan rütbesi + Protokol Genleri (Plague Inc. gen yuvaları) */}
+            <section className="pz-arch-section mt-4 rounded-3xl p-4 sm:p-6" aria-labelledby="pz-gene-title">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">Kariyer</p>
+                        <h2 id="pz-gene-title" className="text-2xl font-black text-white sm:text-3xl">Komutan Profili</h2>
+                        <p className="mb-3 text-xs text-white/60">Her görev XP kazandırır; rütbe yükseldikçe yeni Protokol Genleri açılır.</p>
+                        <CommanderCard xp={xp} name={member ? undefined : 'Misafir komutan'} />
+                        {!member && <p className="mt-2 text-[11px] text-white/60">Misafir XP'si bu cihazda saklanır. Giriş yaparsan ilerlemen hesabına bağlanır.</p>}
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">Protokol genleri</p>
+                        <h3 className="mb-3 text-lg font-black text-white">Göreve özel yetenekler · {genes.length}/5 yuva</h3>
+                        <GenePicker xp={xp} value={genes} onChange={setGenes} />
+                    </div>
+                </div>
             </section>
 
             <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import BreachMiniGame from '../BreachMiniGame';
 
 describe('BreachMiniGame', () => {
@@ -28,7 +28,7 @@ describe('BreachMiniGame', () => {
         const onSound = vi.fn();
         render(<BreachMiniGame open nodeName="İstanbul" seconds={12} targets={3} seed={7} onDone={onDone} onSound={onSound} />);
         expect(screen.getByRole('dialog', { name: /İstanbul/ })).toBeInTheDocument();
-        expect(screen.getAllByRole('gridcell')).toHaveLength(25);
+        expect(within(screen.getByRole('group', { name: 'Veri matrisi' })).getAllByRole('button')).toHaveLength(25);
 
         for (let i = 0; i < 3; i++) {
             const bad = document.querySelector('[data-bad="1"]');

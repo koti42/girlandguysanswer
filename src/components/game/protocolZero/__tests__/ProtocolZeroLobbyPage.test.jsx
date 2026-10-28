@@ -61,7 +61,9 @@ describe('ProtocolZeroLobbyPage', () => {
         expect(await screen.findByText('Komutan Ayşe')).toBeInTheDocument();
         expect(screen.getByText('siber')).toBeInTheDocument();
         expect(screen.getByText('14.500')).toBeInTheDocument();
-        expect(screen.getByText(/misafir/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/misafir/i).length).toBeGreaterThan(0);
+        expect(screen.getByRole('heading', { name: 'Komutan Profili' })).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'Protokol genleri' })).toBeInTheDocument();
 
         const cta = await screen.findByRole('link', { name: /Bu simülasyon hakkında ne düşünüyorsun/ });
         expect(cta).toHaveAttribute('href', '/question/protocol-zero-oynadin-mi');

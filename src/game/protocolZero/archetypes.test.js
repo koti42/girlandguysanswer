@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ARCHETYPES, ARCHETYPE_KEYS, CONDITIONAL_STORY, GLOBAL_STORY, applyArchetype, archetypeOf } from './archetypes';
-import { DIFFICULTIES } from './constants';
+import { DAY_SECONDS, DIFFICULTIES } from './constants';
 import { createSim, purge, snapshot, summary, tick } from './sim';
 
 const run = (s, seconds, step = 0.25) => {
@@ -71,7 +71,7 @@ describe('senaryo ve haberler', () => {
         s.timers.nextReseed = 1e9;
         s.timers.nextBreach = 1e9;
         s.timers.nextDilemma = 1e9;
-        const events = run(s, 3 * 8 + 1); // ~9 gün
+        const events = run(s, DAY_SECONDS * 8 + 1); // ~9 gün
         const stories = events.filter((e) => e.type === 'story');
         const texts = stories.map((e) => e.text);
         expect(texts).toContain(GLOBAL_STORY[0].text);
@@ -81,6 +81,34 @@ describe('senaryo ve haberler', () => {
         expect(s.log.some((l) => l.kind === 'news')).toBe(true);
         const news = s.log.filter((l) => l.kind === 'news');
         for (const n of news) expect(n.text).not.toMatch(/\{(node|country)\}/);
+    });
+
+    it('deşifre %75 eşiğinde YZ anahtar rotasyonu yapar (ilerleme -8, arka kapı aralığı kısalır)', () => {
+        const s = createSim('normal', { seed: 1 });
+        s.timers.nextReseed = 1e9;
+        s.timers.nextBreach = 1e9;
+        s.timers.nextDilemma = 1e9;
+        const before = s.cfg.reseedEvery[0];
+        s.decrypt = 76;
+        run(s, 0.5);
+        expect(s.decrypt).toBeLessThan(70);
+        expect(s.cfg.reseedEvery[0]).toBeCloseTo(before * 0.75);
+        expect(s.story.flags.decrypt75).toBe(true);
+    });
+
+    it('ağır enfekte bölgede hükümet tepkisi: bir kez firewall +1, panik +4', () => {
+        const s = createSim('normal', { seed: 1 });
+        s.timers.nextReseed = 1e9;
+        s.timers.nextBreach = 1e9;
+        s.timers.nextDilemma = 1e9;
+        s.nodes.cai.infection = 85;
+        const fw = s.nodes.cai.firewall;
+        const p = s.panic;
+        run(s, 0.5);
+        expect(s.nodes.cai.firewall).toBe(fw + 1);
+        expect(s.panic).toBeCloseTo(p + 4, 0);
+        run(s, 1);
+        expect(s.nodes.cai.firewall).toBe(fw + 1);
     });
 
     it('koşullu vuruşlar bir kez tetiklenir', () => {

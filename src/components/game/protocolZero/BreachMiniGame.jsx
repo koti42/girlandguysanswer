@@ -11,20 +11,27 @@ const BreachBoard = ({ nodeName, seconds, targets, seed, onDone, onSound }) => {
     // Durum nesnesi ve bitiş geri çağrısı tek bir tutucuda (render'da ref yazmadan, effect'te doldurulur).
     const [st] = useState(() => createBreachState({ seed, targets, seconds }));
     const finishRef = useRef(null);
+    const cbRef = useRef({ onDone, onSound });
     const [, force] = useState(0);
     const rerender = useCallback(() => force((n) => n + 1), []);
+
+    useEffect(() => {
+        cbRef.current = { onDone, onSound };
+    }, [onDone, onSound]);
 
     useEffect(() => {
         let last = performance.now();
         let lastTick = Math.ceil(seconds);
         let raf = 0;
         let finished = false;
+        let doneTimer = 0;
+        const onSound = (n) => cbRef.current.onSound?.(n);
         const finish = (ok) => {
             if (finished) return;
             finished = true;
             cancelAnimationFrame(raf);
-            onSound?.(ok ? 'success' : 'fail');
-            setTimeout(() => onDone?.(ok), 450);
+            onSound(ok ? 'success' : 'fail');
+            doneTimer = setTimeout(() => cbRef.current.onDone?.(ok), 450);
         };
         finishRef.current = finish;
         const loop = (now) => {
@@ -47,8 +54,9 @@ const BreachBoard = ({ nodeName, seconds, targets, seed, onDone, onSound }) => {
         return () => {
             finished = true;
             cancelAnimationFrame(raf);
+            clearTimeout(doneTimer);
         };
-    }, [st, seconds, onDone, onSound, rerender]);
+    }, [st, seconds, rerender]);
 
     const cells = useMemo(() => Array.from({ length: GRID * GRID }, (_, i) => i), []);
     const pct = (st.remaining / st.seconds) * 100;
@@ -89,7 +97,7 @@ const BreachBoard = ({ nodeName, seconds, targets, seed, onDone, onSound }) => {
                     <span style={{ width: `${pct}%`, transition: 'none' }} />
                 </div>
 
-                <div className="pz-grid mt-4" style={{ gridTemplateColumns: `repeat(${GRID}, minmax(0, 1fr))` }} role="grid" aria-label="Veri matrisi">
+                <div className="pz-grid mt-4" style={{ gridTemplateColumns: `repeat(${GRID}, minmax(0, 1fr))` }} role="group" aria-label="Veri matrisi">
                     {cells.map((i) => {
                         const bad = st.bad.has(i);
                         const flash = st.lastCell === i ? st.lastKind : null;
@@ -97,7 +105,6 @@ const BreachBoard = ({ nodeName, seconds, targets, seed, onDone, onSound }) => {
                             <button
                                 key={i}
                                 type="button"
-                                role="gridcell"
                                 data-testid={`pz-cell-${i}`}
                                 data-bad={bad ? '1' : '0'}
                                 onPointerDown={(e) => {

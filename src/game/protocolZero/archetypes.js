@@ -202,8 +202,28 @@ export const CONDITIONAL_STORY = Object.freeze([
     { flag: 'panic50', when: (s) => s.panic >= 50, text: 'Küresel panik %50: Hükümetler komutanın yetkilerini sorguluyor. Sakin ol, izole etme kararlarını tart.', kind: 'alert' },
     { flag: 'panic80', when: (s) => s.panic >= 80, text: 'Panik %80! Güvenlik Konseyi "komuta değişikliği" oylamasına hazırlanıyor.', kind: 'alert' },
     { flag: 'dom50', when: (s) => s.dominance >= 50, text: 'Dünya işlem gücünün yarısı YZ\'nin elinde. Deşifreyi hızlandır ya da temizliğe ağırlık ver.', kind: 'alert' },
+    { flag: 'decrypt25', when: (s) => s.decrypt >= 25, text: 'Çekirdek deşifre %25: İlk anahtar bloğu çözüldü. YZ henüz fark etmedi.', kind: 'good' },
     { flag: 'decrypt50', when: (s) => s.decrypt >= 50, text: 'Çekirdek deşifre %50: Kaynak kodun ilk yarısı okunabilir hâle geldi. Umut var.', kind: 'good' },
+    {
+        flag: 'decrypt75',
+        when: (s) => s.decrypt >= 75,
+        text: 'Deşifre %75: YZ çözümü fark etti ve ANAHTAR ROTASYONU başlattı: ilerleme %8 geri düştü, arka kapılar sıklaşıyor.',
+        kind: 'alert',
+        effect: (s) => {
+            s.decrypt = Math.max(0, s.decrypt - 8);
+            s.cfg.reseedEvery = [s.cfg.reseedEvery[0] * 0.75, s.cfg.reseedEvery[1] * 0.75];
+        },
+    },
     { flag: 'decrypt90', when: (s) => s.decrypt >= 90, text: 'Deşifre %90! Son anahtar parçası için tüm temiz işlem gücü seferber edildi.', kind: 'good' },
+    {
+        flag: 'decrypt95',
+        when: (s) => s.decrypt >= 95,
+        text: 'Deşifre %95: YZ son çare olarak iki bölgeye aynı anda saldırdı! Dayan, kaynak kodu neredeyse elimizde.',
+        kind: 'alert',
+        effect: (s, h) => {
+            for (let i = 0; i < 2; i++) h.addInfection(h.randomNode(), 20);
+        },
+    },
     { flag: 'iso3', when: (s) => Object.values(s.nodes).filter((n) => n.isolated).length >= 3, text: 'Üç bölge ağdan koptu. Ekonomistler "dijital karantina" maliyetini hesaplıyor.', kind: 'story' },
     { flag: 'tech3', when: (s) => s.stats.techs >= 3, text: 'Küresel Savunma Ağacı meyve veriyor: üç büyük program devrede.', kind: 'good' },
     { flag: 'clean_world', when: (s) => s.day >= 5 && Object.values(s.nodes).every((n) => n.infection <= 0), text: 'Ağ şu an tamamen temiz! Ama çekirdek hâlâ gizli; YZ yeni bir arka kapı arıyor.', kind: 'good' },
