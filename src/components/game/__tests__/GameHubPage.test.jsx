@@ -171,14 +171,15 @@ describe('GameHubPage', () => {
         expect(screen.getByRole('link', { name: /^Karakterim:.*Karakterini oluştur/ })).toBeInTheDocument();
     });
 
-    it('GameNav 10 sekme içerir (Koşu, Kule, Mağaza, Karakter dahil); dar ekran kısa etiketi erişilebilir adı bozmaz', async () => {
+    it('GameNav 11 sekme içerir (Koşu, Kule, PROTOCOL: ZERO, Mağaza, Karakter dahil); dar ekran kısa etiketi erişilebilir adı bozmaz', async () => {
         gameApi.categories.mockResolvedValue({ categories: [] });
         renderHub();
         const nav = screen.getByRole('navigation', { name: 'Oyun Merkezi bölümleri' });
         const links = within(nav).getAllByRole('link');
-        expect(links).toHaveLength(10);
+        expect(links).toHaveLength(11);
         expect(within(nav).getByRole('link', { name: 'Koşu' })).toHaveAttribute('href', '/oyun/kosu');
         expect(within(nav).getByRole('link', { name: 'Kule' })).toHaveAttribute('href', '/oyun/kule');
+        expect(within(nav).getByRole('link', { name: 'PROTOCOL: ZERO' })).toHaveAttribute('href', '/oyun/protocol-zero');
         expect(within(nav).getByRole('link', { name: 'Mağaza' })).toHaveAttribute('href', '/oyun/magaza');
         expect(within(nav).getByRole('link', { name: 'Karakter' })).toHaveAttribute('href', '/oyun/karakter');
         expect(within(nav).getByRole('link', { name: 'Liderlik' })).toHaveAttribute('href', '/oyun/liderlik');

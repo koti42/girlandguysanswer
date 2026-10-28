@@ -6,6 +6,7 @@ import SEO from '../components/SEO';
 import UserAvatar from '../components/UserAvatar';
 import LandingHero from '../components/landing/LandingHero';
 import WeeklyTopicsMindMap from '../components/landing/WeeklyTopicsMindMap';
+import ProtocolZeroBanner from '../components/game/protocolZero/ProtocolZeroBanner';
 import { useAuth } from '../context/AuthContext';
 import { questionsAPI, storiesAPI } from '../services/api';
 import { formatDistanceToNow } from 'date-fns';
@@ -243,6 +244,9 @@ const LandingPage = () => {
             <div className="min-h-screen bg-background dark:bg-gray-900">
                 {/* HERO SECTION */}
                 <LandingHero user={user} />
+
+                {/* PROTOCOL: ZERO - "Yapay Zeka Saldırısını Durdurabilir Misin?" canlı simülasyon banner'ı (üyeliksiz oyun) */}
+                <ProtocolZeroBanner className="pt-6 md:pt-8" />
 
                 {/* HAFTANIN GÜNDEM KONULARI */}
                 <WeeklyTopicsMindMap />

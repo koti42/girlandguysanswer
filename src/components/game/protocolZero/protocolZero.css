@@ -1,0 +1,386 @@
+/*
+ * PROTOCOL: ZERO görsel dili: koyu komuta merkezi, turkuaz (#00f0ff) / kızıl (#ff003c) / amber vurgular,
+ * glassmorphism paneller. Oyun ekranı tam ekran sabit katman; lobi kartları game.css diline uyar.
+ */
+
+.pz-screen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(900px 600px at 50% 120%, rgba(0, 240, 255, 0.08), transparent 60%),
+    radial-gradient(700px 500px at 100% -10%, rgba(255, 0, 60, 0.12), transparent 60%),
+    linear-gradient(180deg, #030816 0%, #040b1f 60%, #06061a 100%);
+  color: #e6f7ff;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pz-screen input,
+.pz-screen textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Yalnızca tuval dokunuşu yakalar; kipler ve çekmece normal kaydırılır. */
+.pz-stage {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.pz-stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.pz-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.pz-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: #cffaff;
+  background: rgba(2, 12, 30, 0.72);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.18);
+  transition: opacity 0.15s linear;
+  will-change: transform, opacity;
+}
+.pz-label[data-status='warn'] { color: #ffe0a3; border-color: rgba(255, 170, 0, 0.55); box-shadow: 0 0 10px rgba(255, 170, 0, 0.25); }
+.pz-label[data-status='lost'] { color: #ffc2cf; border-color: rgba(255, 0, 60, 0.65); box-shadow: 0 0 12px rgba(255, 0, 60, 0.35); }
+.pz-label[data-status='isolated'] { color: #cbd5e1; border-color: rgba(100, 116, 139, 0.6); box-shadow: none; opacity: 0.85; }
+
+/* Cam paneller */
+.pz-glass {
+  background: rgba(4, 14, 36, 0.62);
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.pz-glass-red {
+  background: rgba(60, 4, 18, 0.72);
+  border-color: rgba(255, 0, 60, 0.45);
+}
+
+/* Ölçüm çubukları */
+.pz-meter {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.pz-meter > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  transition: width 0.25s linear;
+}
+.pz-meter-ai > span { background: linear-gradient(90deg, #ff5f7a, #ff003c); box-shadow: 0 0 12px rgba(255, 0, 60, 0.6); }
+.pz-meter-panic > span { background: linear-gradient(90deg, #ffd166, #ffaa00); box-shadow: 0 0 12px rgba(255, 170, 0, 0.5); }
+.pz-meter-decrypt > span { background: linear-gradient(90deg, #67e8f9, #a78bfa); box-shadow: 0 0 12px rgba(167, 139, 250, 0.55); }
+.pz-meter-node > span { background: linear-gradient(90deg, #ffaa00, #ff003c); }
+
+.pz-mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Düğmeler */
+.pz-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border-radius: 0.9rem;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  background: rgba(0, 240, 255, 0.08);
+  color: #cffaff;
+  transition: transform 0.08s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.pz-btn:hover { background: rgba(0, 240, 255, 0.16); box-shadow: 0 0 14px rgba(0, 240, 255, 0.25); }
+.pz-btn:active { transform: scale(0.97); }
+.pz-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.pz-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.pz-btn-primary {
+  background: linear-gradient(90deg, #00f0ff, #38bdf8);
+  color: #03111f;
+  border-color: transparent;
+  box-shadow: 0 6px 24px rgba(0, 240, 255, 0.35);
+}
+.pz-btn-primary:hover { background: linear-gradient(90deg, #5ff5ff, #60c8ff); }
+.pz-btn-danger {
+  background: linear-gradient(90deg, #ff3b63, #ff003c);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 24px rgba(255, 0, 60, 0.45);
+}
+.pz-btn-amber { border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.12); color: #ffe6b3; }
+.pz-btn-ghost { border-color: rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.06); color: #e2e8f0; }
+.pz-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  background: rgba(2, 12, 30, 0.6);
+  color: #cffaff;
+  font-size: 1.1rem;
+}
+.pz-icon-btn[aria-pressed='true'] { background: rgba(0, 240, 255, 0.22); border-color: #00f0ff; color: #fff; }
+.pz-icon-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* Hız seçici */
+.pz-speed button {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 0.6rem;
+  font-weight: 900;
+  font-size: 0.75rem;
+  color: #9fdfe8;
+}
+.pz-speed button[aria-pressed='true'] { background: #00f0ff; color: #03111f; box-shadow: 0 0 12px rgba(0, 240, 255, 0.5); }
+
+/* Alarm şeridi */
+@keyframes pz-alarm {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 0, 60, 0.0), 0 10px 40px rgba(0, 0, 0, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 0, 60, 0.25), 0 10px 40px rgba(0, 0, 0, 0.45); }
+}
+.pz-alarm { animation: pz-alarm 0.9s ease-in-out infinite; }
+
+@keyframes pz-flash {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+.pz-screen-alarm::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 120px rgba(255, 0, 60, 0.35);
+  animation: pz-flash 1s ease-in-out infinite;
+}
+
+/* Olay günlüğü */
+.pz-log li { animation: pz-fade-up 0.3s ease both; }
+@keyframes pz-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.pz-log-alert { color: #ffb3c2; }
+.pz-log-good { color: #a7f3d0; }
+.pz-log-warn { color: #ffe0a3; }
+.pz-log-info { color: #cbd5e1; }
+
+/* Çekmece / kipler */
+.pz-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 52vh;
+  overflow-y: auto;
+  border-radius: 1.4rem 1.4rem 0 0;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  animation: pz-sheet-in 0.22s ease both;
+}
+@keyframes pz-sheet-in {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@media (min-width: 768px) {
+  .pz-sheet {
+    left: auto;
+    right: 1rem;
+    bottom: 1rem;
+    width: 360px;
+    max-height: calc(100vh - 7.5rem);
+    border-radius: 1.4rem;
+  }
+}
+
+.pz-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(1, 5, 14, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: pz-fade 0.18s ease both;
+  z-index: 40;
+}
+@keyframes pz-fade { from { opacity: 0; } to { opacity: 1; } }
+.pz-modal {
+  width: 100%;
+  max-width: 640px;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border-radius: 1.5rem;
+  animation: pz-pop 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes pz-pop {
+  from { transform: scale(0.94) translateY(10px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* Tarama çizgisi süsü */
+.pz-scan {
+  position: relative;
+  overflow: hidden;
+}
+.pz-scan::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+}
+
+/* Mini oyun ızgarası */
+.pz-grid {
+  display: grid;
+  gap: 8px;
+  width: min(84vw, 360px);
+  margin: 0 auto;
+}
+.pz-cell {
+  aspect-ratio: 1;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  background: rgba(0, 240, 255, 0.07);
+  color: #67e8f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 900;
+  transition: transform 0.08s ease, background 0.12s ease;
+}
+.pz-cell:active { transform: scale(0.92); }
+.pz-cell-bad {
+  background: radial-gradient(circle, rgba(255, 0, 60, 0.75), rgba(255, 0, 60, 0.25));
+  border-color: #ff003c;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(255, 0, 60, 0.55);
+  animation: pz-cell-pulse 0.6s ease-in-out infinite;
+}
+@keyframes pz-cell-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+.pz-cell-hit { background: rgba(16, 185, 129, 0.45); border-color: #34d399; color: #d1fae5; }
+.pz-cell-miss { background: rgba(255, 170, 0, 0.35); border-color: #ffaa00; }
+
+/* Brifing / rapor */
+.pz-title {
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #00f0ff, #e0f2fe 50%, #ff5f7a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@keyframes pz-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.pz-blink { animation: pz-blink 1.2s steps(2) infinite; }
+
+/* Hub kartı / banner sanatı */
+.game-hero-pz {
+  background:
+    radial-gradient(520px 260px at 100% 0%, rgba(255, 0, 60, 0.28), transparent 70%),
+    radial-gradient(520px 260px at 0% 100%, rgba(0, 240, 255, 0.22), transparent 70%),
+    linear-gradient(160deg, #030916 0%, #071a3a 55%, #2a0a1f 100%);
+}
+.pz-orb {
+  position: absolute;
+  right: -8%;
+  bottom: -38%;
+  width: 70%;
+  max-width: 420px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(0, 240, 255, 0.35), transparent 45%),
+    radial-gradient(circle at 70% 70%, rgba(255, 0, 60, 0.35), transparent 50%),
+    radial-gradient(circle, #0a2a5a 0%, #061534 55%, #030916 100%);
+  box-shadow: 0 0 60px rgba(0, 240, 255, 0.35), inset 0 0 40px rgba(0, 240, 255, 0.15);
+  pointer-events: none;
+}
+.pz-orb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 240, 255, 0.12) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(90deg, rgba(0, 240, 255, 0.12) 0 1px, transparent 1px 18px);
+  -webkit-mask-image: radial-gradient(circle, #000 60%, transparent 72%);
+  mask-image: radial-gradient(circle, #000 60%, transparent 72%);
+}
+.pz-orb-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 12px currentColor;
+  animation: pz-blink 1.6s ease-in-out infinite;
+}
+@keyframes pz-orb-spin { to { transform: rotate(360deg); } }
+.pz-orb-ring {
+  position: absolute;
+  inset: -6%;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 240, 255, 0.35);
+  animation: pz-orb-spin 40s linear infinite;
+}
+
+@keyframes pz-banner-sweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+.pz-banner-sweep::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  animation: pz-banner-sweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.pz-diff-card[aria-pressed='true'] {
+  border-color: #00f0ff;
+  box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.35), 0 10px 30px rgba(0, 240, 255, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pz-alarm, .pz-screen-alarm::after, .pz-cell-bad, .pz-blink, .pz-orb-dot, .pz-orb-ring, .pz-banner-sweep::after,
+  .pz-log li, .pz-sheet, .pz-modal, .pz-modal-backdrop {
+    animation: none !important;
+  }
+}

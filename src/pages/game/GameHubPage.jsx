@@ -12,6 +12,7 @@ import LeagueBadge from '../../components/game/LeagueBadge';
 import RunnerFeatureCard from '../../components/game/runner/RunnerFeatureCard';
 import TowerFeatureCard from '../../components/game/tower/TowerFeatureCard';
 import KesifFeatureCard from '../../components/game/kesif/KesifFeatureCard';
+import ProtocolZeroFeatureCard from '../../components/game/protocolZero/ProtocolZeroFeatureCard';
 import ShopHubCard from '../../components/game/shop/ShopHubCard';
 import AvatarHubCard from '../../components/game/avatar/AvatarHubCard';
 import UserAvatar from '../../components/UserAvatar';
@@ -97,6 +98,8 @@ const FeaturedGames = ({ guest = false, user = null }) => {
     return (
         <>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {/* En yeni: PROTOCOL: ZERO (üyeliksiz 3D strateji) iki sütunu kaplar; dikkat çekici giriş. */}
+                <ProtocolZeroFeatureCard guest={guest} className="lg:col-span-2" />
                 <RunnerFeatureCard guest={guest} avatar={avatar} gender={gender} />
                 <TowerFeatureCard guest={guest} />
                 {/* Üçüncü 3D oyun: iki sütunu kaplayan geniş manzara kartı (dar ekranda zaten tek sütun). */}

@@ -379,6 +379,21 @@ const Header = ({ onSearch }) => {
                             <span className="hidden lg:inline">Oyun</span>
                         </Link>
 
+                        {/* PROTOCOL: ZERO - canlı YZ saldırısı simülasyonu (üyeliksiz); geniş ekranda sinyal pili */}
+                        <Link
+                            to="/oyun/protocol-zero"
+                            title="Yapay Zeka Saldırısını Durdurabilir Misin? (Canlı Simülasyon)"
+                            aria-label="PROTOCOL: ZERO - Yapay Zeka Saldırısını Durdurabilir Misin? Canlı simülasyon"
+                            className={`hidden xl:inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ring-1 transition-all ${
+                                location.pathname.startsWith('/oyun/protocol-zero')
+                                    ? 'bg-rose-500 text-white ring-rose-400'
+                                    : 'bg-gradient-to-r from-slate-900 to-rose-900 text-white ring-rose-400/50 hover:ring-rose-400'
+                            }`}
+                        >
+                            <span className="animate-pulse" aria-hidden="true">🚨</span>
+                            YZ saldırısını durdur
+                        </Link>
+
                         {/* Ask Question Button */}
                         <button
                             onClick={() => setShowQuickAskModal(true)}
@@ -683,6 +698,19 @@ const Header = ({ onSearch }) => {
                             <FaGamepad className="text-xl text-coral" />
                             <span className="text-gray-700 dark:text-gray-200 font-medium">Oyun Merkezi</span>
                             <span className="ml-auto rounded-full bg-gradient-to-r from-coral to-fuchsia-500 px-2 py-0.5 text-[10px] font-bold text-white">YENİ</span>
+                        </Link>
+
+                        <Link
+                            to="/oyun/protocol-zero"
+                            onClick={closeMobileMenu}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-slate-900 to-rose-900 text-white transition-colors mb-2 min-h-[50px] ring-1 ring-rose-400/50"
+                            aria-label="PROTOCOL: ZERO - Yapay Zeka Saldırısını Durdurabilir Misin? Canlı simülasyon"
+                        >
+                            <span className="text-xl animate-pulse" aria-hidden="true">🚨</span>
+                            <span className="min-w-0">
+                                <span className="block text-sm font-bold leading-tight">Yapay Zeka Saldırısını Durdurabilir Misin?</span>
+                                <span className="block text-[11px] text-rose-100/80">Canlı simülasyon · Üyeliksiz oyna</span>
+                            </span>
                         </Link>
 
                         <Link

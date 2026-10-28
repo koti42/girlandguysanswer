@@ -2,14 +2,14 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
     LuArrowLeft, LuGamepad2, LuSwords, LuSplit, LuTrophy, LuCalendarCheck, LuBrain, LuFootprints, LuBuilding2,
-    LuShoppingBag, LuUserRound,
+    LuShoppingBag, LuUserRound, LuShieldAlert,
 } from 'react-icons/lu';
 import MainLayout from '../../layouts/MainLayout';
 import { useGameTitle } from './useNow';
 import './game.css';
 
 /*
- * 10 sekme. Tasarım kararı: md ve üstünde tek satır 10 sütunlu ızgara
+ * 11 sekme. Tasarım kararı: md ve üstünde tek satır 11 sütunlu ızgara
  * (tümü görünür; ikon üstte, etiket altta — max-w-3xl sayfalarda da
  * sütun ~68 px'e sığar); dar ekranda (360-767 px) yatay kaydırılan sekme şeridi.
  * "Daha fazla" menüsü yerine şerit seçildi: her sekme tek dokunuşla, ekran
@@ -23,6 +23,7 @@ const NAV = [
     { to: '/oyun', label: 'Merkez', icon: LuGamepad2, end: true },
     { to: '/oyun/kosu', label: 'Koşu', icon: LuFootprints },
     { to: '/oyun/kule', label: 'Kule', icon: LuBuilding2 },
+    { to: '/oyun/protocol-zero', label: 'PROTOCOL: ZERO', short: 'Zero', icon: LuShieldAlert },
     { to: '/oyun/magaza', label: 'Mağaza', icon: LuShoppingBag },
     { to: '/oyun/karakter', label: 'Karakter', icon: LuUserRound },
     { to: '/oyun/arena', label: 'Arena', icon: LuBrain },
@@ -76,7 +77,7 @@ export const GameNav = () => {
             <div className="rounded-2xl p-1 game-card">
                 <ul
                     ref={listRef}
-                    className={`game-nav-strip flex gap-0.5 overflow-x-auto overscroll-x-contain md:grid md:grid-cols-10 md:gap-1 md:overflow-visible ${
+                    className={`game-nav-strip flex gap-0.5 overflow-x-auto overscroll-x-contain md:grid md:grid-cols-11 md:gap-1 md:overflow-visible ${
                         fade.start ? 'game-nav-fade-start' : ''
                     } ${fade.end ? 'game-nav-fade-end' : ''}`}
                 >
