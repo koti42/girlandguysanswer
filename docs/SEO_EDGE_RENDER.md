@@ -69,3 +69,16 @@ Sosyal: sosyal ağların bağlantı hata ayıklama (paylaşım önizleme) araçl
   istenirse aynı desenle eklenir).
 - Arama motoru Search Console doğrulaması index.html'de yok (yalnızca Yandex etiketi var). DNS ile doğrulanmadıysa
   site doğrulama meta etiketi eklenmeli.
+
+## Ek katman (2. tur, 2026-10-29)
+
+| Yol | Fonksiyon | Ne yapar |
+|---|---|---|
+| `/` | `functions/index.js` | Ana sayfa: 50-60 karakter başlık, H1, değer önerisi, son 12 soru bağlantısı, kategoriler, Organization + WebSite (SearchAction) şeması; 2 dk edge önbelleği |
+| diğer her yol | `functions/[[path]].js` | Catch-all: bilinen SPA rotası → kabuk 200; bilinmeyen yol → kabuk + noindex, HTTP 404; .html olmayan uzantıya SPA fallback HTML geliyorsa → 404 düz metin (eski /assets parçası, uydurma .xml) |
+| tüm fonksiyon yanıtları | `functions/_middleware.js` | Güvenlik başlıkları (HSTS, nosniff, X-Frame-Options, Referrer-Policy, CSP frame-ancestors); statik dosyalar için aynı liste `public/_headers` |
+
+- `public/_routes.json`: statik dosyalar (`/assets/*`, görseller, robots, `/embed`) fonksiyona hiç uğramaz; günlük fonksiyon kotası yalnızca HTML sayfa isteklerine harcanır.
+- `src/seo/edge/catchAll.js` içindeki `ROUTE_PATTERNS` App.jsx rotalarının kopyasıdır; `catchAll.test.js` App.jsx'i ayrıştırıp iki listeyi eşler. **Yeni rota eklendiğinde listeye de eklenmeli**, yoksa o sayfa 404 durumuyla (ama çalışır hâlde) döner.
+- Varsayılan paylaşım görseli `public/og-default.jpg` (1200x630, ~40 KB); üretici betik tek seferlikti (Pillow), logo değişirse yeniden üretilmeli. React tarafı (`SEO.jsx`) ve edge aynı dosyayı kullanır.
+- Soru meta açıklaması: cevap varsa "{başlık} sorusuna {n} cevap: {ilk cevap}" (160 karakter), yoksa soru metni.

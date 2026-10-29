@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "description": "Hangi yollar Pages Functions'a gider. Statik dosyalar dışarıda: fonksiyon kotası (100k istek/gün) yalnızca HTML sayfa isteklerine harcanır. /embed mobil WebView'in statik sayfasıdır, fonksiyon dokunmaz.",
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*",
+    "/images/*",
+    "/embed",
+    "/embed.html",
+    "/robots.txt",
+    "/ads.txt",
+    "/favicon-32x32.png",
+    "/apple-touch-icon.png",
+    "/logo.png",
+    "/logo.webp",
+    "/og-default.jpg",
+    "/vite.svg",
+    "/ankara-herkeslersoruyor.png",
+    "/ankara-silhouette.svg"
+  ]
+}

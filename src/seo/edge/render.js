@@ -9,33 +9,54 @@
  * ilk boyama ve botlar için vardır.
  */
 import { injectIntoShell } from './html.js';
-import { categoryPage, notFoundPage, opinionPage, questionPage, storyPage } from './pages.js';
+import { categoryPage, homePage, notFoundPage, opinionPage, questionPage, storyPage } from './pages.js';
 
 export const DEFAULT_API = 'https://herkeslersoruyor.panalix.com.tr/api';
 export const DEFAULT_ORIGIN = 'https://herkeslersoruyor.com.tr';
 const API_TIMEOUT_MS = 4000;
 const CACHE_TTL_SECONDS = 300;
 
+const enc = (p) => encodeURIComponent(p);
+
+/**
+ * Sayfa türleri. `apis(param)` çağrılacak API yollarını, `build(jsonlar, ctx)` sayfa modelini verir.
+ * `needsParam: false` olan türler (ana sayfa) parametre istemez.
+ */
 export const KINDS = {
+    home: {
+        label: 'Ana sayfa',
+        needsParam: false,
+        cacheSeconds: 120,
+        apis: () => ['/questions?limit=12&sort=newest', '/categories'],
+        build: ([questions, categories], ctx) =>
+            homePage(
+                {
+                    questions: questions?.data?.questions,
+                    pagination: questions?.data?.pagination,
+                    categories: categories?.data?.categories,
+                },
+                ctx,
+            ),
+    },
     question: {
         label: 'Soru',
-        api: (p) => `/questions/${encodeURIComponent(p)}`,
-        build: (json, ctx) => questionPage(json.data.question, ctx),
+        apis: (p) => [`/questions/${enc(p)}`],
+        build: ([json], ctx) => questionPage(json.data.question, ctx),
     },
     category: {
         label: 'Kategori',
-        api: (p) => `/categories/${encodeURIComponent(p)}`,
-        build: (json, ctx) => categoryPage(json.data, ctx),
+        apis: (p) => [`/categories/${enc(p)}`],
+        build: ([json], ctx) => categoryPage(json.data, ctx),
     },
     opinion: {
         label: 'Görüş',
-        api: (p) => `/opinions/${encodeURIComponent(p)}`,
-        build: (json, ctx) => opinionPage(json.data.opinion, ctx),
+        apis: (p) => [`/opinions/${enc(p)}`],
+        build: ([json], ctx) => opinionPage(json.data.opinion, ctx),
     },
     story: {
         label: 'Hikaye',
-        api: (p) => `/stories/${encodeURIComponent(p)}`,
-        build: (json, ctx) => storyPage(json.data.story, ctx),
+        apis: (p) => [`/stories/${enc(p)}`],
+        build: ([json], ctx) => storyPage(json.data.story, ctx),
     },
 };
 
@@ -56,13 +77,13 @@ export async function fetchWithTimeout(url, init = {}, ms = API_TIMEOUT_MS) {
 }
 
 /** SPA kabuğu: kök yol her zaman index.html'dir (temiz URL yönlendirmesine takılmaz). */
-async function fetchShell(context) {
+export async function fetchShell(context) {
     const rootUrl = new URL('/', context.request.url);
-    const res = await context.env.ASSETS.fetch(new Request(rootUrl.toString(), { headers: { accept: 'text/html' } }));
-    return res;
+    return context.env.ASSETS.fetch(new Request(rootUrl.toString(), { headers: { accept: 'text/html' } }));
 }
 
-async function serveShell(context) {
+/** Kabuğu olduğu gibi 200 ile döndürür (fail-open ve bilinen SPA rotaları). */
+export async function serveShell(context) {
     const res = await fetchShell(context);
     return new Response(res.body, {
         status: 200,
@@ -72,7 +93,7 @@ async function serveShell(context) {
 
 export async function renderSeoPage(context, kind, param) {
     const def = KINDS[kind];
-    if (!def || !param) return serveShell(context);
+    if (!def || (def.needsParam !== false && !param)) return serveShell(context);
 
     try {
         const url = new URL(context.request.url);
@@ -86,29 +107,30 @@ export async function renderSeoPage(context, kind, param) {
         const { api, origin } = resolveConfig(context.env);
         const ctx = { origin, path: url.pathname };
 
-        const [shellRes, apiRes] = await Promise.all([
+        const [shellRes, ...apiResponses] = await Promise.all([
             fetchShell(context),
-            fetchWithTimeout(api + def.api(param), { headers: { accept: 'application/json' } }),
+            ...def.apis(param).map((p) => fetchWithTimeout(api + p, { headers: { accept: 'application/json' } })),
         ]);
         if (!shellRes.ok) return serveShell(context);
         const shell = await shellRes.text();
 
         let page;
-        if (apiRes.status === 404) {
+        if (apiResponses.some((r) => r.status === 404)) {
             page = notFoundPage(ctx, def.label);
-        } else if (!apiRes.ok) {
+        } else if (apiResponses.some((r) => !r.ok)) {
             return serveShell(context);
         } else {
-            const json = await apiRes.json();
-            page = def.build(json, ctx);
+            const jsons = await Promise.all(apiResponses.map((r) => r.json()));
+            page = def.build(jsons, ctx);
         }
 
         const html = injectIntoShell(shell, page);
+        const ttl = def.cacheSeconds || CACHE_TTL_SECONDS;
         const response = new Response(html, {
             status: page.status || 200,
             headers: {
                 'content-type': 'text/html; charset=utf-8',
-                'cache-control': page.status === 200 ? `public, max-age=0, s-maxage=${CACHE_TTL_SECONDS}` : 'no-store',
+                'cache-control': page.status === 200 ? `public, max-age=0, s-maxage=${ttl}` : 'no-store',
                 'x-seo-render': kind,
             },
         });

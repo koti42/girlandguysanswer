@@ -99,7 +99,12 @@ export function buildHead(page) {
         `<meta property="og:description" content="${description}">`,
         `<meta property="og:url" content="${canonical}">`,
     );
-    if (page.image) parts.push(`<meta property="og:image" content="${escapeHtml(page.image)}">`);
+    if (page.image) {
+        parts.push(`<meta property="og:image" content="${escapeHtml(page.image)}">`);
+        if (page.imageWidth && page.imageHeight) {
+            parts.push(`<meta property="og:image:width" content="${Number(page.imageWidth)}">`, `<meta property="og:image:height" content="${Number(page.imageHeight)}">`);
+        }
+    }
     parts.push(
         `<meta name="twitter:card" content="${page.image ? 'summary_large_image' : 'summary'}">`,
         `<meta name="twitter:title" content="${title}">`,

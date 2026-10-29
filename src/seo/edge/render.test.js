@@ -44,10 +44,12 @@ describe('resolveConfig', () => {
 
 describe('KINDS', () => {
     it('API yollarını slug ile kurar ve kaçışlar', () => {
-        expect(KINDS.question.api('a b')).toBe('/questions/a%20b');
-        expect(KINDS.category.api('gundem')).toBe('/categories/gundem');
-        expect(KINDS.opinion.api('x')).toBe('/opinions/x');
-        expect(KINDS.story.api('y')).toBe('/stories/y');
+        expect(KINDS.question.apis('a b')).toEqual(['/questions/a%20b']);
+        expect(KINDS.category.apis('gundem')).toEqual(['/categories/gundem']);
+        expect(KINDS.opinion.apis('x')).toEqual(['/opinions/x']);
+        expect(KINDS.story.apis('y')).toEqual(['/stories/y']);
+        expect(KINDS.home.apis()).toHaveLength(2);
+        expect(KINDS.home.needsParam).toBe(false);
     });
 });
 
@@ -77,6 +79,7 @@ describe('renderSeoPage', () => {
         expect(html).toContain('<link rel="canonical" href="https://herkeslersoruyor.com.tr/question/edge-soru">');
         expect(html).toContain('<div id="root"><main id="seo-ssr">');
         expect(html).toContain('"@type":"QAPage"');
+        expect(html).toContain('<meta property="og:image:width" content="1200">');
         // kabuk kök yoldan alınır (temiz URL yönlendirmesine takılmaz)
         expect(ctx._assetsFetch.mock.calls[0][0].url).toBe('https://herkeslersoruyor.com.tr/');
     });
@@ -117,6 +120,8 @@ describe('renderSeoPage', () => {
         vi.stubGlobal('fetch', fetchMock);
         const res = await renderSeoPage(makeContext('https://herkeslersoruyor.com.tr/x'), 'nope', 'x');
         expect(await res.text()).toBe(SHELL);
+        const res2 = await renderSeoPage(makeContext('https://herkeslersoruyor.com.tr/question/'), 'question', '');
+        expect(await res2.text()).toBe(SHELL);
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
@@ -151,5 +156,46 @@ describe('renderSeoPage', () => {
         const html = await (await renderSeoPage(ctx, 'question', 'edge-soru')).text();
         expect(fetchMock.mock.calls[0][0]).toBe('https://api.test/api/questions/edge-soru');
         expect(html).toContain('href="https://canon.test/question/edge-soru"');
+    });
+});
+
+describe('renderSeoPage: ana sayfa (iki API çağrısı, parametresiz)', () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    const homeJson = (url) =>
+        url.includes('/categories')
+            ? { data: { categories: [{ name: 'Gündem', slug: 'gundem' }, { name: 'İlişkiler', slug: 'ask-iliskileri' }] } }
+            : { data: { questions: [{ title: 'Son soru', slug: 'son-soru', answers_count: 2, created_at: '2026-10-28T10:00:00Z' }], pagination: { totalQuestions: 1528 } } };
+
+    it('başlık, Organization/WebSite şeması, son sorular ve kategoriler basılır', async () => {
+        vi.stubGlobal('caches', undefined);
+        const fetchMock = vi.fn(async (url) => new Response(JSON.stringify(homeJson(url)), { status: 200 }));
+        vi.stubGlobal('fetch', fetchMock);
+        const res = await renderSeoPage(makeContext('https://herkeslersoruyor.com.tr/'), 'home', '');
+        const html = await res.text();
+        expect(res.status).toBe(200);
+        expect(res.headers.get('x-seo-render')).toBe('home');
+        expect(res.headers.get('cache-control')).toContain('s-maxage=120');
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(html).toContain('<title>Herkesler Soruyor | Kadınlar ve Erkekler Soruyor, Cevaplıyor</title>');
+        expect(html).toContain('<link rel="canonical" href="https://herkeslersoruyor.com.tr/">');
+        expect(html).toContain('"@type":"WebSite"');
+        expect(html).toContain('"@type":"Organization"');
+        expect(html).toContain('<a href="/question/son-soru">');
+        expect(html).toContain('<a href="/questions/gundem">');
+        expect(html).toContain('1.528 soru');
+        expect(html).toContain('og-default.jpg');
+    });
+
+    it("API'lerden biri düşerse kabuk (fail-open)", async () => {
+        vi.stubGlobal('caches', undefined);
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url) =>
+                url.includes('/categories') ? new Response('err', { status: 500 }) : new Response(JSON.stringify(homeJson(url)), { status: 200 }),
+            ),
+        );
+        const res = await renderSeoPage(makeContext('https://herkeslersoruyor.com.tr/'), 'home', '');
+        expect(res.headers.get('x-seo-render')).toBe('bypass');
     });
 });

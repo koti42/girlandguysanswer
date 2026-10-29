@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { categoryPage, notFoundPage, opinionPage, questionPage, storyPage } from './pages.js';
+import { categoryPage, homePage, notFoundPage, opinionPage, questionPage, storyPage } from './pages.js';
 
 const ctx = (path) => ({ origin: 'https://s.test', path });
 
@@ -37,7 +37,7 @@ describe('questionPage', () => {
         const page = questionPage(question(), ctx('/question/esimin-arkadasi'));
         expect(page.title).toContain('Eşimin arkadaşı');
         expect(page.title.endsWith(' - Herkesler Soruyor')).toBe(true);
-        expect(page.description).toBe('Merhaba & selam. İkinci paragraf.');
+        expect(page.description).toBe('Eşimin arkadaşı <script>alert(1)</script> ne yapmalıyım? sorusuna 1 cevap: Bence önce konuşmalısın.');
         expect(page.canonical).toBe('https://s.test/question/esimin-arkadasi');
         expect(page.robots).toBeUndefined();
         expect(page.status).toBe(200);
@@ -73,13 +73,21 @@ describe('questionPage', () => {
         expect(page.bodyHtml).not.toContain('/profile/');
     });
 
-    it('cevapsız soru noindex, follow alır ve çağrı metni basar', () => {
+    it('cevapsız soru noindex, follow alır, soru metnini açıklama yapar ve çağrı metni basar', () => {
         const page = questionPage(question({ answers: [], answers_count: 0 }), ctx('/question/x'));
         expect(page.robots).toBe('noindex, follow');
+        expect(page.description).toBe('Merhaba & selam. İkinci paragraf.');
         expect(page.bodyHtml).toContain('henüz cevap yazılmadı');
         const qa = page.jsonLd.find((l) => l['@type'] === 'QAPage');
         expect(qa.mainEntity.answerCount).toBe(0);
         expect(qa.mainEntity.suggestedAnswer).toBeUndefined();
+    });
+
+    it('açıklama şablonu 160 karakteri aşmaz', () => {
+        const long = question({ answers: [answer({ content: 'x'.repeat(300) })] });
+        const d = questionPage(long, ctx('/q')).description;
+        expect(d.length).toBeLessThanOrEqual(160);
+        expect(d).toContain('sorusuna 1 cevap:');
     });
 
     it('gizli/kaldırılmış cevapları saymaz, kabul edilen cevabı acceptedAnswer yapar', () => {
@@ -97,9 +105,14 @@ describe('questionPage', () => {
         expect(page.bodyHtml).not.toContain('answer-h"');
     });
 
-    it('görsel yoksa site logosunu og:image yapar, varsa mutlak URL', () => {
-        expect(questionPage(question(), ctx('/q')).image).toBe('https://s.test/logo.png');
-        expect(questionPage(question({ image: '/storage/x.jpg' }), ctx('/q')).image).toBe('https://s.test/storage/x.jpg');
+    it('görsel yoksa 1200x630 varsayılan OG görseli, varsa mutlak URL (boyutsuz)', () => {
+        const def = questionPage(question(), ctx('/q'));
+        expect(def.image).toBe('https://s.test/og-default.jpg');
+        expect(def.imageWidth).toBe(1200);
+        expect(def.imageHeight).toBe(630);
+        const own = questionPage(question({ image: '/storage/x.jpg' }), ctx('/q'));
+        expect(own.image).toBe('https://s.test/storage/x.jpg');
+        expect(own.imageWidth).toBeUndefined();
         expect(questionPage(question({ image: 'https://cdn.test/x.jpg' }), ctx('/q')).image).toBe('https://cdn.test/x.jpg');
     });
 
@@ -131,6 +144,7 @@ describe('opinionPage / storyPage', () => {
         expect(art.headline).toBe('Nar kesme tekniği');
         expect(art.dateModified).toBe('2026-10-23T06:24:27.000000Z');
         expect(art.author.name).toBe('Ali');
+        expect(art.publisher.name).toBe('Herkesler Soruyor');
         expect(art.image).toEqual(['https://api.test/storage/opinions/a.jpeg']);
         expect(page.bodyHtml).toContain('<p>Narı yatay kesmeyin.</p><p>Perdeleri izleyin.</p>');
         expect(page.bodyHtml).toContain('<img src="https://api.test/storage/opinions/a.jpeg"');
@@ -142,7 +156,7 @@ describe('opinionPage / storyPage', () => {
         expect(page.title).toContain('- Hikayeler | Herkesler Soruyor');
         expect(page.robots).toBe('noindex, follow');
         expect(page.extraHead).toContain('rating" content="adult"');
-        expect(page.image).toBe('https://s.test/logo.png');
+        expect(page.image).toBe('https://s.test/og-default.jpg');
         expect(page.bodyHtml).not.toContain('<img');
     });
 
@@ -170,6 +184,7 @@ describe('categoryPage', () => {
         expect(page.bodyHtml).toContain('<p>Mangal yaptık.</p>');
         expect(page.bodyHtml).toContain('2 cevap');
         expect(page.robots).toBeUndefined();
+        expect(page.image).toBe('https://s.test/og-default.jpg');
 
         const coll = page.jsonLd.find((l) => l['@type'] === 'CollectionPage');
         expect(coll.mainEntity.numberOfItems).toBe(513);
@@ -180,6 +195,46 @@ describe('categoryPage', () => {
         const page = categoryPage({ category: { name: 'Boş', slug: 'bos' }, questions: [] }, ctx('/questions/bos'));
         expect(page.bodyHtml).toContain('henüz soru yok');
         expect(page.description).toContain('0 soru');
+    });
+});
+
+describe('homePage', () => {
+    const data = {
+        questions: [{ title: 'Soru A', slug: 'soru-a', description: '<p>Açıklama</p>', answers_count: 3, created_at: '2026-10-28T10:00:00Z' }],
+        pagination: { totalQuestions: 1528 },
+        categories: [{ name: 'Gündem & Haber', slug: 'gundem' }, { name: 'Eksik', slug: null }],
+    };
+
+    it('50-60 karakter başlık, 150-160 karakter açıklama, tek H1', () => {
+        const page = homePage(data, ctx('/'));
+        expect(page.title.length).toBeGreaterThanOrEqual(50);
+        expect(page.title.length).toBeLessThanOrEqual(60);
+        expect(page.description.length).toBeGreaterThanOrEqual(150);
+        expect(page.description.length).toBeLessThanOrEqual(160);
+        expect(page.bodyHtml.match(/<h1>/g)).toHaveLength(1);
+        expect(page.canonical).toBe('https://s.test/');
+        expect(page.robots).toBeUndefined();
+        expect(page.imageWidth).toBe(1200);
+    });
+
+    it('Organization + WebSite (SearchAction) şeması, son sorular ve geçerli kategoriler', () => {
+        const page = homePage(data, ctx('/'));
+        const org = page.jsonLd.find((l) => l['@type'] === 'Organization');
+        const site = page.jsonLd.find((l) => l['@type'] === 'WebSite');
+        expect(org.logo.url).toBe('https://s.test/logo.png');
+        expect(site.potentialAction.target.urlTemplate).toBe('https://s.test/questions?search={search_term_string}');
+        expect(site.publisher['@id']).toBe(org['@id']);
+        expect(page.bodyHtml).toContain('<a href="/question/soru-a"><strong>Soru A</strong></a>');
+        expect(page.bodyHtml).toContain('<a href="/questions/gundem">Gündem &amp; Haber</a>');
+        expect(page.bodyHtml).not.toContain('Eksik');
+        expect(page.bodyHtml).toContain('1.528 soru');
+    });
+
+    it('veri eksikse yine üretir', () => {
+        const page = homePage({}, ctx('/'));
+        expect(page.bodyHtml).toContain('<h1>');
+        expect(page.bodyHtml).not.toContain('Son Sorular');
+        expect(page.bodyHtml).not.toContain('Kategoriler');
     });
 });
 

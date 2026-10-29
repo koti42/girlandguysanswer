@@ -237,8 +237,8 @@ const LandingPage = () => {
     return (
         <MainLayout fullWidth={true} showMobileFooter={true}>
             <SEO
-                title="Herkesler Soruyor - Anonim Soru Cevap Platformu"
-                description="Topluluğa katıl, anonim sorular sor ve cevapla. Kadın ve erkek perspektiflerini keşfet!"
+                title="Herkesler Soruyor | Kadınlar ve Erkekler Soruyor, Cevaplıyor"
+                description="Anonim soru sor, kadın ve erkek bakış açısından samimi cevaplar al. İlişkiler, aile, kariyer, sağlık ve daha fazlası: binlerce soru ve cevap seni bekliyor."
             />
 
             <div className="min-h-screen bg-background dark:bg-gray-900">
