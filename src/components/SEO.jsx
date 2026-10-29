@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { getCanonicalUrl } from '../config/site';
 
-const SEO = ({ title, description, name, type, noindex, jsonLd, canonical }) => {
+const SEO = ({ title, description, name, type, noindex, robots, jsonLd, canonical }) => {
     const { pathname } = useLocation();
     const canonicalUrl = canonical || getCanonicalUrl(pathname);
 
@@ -13,7 +13,8 @@ const SEO = ({ title, description, name, type, noindex, jsonLd, canonical }) => 
             <meta name="description" content={description} />
             <link rel="canonical" href={canonicalUrl} />
 
-            {noindex && <meta name="robots" content="noindex, nofollow" />}
+            {/* `robots` açık değer verir (ör. cevapsız soru: "noindex, follow"); `noindex` eski kısa yol. */}
+            {robots ? <meta name="robots" content={robots} /> : noindex && <meta name="robots" content="noindex, nofollow" />}
 
             <meta property="og:type" content={type} />
             <meta property="og:title" content={title} />

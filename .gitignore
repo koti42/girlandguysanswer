@@ -34,3 +34,6 @@ dist-ssr
 .env.*.local
 !.env.example
 !.env.production
+
+# Wrangler yerel durum (npx wrangler pages dev)
+.wrangler

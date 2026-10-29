@@ -233,6 +233,8 @@ const QuestionDetailPage = () => {
     }
 
     const currentQuestion = questions.find(q => q.slug === slug) || questions[0];
+    // Cevapsız soru ince içeriktir: cevap gelene kadar noindex (sitemap de bu soruları yazmaz). Bağlantılar takip edilir.
+    const visibleAnswerCount = Number(currentQuestion?.answers_count ?? currentQuestion?.answer_count ?? currentQuestion?.answers?.length ?? 0) || 0;
 
     return (
         <MainLayout sidebar={SidebarContent}>
@@ -240,6 +242,7 @@ const QuestionDetailPage = () => {
                 <SEO
                     title={`${currentQuestion.title} - Herkesler Soruyor`}
                     description={stripHtml(currentQuestion.description) || currentQuestion.title}
+                    robots={visibleAnswerCount === 0 ? "noindex, follow" : undefined}
                     jsonLd={[
                         {
                             "@context": "https://schema.org",
@@ -248,7 +251,7 @@ const QuestionDetailPage = () => {
                                 "@type": "Question",
                                 "name": currentQuestion.title,
                                 "text": stripHtml(currentQuestion.description) || currentQuestion.title,
-                                "answerCount": currentQuestion.answer_count || 0,
+                                "answerCount": visibleAnswerCount,
                                 "upvoteCount": currentQuestion.likes_count || 0,
                                 "datePublished": currentQuestion.created_at || currentQuestion.updated_at,
                                 "author": {
