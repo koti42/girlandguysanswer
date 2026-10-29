@@ -18,7 +18,7 @@ import usePzSession from './usePzSession';
 import '../../../components/game/protocolZero/protocolZero.css';
 
 /*
- * Tam ekran komuta merkezi (Plague Inc. düzeni). Katmanlar (alttan üste): taktik dünya haritası (canvas) →
+ * Tam ekran komuta merkezi. Katmanlar (alttan üste): taktik dünya haritası (canvas) →
  * neon çerçeve → üst şerit (haber bandı + hız) · sol menü (Dünya/Tehdit/Araştırma/İstatistikler/Ayarlar) ·
  * alt gösterge paneli → sağ panel (bölge / araştırma / tehdit / ayarlar) → kipler (dünya durumu, ikilem,
  * mini oyun, duraklatma) → brifing / rapor.

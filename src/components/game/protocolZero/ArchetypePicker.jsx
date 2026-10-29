@@ -4,7 +4,7 @@ import { ARCHETYPES, ARCHETYPE_KEYS } from '../../../game/protocolZero/archetype
 const skulls = (n) => '☠'.repeat(Math.max(1, Math.min(5, n)));
 
 /**
- * Plague Inc. "hastalık türü" ekranı gibi YZ tehdit türü seçimi: kart ızgarası + seçili türün hikâyesi,
+ * YZ tehdit türü seçim ekranı: kart ızgarası + seçili türün hikâyesi,
  * güçlü/zayıf yanları. `value` tür anahtarı, `onChange(key)`.
  */
 const ArchetypePicker = ({ value, onChange }) => {

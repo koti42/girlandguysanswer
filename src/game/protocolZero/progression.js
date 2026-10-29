@@ -1,5 +1,5 @@
 /*
- * Kalıcı ilerleme (Plague Inc. "DNA / Genler" karşılığı): tecrübe puanı (XP), komutan rütbeleri ve
+ * Kalıcı ilerleme: tecrübe puanı (XP), komutan rütbeleri ve
  * seviyeyle açılan "Protokol Genleri". Oyuncu her kategoriden EN FAZLA BİR gen kuşanır (5 yuva).
  *
  *   xpFor({ score, days, outcome, difficulty })  — sunucu (ProtocolZeroScoreService::xpFor) ile BİREBİR aynı

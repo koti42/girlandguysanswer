@@ -1,5 +1,5 @@
 /*
- * PROTOCOL: ZERO — taktik dünya haritası (Canvas 2D, Plague Inc. / DEFCON stili).
+ * PROTOCOL: ZERO — taktik dünya haritası (Canvas 2D, askeri komuta ekranı stili).
  *
  *   const map = createWorldMap(container, { world, onSelect, onPopBubble, onPacketArrive, lowPower, reducedMotion });
  *   map.update(snapshot);      // sim.snapshot(): ülke renkleri, sporlar, düğümler, hatlar, baloncuklar

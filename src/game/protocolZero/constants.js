@@ -129,7 +129,7 @@ export const DIFFICULTY_KEYS = Object.freeze(Object.keys(DIFFICULTIES));
 export const SERVERS_PER_TFLOPS = 7400;
 
 /**
- * Harita baloncukları (Plague Inc. DNA/ilaç baloncukları gibi):
+ * Harita baloncukları (haritada beliren tıklanabilir bonus/olay işaretleri):
  *  data   mavi "Veri/Kuantum": +25 ₵, +2 deşifre; dataEvery sn'de bir temiz düğümde belirir, dataTtl sn yaşar
  *  breach kızıl "YZ sızma": bir düğüm ilk kez enfekte olunca; breachTtl sn içinde patlatılırsa ilk dalga bastırılır
  */

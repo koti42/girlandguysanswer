@@ -88,7 +88,7 @@ const Lobby = ({ member, api }) => {
         <>
             <SEO
                 title="PROTOCOL: ZERO - Yapay Zeka Saldırısını Durdurabilir Misin? | Herkesler Soruyor"
-                description="Gerçek ülke sınırlı taktik dünya haritasında 14 veri merkezini kontrolden çıkan yapay zekâya karşı savun. Plague Inc. tarzı, üyeliksiz canlı strateji simülasyonu: güvenlik duvarları, karantina, kuantum şifre çözümü, kriz kararları. Skorunu paylaş, arkadaşlarına meydan oku."
+                description="Gerçek ülke sınırlı taktik dünya haritasında 14 veri merkezini kontrolden çıkan yapay zekâya karşı savun. Üyeliksiz canlı strateji simülasyonu: güvenlik duvarları, karantina, kuantum şifre çözümü, kriz kararları. Skorunu paylaş, arkadaşlarına meydan oku."
             />
             <section className="game-hero game-hero-pz relative min-h-[340px] overflow-hidden rounded-3xl p-5 shadow-2xl game-pop-in sm:p-8" aria-labelledby="pz-hero-title">
                 <PzHeroArt />
@@ -132,7 +132,7 @@ const Lobby = ({ member, api }) => {
                 </div>
             </section>
 
-            {/* Plague Inc. "tür seç" ekranı: YZ tehdit türü */}
+            {/* Tür seç ekranı: YZ tehdit türü */}
             <section className="pz-arch-section mt-5 rounded-3xl p-4 sm:p-6" aria-labelledby="pz-arch-title">
                 <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
                     <div>
@@ -152,7 +152,7 @@ const Lobby = ({ member, api }) => {
                 </button>
             </section>
 
-            {/* Komutan rütbesi + Protokol Genleri (Plague Inc. gen yuvaları) */}
+            {/* Komutan rütbesi + Protokol Genleri (gen yuvaları) */}
             <section className="pz-arch-section mt-4 rounded-3xl p-4 sm:p-6" aria-labelledby="pz-gene-title">
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
                     <div>

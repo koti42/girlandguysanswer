@@ -17,7 +17,7 @@ const ProtocolZeroFeatureCard = ({ guest = false, className = '' }) => (
         <PzHeroArt />
         <span className="relative z-10 flex max-w-[70%] flex-col sm:max-w-[56%]">
             <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-400 to-cyan-300 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-950 shadow">
-                <LuShieldAlert aria-hidden="true" /> Yeni · Plague Inc. tarzı strateji
+                <LuShieldAlert aria-hidden="true" /> Yeni · Küresel strateji simülasyonu
             </span>
             <span className="mt-2 text-2xl font-black leading-tight text-white sm:text-3xl">PROTOCOL: ZERO</span>
             <span className="mt-1 text-sm text-white/85">

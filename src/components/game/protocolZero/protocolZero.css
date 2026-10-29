@@ -386,7 +386,7 @@
   }
 }
 
-/* ---------------- Plague Inc. düzeni: haber bandı, alt gösterge paneli ---------------- */
+/* ---------------- Komuta merkezi düzeni: haber bandı, alt gösterge paneli ---------------- */
 
 .pz-ticker {
   position: absolute;
@@ -471,7 +471,7 @@
   .pz-ticker-track { animation: none; }
 }
 
-/* ---------------- Tehdit türü seçimi (Plague Inc. "tür seç" ekranı) ---------------- */
+/* ---------------- Tehdit türü seçimi (tür seç ekranı) ---------------- */
 .pz-arch-section {
   position: relative;
   overflow: hidden;
@@ -532,7 +532,7 @@
 }
 
 /* =====================================================================
-   PREMIUM KOMUTA MERKEZI DUZENI (referans: Plague Inc. tarzi arayuz)
+   PREMIUM KOMUTA MERKEZI DUZENI (taktik strateji arayuzu)
    ===================================================================== */
 
 /* Neon cerceve */

@@ -165,7 +165,7 @@ function storyTick(state, dt, events) {
             events.push({ type: 'story', kind: c.kind || 'story', text: c.text });
         }
     }
-    // Hükümet tepkisi (Plague: sınır kapatma / sıkıyönetim): ağır enfekte, izole olmayan bölge kendi
+    // Hükümet tepkisi (sınır kapatma / sıkıyönetim): ağır enfekte, izole olmayan bölge kendi
     // başına sınırlarını kapatır — bir kez: firewall +1 (ücretsiz) ama panik +4.
     for (const id in state.nodes) {
         const n = state.nodes[id];

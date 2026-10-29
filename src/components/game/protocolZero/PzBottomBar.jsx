@@ -16,7 +16,7 @@ const Pill = ({ icon: Icon, label, value, tone }) => (
 );
 
 /**
- * Alt gösterge paneli (Plague düzeni): sol — enfekte sunucu sayacı (+hız) ve bütçe + ağaç;
+ * Alt gösterge paneli: sol — enfekte sunucu sayacı (+hız) ve bütçe + ağaç;
  * orta — oynat/duraklat, gün içi zaman çizgisi, tarih (telefonda hız döngü düğmesi); sağ — pil göstergeleri + DÜNYA DURUMU.
  * Gerçek yüksekliğini `--pz-bb-h` olarak ekrana yazar: yan menü ve paneller çakışmadan üstüne oturur.
  */

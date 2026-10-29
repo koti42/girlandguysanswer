@@ -3,7 +3,7 @@ import { LuLock } from 'react-icons/lu';
 import { GENES, GENE_CATEGORIES, levelFor, unlockedGenes } from '../../../game/protocolZero/progression';
 
 /**
- * Protokol Genleri (Plague Inc. gen yuvaları): 5 kategori, her birinden en fazla bir gen.
+ * Protokol Genleri (gen yuvaları): 5 kategori, her birinden en fazla bir gen.
  * Kilitli genler seviye gereksinimiyle gösterilir. `value` kuşanılan anahtarlar, `onChange(keys)`.
  */
 const GenePicker = ({ xp = 0, value = [], onChange }) => {

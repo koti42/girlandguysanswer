@@ -1,5 +1,5 @@
 /*
- * YZ tehdit türleri (Plague Inc.'deki "hastalık türü" seçimi). Her tür zorluk ayarlarını çarpanlarla
+ * YZ tehdit türleri (oyun başında seçilen tür). Her tür zorluk ayarlarını çarpanlarla
  * değiştirir, kendi hikâyesini (brifing + günlere bağlı senaryo vuruşları) ve haber havuzunu taşır.
  *
  *  mods: spread, panicRate, dilemmaEvery, breachEvery, breachSeconds (toplama), reseedEvery, decryptBase,
